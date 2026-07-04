@@ -10,11 +10,21 @@
  * game adds stages/topics, mirror them here (or export this file from the build).
  */
 
-// The three world NPCs that can deliver a task.
+// The characters that can deliver a task — island (Pip/Fern/Alby) + the nine
+// schoolyard staff. defaultTopic just pre-selects the form; off-theme is fine.
 export const ADVENTURE_NPCS = [
   { id: "pip",  name: "Pip",  defaultTopic: "integers" },
   { id: "fern", name: "Fern", defaultTopic: "fdp" },
   { id: "alby", name: "Alby", defaultTopic: "algebra" },
+  { id: "pearce",   name: "Mr. Pearce (Schoolyard)",   defaultTopic: "area" },
+  { id: "mahoney",  name: "Ms. Mahoney (Schoolyard)",  defaultTopic: "pythagoras" },
+  { id: "ewings",   name: "Ms. Ewings (Schoolyard)",   defaultTopic: "algebra" },
+  { id: "kellahan", name: "Mrs. Kellahan (Schoolyard)", defaultTopic: "area" },
+  { id: "dawson",   name: "Mr. Dawson (Schoolyard)",   defaultTopic: "pythagoras" },
+  { id: "heywood",  name: "Mr. Heywood (Schoolyard)",  defaultTopic: "algebra" },
+  { id: "morgan",   name: "Mr. Morgan (Schoolyard)",   defaultTopic: "area" },
+  { id: "bacon",    name: "Mrs. Bacon (Schoolyard)",   defaultTopic: "pythagoras" },
+  { id: "brookes",  name: "Ms. Brookes (Schoolyard)",  defaultTopic: "algebra" },
 ];
 
 // Stage → topics (ids mirror the game curriculum exactly).
@@ -30,6 +40,15 @@ export const ADVENTURE_STAGES = [
       { id: "pythagoras", name: "Pythagoras" },
     ],
   },
+];
+
+// Badges a teacher task can award on completion ("get to the end" → trophy).
+// Mirror of the game's badge catalogue (src/data/badges.js). Keep ids identical.
+export const ADVENTURE_BADGES = [
+  { id: "integer-adventurer", name: "Integer Adventurer", icon: "➕" },
+  { id: "fraction-explorer", name: "Fraction Explorer", icon: "🍰" },
+  { id: "algebra-apprentice", name: "Algebra Apprentice", icon: "🧮" },
+  { id: "stage4-quest-champion", name: "Quest Champion (trophy)", icon: "🏆" },
 ];
 
 export function getStageTopics(stageId) {

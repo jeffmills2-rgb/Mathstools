@@ -46,6 +46,11 @@ NSW maths teacher. It now also has a **secure Student/Teacher Platform** and
   `signInWithCustomToken`.
 - **`createStudentForTeacher`** (callable, teacher-authed) creates students
   server-side, stamped with the caller's own `teacherCode`.
+- **`setStudentAvatar`** (callable, student-authed) saves the Adventure player's
+  customisable avatar to the caller's OWN `students/{code}` doc (code from the
+  verified claim). Admin-SDK write (no rules change); avatar is returned by
+  `exchangeStudentCode` and applied on sign-in so the character follows the
+  student across devices. Cosmetic only — no answers/PII stored.
 - **Teacher-set Adventure tasks** (callables `createAdventureTask`,
   `updateAdventureTask`, `setAdventureTaskActive`, all teacher-authed and stamped
   with the caller's own `teacherCode`) write the `adventureAssignments` collection;
@@ -94,10 +99,16 @@ portal/PLACEMENT.md , portal/README.md   migration + structure notes
   `portal/` is the deployed one).
 - **Dev panel** shows only in `npm run dev` (hidden in the production build).
 - Defaults: **Camera Lock ON, Quest HUD OFF**.
-- **251 headless system checks** in `src/dev/systemChecks.js` — run via the babel
+- **263 headless system checks** in `src/dev/systemChecks.js` — run via the babel
   parse-check + Node harness (set `package.json` `type:module` temporarily, shim
   localStorage/window/document, run `runSystemChecks()`; restore package.json).
   esbuild can't run in that harness (platform mismatch) — don't rely on it.
+- **Touch controls (W4, built 2026-07-02):** phone/tablet support added ALONGSIDE
+  keyboard (both always on; auto-detected, ⚙ override). Tap-to-move, tap-a-character
+  → "Interact with X?" confirm, an on-screen number keypad for typed answers (+
+  MathLive's virtual keyboard for math), and on-screen rotate/Jump buttons. All
+  gated on `uiStore.touchMode`; desktop is unchanged. Full where-everything-lives:
+  the game repo's `CLAUDE.md` "Touch controls" section.
 - Cloud save: completed attempts write a compact `achievements` record + a rich
   `adventureAttempts` record (no typed answers). Demo/skip stays local-only.
   Curriculum/adapters/diagram systems are isolated — only adapters touch legacy banks.

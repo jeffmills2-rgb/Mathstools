@@ -100,6 +100,7 @@
         </div>
       </div>
       <div class="field" style="min-width:150px"><label for="taskDue">Due (optional)</label><input id="taskDue" type="date"/></div>
+      <div class="field" style="min-width:170px"><label for="taskBadge">Reward (optional)</label><select id="taskBadge"></select></div>
       <button class="btn primary" id="setTaskBtn" type="button">Set task</button>
       <button class="btn ghost hidden" id="cancelEditBtn" type="button">Cancel</button>
     </div>
@@ -125,7 +126,7 @@
 <script type="module">
 import { initPortal, loginTeacher, logout, normaliseCode, getDb, createStudent, createAdventureTask, setAdventureTaskActive, updateAdventureTask } from "../shared/codeExchangeClient.js";
 import { COLLECTIONS } from "../shared/firebaseConfig.js";
-import { ADVENTURE_NPCS, ADVENTURE_STAGES, getStageTopics, npcDefaultTopic } from "../shared/adventureManifest.js";
+import { ADVENTURE_NPCS, ADVENTURE_STAGES, ADVENTURE_BADGES, getStageTopics, npcDefaultTopic } from "../shared/adventureManifest.js";
 import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 import { getEnabledTools } from "../shared/mmtToolRegistry.js";
 import { normaliseAchievement, summarise, rollupByStudent, toCSV, summaryText } from "../shared/resultUtils.js";
@@ -235,6 +236,9 @@ function setupTaskForm(classes){
   // Topic options (Stage 4 for now).
   const topics = getStageTopics("stage4");
   $("taskTopic").innerHTML = topics.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join("");
+  // Reward badge options (optional) — awarded on completion ("get to the end").
+  $("taskBadge").innerHTML = `<option value="">No reward badge</option>`+
+    ADVENTURE_BADGES.map(b=>`<option value="${b.id}">${b.icon} ${esc(b.name)}</option>`).join("");
   // Default the topic to the chosen character's theme, and note off-theme picks.
   const syncTheme=()=>{ const def=npcDefaultTopic($("taskNpc").value); if(def) $("taskTopic").value=def; offThemeNote(); };
   $("taskNpc").addEventListener("change", syncTheme);
@@ -272,6 +276,7 @@ async function setTask(){
     npcId, className,
     stages:["stage4"], selectedTopics:[topicId], selectedSkills:[],
     difficultyRange:{min,max}, requiredQuestions, adaptiveOn:true, dueAt,
+    rewardBadge: $("taskBadge").value || null,
     title:`${npcName}: ${topicName}`,
     description:`A ${topicName} task set by your teacher.`,
   };
@@ -306,6 +311,7 @@ function startEditTask(t){
   $("taskDiffMin").value=String(t.difficultyRange?.min||1);
   $("taskDiffMax").value=String(t.difficultyRange?.max||5);
   $("taskDue").value= t.dueAt ? new Date(t.dueAt).toISOString().slice(0,10) : "";
+  $("taskBadge").value= t.rewardBadge || "";
   $("setTaskBtn").textContent="Update task";
   $("cancelEditBtn").classList.remove("hidden");
   offThemeNote();
