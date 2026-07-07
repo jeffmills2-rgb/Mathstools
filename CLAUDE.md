@@ -3,7 +3,16 @@
 > Hand this file to Claude at the start of any chat to get up to speed without
 > re-uploading everything. Keep it short, current, high-signal. If a fact here
 > stops being true, fix it here first.
-> Last reviewed: 2026-07-01 (Phase 4A live — secure platform deployed)
+> Last reviewed: 2026-07-06. LIVE = W3–W6 batch. **PENDING DEPLOY:** the
+> Adventure question-bank expansion (Phases 3A–3G — six new Stage 4 topics:
+> Ratios & Rates, Length, Equations, Probability, Indices, Linear
+> Relationships; ~99 Stage-4 skills total) is BUILT + fully checked in the
+> game source but NOT yet built/pushed. This repo already has UNCOMMITTED
+> edits (adventureManifest.js topic list + CLAUDE.md) that must ride the SAME
+> push as the rebuilt game — deploying the manifest alone would offer teachers
+> topics the live game doesn't know. Deploy: game repo `npm run build` → copy
+> `dist/.` into `game-platforms/mills-maths-adventure/` → one push.
+> Full details: the game repo's CLAUDE.md "Question-bank expansion" section.
 
 ---
 
@@ -99,16 +108,19 @@ portal/PLACEMENT.md , portal/README.md   migration + structure notes
   `portal/` is the deployed one).
 - **Dev panel** shows only in `npm run dev` (hidden in the production build).
 - Defaults: **Camera Lock ON, Quest HUD OFF**.
-- **263 headless system checks** in `src/dev/systemChecks.js` — run via the babel
+- **391 headless system checks** in `src/dev/systemChecks.js` — run via the babel
   parse-check + Node harness (set `package.json` `type:module` temporarily, shim
   localStorage/window/document, run `runSystemChecks()`; restore package.json).
   esbuild can't run in that harness (platform mismatch) — don't rely on it.
-- **Touch controls (W4, built 2026-07-02):** phone/tablet support added ALONGSIDE
-  keyboard (both always on; auto-detected, ⚙ override). Tap-to-move, tap-a-character
-  → "Interact with X?" confirm, an on-screen number keypad for typed answers (+
-  MathLive's virtual keyboard for math), and on-screen rotate/Jump buttons. All
-  gated on `uiStore.touchMode`; desktop is unchanged. Full where-everything-lives:
-  the game repo's `CLAUDE.md` "Touch controls" section.
+- **Player avatar cloud-save (W3):** customisable "shape" avatar saved to the
+  student's `students/{code}` doc via `setStudentAvatar` (follows them across
+  devices). **Touch controls (W4):** tap-to-move / tap-to-interact / on-screen
+  keypad, ⚙-toggled. **Soft-cartoon graphics (W5):** ⚙ **Graphics** High/Low
+  (auto-low on touch) — lighting/AO/bloom/outlines/wind-grass; needs the
+  `@react-three/postprocessing` dep (`npm install` before build). **World redesign
+  (W6):** bigger irregular island, square plaza, snow/ash themed zones, grove→
+  SchoolYard portal. FPV toggle is PARKED (not working). Full where-everything-
+  lives: the game repo's `CLAUDE.md` (W3–W6 sections).
 - Cloud save: completed attempts write a compact `achievements` record + a rich
   `adventureAttempts` record (no typed answers). Demo/skip stays local-only.
   Curriculum/adapters/diagram systems are isolated — only adapters touch legacy banks.
@@ -134,11 +146,20 @@ portal/PLACEMENT.md , portal/README.md   migration + structure notes
   **function first**, then push the website.
 
 ## 8. Open / future items
+- **Deploy the Adventure 3A–3G question-bank batch** (see header — game build +
+  the uncommitted manifest edits here, one push).
+- Adventure: **interactive plot-a-point input mode** (student taps the
+  Cartesian grid — flagged during the Linear Relationships build); **Stage 5
+  depth** (still just 2 sample skills). Angles, Properties of Geometrical
+  Figures AND Data Classification & Visualisation are now BUILT (see the game
+  repo's Phase 3G/3H/3I sections); all ride the same deploy, with `angles` +
+  `geometry` + `data` already added to adventureManifest.js.
 - Teacher portal: revisit **graphs** (engagement/leaderboard — removed for now),
   add student **enable/disable/edit** + a class-management view. (Adventure-TASK
   create/edit/remove + completion view are now DONE — see §6.)
 - Adventure tasks — future polish: per-skill selection in the Set-task form (only
-  topic-level today), in-game due-date display/overdue handling, more stages/NPCs.
+  topic-level today — now 12 topics after 3A–3G), in-game due-date
+  display/overdue handling, more stages/NPCs.
 - Functions runtime: bump **Node 20 → 22** before Oct 2026 (Google deprecation).
 - Consider **App Check**; consider consolidating the 3 Firebase projects later.
 - Old pre-reorg URLs (e.g. `/factor-circles/`) now 404 — add redirects if any were

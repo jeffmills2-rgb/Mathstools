@@ -38,6 +38,15 @@ export const ADVENTURE_STAGES = [
       { id: "algebra",    name: "Algebraic Techniques" },
       { id: "area",       name: "Area" },
       { id: "pythagoras", name: "Pythagoras" },
+      { id: "ratio",      name: "Ratios & Rates" }, // Phase 3A (native, in-game)
+      { id: "length",     name: "Length" },         // Phase 3B (native, in-game)
+      { id: "equations",  name: "Equations" },      // Phase 3C (native, in-game)
+      { id: "probability", name: "Probability" },   // Phase 3D (native, in-game)
+      { id: "indices",    name: "Indices" },        // Phase 3E (native, in-game)
+      { id: "linear",     name: "Linear Relationships" }, // Phase 3F (native, in-game)
+      { id: "angles",     name: "Angle Relationships" },  // Phase 3G (native, in-game)
+      { id: "geometry",   name: "Properties of Geometrical Figures" }, // Phase 3H (native, in-game)
+      { id: "data",       name: "Data Classification & Visualisation" }, // Phase 3I (native, in-game)
     ],
   },
 ];
