@@ -696,7 +696,8 @@
         });
         signInAnonymously(auth).catch((err) => {
           console.error(err);
-          setOnlineStatus('Firebase sign-in failed. Check Anonymous Authentication is enabled.', 'warn');
+          const code = (err && (err.code || err.message)) || 'unknown';
+          setOnlineStatus('Sign-in failed (' + code + '). Online play may be blocked on this network/browser.', 'warn');
         });
       } catch (err) {
         console.error(err);
@@ -1439,12 +1440,27 @@
     }
     async function ensureAuth(){
       if (!FIREBASE_CONFIGURED || !auth || !db) throw new Error('Firebase is not configured.');
+      // Prefer a session already established (persisted or from load-time sign-in).
+      if (auth.currentUser) return auth.currentUser;
       const existing = await authReadyPromise;
       if (existing) return existing;
-      await signInAnonymously(auth);
-      const user = await authReadyPromise;
-      if (!user) throw new Error('Anonymous sign-in failed.');
-      return user;
+      // Sign in fresh, using the credential returned directly (do NOT rely on the
+      // one-shot authReadyPromise, which may have already resolved to null on a
+      // device with no persisted session). Retry once for transient failures.
+      let lastErr = null;
+      for (let attempt = 0; attempt < 2; attempt++){
+        try{
+          const cred = await signInAnonymously(auth);
+          if (cred && cred.user) return cred.user;
+          if (auth.currentUser) return auth.currentUser;
+        }catch(err){
+          lastErr = err;
+          console.error('Anonymous sign-in attempt ' + (attempt + 1) + ' failed:', err);
+          if (attempt === 0) await new Promise(r => setTimeout(r, 800));
+        }
+      }
+      const code = (lastErr && (lastErr.code || lastErr.message)) || 'unknown';
+      throw new Error('Sign-in failed (' + code + '). This device or browser may be blocking Google sign-in — try another network (e.g. a mobile hotspot) or a non-private browser window.');
     }
     async function createOnlineRoom(){
       const name = els.playerNameInput.value.trim() || 'Player 1';
