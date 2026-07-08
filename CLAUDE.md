@@ -3,16 +3,15 @@
 > Hand this file to Claude at the start of any chat to get up to speed without
 > re-uploading everything. Keep it short, current, high-signal. If a fact here
 > stops being true, fix it here first.
-> Last reviewed: 2026-07-06. LIVE = W3–W6 batch. **PENDING DEPLOY:** the
-> Adventure question-bank expansion (Phases 3A–3G — six new Stage 4 topics:
-> Ratios & Rates, Length, Equations, Probability, Indices, Linear
-> Relationships; ~99 Stage-4 skills total) is BUILT + fully checked in the
-> game source but NOT yet built/pushed. This repo already has UNCOMMITTED
-> edits (adventureManifest.js topic list + CLAUDE.md) that must ride the SAME
-> push as the rebuilt game — deploying the manifest alone would offer teachers
-> topics the live game doesn't know. Deploy: game repo `npm run build` → copy
-> `dist/.` into `game-platforms/mills-maths-adventure/` → one push.
-> Full details: the game repo's CLAUDE.md "Question-bank expansion" section.
+> Last reviewed: 2026-07-08. **All LIVE** — the Adventure now has **14 Stage 4
+> topics** (deployed 2026-07-08, commit `aad2142`): the Phase 3A–3G expansion
+> (Ratios & Rates, Length, Equations, Probability, Indices, Linear) PLUS Angle
+> Relationships (3G), Properties of Geometrical Figures (3H) and Data
+> Classification & Visualisation (3I). Also live: schoolyard NPCs now default to
+> a RANDOM Stage 4 topic (a teacher task still overrides). `adventureManifest.js`
+> lists all 14 topics and matches the live game. Nothing is pending deploy.
+> Full details: the game repo's CLAUDE.md (per-phase sections + "Schoolyard
+> default topics").
 
 ---
 
@@ -146,19 +145,19 @@ portal/PLACEMENT.md , portal/README.md   migration + structure notes
   **function first**, then push the website.
 
 ## 8. Open / future items
-- **Deploy the Adventure 3A–3G question-bank batch** (see header — game build +
-  the uncommitted manifest edits here, one push).
 - Adventure: **interactive plot-a-point input mode** (student taps the
   Cartesian grid — flagged during the Linear Relationships build); **Stage 5
-  depth** (still just 2 sample skills). Angles, Properties of Geometrical
-  Figures AND Data Classification & Visualisation are now BUILT (see the game
-  repo's Phase 3G/3H/3I sections); all ride the same deploy, with `angles` +
-  `geometry` + `data` already added to adventureManifest.js.
+  depth** (still just 2 sample skills); **Area extension** as a further Stage 4
+  topic. (The 14 Stage 4 topics — through Angles, Geometry and Data — are all
+  LIVE; see the game repo's Phase 3A–3J sections.)
+- Consider a **DevPanel diagram/chart gallery** to eyeball every new figure at
+  once, and a live-review polish pass on the newest diagrams (protractor,
+  geometry shapes, data charts).
 - Teacher portal: revisit **graphs** (engagement/leaderboard — removed for now),
   add student **enable/disable/edit** + a class-management view. (Adventure-TASK
   create/edit/remove + completion view are now DONE — see §6.)
 - Adventure tasks — future polish: per-skill selection in the Set-task form (only
-  topic-level today — now 12 topics after 3A–3G), in-game due-date
+  topic-level today — now 14 Stage 4 topics), in-game due-date
   display/overdue handling, more stages/NPCs.
 - Functions runtime: bump **Node 20 → 22** before Oct 2026 (Google deprecation).
 - Consider **App Check**; consider consolidating the 3 Firebase projects later.
