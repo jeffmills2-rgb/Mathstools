@@ -755,6 +755,38 @@
     .mainBtnGhost:hover:not(:disabled){ border-color:#c7d2fe; box-shadow:0 8px 20px rgba(37,99,235,.10); transform:translateY(-1px); }
     .mainBtn:disabled{ opacity:.42; cursor:not-allowed; transform:none; box-shadow:none; }
 
+    /* Teacher zoom-level navigation — under the primary actions */
+    .zoomLevelNav{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      margin-top:12px;
+    }
+    .znav{
+      appearance:none;
+      display:inline-flex;
+      align-items:center;
+      gap:7px;
+      font-family:inherit;
+      font-size:13.5px;
+      font-weight:800;
+      color:var(--muted);
+      cursor:pointer;
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:999px;
+      padding:8px 14px;
+      transition:.16s ease;
+      user-select:none;
+      -webkit-user-select:none;
+    }
+    .znav svg{ width:16px; height:16px; flex:0 0 auto; }
+    .znav:hover:not(:disabled){ color:var(--blue-dark); border-color:#c7d2fe; box-shadow:0 6px 16px rgba(37,99,235,.10); transform:translateY(-1px); }
+    .znav:focus-visible{ outline:3px solid rgba(37,99,235,.25); outline-offset:2px; }
+    .znav:disabled{ opacity:.4; cursor:not-allowed; }
+    .znavHint{ font-size:11.5px; font-weight:800; letter-spacing:.02em; color:var(--muted); text-transform:uppercase; margin:0 2px; }
+
     .summary{
       background:#fff;
       border:1px solid var(--border);
@@ -944,6 +976,18 @@
               <button class="mainBtn mainBtnPrimary" id="submitBtn" type="button" disabled>Submit</button>
               <button class="mainBtn mainBtnPrimary" id="nextBtn" type="button" style="display:none">Zoom in &rarr;</button>
               <button class="mainBtn mainBtnGhost" id="summaryBtn" type="button" style="display:none">See the summary</button>
+            </div>
+
+            <div class="zoomLevelNav" id="zoomLevelNav" aria-label="Teacher zoom level controls">
+              <button class="znav" id="stageZoomOutBtn" type="button" aria-label="Zoom out one level">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg>
+                <span>Zoom out</span>
+              </button>
+              <span class="znavHint">Zoom level</span>
+              <button class="znav" id="stageZoomInBtn" type="button" aria-label="Zoom in one level">
+                <span>Zoom in</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg>
+              </button>
             </div>
 
             <div class="summary" id="summary">
@@ -1506,6 +1550,8 @@
 
         $("backBtn").disabled = animating || (estimateMode ? (first && !revealed) : first);
         $("fwdBtn").disabled  = animating || last;
+        $("stageZoomOutBtn").disabled = animating || (estimateMode ? (first && !revealed) : first);
+        $("stageZoomInBtn").disabled  = animating || last;
         document.querySelectorAll(".tbtn.jump").forEach((b,i)=>{
           b.setAttribute("aria-current", i===level ? "true":"false");
         });
@@ -1599,6 +1645,13 @@
       });
       $("zoomInBtn").addEventListener("click", ()=>goToLevel(level+1,true));
       $("zoomOutBtn").addEventListener("click", ()=>goToLevel(level-1,true));
+      // Stage-level zoom nav (under Submit) — mirrors the teacher panel Back / Forward.
+      $("stageZoomInBtn").addEventListener("click", ()=>goToLevel(level+1,true));
+      $("stageZoomOutBtn").addEventListener("click", ()=>{
+        if(animating) return;
+        if(estimateMode && revealed){ revealed=false; guessFrac=null; render(); }
+        else goToLevel(level-1, true);
+      });
       $("estimateToggle").addEventListener("click", ()=>{
         if(animating) return;
         estimateMode = !estimateMode;
