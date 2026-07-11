@@ -1,0 +1,807 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Fraction Bar + Number Line | Mills Maths Tools</title>
+
+  <style>
+    :root{
+      --bg:#f8fafc;
+      --card:#ffffff;
+      --ink:#0f172a;
+      --muted:#64748b;
+      --border:#e2e8f0;
+      --shadow:0 18px 45px rgba(15,23,42,.13);
+      --blue:#2563eb;
+      --blue-dark:#1d4ed8;
+      --green:#22c55e;
+      --purple:#7c3aed;
+      --orange:#f97316;
+      --line:#334155;
+      --line-soft:#94a3b8;
+      --pink:#db2777;
+      --pink-soft:#fce7f3;
+      --uiFont:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      --mathFont:"STIX Two Math","Cambria Math","Latin Modern Math","Times New Roman",Georgia,serif;
+      --mono:ui-monospace,"SF Mono","SFMono-Regular",Menlo,Consolas,"Roboto Mono",monospace;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ min-height:100%; }
+    body{
+      margin:0;
+      font-family:var(--uiFont);
+      color:var(--ink);
+      background:
+        radial-gradient(circle at top left,rgba(37,99,235,.14),transparent 32rem),
+        radial-gradient(circle at top right,rgba(124,58,237,.12),transparent 34rem),
+        var(--bg);
+      overflow-x:hidden;
+    }
+    button,input{ font:inherit; }
+
+    .app{ min-height:100dvh; display:flex; flex-direction:column; min-width:0; }
+
+    .mmtTopbar{
+      position:relative; z-index:40;
+      background:linear-gradient(135deg,#0f172a,#123b7a 55%,#2563eb);
+      color:white; padding:14px 24px;
+      display:grid; grid-template-columns:minmax(220px,1fr) auto minmax(300px,1fr);
+      align-items:center; gap:18px;
+      box-shadow:0 10px 28px rgba(15,23,42,.22);
+    }
+    .mmtBrand{
+      display:flex; align-items:center; gap:12px; justify-self:start;
+      text-decoration:none; color:white; border-radius:14px; padding:8px 12px;
+      margin-left:-12px; font-weight:900;
+      transition:background .18s ease,transform .18s ease,box-shadow .18s ease;
+    }
+    .mmtBrand:hover{ background:rgba(255,255,255,.12); transform:translateY(-1px);
+      box-shadow:0 0 10px rgba(124,58,237,.6),0 0 18px rgba(37,99,235,.4); }
+    .mmtBrandLogo{
+      width:44px; height:44px; border-radius:9px; background:white; color:#1d4ed8;
+      display:grid; place-items:center; font-weight:1000; letter-spacing:-.08em;
+      box-shadow:inset 0 -2px 0 rgba(15,23,42,.08); flex:0 0 auto;
+    }
+    .mmtBrandText strong{ display:block; font-size:1.18rem; line-height:1; letter-spacing:-.03em; color:white; }
+    .mmtBrandText span{ display:block; font-size:.78rem; opacity:.82; font-weight:650; color:white; }
+    .mmtTopTitle{
+      font-weight:850; font-size:clamp(1.1rem,2vw,1.6rem); letter-spacing:-.04em;
+      text-align:center; color:white; white-space:nowrap;
+    }
+    .topActions{ justify-self:end; display:flex; align-items:center; justify-content:flex-end; gap:10px; flex-wrap:wrap; }
+
+    .btn{
+      appearance:none; border:1px solid rgba(255,255,255,.28); background:rgba(255,255,255,.14);
+      color:white; padding:11px 15px; border-radius:14px; font-weight:900; font-size:15px;
+      cursor:pointer; transition:.18s ease; user-select:none;
+    }
+    .btn:hover:not(:disabled){ background:rgba(255,255,255,.22); transform:translateY(-1px); }
+    .btn:active{ transform:translateY(0); }
+    .btn:focus-visible{ outline:none; box-shadow:0 0 0 4px rgba(255,255,255,.23); }
+    .btn-primary{ background:white; color:#1d4ed8; border-color:white; }
+    .btn-primary:hover:not(:disabled){ background:#eef2ff; color:#1d4ed8; }
+    .btn:disabled{ opacity:.45; cursor:not-allowed; transform:none; }
+
+    .layout{
+      width:min(1200px, calc(100vw - 48px));
+      margin:24px auto 14px;
+      background:rgba(255,255,255,.94);
+      border:1px solid rgba(226,232,240,.9);
+      border-radius:26px; box-shadow:var(--shadow); overflow:hidden;
+      display:block; position:relative;
+    }
+
+    /* Stage */
+    .stage{ padding:20px clamp(14px,3vw,34px) 26px; display:flex; flex-direction:column; gap:14px; min-width:0; }
+    .topRow{ display:flex; gap:14px; align-items:stretch; }
+    .eqCard{
+      flex:1; min-width:0;
+      background:white; border:1px solid var(--border); border-radius:20px;
+      padding:16px 20px; display:flex; flex-direction:column; align-items:center; gap:8px;
+    }
+    .eqEyebrow{ font-size:.72rem; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:950; }
+
+    /* editable fraction ("the number") */
+    .fracEditor{ display:flex; align-items:center; gap:18px; justify-content:center; }
+    .fracStack{ display:flex; flex-direction:column; align-items:center; gap:8px; }
+    .fracStack .barSep{ width:104px; height:4px; background:var(--line); border-radius:2px; }
+    .numBox{
+      width:112px; text-align:center; border:2px solid var(--border); border-radius:14px;
+      padding:4px 8px; background:#fff; color:var(--ink); font-family:var(--mathFont);
+      font-weight:700; font-size:clamp(1.9rem,4vw,2.6rem); line-height:1.1; outline:none;
+      transition:border-color .18s ease, box-shadow .18s ease;
+    }
+    .numBox:hover{ border-color:var(--line-soft); }
+    .numBox:focus{ border-color:var(--blue); box-shadow:0 0 0 4px rgba(37,99,235,.16); }
+    .numBox.bad{ border-color:var(--pink); box-shadow:0 0 0 4px rgba(219,39,119,.16); }
+    @keyframes numPulse{ 0%{transform:scale(1);} 35%{transform:scale(1.32); border-color:var(--purple);} 100%{transform:scale(1);} }
+    .numBox.pulse{ animation:numPulse .6s ease; }
+    .enterBtn{
+      appearance:none; border:1px solid var(--blue); background:var(--blue); color:#fff;
+      font-weight:900; font-size:1rem; padding:11px 20px; border-radius:13px; cursor:pointer;
+      box-shadow:0 8px 20px rgba(37,99,235,.22); transition:.16s ease;
+    }
+    .enterBtn:hover{ background:var(--blue-dark); transform:translateY(-1px); }
+    .enterBtn:active{ transform:translateY(0); }
+    .enterBtn:focus-visible{ outline:none; box-shadow:0 0 0 4px rgba(37,99,235,.3); }
+
+    .inputMsg{ min-height:16px; margin:0; font-size:.86rem; font-weight:750; color:var(--pink); text-align:center; }
+    .eqNote{ font-size:.9rem; font-weight:750; color:var(--muted); min-height:1.1em; text-align:center; }
+    .eqNote.good{ color:var(--green); }
+
+    .animateBtn{
+      appearance:none; border:1px solid var(--purple); background:var(--purple); color:#fff;
+      font-weight:900; font-size:.96rem; padding:11px 16px; border-radius:13px; cursor:pointer;
+      box-shadow:0 8px 20px rgba(124,58,237,.24); transition:.16s ease; margin-top:6px; white-space:nowrap;
+    }
+    .animateBtn:hover:not(:disabled){ background:#6d28d9; transform:translateY(-1px); }
+    .animateBtn:disabled{ opacity:.45; cursor:not-allowed; }
+    .animateBtn.stop{ background:#ef4444; border-color:#ef4444; box-shadow:0 8px 20px rgba(239,68,68,.24); }
+    .animateBtn.stop:hover:not(:disabled){ background:#dc2626; }
+
+    /* in-place animation controls */
+    .switchColumn.faded .sw{ opacity:.4; pointer-events:none; transition:opacity .3s ease; }
+    .animArrows{ display:flex; align-items:center; justify-content:center; gap:16px; padding-top:8px; }
+    .arrowBtn{
+      width:46px; height:46px; border-radius:50%; border:1px solid var(--border); background:#fff;
+      color:var(--purple); font-size:1.6rem; font-weight:900; line-height:1; cursor:pointer;
+      display:grid; place-items:center; box-shadow:0 8px 20px rgba(15,23,42,.12); transition:.16s ease; flex:0 0 auto;
+    }
+    .arrowBtn:hover:not(:disabled){ transform:translateY(-1px); background:#faf5ff; }
+    .arrowBtn:disabled{ opacity:.35; cursor:not-allowed; }
+    .animCaption{ font-size:clamp(.98rem,1.9vw,1.14rem); font-weight:750; color:var(--ink); line-height:1.4; text-align:center; min-width:min(60vw,540px); }
+    .animCaption .hl{ color:var(--purple); font-weight:900; }
+    .animCaption .dec{ color:var(--blue); font-weight:900; }
+
+    .stage.animOn .legend, .stage.animOn .dragHint{ display:none; }
+    .stage.animOn .nline{ cursor:default; }
+    [hidden]{ display:none !important; }
+
+    .frac{ display:inline-flex; flex-direction:column; align-items:center; vertical-align:middle; line-height:1; }
+    .frac .n{ padding:0 .3em .05em; }
+    .frac .d{ padding:.06em .3em 0; border-top:.08em solid currentColor; }
+    .mixed{ display:inline-flex; align-items:center; gap:.14em; }   /* whole number centred about the fraction */
+    .mixed .w{ font-weight:800; }
+
+    /* iOS-style switches, stacked vertically beside "The number" */
+    .switchColumn{
+      background:white; border:1px solid var(--border); border-radius:20px;
+      padding:16px 22px; display:flex; flex-direction:column; gap:16px; justify-content:center;
+      flex:0 0 auto;
+    }
+    .sw{ display:inline-flex; align-items:center; gap:11px; cursor:pointer; user-select:none; font-weight:850; color:var(--line); font-size:.98rem; white-space:nowrap; }
+    .sw input{ position:absolute; opacity:0; width:0; height:0; }
+    .sw .track{ position:relative; width:52px; height:30px; border-radius:999px; background:#cbd5e1; transition:.18s ease; flex:0 0 auto; box-shadow:inset 0 1px 3px rgba(15,23,42,.18); }
+    .sw .track::after{ content:""; position:absolute; top:3px; left:3px; width:24px; height:24px; border-radius:50%; background:#fff; box-shadow:0 2px 6px rgba(15,23,42,.3); transition:.18s ease; }
+    .sw.swOff{ opacity:.42; pointer-events:none; }
+    .sw input:checked + .track{ background:var(--green); }
+    .sw input:checked + .track::after{ transform:translateX(22px); }
+    .sw input:focus-visible + .track{ box-shadow:0 0 0 4px rgba(37,99,235,.28); }
+
+    .svgCard{ background:white; border:1px solid var(--border); border-radius:22px; padding:14px clamp(8px,2vw,18px) 12px; }
+    .lineholder{ position:relative; width:100%; border-radius:14px; }
+    .nline{ width:100%; height:auto; max-height:52vh; display:block; margin:0 auto; touch-action:none; cursor:ew-resize; user-select:none; -webkit-user-select:none; }
+    .nline text{ font-family:var(--mathFont); }
+
+    .legend{ display:flex; gap:18px; flex-wrap:wrap; justify-content:center; padding-top:2px; }
+    .legend span{ display:inline-flex; align-items:center; gap:8px; font-size:.86rem; font-weight:800; color:var(--line); }
+    .legend i{ width:16px; height:16px; border-radius:5px; display:inline-block; }
+    .legend .lp i{ background:var(--blue); }
+    .legend .lr i{ background:#c7d9f7; }
+    .legend.hidden{ display:none; }
+    .dragHint{ text-align:center; font-size:.82rem; font-weight:700; color:var(--muted); margin:0; }
+
+    @media (max-width:900px){
+      .mmtTopbar{ grid-template-columns:1fr; justify-items:center; padding:12px 14px; }
+      .mmtBrand{ margin-left:0; } .topActions{ justify-self:center; justify-content:center; }
+      .layout{ width:calc(100vw - 24px); }
+      .numBox{ width:88px; }
+      .topRow{ flex-direction:column; }
+      .switchColumn{ flex-direction:row; flex-wrap:wrap; justify-content:center; gap:12px 22px; }
+    }
+    @media (prefers-reduced-motion:reduce){
+      *{ animation-duration:.001ms !important; transition-duration:.001ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="mmtTopbar">
+      <a class="mmtBrand" href="https://www.millsmathstools.au" target="_self" aria-label="Back to Mills Maths Tools">
+        <span class="mmtBrandLogo" aria-hidden="true">MMT</span>
+        <span class="mmtBrandText"><strong>MMT</strong><span>Mills Maths Tools</span></span>
+      </a>
+      <div class="mmtTopTitle">Fraction Bar + Number Line</div>
+      <div class="topActions">
+        <button class="btn" id="topExampleBtn" type="button">Example: 4/10</button>
+        <button class="btn btn-primary" id="topResetBtn" type="button">Reset</button>
+      </div>
+    </header>
+
+    <main class="layout" id="layout">
+      <section class="stage" id="stage">
+        <div class="topRow" id="topRow">
+          <div class="eqCard">
+            <div class="eqEyebrow">The number — type a fraction</div>
+            <div class="fracEditor">
+              <div class="fracStack">
+                <input class="numBox" id="numInput" inputmode="numeric" autocomplete="off" value="4" aria-label="Numerator" />
+                <span class="barSep" aria-hidden="true"></span>
+                <input class="numBox" id="denInput" inputmode="numeric" autocomplete="off" value="10" aria-label="Denominator" />
+              </div>
+              <button class="enterBtn" id="useBtn" type="button">Enter</button>
+            </div>
+            <p class="inputMsg" id="inputMsg"></p>
+            <div class="eqNote" id="eqNote"></div>
+          </div>
+
+          <div class="switchColumn" id="switchBar">
+            <label class="sw"><input type="checkbox" id="lineToggle" checked><span class="track"></span><span>Show number line</span></label>
+            <label class="sw"><input type="checkbox" id="barToggle"><span class="track"></span><span>Fraction bar</span></label>
+            <label class="sw"><input type="checkbox" id="decimalToggle"><span class="track"></span><span>Decimal</span></label>
+            <label class="sw"><input type="checkbox" id="simplifyToggle"><span class="track"></span><span>Simplify</span></label>
+            <label class="sw"><input type="checkbox" id="mixedToggle" checked><span class="track"></span><span>Mixed number</span></label>
+            <button class="animateBtn" id="animateBtn" type="button">▶ Animate 4 ÷ 10</button>
+          </div>
+        </div>
+
+        <div class="svgCard">
+          <div class="lineholder">
+            <svg class="nline" id="nline" viewBox="0 0 1000 300" role="img" aria-label="Fraction on a number line"></svg>
+          </div>
+          <div class="animArrows" id="animArrows" hidden>
+            <button class="arrowBtn" id="animBack" type="button" aria-label="Previous step">‹</button>
+            <div class="animCaption" id="animCaption"></div>
+            <button class="arrowBtn" id="animNext" type="button" aria-label="Next step">›</button>
+          </div>
+          <div class="legend hidden" id="legend">
+            <span class="lp"><i></i>Shaded part</span>
+            <span class="lr"><i></i>Rest of the whole</span>
+          </div>
+          <p class="dragHint">Tip: drag to change the fraction.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+  (function(){
+    "use strict";
+    const $ = id => document.getElementById(id);
+    const NS = "http://www.w3.org/2000/svg";
+
+    const DEN_MIN = 2, DEN_MAX = 100, NUM_MAX = 400;
+
+    const state = {
+      num:4, den:10,
+      showBar:false, showDecimal:false, simplify:false, mixed:true, showLine:true,
+      rangeMax:1,      // right end of the number line
+      animMode:false,  // the division walkthrough is active
+      animStep:1       // 1..3
+    };
+
+    // ---- maths helpers ----
+    function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ [a,b]=[b,a%b]; } return a||1; }
+    function reduce(n,d){ if(n===0) return {n:0,d:1}; const g=gcd(n,d); return {n:n/g, d:d/g}; }
+    function isLowest(n,d){ return gcd(n,d)===1; }
+    const OVERDOT="̇"; // combining dot above — marks a recurring digit
+    // Exact decimal via long division: returns integer part + non-repeating + repeating digits.
+    function decimalParts(num,den){
+      const intPart=Math.floor(num/den);
+      let rem=num%den;
+      if(rem===0) return {intPart, nonRep:"", rep:""};
+      const digits=[], seen={};
+      let repStart=-1;
+      while(rem!==0){
+        if(seen[rem]!==undefined){ repStart=seen[rem]; break; }
+        seen[rem]=digits.length;
+        rem*=10; digits.push(Math.floor(rem/den)); rem%=den;
+      }
+      if(rem===0) return {intPart, nonRep:digits.join(""), rep:""};
+      return {intPart, nonRep:digits.slice(0,repStart).join(""), rep:digits.slice(repStart).join("")};
+    }
+    // Recurring notation with an overdot on the first and last digit of the repeating block.
+    function decimalStr(n,d){
+      const p=decimalParts(n,d);
+      if(!p.nonRep && !p.rep) return String(p.intPart);
+      let repStr="";
+      if(p.rep){
+        const r=p.rep;
+        repStr = (r.length===1) ? r+OVERDOT
+               : r[0]+OVERDOT + r.slice(1,-1) + r[r.length-1]+OVERDOT;
+      }
+      return p.intPart + "." + p.nonRep + repStr;
+    }
+
+    // ---- fraction HTML (top equation) ----
+    function fracFrag(n,d){ return `<span class="frac"><span class="n">${n}</span><span class="d">${d}</span></span>`; }
+    function fracHTML(n,d,useMixed){
+      if(d<=0) return "";
+      if(n===0) return `<span>0</span>`;
+      if(n%d===0) return `<span>${n/d}</span>`;
+      if(useMixed && n>d){
+        const w=Math.floor(n/d), r=n%d;
+        return `<span class="mixed"><span class="w">${w}</span>${fracFrag(r,d)}</span>`;
+      }
+      return fracFrag(n,d);
+    }
+    function fmtPlain(n,d){ return n+"/"+d; }
+
+    // ---- geometry (viewBox 1000 x 300) ----
+    const LEFT=88, RIGHT=912, W=RIGHT-LEFT;
+    const BAR_TOP=30, BAR_H=48, BAR_BOT=BAR_TOP+BAR_H;
+    const LINE_Y=158;
+    const HALO={ stroke:"#fff", "stroke-width":"4", "paint-order":"stroke", "stroke-linejoin":"round" };
+
+    function el(tag,attrs,text){
+      const e=document.createElementNS(NS,tag);
+      for(const k in attrs) e.setAttribute(k,attrs[k]);
+      if(text!=null) e.textContent=text;
+      return e;
+    }
+
+    // stacked SVG fraction; whole number vertically centred about the fraction bar
+    function svgFrac(cx, topY, n, d, useMixed, fs){
+      const g=el("g",{});
+      const cw=fs*0.6;
+      function txt(x,y,str,fw,size,fill){
+        const t=el("text",Object.assign({x:x, y:y, "text-anchor":"middle", "font-weight":fw||"700", "font-size":size||fs, fill:fill||"var(--line)"},HALO));
+        t.textContent=str; return t;
+      }
+      if(d<=0 || n===0 || n%d===0){
+        g.appendChild(txt(cx, topY+fs*1.1, (n%d===0? String(n/d):"0"), "800", fs*1.15));
+        return g;
+      }
+      let wholeStr="", nn=n;
+      if(useMixed && n>d){ wholeStr=String(Math.floor(n/d)); nn=n%d; }
+      const numStr=String(nn), denStr=String(d);
+      const barW=Math.max(numStr.length,denStr.length)*cw + 10;
+      const wholeW = wholeStr? (wholeStr.length*cw*1.15 + 8) : 0;
+      const totalW = wholeW + barW;
+      const startX = cx - totalW/2;
+      const fracCx = startX + wholeW + barW/2;
+      const barY = topY + fs;                    // the fraction bar line
+      if(wholeStr){
+        // centred on the fraction bar (vertical middle of the fraction)
+        g.appendChild(txt(startX + wholeW/2, barY + fs*0.34, wholeStr, "800", fs*1.15));
+      }
+      g.appendChild(txt(fracCx, barY - fs*0.28, numStr));                 // numerator
+      g.appendChild(el("line",{x1:fracCx-barW/2, y1:barY, x2:fracCx+barW/2, y2:barY, stroke:"var(--line)", "stroke-width":Math.max(2,fs*0.09), "stroke-linecap":"round"}));
+      g.appendChild(txt(fracCx, barY + fs*0.92, denStr));                 // denominator
+      return g;
+    }
+
+    function computeGeom(){
+      const value = state.num/state.den;
+      const partSpan = Math.max(1, Math.ceil(value - 1e-9));   // wholes that get partitioned (follows the value)
+      let effN=state.num, effD=state.den;
+      if(state.simplify){ const r=reduce(state.num,state.den); effN=r.n; effD=r.d; }
+      const visibleMax = Math.max(partSpan, state.rangeMax);   // line end (independent of the value → no runaway)
+      // At the base view, extend the line ~0.4 of a whole past the top with unlabelled ticks,
+      // so it's clear the line (and fractions) continue beyond 1. Purely visual; drag still stops at the whole.
+      const overshoot = visibleMax<=partSpan;
+      const extraTenths = overshoot ? Math.max(1, Math.round(0.4*effD)) : 0;
+      const drawMax = visibleMax + extraTenths/effD;
+      return {value, partSpan, visibleMax, effN, effD, extraTenths, drawMax};
+    }
+    function xFor(v, m){ return LEFT + (v/m)*W; }
+
+    // opts: { animMax, tickMax } used during the smooth zoom animation
+    function render(opts){
+      opts=opts||{};
+      const svg=$("nline");
+      while(svg.firstChild) svg.removeChild(svg.firstChild);
+      const g=el("g",{});
+      svg.appendChild(g);
+
+      const {value, partSpan, visibleMax, effN, effD, extraTenths, drawMax} = computeGeom();
+      const animatingZoom = (opts.animMax!=null);
+      const m = (opts.forceMax!=null) ? opts.forceMax : (animatingZoom ? opts.animMax : drawMax);   // 0..m → line
+      const tickMax = (opts.tickMax!=null) ? Math.round(opts.tickMax)
+                     : (opts.forceMax!=null) ? Math.round(opts.forceMax) : visibleMax;
+      const parts = effD*partSpan;                // fraction partitions across 0..partSpan
+      const partsExt = animatingZoom ? parts : (parts + extraTenths);  // extra unlabelled ticks past the whole
+
+      if(!state.showLine){                      // ---- BAR-DIAGRAM MODE (number line hidden) ----
+        drawBarDiagram(g, value, partSpan, effN, effD);
+        updateReadouts();
+        $("legend").classList.remove("hidden");
+        return;
+      }
+
+      // ---- whole-number gridlines (behind everything) ----
+      const labelStep = tickMax<=12 ? 1 : Math.ceil(tickMax/10);
+      for(let w=0; w<=tickMax; w++){
+        const x=xFor(w,m);
+        g.appendChild(el("line",{x1:x.toFixed(2), y1:(LINE_Y-42), x2:x.toFixed(2), y2:(LINE_Y+14), stroke:"var(--line-soft)", "stroke-width":"1.4", "stroke-dasharray": w===0?"0":"3 4", "stroke-opacity": w===0?"0.9":"0.7"}));
+      }
+
+      // ---- fraction bar: centred ON the line, numerator = blue, rest of the whole = faded blue ----
+      const BH=42, bt=LINE_Y-BH/2;
+      if(state.showBar){
+        const bx0=xFor(0,m), bxV=xFor(value,m), bx1=xFor(partSpan,m);
+        g.appendChild(el("rect",{x:bxV.toFixed(2), y:bt, width:(bx1-bxV).toFixed(2), height:BH, fill:"var(--blue)", "fill-opacity":"0.15"}));            // remainder of the whole
+        g.appendChild(el("rect",{x:bx0.toFixed(2), y:bt, width:(bxV-bx0).toFixed(2), height:BH, fill:"var(--blue)", "fill-opacity":"0.85"}));            // numerator
+        g.appendChild(el("rect",{x:bx0.toFixed(2), y:bt, width:(bx1-bx0).toFixed(2), height:BH, fill:"none", stroke:"var(--line)", "stroke-width":"2", rx:"4"}));
+      }
+
+      // ---- number line (on top of the bar) ----
+      g.appendChild(el("line",{x1:LEFT-14, y1:LINE_Y, x2:RIGHT+14, y2:LINE_Y, stroke:"var(--line)", "stroke-width":"3.2", "stroke-linecap":"round"}));
+
+      // minor partition ticks (0..partSpan, plus the unlabelled overshoot past the whole)
+      for(let i=0;i<=partsExt;i++){
+        if(i%effD===0) continue;
+        const x=xFor(i/effD,m);
+        g.appendChild(el("line",{x1:x.toFixed(2), y1:(LINE_Y-9), x2:x.toFixed(2), y2:(LINE_Y+9), stroke:"var(--line)", "stroke-width":"1.8", "stroke-linecap":"round"}));
+      }
+      // whole ticks + labels across the visible range
+      for(let w=0; w<=tickMax; w++){
+        const x=xFor(w,m);
+        g.appendChild(el("line",{x1:x.toFixed(2), y1:(LINE_Y-15), x2:x.toFixed(2), y2:(LINE_Y+15), stroke:"var(--line)", "stroke-width":"3", "stroke-linecap":"round"}));
+        if(w===0 || w===tickMax || w%labelStep===0){
+          const lbl=el("text",{x:x.toFixed(2), y:(LINE_Y+40), "text-anchor":"middle", "font-weight":"800", "font-size":"22", fill:"var(--line)"});
+          lbl.textContent=String(w); g.appendChild(lbl);
+        }
+      }
+
+      // ---- draggable marker: a flat left/right double-arrow handle (not a down-pointer) ----
+      const px=xFor(value,m);
+      const rw=15, rh=9, tipInset=7;
+      g.appendChild(el("path",{d:`M ${(px-rw).toFixed(2)} ${LINE_Y} L ${(px-rw+tipInset).toFixed(2)} ${LINE_Y-rh} L ${(px+rw-tipInset).toFixed(2)} ${LINE_Y-rh} L ${(px+rw).toFixed(2)} ${LINE_Y} L ${(px+rw-tipInset).toFixed(2)} ${LINE_Y+rh} L ${(px-rw+tipInset).toFixed(2)} ${LINE_Y+rh} Z`, fill:"var(--blue)", stroke:"#fff", "stroke-width":"2", "stroke-linejoin":"round"}));
+
+      // decimal reading above, fraction below (both clear of the centred bar)
+      if(state.showDecimal){
+        const dt=el("text",Object.assign({x:px.toFixed(2), y:(LINE_Y-34), "text-anchor":"middle", "font-weight":"800", "font-size":"27", fill:"var(--blue)"},HALO));
+        dt.textContent=decimalStr(state.num,state.den);
+        g.appendChild(dt);
+      }
+      g.appendChild(svgFrac(px, LINE_Y+52, effN, effD, state.mixed, 24));
+
+      updateReadouts();
+      $("legend").classList.toggle("hidden", !state.showBar);
+    }
+
+    // A prominent, typical fraction-bar diagram (used when "Show number line" is off)
+    function drawBarDiagram(g, value, partSpan, effN, effD){
+      const barMax=partSpan, xb=v=>LEFT+(v/barMax)*W;
+      const cells=effD*partSpan, shaded=effN, bh=120, bt=LINE_Y-bh/2, cx=(LEFT+RIGHT)/2;
+      for(let i=0;i<cells;i++){
+        const x0=xb(i/effD), x1=xb((i+1)/effD);
+        g.appendChild(el("rect",{x:x0.toFixed(2), y:bt, width:(x1-x0).toFixed(2), height:bh, fill:"var(--blue)", "fill-opacity":(i<shaded?"0.85":"0.14")}));
+        if(i>0) g.appendChild(el("line",{x1:x0.toFixed(2),y1:bt,x2:x0.toFixed(2),y2:(bt+bh),stroke:"#fff","stroke-width":"2"}));
+      }
+      for(let w=1;w<partSpan;w++){ const x=xb(w); g.appendChild(el("line",{x1:x.toFixed(2),y1:(bt-7),x2:x.toFixed(2),y2:(bt+bh+7),stroke:"var(--line)","stroke-width":"3","stroke-linecap":"round"})); }
+      g.appendChild(el("rect",{x:xb(0).toFixed(2), y:bt, width:(xb(partSpan)-xb(0)).toFixed(2), height:bh, fill:"none", stroke:"var(--line)", "stroke-width":"2.5", rx:"6"}));
+      g.appendChild(svgFrac(cx, bt+bh+14, effN, effD, state.mixed, 26));
+    }
+
+    // smooth morph between the number line (t=0) and the bar diagram (t=1)
+    function renderMorph(t){
+      const svg=$("nline"); while(svg.firstChild) svg.removeChild(svg.firstChild);
+      const g=el("g",{}); svg.appendChild(g);
+      const {value, partSpan, visibleMax, effN, effD, drawMax} = computeGeom();
+      const te = t<0.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2;
+      const mapMax = drawMax + (partSpan-drawMax)*te;
+      const xT=v=>LEFT+(v/mapMax)*W;
+      const lineOp=Math.max(0,Math.min(1,1-te*1.5)), barOp=Math.max(0,Math.min(1,te*1.6));
+      const barH=22+(120-22)*te, bt=LINE_Y-barH/2;
+      const cells=effD*partSpan, shaded=effN, cx=(LEFT+RIGHT)/2;
+
+      // the growing bar (behind)
+      if(barOp>0.01){
+        const bg=el("g",{opacity:barOp.toFixed(3)});
+        for(let i=0;i<cells;i++){
+          const x0=xT(i/effD), x1=xT((i+1)/effD);
+          bg.appendChild(el("rect",{x:x0.toFixed(2),y:bt.toFixed(2),width:(x1-x0).toFixed(2),height:barH.toFixed(2),fill:"var(--blue)","fill-opacity":(i<shaded?"0.85":"0.14")}));
+          if(i>0) bg.appendChild(el("line",{x1:x0.toFixed(2),y1:bt.toFixed(2),x2:x0.toFixed(2),y2:(bt+barH).toFixed(2),stroke:"#fff","stroke-width":"2"}));
+        }
+        for(let w=1;w<partSpan;w++){ const x=xT(w); bg.appendChild(el("line",{x1:x.toFixed(2),y1:(bt-7).toFixed(2),x2:x.toFixed(2),y2:(bt+barH+7).toFixed(2),stroke:"var(--line)","stroke-width":"3"})); }
+        bg.appendChild(el("rect",{x:xT(0).toFixed(2),y:bt.toFixed(2),width:(xT(partSpan)-xT(0)).toFixed(2),height:barH.toFixed(2),fill:"none",stroke:"var(--line)","stroke-width":"2.5",rx:"6"}));
+        g.appendChild(bg);
+      }
+      // the fading number line (in front)
+      if(lineOp>0.01){
+        const lg=el("g",{opacity:lineOp.toFixed(3)});
+        lg.appendChild(el("line",{x1:LEFT-14,y1:LINE_Y,x2:RIGHT+14,y2:LINE_Y,stroke:"var(--line)","stroke-width":"3.2","stroke-linecap":"round"}));
+        const parts=effD*partSpan;
+        for(let i=0;i<=parts;i++){ if(i%effD===0) continue; const x=xT(i/effD); lg.appendChild(el("line",{x1:x.toFixed(2),y1:LINE_Y-9,x2:x.toFixed(2),y2:LINE_Y+9,stroke:"var(--line)","stroke-width":"1.8","stroke-linecap":"round"})); }
+        for(let w=0;w<=visibleMax;w++){ const x=xT(w); lg.appendChild(el("line",{x1:x.toFixed(2),y1:LINE_Y-15,x2:x.toFixed(2),y2:LINE_Y+15,stroke:"var(--line)","stroke-width":"3","stroke-linecap":"round"})); const lb=el("text",{x:x.toFixed(2),y:LINE_Y+40,"text-anchor":"middle","font-weight":"800","font-size":"22",fill:"var(--line)"}); lb.textContent=String(w); lg.appendChild(lb); }
+        const px=xT(value), rw=15, rh=9, ti=7;
+        lg.appendChild(el("path",{d:`M ${(px-rw).toFixed(2)} ${LINE_Y} L ${(px-rw+ti).toFixed(2)} ${LINE_Y-rh} L ${(px+rw-ti).toFixed(2)} ${LINE_Y-rh} L ${(px+rw).toFixed(2)} ${LINE_Y} L ${(px+rw-ti).toFixed(2)} ${LINE_Y+rh} L ${(px-rw+ti).toFixed(2)} ${LINE_Y+rh} Z`,fill:"var(--blue)",stroke:"#fff","stroke-width":"2","stroke-linejoin":"round"}));
+        g.appendChild(lg);
+      }
+      // fraction label: glides from the point to the centre, y follows the bar
+      const fx=xT(value)*(1-te)+cx*te, fy=LINE_Y+(52+(76-52)*te);
+      g.appendChild(svgFrac(fx, fy, effN, effD, state.mixed, 24+2*te));
+    }
+    function morphTo(toBar){
+      if(reduceMotion || typeof requestAnimationFrame!=="function"){ render(); return; }
+      cancelAnimationFrame(animRAF);
+      let t0=null; const dur=620;
+      function f(now){ if(t0===null) t0=now; let p=Math.min(1,(now-t0)/dur); renderMorph(toBar? p : 1-p); if(p<1){ animRAF=requestAnimationFrame(f); } else { render(); } }
+      animRAF=requestAnimationFrame(f);
+    }
+
+    function updateReadouts(){
+      // The number is shown in the editable boxes; equivalent decimal/simplified forms live
+      // on the number line. Only surface the lowest-terms note (not shown elsewhere).
+      const note=$("eqNote"); note.className="eqNote";
+      note.textContent = (state.simplify && isLowest(state.num,state.den))
+        ? fmtPlain(state.num,state.den) + " is already in lowest terms."
+        : "";
+      const ab=$("animateBtn");
+      ab.textContent = "▶ Animate " + state.num + " ÷ " + state.den;
+      ab.disabled = state.num<1;
+    }
+
+    let animating=false, animRAF=null;
+    const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    // ---- Animate: a fraction is also a division (a ÷ b), in place on the number line ----
+    function animRangeFor(step){
+      const value=state.num/state.den;
+      // step 3 zooms right in: show one part (value) and a little past the next part (2·value)
+      return (step<=2) ? Math.max(1,state.num) : value*2.4;
+    }
+    function captionFor(step){
+      const n=state.num, d=state.den, dec=decimalStr(n,d);
+      if(step===1) return `<span class="hl">${n} ÷ ${d}</span> — start with <span class="hl">${n}</span> as a length on the line.`;
+      if(step===2) return `Share the <span class="hl">${n}</span> into <span class="hl">${d}</span> equal parts (one part shown in blue).`;
+      return `One part = <span class="dec">${dec}</span> — exactly where <span class="hl">${n}/${d}</span> sits as a number.`;
+    }
+    function pulse(node){ if(!node) return; node.classList.remove("pulse"); void node.offsetWidth; node.classList.add("pulse"); setTimeout(()=>node.classList.remove("pulse"), 700); }
+    function updateArrows(){
+      $("animCaption").innerHTML=captionFor(state.animStep);
+      $("animBack").disabled = state.animStep<=1 || animating;
+      $("animNext").disabled = state.animStep>=3 || animating;
+    }
+    // draw a frame; opacities let transitions cross-fade decorations
+    function renderAnim(o){
+      o=o||{};
+      const svg=$("nline"); while(svg.firstChild) svg.removeChild(svg.firstChild);
+      const g=el("g",{}); svg.appendChild(g);
+      const n=state.num, d=state.den, value=n/d, step=state.animStep;
+      const m=(o.animMax!=null)?o.animMax:animRangeFor(step);
+      const tickMax=(o.tickMax!=null)?Math.round(o.tickMax):Math.round(animRangeFor(step));
+      const intOp=(o.int!=null)?o.int:(step===1?1:0);          // integers (ticks+labels) — only step 1
+      const bracketOp=(o.bracket!=null)?o.bracket:(step<=2?1:0);
+      const blueOp=(o.blue!=null)?o.blue:(step>=2?1:0);
+      const pointOp=(o.point!=null)?o.point:(step===3?1:0);
+      const remnantOp=(o.remnant!=null)?o.remnant:0;
+
+      // number line
+      g.appendChild(el("line",{x1:LEFT-14,y1:LINE_Y,x2:RIGHT+14,y2:LINE_Y,stroke:"var(--line)","stroke-width":"3.2","stroke-linecap":"round"}));
+
+      // origin: 0 always stays (an anchor), even after the other integers fade away
+      g.appendChild(el("line",{x1:xFor(0,m).toFixed(2),y1:LINE_Y-13,x2:xFor(0,m).toFixed(2),y2:LINE_Y+13,stroke:"var(--line-soft)","stroke-width":"2.4","stroke-linecap":"round"}));
+      { const z=el("text",{x:xFor(0,m).toFixed(2),y:LINE_Y+40,"text-anchor":"middle","font-weight":"800","font-size":"22",fill:"var(--muted)"}); z.textContent="0"; g.appendChild(z); }
+
+      // the other integers (grey ticks + labels) — fade away after step 1
+      if(intOp>0.001){
+        const ig=el("g",{opacity:intOp.toFixed(3)});
+        const labelStep = tickMax<=12?1:Math.ceil(tickMax/10);
+        for(let w=1;w<=tickMax;w++){
+          const x=xFor(w,m);
+          ig.appendChild(el("line",{x1:x.toFixed(2),y1:LINE_Y-13,x2:x.toFixed(2),y2:LINE_Y+13,stroke:"var(--line-soft)","stroke-width":"2.4","stroke-linecap":"round"}));
+          if(w===tickMax||w%labelStep===0){
+            const lbl=el("text",{x:x.toFixed(2),y:LINE_Y+40,"text-anchor":"middle","font-weight":"800","font-size":"22",fill:"var(--muted)"});
+            lbl.textContent=String(w); ig.appendChild(lbl);
+          }
+        }
+        g.appendChild(ig);
+      }
+
+      // remnant: the fraction's own tenths + point, fading out as the animation begins
+      if(remnantOp>0.001){
+        const rg=el("g",{opacity:remnantOp.toFixed(3)});
+        const ps=Math.max(1,Math.ceil(value-1e-9));
+        for(let i=1;i<ps*d;i++){ if(i%d===0) continue; const x=xFor(i/d,m); rg.appendChild(el("line",{x1:x.toFixed(2),y1:LINE_Y-9,x2:x.toFixed(2),y2:LINE_Y+9,stroke:"var(--line)","stroke-width":"1.8","stroke-linecap":"round"})); }
+        const pv=xFor(value,m);
+        rg.appendChild(el("circle",{cx:pv.toFixed(2),cy:LINE_Y,r:"7.5",fill:"var(--blue)",stroke:"#fff","stroke-width":"2.5"}));
+        g.appendChild(rg);
+      }
+
+      // bracket: the numerator as a length 0..n
+      if(bracketOp>0.001){
+        const bg=el("g",{opacity:bracketOp.toFixed(3)});
+        const x0=xFor(0,m), xn=xFor(n,m), by=104;
+        bg.appendChild(el("line",{x1:x0.toFixed(2),y1:by,x2:xn.toFixed(2),y2:by,stroke:"var(--purple)","stroke-width":"3","stroke-linecap":"round"}));
+        bg.appendChild(el("line",{x1:x0.toFixed(2),y1:by,x2:x0.toFixed(2),y2:by+16,stroke:"var(--purple)","stroke-width":"3","stroke-linecap":"round"}));
+        bg.appendChild(el("line",{x1:xn.toFixed(2),y1:by,x2:xn.toFixed(2),y2:by+16,stroke:"var(--purple)","stroke-width":"3","stroke-linecap":"round"}));
+        const nt=el("text",Object.assign({x:((x0+xn)/2).toFixed(2),y:by-12,"text-anchor":"middle","font-weight":"800","font-size":"30",fill:"var(--purple)"},HALO));
+        nt.textContent=String(n); bg.appendChild(nt);
+        g.appendChild(bg);
+      }
+
+      // blue division: partition tick marks, first-part highlight, and the part-value labels
+      if(blueOp>0.001){
+        const dg=el("g",{opacity:blueOp.toFixed(3)});
+        // first part shown in blue
+        dg.appendChild(el("line",{x1:xFor(0,m).toFixed(2),y1:LINE_Y,x2:xFor(value,m).toFixed(2),y2:LINE_Y,stroke:"var(--blue)","stroke-width":"8","stroke-linecap":"round","stroke-opacity":"0.85"}));
+        // partition ticks + value labels (0.4, 0.8, …)
+        for(let k=1;k<=d;k++){
+          const pv=k*value; if(pv>m+1e-6) break;
+          const x=xFor(pv,m);
+          dg.appendChild(el("line",{x1:x.toFixed(2),y1:LINE_Y-12,x2:x.toFixed(2),y2:LINE_Y+12,stroke:"var(--blue)","stroke-width":"2.6","stroke-linecap":"round"}));
+          if(pointOp>0.5 && k===1) continue;   // the point already labels this one in step 3
+          const t=el("text",Object.assign({x:x.toFixed(2),y:(LINE_Y+34),"text-anchor":"middle","font-weight":(k===1?"900":"800"),"font-size":"16",fill:(k===1?"var(--blue-dark)":"var(--blue)")},HALO));
+          t.textContent=decimalStr(k*n,d); dg.appendChild(t);
+        }
+        g.appendChild(dg);
+      }
+
+      // point: the value with fraction + recurring decimal (the payoff)
+      if(pointOp>0.001){
+        const pg=el("g",{opacity:pointOp.toFixed(3)});
+        const px=xFor(value,m);
+        pg.appendChild(el("circle",{cx:px.toFixed(2),cy:LINE_Y,r:"7.5",fill:"var(--blue)",stroke:"#fff","stroke-width":"2.5"}));
+        const dt=el("text",Object.assign({x:px.toFixed(2),y:LINE_Y-34,"text-anchor":"middle","font-weight":"800","font-size":"27",fill:"var(--blue)"},HALO));
+        dt.textContent=decimalStr(n,d); pg.appendChild(dt);
+        pg.appendChild(svgFrac(px, LINE_Y+54, n, d, state.mixed, 24));
+        g.appendChild(pg);
+      }
+    }
+    function lerpGeo(a,b,e){ return a*Math.pow(b/a, e); }
+    function animTween(dur, frameFn, doneFn){
+      cancelAnimationFrame(animRAF); animating=true; updateArrows();
+      if(reduceMotion || typeof requestAnimationFrame!=="function"){ frameFn(1,1); animating=false; if(doneFn)doneFn(); updateArrows(); return; }
+      let t0=null;
+      function f(now){
+        if(t0===null) t0=now;                              // first real timestamp from rAF
+        let p=Math.min(1,(now-t0)/dur);
+        const e = p<0.5 ? 2*p*p : 1-Math.pow(-2*p+2,2)/2;  // easeInOutQuad
+        frameFn(p,e);
+        if(p<1){ animRAF=requestAnimationFrame(f); }
+        else{ animating=false; if(doneFn)doneFn(); updateArrows(); }
+      }
+      animRAF=requestAnimationFrame(f);                    // start via rAF so the first frame has a real time
+    }
+    function goToStep(target){
+      if(animating) return;
+      target=Math.max(1,Math.min(3,target));
+      const cur=state.animStep;
+      if(target===cur) return;
+      const fromRange=animRangeFor(cur), toRange=animRangeFor(target);
+      state.animStep=target;
+      if(target===2) pulse($("denInput"));   // the divisions go in → highlight the denominator
+      const tickMax=Math.round(Math.max(fromRange,toRange));
+      const i0=cur===1?1:0, i1=target===1?1:0;
+      const b0=cur<=2?1:0, b1=target<=2?1:0;
+      const l0=cur>=2?1:0, l1=target>=2?1:0;
+      const p0=cur===3?1:0, p1=target===3?1:0;
+      animTween(560,(p,e)=>{
+        renderAnim({ animMax:lerpGeo(fromRange,toRange,e), tickMax:tickMax,
+          int:i0+(i1-i0)*e, bracket:b0+(b1-b0)*e, blue:l0+(l1-l0)*e, point:p0+(p1-p0)*e });
+      }, ()=>renderAnim());
+    }
+    function enterAnim(){
+      if(state.num<1) return;
+      stopAnim();
+      state.animMode=true; state.animStep=1;
+      $("switchBar").classList.add("faded");
+      $("stage").classList.add("animOn");
+      $("animArrows").hidden=false;
+      $("animateBtn").textContent="✕ Stop animation"; $("animateBtn").classList.add("stop");
+      pulse($("numInput"));   // draw attention to the numerator as the starting length
+      const startMax=state.rangeMax, endMax=animRangeFor(1), tickMax=Math.max(startMax,endMax);
+      // partitions fade out, THEN a smooth zoom out to the numerator length (bracket fades in)
+      animTween(950,(p,e)=>{
+        const remnant=Math.max(0,Math.min(1,(0.35-p)/0.35));
+        const zp=Math.max(0,Math.min(1,(p-0.30)/0.70));
+        const ze = zp<0.5 ? 2*zp*zp : 1-Math.pow(-2*zp+2,2)/2;
+        renderAnim({ animMax:lerpGeo(startMax,endMax,ze), tickMax:tickMax, remnant:remnant, int:zp, bracket:zp, blue:0, point:0 });
+      }, ()=>renderAnim());
+    }
+    function exitAnim(){
+      stopAnim();
+      state.animMode=false;
+      $("switchBar").classList.remove("faded");
+      $("stage").classList.remove("animOn");
+      $("animArrows").hidden=true;
+      $("animateBtn").textContent="▶ Animate "+state.num+" ÷ "+state.den; $("animateBtn").classList.remove("stop");
+      render();
+    }
+
+    // ---- inputs ----
+    function readInputs(){
+      const numRaw=$("numInput").value.trim(), denRaw=$("denInput").value.trim(), msg=$("inputMsg");
+      $("numInput").classList.remove("bad"); $("denInput").classList.remove("bad"); msg.textContent="";
+      if(!/^\d+$/.test(numRaw)){ $("numInput").classList.add("bad"); msg.textContent="Numerator must be a whole number (0 or more)."; return false; }
+      if(!/^\d+$/.test(denRaw)){ $("denInput").classList.add("bad"); msg.textContent="Denominator must be a whole number."; return false; }
+      const n=parseInt(numRaw,10), d=parseInt(denRaw,10);
+      if(d===0){ $("denInput").classList.add("bad"); msg.textContent="Denominator can't be 0 — you can't split into 0 parts."; return false; }
+      if(d<DEN_MIN||d>DEN_MAX){ $("denInput").classList.add("bad"); msg.textContent=`Denominator must be between ${DEN_MIN} and ${DEN_MAX}.`; return false; }
+      if(n>NUM_MAX){ $("numInput").classList.add("bad"); msg.textContent=`Keep the numerator ${NUM_MAX} or below.`; return false; }
+      state.num=n; state.den=d; return true;
+    }
+    function stopAnim(){ if(animRAF) cancelAnimationFrame(animRAF); animating=false; }
+    function applyInputs(){ if(readInputs()){ if(state.animMode) exitAnim(); stopAnim(); state.rangeMax=Math.max(1,Math.ceil(state.num/state.den-1e-9)); render(); } }
+
+    // ---- drag to build a fraction ----
+    let dragging=false;
+    function numFromClientX(clientX){
+      const svg=$("nline"), r=svg.getBoundingClientRect();
+      const vx=(clientX-r.left)/r.width*1000;               // viewBox x
+      const geom=computeGeom(), effD=geom.effD, bar=!state.showLine;
+      const dm = state._dragMax || (bar ? geom.partSpan : geom.drawMax);   // frozen at pointer-down
+      let value=(vx-LEFT)/W*dm;                             // match the drawn mapping
+      const maxVal = bar ? dm : (dm - 1/effD);              // bar: fill up to all cells; line: one tick before the end
+      value=Math.max(0, Math.min(maxVal, value));
+      const units=Math.round(value*effD);                   // snap to partitions
+      let newNum=Math.max(0, Math.min(NUM_MAX, Math.round(units*(state.den/effD))));
+      if(newNum!==state.num){ state.num=newNum; $("numInput").value=String(newNum); $("numInput").classList.remove("bad"); $("inputMsg").textContent=""; }
+      render(bar ? {} : {forceMax:dm});                     // line mode keeps the view frozen during the gesture
+    }
+    // after a drag that crossed a whole, ease from the frozen scale to the natural range
+    function settleDrag(fromMax){
+      const toMax=computeGeom().drawMax;
+      if(reduceMotion || typeof requestAnimationFrame!=="function" || Math.abs(toMax-fromMax)<1e-4){ render(); return; }
+      cancelAnimationFrame(animRAF);
+      let t0=null; const dur=430;
+      function f(now){
+        if(t0===null) t0=now;
+        let p=Math.min(1,(now-t0)/dur);
+        const e = p<0.5 ? 2*p*p : 1-Math.pow(-2*p+2,2)/2;
+        render({forceMax: fromMax*Math.pow(toMax/fromMax, e)});
+        if(p<1){ animRAF=requestAnimationFrame(f); } else { render(); }
+      }
+      animRAF=requestAnimationFrame(f);
+    }
+    (function bindDrag(){
+      const svg=$("nline");
+      svg.addEventListener("pointerdown",e=>{ if(state.animMode) return; e.preventDefault(); cancelAnimationFrame(animRAF); dragging=true; const gm=computeGeom(); state._dragMax = state.showLine ? gm.drawMax : gm.partSpan; svg.setPointerCapture(e.pointerId); numFromClientX(e.clientX); });
+      svg.addEventListener("pointermove",e=>{ if(dragging) numFromClientX(e.clientX); });
+      function end(e){ if(!dragging) return; dragging=false; const fromMax=state._dragMax; state._dragMax=null; try{svg.releasePointerCapture(e.pointerId);}catch(_){} if(fromMax && state.showLine) settleDrag(fromMax); else render(); }
+      svg.addEventListener("pointerup",end);
+      svg.addEventListener("pointercancel",end);
+    })();
+
+    // ---- switches ----
+    $("lineToggle").addEventListener("change",e=>{
+      state.showLine=e.target.checked;
+      ["barToggle","decimalToggle"].forEach(id=>{ const c=$(id); c.disabled=!state.showLine; c.closest(".sw").classList.toggle("swOff", !state.showLine); });
+      morphTo(!state.showLine);   // smooth transition between line and bar
+    });
+    $("barToggle").addEventListener("change",e=>{ state.showBar=e.target.checked; render(); });
+    $("decimalToggle").addEventListener("change",e=>{ state.showDecimal=e.target.checked; render(); });
+    $("simplifyToggle").addEventListener("change",e=>{ state.simplify=e.target.checked; render(); });
+    $("mixedToggle").addEventListener("change",e=>{ state.mixed=e.target.checked; render(); });
+
+    // ---- animate walkthrough wiring ----
+    $("animateBtn").addEventListener("click",()=>{ state.animMode ? exitAnim() : enterAnim(); });
+    $("animBack").addEventListener("click",()=>{ if(!animating) goToStep(state.animStep-1); });
+    $("animNext").addEventListener("click",()=>{ if(!animating) goToStep(state.animStep+1); });
+    document.addEventListener("keydown",e=>{
+      if(!state.animMode) return;
+      if(e.key==="Escape"){ e.preventDefault(); exitAnim(); return; }   // Esc exits the animation
+      if(animating) return;
+      if(e.target && e.target.tagName==="INPUT") return;   // let arrows move the caret in the boxes
+      if(e.key==="ArrowRight"){ e.preventDefault(); goToStep(state.animStep+1); }
+      else if(e.key==="ArrowLeft"){ e.preventDefault(); goToStep(state.animStep-1); }
+    });
+
+    // ---- inputs wiring ----
+    $("useBtn").addEventListener("click",applyInputs);
+    $("numInput").addEventListener("keydown",e=>{ if(e.key==="Enter") applyInputs(); });
+    $("denInput").addEventListener("keydown",e=>{ if(e.key==="Enter") applyInputs(); });
+
+    function setState(num,den,bar,dec,simp,mixed){
+      if(state.animMode) exitAnim();
+      stopAnim();
+      state.num=num; state.den=den; state.showBar=bar; state.showDecimal=dec; state.simplify=simp; state.mixed=mixed;
+      state.rangeMax=Math.max(1,Math.ceil(num/den-1e-9));
+      $("numInput").value=String(num); $("denInput").value=String(den);
+      $("numInput").classList.remove("bad"); $("denInput").classList.remove("bad"); $("inputMsg").textContent="";
+      $("barToggle").checked=bar; $("decimalToggle").checked=dec; $("simplifyToggle").checked=simp; $("mixedToggle").checked=mixed;
+      render();
+    }
+    $("topExampleBtn").addEventListener("click",()=>setState(4,10,true,false,false,true));
+    $("topResetBtn").addEventListener("click",()=>setState(4,10,false,false,false,true));
+
+    render();
+  })();
+  </script>
+</body>
+</html>
