@@ -84,6 +84,16 @@
     .btn-primary:hover:not(:disabled){ background:#eef2ff; color:#1d4ed8; }
     .btn:disabled{ opacity:.45; cursor:not-allowed; transform:none; }
 
+    .toolsWrap{ position:relative; display:inline-flex; }
+    .toolsMenu{ position:absolute; top:calc(100% + 8px); right:0; min-width:210px; background:#fff; color:var(--ink);
+      border:1px solid rgba(226,232,240,.95); border-radius:14px; box-shadow:0 18px 45px rgba(15,23,42,.22); padding:7px; display:none; z-index:120; }
+    .toolsMenu.open{ display:grid; gap:4px; }
+    .toolLink{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border-radius:10px;
+      color:var(--ink); text-decoration:none; font-weight:900; font-size:.9rem; }
+    .toolLink::after{ content:'›'; color:var(--blue); font-weight:1000; font-size:1.1rem; line-height:1; }
+    .toolLink:hover,.toolLink:focus-visible{ background:#eef2ff; color:#1d4ed8; outline:none; }
+    .toolLink small{ display:block; font-weight:650; font-size:.74rem; color:var(--muted); }
+
     .layout{
       width:min(1200px, calc(100vw - 48px));
       margin:24px auto 14px;
@@ -215,6 +225,12 @@
       </a>
       <div class="mmtTopTitle">Fraction Bar + Number Line</div>
       <div class="topActions">
+        <div class="toolsWrap">
+          <button class="btn" id="toolsBtn" type="button" aria-haspopup="true" aria-expanded="false">Tools ▾</button>
+          <nav class="toolsMenu" id="toolsMenu" aria-label="Related tools">
+            <a class="toolLink" href="/online-quizzes/stage-4/number/fraction-thinking-quest.html">Student Quiz<small>Fractions Number Line Quiz</small></a>
+          </nav>
+        </div>
         <button class="btn" id="topExampleBtn" type="button">Example: 4/10</button>
         <button class="btn btn-primary" id="topResetBtn" type="button">Reset</button>
       </div>
@@ -799,6 +815,14 @@
     }
     $("topExampleBtn").addEventListener("click",()=>setState(4,10,true,false,false,true));
     $("topResetBtn").addEventListener("click",()=>setState(4,10,false,false,false,true));
+
+    // Tools dropdown → Student Quiz
+    (function(){ const b=$("toolsBtn"), m=$("toolsMenu"); if(!b||!m) return;
+      function setOpen(o){ m.classList.toggle("open",o); b.setAttribute("aria-expanded",o?"true":"false"); }
+      b.addEventListener("click",e=>{ e.stopPropagation(); setOpen(!m.classList.contains("open")); });
+      document.addEventListener("click",e=>{ if(!e.target.closest(".toolsWrap")) setOpen(false); });
+      document.addEventListener("keydown",e=>{ if(e.key==="Escape") setOpen(false); });
+    })();
 
     render();
   })();

@@ -1,0 +1,629 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Fraction Thinking Explorer | Mills Maths Tools</title>
+  <style>
+    :root{
+      --bg:#f8fafc; --card:#ffffff; --ink:#0f172a; --muted:#64748b; --border:#e2e8f0;
+      --shadow:0 18px 45px rgba(15,23,42,.13);
+      --blue:#2563eb; --blue-dark:#1d4ed8; --green:#22c55e; --green-dark:#15803d; --purple:#7c3aed;
+      --amber:#f59e0b; --line:#334155; --line-soft:#94a3b8; --pink:#db2777;
+      --uiFont:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      --mathFont:"STIX Two Math","Cambria Math","Latin Modern Math","Times New Roman",Georgia,serif;
+    }
+    *{ box-sizing:border-box; }
+    html,body{ min-height:100%; }
+    body{ margin:0; font-family:var(--uiFont); color:var(--ink);
+      background:radial-gradient(circle at top left,rgba(37,99,235,.14),transparent 32rem),radial-gradient(circle at top right,rgba(124,58,237,.12),transparent 34rem),var(--bg);
+      overflow-x:hidden; }
+    button,input{ font:inherit; }
+    .app{ min-height:100dvh; display:flex; flex-direction:column; min-width:0; }
+
+    .mmtTopbar{ position:relative; z-index:40; background:linear-gradient(135deg,#0f172a,#123b7a 55%,#2563eb); color:#fff;
+      padding:14px 24px; display:grid; grid-template-columns:minmax(200px,1fr) auto minmax(240px,1fr); align-items:center; gap:18px;
+      box-shadow:0 10px 28px rgba(15,23,42,.22); }
+    .mmtBrand{ display:flex; align-items:center; gap:12px; justify-self:start; text-decoration:none; color:#fff; border-radius:14px; padding:8px 12px; margin-left:-12px; font-weight:900; }
+    .mmtBrandLogo{ width:44px; height:44px; border-radius:9px; background:#fff; color:#1d4ed8; display:grid; place-items:center; font-weight:1000; letter-spacing:-.08em; }
+    .mmtBrandText strong{ display:block; font-size:1.12rem; line-height:1; }
+    .mmtBrandText span{ display:block; font-size:.76rem; opacity:.82; font-weight:650; }
+    .mmtTopTitle{ font-weight:850; font-size:clamp(1.05rem,2vw,1.5rem); letter-spacing:-.04em; text-align:center; white-space:nowrap; }
+    .topActions{ justify-self:end; display:flex; align-items:center; gap:10px; flex-wrap:wrap; font-size:.86rem; font-weight:800; }
+    .whoami{ opacity:.92; }
+    .btn{ appearance:none; border:1px solid rgba(255,255,255,.28); background:rgba(255,255,255,.14); color:#fff; padding:9px 13px; border-radius:12px; font-weight:900; font-size:14px; cursor:pointer; transition:.16s; }
+    .btn:hover{ background:rgba(255,255,255,.22); }
+    .btn-primary{ background:#fff; color:#1d4ed8; }
+
+    /* sign-in strip */
+    .signin{ background:#eef4ff; border-bottom:1px solid var(--border); padding:8px 20px; display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; font-size:.9rem; font-weight:700; color:#334155; }
+    .signin.hide{ display:none; }
+    .signin input{ border:1px solid var(--border); border-radius:10px; padding:8px 10px; font-family:var(--mono); font-weight:800; letter-spacing:.08em; text-transform:uppercase; width:130px; }
+    .signin .sBtn{ appearance:none; border:1px solid var(--blue); background:var(--blue); color:#fff; font-weight:900; padding:8px 14px; border-radius:10px; cursor:pointer; }
+    .signin .sGhost{ appearance:none; border:1px solid var(--border); background:#fff; color:var(--muted); font-weight:800; padding:8px 12px; border-radius:10px; cursor:pointer; }
+    .signin .sMsg{ color:var(--pink); font-weight:800; }
+
+    .layout{ width:min(1180px, calc(100vw - 40px)); margin:20px auto 26px; background:rgba(255,255,255,.94); border:1px solid rgba(226,232,240,.9); border-radius:24px; box-shadow:var(--shadow); overflow:hidden; }
+    .stage{ padding:18px clamp(14px,3vw,30px) 24px; display:flex; flex-direction:column; gap:14px; min-width:0; }
+    .topRow{ display:flex; gap:14px; align-items:stretch; flex-wrap:wrap; }
+    .eqCard{ flex:1 1 320px; min-width:0; background:#fff; border:1px solid var(--border); border-radius:18px; padding:14px 18px; display:flex; flex-direction:column; align-items:center; gap:8px; }
+    .eqEyebrow{ font-size:.7rem; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:950; }
+    .fracEditor{ display:flex; align-items:center; gap:16px; }
+    .fracStack{ display:flex; flex-direction:column; align-items:center; gap:7px; }
+    .fracStack .barSep{ width:96px; height:4px; background:var(--line); border-radius:2px; }
+    .numBox{ width:104px; text-align:center; border:2px solid var(--border); border-radius:14px; padding:4px 8px; background:#fff; color:var(--ink); font-family:var(--mathFont); font-weight:700; font-size:clamp(1.7rem,4vw,2.4rem); outline:none; transition:.18s; }
+    .numBox:focus{ border-color:var(--blue); box-shadow:0 0 0 4px rgba(37,99,235,.16); }
+    .numBox.bad{ border-color:var(--pink); box-shadow:0 0 0 4px rgba(219,39,119,.16); }
+    @keyframes numPulse{ 0%{transform:scale(1);} 35%{transform:scale(1.3); border-color:var(--purple);} 100%{transform:scale(1);} }
+    .numBox.pulse{ animation:numPulse .6s ease; }
+    .enterBtn{ appearance:none; border:1px solid var(--blue); background:var(--blue); color:#fff; font-weight:900; font-size:1rem; padding:10px 18px; border-radius:12px; cursor:pointer; }
+    .enterBtn:hover{ background:var(--blue-dark); }
+    .inputMsg{ min-height:15px; margin:0; font-size:.82rem; font-weight:750; color:var(--pink); }
+
+    .switchColumn{ background:#fff; border:1px solid var(--border); border-radius:18px; padding:14px 20px; display:flex; flex-direction:column; gap:14px; justify-content:center; flex:0 0 auto; }
+    .sw{ display:inline-flex; align-items:center; gap:11px; cursor:pointer; user-select:none; font-weight:850; color:var(--line); font-size:.96rem; white-space:nowrap; }
+    .sw input{ position:absolute; opacity:0; width:0; height:0; }
+    .sw .track{ position:relative; width:50px; height:29px; border-radius:999px; background:#cbd5e1; transition:.18s; flex:0 0 auto; }
+    .sw .track::after{ content:""; position:absolute; top:3px; left:3px; width:23px; height:23px; border-radius:50%; background:#fff; box-shadow:0 2px 6px rgba(15,23,42,.3); transition:.18s; }
+    .sw input:checked + .track{ background:var(--green); }
+    .sw input:checked + .track::after{ transform:translateX(21px); }
+    .animateBtn{ appearance:none; border:1px solid var(--purple); background:var(--purple); color:#fff; font-weight:900; font-size:.94rem; padding:10px 15px; border-radius:12px; cursor:pointer; margin-top:4px; white-space:nowrap; }
+    .animateBtn:hover:not(:disabled){ background:#6d28d9; }
+    .animateBtn:disabled{ opacity:.45; cursor:not-allowed; }
+    .animateBtn.stop{ background:#ef4444; border-color:#ef4444; }
+
+    /* challenge card */
+    .challengeCard{ background:linear-gradient(135deg,#faf5ff,#eef4ff); border:1px solid var(--border); border-radius:18px; padding:16px 20px; }
+    .chIntro{ display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; }
+    .chIntro p{ margin:0; font-weight:750; color:var(--line); font-size:.98rem; line-height:1.45; }
+    .shuffleBtn{ appearance:none; border:1px solid var(--purple); background:var(--purple); color:#fff; font-weight:900; font-size:1rem; padding:12px 18px; border-radius:13px; cursor:pointer; white-space:nowrap; box-shadow:0 8px 20px rgba(124,58,237,.22); }
+    .shuffleBtn:hover{ background:#6d28d9; transform:translateY(-1px); }
+    .chActive{ display:none; }
+    .chActive.show{ display:block; }
+    .chTop{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px; flex-wrap:wrap; }
+    .chTags{ display:flex; gap:6px; flex-wrap:wrap; }
+    .chTag{ font-size:.68rem; font-weight:900; letter-spacing:.04em; text-transform:uppercase; color:#6d28d9; background:#ede9fe; border-radius:999px; padding:3px 9px; }
+    .chPrompt{ font-size:clamp(1.02rem,2.1vw,1.2rem); font-weight:800; color:var(--ink); line-height:1.5; }
+    .chPrompt b{ color:var(--purple); }
+    .predictRow{ display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; align-items:center; }
+    .predictRow .plabel{ font-weight:850; color:var(--muted); font-size:.86rem; margin-right:4px; }
+    .pchip{ appearance:none; border:1px solid var(--border); background:#fff; color:var(--ink); font-weight:850; padding:8px 14px; border-radius:999px; cursor:pointer; transition:.14s; }
+    .pchip[aria-pressed="true"]{ background:#dbeafe; border-color:var(--blue); color:var(--blue-dark); }
+    .chBtns{ display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; align-items:center; }
+    .checkBtn{ appearance:none; border:1px solid var(--green); background:var(--green); color:#fff; font-weight:900; font-size:.96rem; padding:10px 18px; border-radius:12px; cursor:pointer; }
+    .checkBtn:hover{ background:var(--green-dark); }
+    .ghostBtn{ appearance:none; border:1px solid var(--border); background:#fff; color:var(--line); font-weight:850; font-size:.9rem; padding:9px 14px; border-radius:12px; cursor:pointer; }
+    .ghostBtn:hover{ background:#f8fafc; }
+    .feedback{ margin-top:12px; min-height:1.2em; font-weight:800; font-size:.98rem; line-height:1.45; border-radius:12px; padding:0; }
+    .feedback.show{ padding:11px 14px; }
+    .feedback.ok{ background:#dcfce7; color:#166534; border:1px solid #86efac; }
+    .feedback.nudge{ background:#fef9c3; color:#854d0e; border:1px solid #fde68a; }
+    .feedback.reveal{ background:#e0e7ff; color:#3730a3; border:1px solid #c7d2fe; }
+    .disclosure{ margin-top:10px; }
+    .disclosure details{ background:#fff; border:1px solid var(--border); border-radius:10px; padding:2px 12px; margin-top:8px; }
+    .disclosure summary{ cursor:pointer; font-weight:900; padding:8px 0; color:var(--purple); }
+    .disclosure details[data-kind="further"] summary{ color:var(--amber); }
+    .disclosure p{ margin:0 0 10px; color:var(--line); font-weight:650; line-height:1.5; }
+
+    .svgCard{ background:#fff; border:1px solid var(--border); border-radius:20px; padding:12px clamp(6px,2vw,16px) 10px; }
+    .lineholder{ position:relative; width:100%; }
+    .nline{ width:100%; height:auto; max-height:44vh; display:block; margin:0 auto; touch-action:none; cursor:ew-resize; user-select:none; -webkit-user-select:none; }
+    .nline text{ font-family:var(--mathFont); }
+    .legend{ display:flex; gap:18px; flex-wrap:wrap; justify-content:center; padding-top:2px; }
+    .legend span{ display:inline-flex; align-items:center; gap:8px; font-size:.84rem; font-weight:800; color:var(--line); }
+    .legend i{ width:15px; height:15px; border-radius:5px; display:inline-block; }
+    .legend .lp i{ background:var(--blue); }
+    .legend .lr i{ background:#c7d9f7; }
+    .legend.hidden{ display:none; }
+    .dragHint{ text-align:center; font-size:.8rem; font-weight:700; color:var(--muted); margin:6px 0 0; }
+
+    .animArrows{ display:flex; align-items:center; justify-content:center; gap:16px; padding-top:8px; }
+    .animArrows[hidden]{ display:none; }
+    .arrowBtn{ width:44px; height:44px; border-radius:50%; border:1px solid var(--border); background:#fff; color:var(--purple); font-size:1.5rem; font-weight:900; display:grid; place-items:center; cursor:pointer; }
+    .arrowBtn:disabled{ opacity:.35; cursor:not-allowed; }
+    .animCaption{ font-size:clamp(.95rem,1.9vw,1.1rem); font-weight:750; color:var(--ink); text-align:center; min-width:min(60vw,520px); }
+    .animCaption .hl{ color:var(--purple); font-weight:900; } .animCaption .dec{ color:var(--blue); font-weight:900; }
+    .stage.animOn .legend, .stage.animOn .dragHint, .stage.animOn .challengeCard, .stage.animOn .topRow{ opacity:.5; }
+    .stage.animOn .switchColumn .sw{ pointer-events:none; }
+
+    .savebar{ display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap; padding-top:4px; font-weight:800; color:var(--muted); font-size:.9rem; }
+    .saveBtn{ appearance:none; border:1px solid var(--blue); background:var(--blue); color:#fff; font-weight:900; padding:10px 18px; border-radius:12px; cursor:pointer; }
+    .saveBtn:disabled{ opacity:.5; cursor:not-allowed; }
+
+    @media (max-width:820px){
+      .mmtTopbar{ grid-template-columns:1fr; justify-items:center; }
+      .topRow{ flex-direction:column; } .switchColumn{ flex-direction:row; flex-wrap:wrap; justify-content:center; }
+      .numBox{ width:84px; }
+    }
+    @media (prefers-reduced-motion:reduce){ *{ animation-duration:.001ms !important; transition-duration:.001ms !important; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="mmtTopbar">
+      <a class="mmtBrand" href="https://www.millsmathstools.au" target="_self">
+        <span class="mmtBrandLogo">MMT</span>
+        <span class="mmtBrandText"><strong>MMT</strong><span>Mills Maths Tools</span></span>
+      </a>
+      <div class="mmtTopTitle">Fraction Thinking Explorer</div>
+      <div class="topActions"><span class="whoami" id="whoami"></span></div>
+    </header>
+
+    <div class="signin" id="signinBar">
+      <span>Sign in to save your thinking (optional):</span>
+      <input id="codeInput" placeholder="Student code" maxlength="12" autocomplete="off" />
+      <button class="sBtn" id="signinBtn" type="button">Sign in</button>
+      <button class="sGhost" id="skipBtn" type="button">Explore without saving</button>
+      <span class="sMsg" id="signinMsg"></span>
+    </div>
+
+    <main class="layout">
+      <section class="stage" id="stage">
+        <div class="topRow" id="topRow">
+          <div class="eqCard">
+            <div class="eqEyebrow">Your fraction — type or drag</div>
+            <div class="fracEditor">
+              <div class="fracStack">
+                <input class="numBox" id="numInput" inputmode="numeric" autocomplete="off" value="3" aria-label="Numerator" />
+                <span class="barSep"></span>
+                <input class="numBox" id="denInput" inputmode="numeric" autocomplete="off" value="4" aria-label="Denominator" />
+              </div>
+              <button class="enterBtn" id="useBtn" type="button">Enter</button>
+            </div>
+            <p class="inputMsg" id="inputMsg"></p>
+          </div>
+          <div class="switchColumn" id="switchBar">
+            <label class="sw"><input type="checkbox" id="barToggle"><span class="track"></span><span>Fraction bar</span></label>
+            <label class="sw"><input type="checkbox" id="decimalToggle"><span class="track"></span><span>Decimal</span></label>
+            <label class="sw"><input type="checkbox" id="simplifyToggle"><span class="track"></span><span>Simplify</span></label>
+            <label class="sw"><input type="checkbox" id="mixedToggle" checked><span class="track"></span><span>Mixed number</span></label>
+            <button class="animateBtn" id="animateBtn" type="button">▶ Animate 3 ÷ 4</button>
+          </div>
+        </div>
+
+        <div class="challengeCard" id="challengeCard">
+          <div class="chIntro" id="chIntro">
+            <p><b>Explore freely</b> — drag the point, flip the switches, animate the division. When you're ready to think harder, grab a challenge. Each one mixes a few ideas together.</p>
+            <button class="shuffleBtn" id="shuffleBtn" type="button">🎲 Give me a thinking challenge</button>
+          </div>
+          <div class="chActive" id="chActive">
+            <div class="chTop">
+              <div class="chTags" id="chTags"></div>
+              <button class="ghostBtn" id="anotherBtn" type="button">🎲 Another challenge</button>
+            </div>
+            <div class="chPrompt" id="chPrompt"></div>
+            <div class="predictRow" id="predictRow" hidden></div>
+            <div class="chBtns">
+              <button class="checkBtn" id="checkBtn" type="button">Check my thinking</button>
+              <button class="ghostBtn" id="closeChBtn" type="button">Back to explore</button>
+            </div>
+            <div class="feedback" id="feedback"></div>
+            <div class="disclosure">
+              <details data-kind="hint"><summary>💡 Hint</summary><p id="hintText"></p></details>
+              <details data-kind="further"><summary>🚀 Take it further</summary><p id="furtherText"></p></details>
+            </div>
+          </div>
+        </div>
+
+        <div class="svgCard">
+          <div class="lineholder">
+            <svg class="nline" id="nline" viewBox="0 0 1000 300" role="img" aria-label="Fraction on a number line"></svg>
+          </div>
+          <div class="animArrows" id="animArrows" hidden>
+            <button class="arrowBtn" id="animBack" type="button" aria-label="Previous step">‹</button>
+            <div class="animCaption" id="animCaption"></div>
+            <button class="arrowBtn" id="animNext" type="button" aria-label="Next step">›</button>
+          </div>
+          <div class="legend hidden" id="legend"><span class="lp"><i></i>Shaded part</span><span class="lr"><i></i>Rest of the whole</span></div>
+          <p class="dragHint">Tip: drag the point to change the fraction.</p>
+        </div>
+
+        <div class="savebar">
+          <span id="progressText">Challenges worked through: 0</span>
+          <button class="saveBtn" id="saveBtn" type="button" disabled>Save my thinking</button>
+          <span id="saveMsg"></span>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+  (function(){
+    "use strict";
+    const $ = id => document.getElementById(id);
+    const NS = "http://www.w3.org/2000/svg";
+    const DEN_MIN=2, DEN_MAX=100, NUM_MAX=400;
+    const state = { num:3, den:4, showBar:false, showDecimal:false, simplify:false, mixed:true, rangeMax:1, animMode:false, animStep:1 };
+
+    // ---------- maths ----------
+    function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ [a,b]=[b,a%b]; } return a||1; }
+    function reduce(n,d){ if(n===0) return {n:0,d:1}; const g=gcd(n,d); return {n:n/g,d:d/g}; }
+    function isLowest(n,d){ return gcd(n,d)===1; }
+    function terminating(n,d){ let dd=d/gcd(n,d); while(dd%2===0)dd/=2; while(dd%5===0)dd/=5; return dd===1; }
+    const OVERDOT="̇";
+    function decimalParts(num,den){
+      const intPart=Math.floor(num/den); let rem=num%den;
+      if(rem===0) return {intPart,nonRep:"",rep:""};
+      const digits=[],seen={}; let repStart=-1;
+      while(rem!==0){ if(seen[rem]!==undefined){ repStart=seen[rem]; break; } seen[rem]=digits.length; rem*=10; digits.push(Math.floor(rem/den)); rem%=den; }
+      if(rem===0) return {intPart,nonRep:digits.join(""),rep:""};
+      return {intPart,nonRep:digits.slice(0,repStart).join(""),rep:digits.slice(repStart).join("")};
+    }
+    function decimalStr(n,d){
+      const p=decimalParts(n,d); if(!p.nonRep && !p.rep) return String(p.intPart);
+      let r=""; if(p.rep){ const s=p.rep; r=(s.length===1)? s+OVERDOT : s[0]+OVERDOT+s.slice(1,-1)+s[s.length-1]+OVERDOT; }
+      return p.intPart+"."+p.nonRep+r;
+    }
+    function decimalPlain(n,d){ return n/d; }
+    function fmtPlain(n,d){ return n+"/"+d; }
+
+    // ---------- fraction HTML ----------
+    function fracFrag(n,d){ return `<span style="display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1;font-family:var(--mathFont)"><span style="padding:0 .3em .04em">${n}</span><span style="padding:.05em .3em 0;border-top:.08em solid currentColor">${d}</span></span>`; }
+    function fracHTML(n,d,mixed){ if(d<=0) return ""; if(n===0) return "0"; if(n%d===0) return String(n/d);
+      if(mixed && n>d){ const w=Math.floor(n/d), r=n%d; return `<span style="display:inline-flex;align-items:center;gap:.12em"><b>${w}</b>${fracFrag(r,d)}</span>`; }
+      return fracFrag(n,d); }
+
+    // ---------- geometry ----------
+    const LEFT=88, RIGHT=912, W=RIGHT-LEFT, LINE_Y=158;
+    const HALO={ stroke:"#fff","stroke-width":"4","paint-order":"stroke","stroke-linejoin":"round" };
+    function el(tag,attrs,text){ const e=document.createElementNS(NS,tag); for(const k in attrs) e.setAttribute(k,attrs[k]); if(text!=null) e.textContent=text; return e; }
+    function svgFrac(cx,topY,n,d,useMixed,fs){
+      const g=el("g",{}); const cw=fs*0.6;
+      function txt(x,y,s,fw,size){ const t=el("text",Object.assign({x:x,y:y,"text-anchor":"middle","font-weight":fw||"700","font-size":size||fs,fill:"var(--line)"},HALO)); t.textContent=s; return t; }
+      if(d<=0||n===0||n%d===0){ g.appendChild(txt(cx,topY+fs*1.1,(n%d===0?String(n/d):"0"),"800",fs*1.15)); return g; }
+      let wholeStr="",nn=n; if(useMixed&&n>d){ wholeStr=String(Math.floor(n/d)); nn=n%d; }
+      const numStr=String(nn),denStr=String(d);
+      const barW=Math.max(numStr.length,denStr.length)*cw+10, wholeW=wholeStr?(wholeStr.length*cw*1.15+8):0;
+      const startX=cx-(wholeW+barW)/2, fracCx=startX+wholeW+barW/2, barY=topY+fs;
+      if(wholeStr) g.appendChild(txt(startX+wholeW/2,barY+fs*0.34,wholeStr,"800",fs*1.15));
+      g.appendChild(txt(fracCx,barY-fs*0.28,numStr));
+      g.appendChild(el("line",{x1:fracCx-barW/2,y1:barY,x2:fracCx+barW/2,y2:barY,stroke:"var(--line)","stroke-width":Math.max(2,fs*0.09),"stroke-linecap":"round"}));
+      g.appendChild(txt(fracCx,barY+fs*0.92,denStr));
+      return g;
+    }
+    function computeGeom(){
+      const value=state.num/state.den, partSpan=Math.max(1,Math.ceil(value-1e-9));
+      let effN=state.num,effD=state.den; if(state.simplify){ const r=reduce(state.num,state.den); effN=r.n; effD=r.d; }
+      const visibleMax=Math.max(partSpan,state.rangeMax);
+      const overshoot=visibleMax<=partSpan, extraTenths=overshoot?Math.max(1,Math.round(0.4*effD)):0;
+      const drawMax=visibleMax+extraTenths/effD;
+      return {value,partSpan,visibleMax,effN,effD,extraTenths,drawMax};
+    }
+    function xFor(v,m){ return LEFT+(v/m)*W; }
+
+    function render(opts){
+      opts=opts||{};
+      const svg=$("nline"); while(svg.firstChild) svg.removeChild(svg.firstChild);
+      const g=el("g",{}); svg.appendChild(g);
+      const {value,partSpan,visibleMax,effN,effD,extraTenths,drawMax}=computeGeom();
+      const m=(opts.forceMax!=null)?opts.forceMax:drawMax;
+      const tickMax=(opts.forceMax!=null)?Math.round(opts.forceMax):visibleMax;
+      const parts=effD*partSpan, partsExt=parts+extraTenths, labelStep=tickMax<=12?1:Math.ceil(tickMax/10);
+
+      for(let w=0;w<=tickMax;w++){ const x=xFor(w,m); g.appendChild(el("line",{x1:x.toFixed(2),y1:LINE_Y-42,x2:x.toFixed(2),y2:LINE_Y+14,stroke:"var(--line-soft)","stroke-width":"1.4","stroke-dasharray":w===0?"0":"3 4","stroke-opacity":w===0?"0.9":"0.7"})); }
+
+      const BH=42, bt=LINE_Y-BH/2;
+      if(state.showBar){
+        const bx0=xFor(0,m),bxV=xFor(value,m),bx1=xFor(partSpan,m);
+        g.appendChild(el("rect",{x:bxV.toFixed(2),y:bt,width:(bx1-bxV).toFixed(2),height:BH,fill:"var(--blue)","fill-opacity":"0.15"}));
+        g.appendChild(el("rect",{x:bx0.toFixed(2),y:bt,width:(bxV-bx0).toFixed(2),height:BH,fill:"var(--blue)","fill-opacity":"0.85"}));
+        g.appendChild(el("rect",{x:bx0.toFixed(2),y:bt,width:(bx1-bx0).toFixed(2),height:BH,fill:"none",stroke:"var(--line)","stroke-width":"2",rx:"4"}));
+      }
+      g.appendChild(el("line",{x1:LEFT-14,y1:LINE_Y,x2:RIGHT+14,y2:LINE_Y,stroke:"var(--line)","stroke-width":"3.2","stroke-linecap":"round"}));
+      for(let i=0;i<=partsExt;i++){ if(i%effD===0) continue; const x=xFor(i/effD,m); g.appendChild(el("line",{x1:x.toFixed(2),y1:LINE_Y-9,x2:x.toFixed(2),y2:LINE_Y+9,stroke:"var(--line)","stroke-width":"1.8","stroke-linecap":"round"})); }
+      for(let w=0;w<=tickMax;w++){ const x=xFor(w,m); g.appendChild(el("line",{x1:x.toFixed(2),y1:LINE_Y-15,x2:x.toFixed(2),y2:LINE_Y+15,stroke:"var(--line)","stroke-width":"3","stroke-linecap":"round"}));
+        if(w===0||w===tickMax||w%labelStep===0){ const lbl=el("text",{x:x.toFixed(2),y:LINE_Y+40,"text-anchor":"middle","font-weight":"800","font-size":"22",fill:"var(--line)"}); lbl.textContent=String(w); g.appendChild(lbl); } }
+
+      const px=xFor(value,m), rw=15, rh=9, ti=7;
+      g.appendChild(el("path",{d:`M ${(px-rw).toFixed(2)} ${LINE_Y} L ${(px-rw+ti).toFixed(2)} ${LINE_Y-rh} L ${(px+rw-ti).toFixed(2)} ${LINE_Y-rh} L ${(px+rw).toFixed(2)} ${LINE_Y} L ${(px+rw-ti).toFixed(2)} ${LINE_Y+rh} L ${(px-rw+ti).toFixed(2)} ${LINE_Y+rh} Z`,fill:"var(--blue)",stroke:"#fff","stroke-width":"2","stroke-linejoin":"round"}));
+      if(state.showDecimal){ const dt=el("text",Object.assign({x:px.toFixed(2),y:LINE_Y-34,"text-anchor":"middle","font-weight":"800","font-size":"27",fill:"var(--blue)"},HALO)); dt.textContent=decimalStr(state.num,state.den); g.appendChild(dt); }
+      g.appendChild(svgFrac(px,LINE_Y+52,effN,effD,state.mixed,24));
+
+      const ab=$("animateBtn"); ab.textContent="▶ Animate "+state.num+" ÷ "+state.den; ab.disabled=state.num<1;
+      $("legend").classList.toggle("hidden",!state.showBar);
+    }
+
+    // ---------- drag ----------
+    let dragging=false, animRAF=null;
+    const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    function numFromClientX(clientX){
+      const svg=$("nline"), r=svg.getBoundingClientRect(), vx=(clientX-r.left)/r.width*1000;
+      const geom=computeGeom(), effD=geom.effD;
+      const dm=state._dragMax||geom.drawMax;
+      let value=(vx-LEFT)/W*dm; value=Math.max(0,Math.min(dm-1/effD,value));
+      const units=Math.round(value*effD); let newNum=Math.max(0,Math.min(NUM_MAX,Math.round(units*(state.den/effD))));
+      if(newNum!==state.num){ state.num=newNum; $("numInput").value=String(newNum); $("numInput").classList.remove("bad"); $("inputMsg").textContent=""; }
+      render({forceMax:dm});
+    }
+    function settleDrag(fromMax){
+      const toMax=computeGeom().drawMax;
+      if(reduceMotion||typeof requestAnimationFrame!=="function"||Math.abs(toMax-fromMax)<1e-4){ render(); return; }
+      cancelAnimationFrame(animRAF); let t0=null; const dur=430;
+      function f(now){ if(t0===null)t0=now; let p=Math.min(1,(now-t0)/dur); const e=p<0.5?2*p*p:1-Math.pow(-2*p+2,2)/2; render({forceMax:fromMax*Math.pow(toMax/fromMax,e)}); if(p<1){animRAF=requestAnimationFrame(f);}else render(); }
+      animRAF=requestAnimationFrame(f);
+    }
+    (function bindDrag(){
+      const svg=$("nline");
+      svg.addEventListener("pointerdown",e=>{ if(state.animMode) return; e.preventDefault(); cancelAnimationFrame(animRAF); dragging=true; state._dragMax=computeGeom().drawMax; svg.setPointerCapture(e.pointerId); numFromClientX(e.clientX); });
+      svg.addEventListener("pointermove",e=>{ if(dragging) numFromClientX(e.clientX); });
+      function end(e){ if(!dragging) return; dragging=false; const fromMax=state._dragMax; state._dragMax=null; try{svg.releasePointerCapture(e.pointerId);}catch(_){} if(fromMax) settleDrag(fromMax); else render(); }
+      svg.addEventListener("pointerup",end); svg.addEventListener("pointercancel",end);
+    })();
+
+    // ---------- animation (fraction as division) ----------
+    let animating=false;
+    function animRangeFor(step){ const value=state.num/state.den; return (step<=2)?Math.max(1,state.num):value*2.4; }
+    function captionFor(step){ const n=state.num,d=state.den,dec=decimalStr(n,d);
+      if(step===1) return `<span class="hl">${n} ÷ ${d}</span> — start with <span class="hl">${n}</span> as a length on the line.`;
+      if(step===2) return `Share the <span class="hl">${n}</span> into <span class="hl">${d}</span> equal parts (one part shown in blue).`;
+      return `One part = <span class="dec">${dec}</span> — exactly where <span class="hl">${n}/${d}</span> sits as a number.`; }
+    function pulse(node){ if(!node) return; node.classList.remove("pulse"); void node.offsetWidth; node.classList.add("pulse"); setTimeout(()=>node.classList.remove("pulse"),700); }
+    function updateArrows(){ $("animCaption").innerHTML=captionFor(state.animStep); $("animBack").disabled=state.animStep<=1||animating; $("animNext").disabled=state.animStep>=3||animating; }
+    function renderAnim(o){
+      o=o||{}; const svg=$("nline"); while(svg.firstChild) svg.removeChild(svg.firstChild); const g=el("g",{}); svg.appendChild(g);
+      const n=state.num,d=state.den,value=n/d,step=state.animStep;
+      const m=(o.animMax!=null)?o.animMax:animRangeFor(step);
+      const tickMax=(o.tickMax!=null)?Math.round(o.tickMax):Math.round(animRangeFor(step));
+      const intOp=(o.int!=null)?o.int:(step===1?1:0), bracketOp=(o.bracket!=null)?o.bracket:(step<=2?1:0);
+      const blueOp=(o.blue!=null)?o.blue:(step>=2?1:0), pointOp=(o.point!=null)?o.point:(step===3?1:0), remnantOp=(o.remnant!=null)?o.remnant:0;
+      g.appendChild(el("line",{x1:LEFT-14,y1:LINE_Y,x2:RIGHT+14,y2:LINE_Y,stroke:"var(--line)","stroke-width":"3.2","stroke-linecap":"round"}));
+      g.appendChild(el("line",{x1:xFor(0,m).toFixed(2),y1:LINE_Y-13,x2:xFor(0,m).toFixed(2),y2:LINE_Y+13,stroke:"var(--line-soft)","stroke-width":"2.4","stroke-linecap":"round"}));
+      { const z=el("text",{x:xFor(0,m).toFixed(2),y:LINE_Y+40,"text-anchor":"middle","font-weight":"800","font-size":"22",fill:"var(--muted)"}); z.textContent="0"; g.appendChild(z); }
+      if(intOp>0.001){ const ig=el("g",{opacity:intOp.toFixed(3)}); const ls=tickMax<=12?1:Math.ceil(tickMax/10);
+        for(let w=1;w<=tickMax;w++){ const x=xFor(w,m); ig.appendChild(el("line",{x1:x.toFixed(2),y1:LINE_Y-13,x2:x.toFixed(2),y2:LINE_Y+13,stroke:"var(--line-soft)","stroke-width":"2.4","stroke-linecap":"round"}));
+          if(w===tickMax||w%ls===0){ const lb=el("text",{x:x.toFixed(2),y:LINE_Y+40,"text-anchor":"middle","font-weight":"800","font-size":"22",fill:"var(--muted)"}); lb.textContent=String(w); ig.appendChild(lb); } } g.appendChild(ig); }
+      if(remnantOp>0.001){ const rg=el("g",{opacity:remnantOp.toFixed(3)}); const ps=Math.max(1,Math.ceil(value-1e-9));
+        for(let i=1;i<ps*d;i++){ if(i%d===0) continue; const x=xFor(i/d,m); rg.appendChild(el("line",{x1:x.toFixed(2),y1:LINE_Y-9,x2:x.toFixed(2),y2:LINE_Y+9,stroke:"var(--line)","stroke-width":"1.8","stroke-linecap":"round"})); }
+        rg.appendChild(el("circle",{cx:xFor(value,m).toFixed(2),cy:LINE_Y,r:"7.5",fill:"var(--blue)",stroke:"#fff","stroke-width":"2.5"})); g.appendChild(rg); }
+      if(bracketOp>0.001){ const bg=el("g",{opacity:bracketOp.toFixed(3)}); const x0=xFor(0,m),xn=xFor(n,m),by=104;
+        bg.appendChild(el("line",{x1:x0.toFixed(2),y1:by,x2:xn.toFixed(2),y2:by,stroke:"var(--purple)","stroke-width":"3","stroke-linecap":"round"}));
+        bg.appendChild(el("line",{x1:x0.toFixed(2),y1:by,x2:x0.toFixed(2),y2:by+16,stroke:"var(--purple)","stroke-width":"3","stroke-linecap":"round"}));
+        bg.appendChild(el("line",{x1:xn.toFixed(2),y1:by,x2:xn.toFixed(2),y2:by+16,stroke:"var(--purple)","stroke-width":"3","stroke-linecap":"round"}));
+        const nt=el("text",Object.assign({x:((x0+xn)/2).toFixed(2),y:by-12,"text-anchor":"middle","font-weight":"800","font-size":"30",fill:"var(--purple)"},HALO)); nt.textContent=String(n); bg.appendChild(nt); g.appendChild(bg); }
+      if(blueOp>0.001){ const dg=el("g",{opacity:blueOp.toFixed(3)});
+        dg.appendChild(el("line",{x1:xFor(0,m).toFixed(2),y1:LINE_Y,x2:xFor(value,m).toFixed(2),y2:LINE_Y,stroke:"var(--blue)","stroke-width":"8","stroke-linecap":"round","stroke-opacity":"0.85"}));
+        for(let k=1;k<=d;k++){ const pv=k*value; if(pv>m+1e-6) break; const x=xFor(pv,m); dg.appendChild(el("line",{x1:x.toFixed(2),y1:LINE_Y-12,x2:x.toFixed(2),y2:LINE_Y+12,stroke:"var(--blue)","stroke-width":"2.6","stroke-linecap":"round"}));
+          if(pointOp>0.5&&k===1) continue; const t=el("text",Object.assign({x:x.toFixed(2),y:LINE_Y+34,"text-anchor":"middle","font-weight":(k===1?"900":"800"),"font-size":"16",fill:(k===1?"var(--blue-dark)":"var(--blue)")},HALO)); t.textContent=decimalStr(k*n,d); dg.appendChild(t); }
+        g.appendChild(dg); }
+      if(pointOp>0.001){ const pg=el("g",{opacity:pointOp.toFixed(3)}); const px=xFor(value,m);
+        pg.appendChild(el("circle",{cx:px.toFixed(2),cy:LINE_Y,r:"7.5",fill:"var(--blue)",stroke:"#fff","stroke-width":"2.5"}));
+        const dt=el("text",Object.assign({x:px.toFixed(2),y:LINE_Y-34,"text-anchor":"middle","font-weight":"800","font-size":"27",fill:"var(--blue)"},HALO)); dt.textContent=decimalStr(n,d); pg.appendChild(dt);
+        pg.appendChild(svgFrac(px,LINE_Y+54,n,d,state.mixed,24)); g.appendChild(pg); }
+    }
+    function lerpGeo(a,b,e){ return a*Math.pow(b/a,e); }
+    function animTween(dur,frameFn,doneFn){
+      cancelAnimationFrame(animRAF); animating=true; updateArrows();
+      if(reduceMotion||typeof requestAnimationFrame!=="function"){ frameFn(1,1); animating=false; if(doneFn)doneFn(); updateArrows(); return; }
+      let t0=null; function f(now){ if(t0===null)t0=now; let p=Math.min(1,(now-t0)/dur); const e=p<0.5?2*p*p:1-Math.pow(-2*p+2,2)/2; frameFn(p,e); if(p<1){animRAF=requestAnimationFrame(f);}else{ animating=false; if(doneFn)doneFn(); updateArrows(); } }
+      animRAF=requestAnimationFrame(f);
+    }
+    function goToStep(target){
+      if(animating) return; target=Math.max(1,Math.min(3,target)); const cur=state.animStep; if(target===cur) return;
+      const fromRange=animRangeFor(cur),toRange=animRangeFor(target); state.animStep=target;
+      if(target===2) pulse($("denInput"));
+      const tickMax=Math.round(Math.max(fromRange,toRange));
+      const i0=cur===1?1:0,i1=target===1?1:0,b0=cur<=2?1:0,b1=target<=2?1:0,l0=cur>=2?1:0,l1=target>=2?1:0,p0=cur===3?1:0,p1=target===3?1:0;
+      animTween(560,(p,e)=>{ renderAnim({animMax:lerpGeo(fromRange,toRange,e),tickMax:tickMax,int:i0+(i1-i0)*e,bracket:b0+(b1-b0)*e,blue:l0+(l1-l0)*e,point:p0+(p1-p0)*e}); },()=>renderAnim());
+    }
+    function enterAnim(){
+      if(state.num<1) return; if(animRAF) cancelAnimationFrame(animRAF); animating=false;
+      state.animMode=true; state.animStep=1; $("stage").classList.add("animOn"); $("animArrows").hidden=false;
+      $("animateBtn").textContent="✕ Stop animation"; $("animateBtn").classList.add("stop"); pulse($("numInput"));
+      const startMax=state.rangeMax,endMax=animRangeFor(1),tickMax=Math.max(startMax,endMax);
+      animTween(950,(p,e)=>{ const remnant=Math.max(0,Math.min(1,(0.35-p)/0.35)); const zp=Math.max(0,Math.min(1,(p-0.30)/0.70)); const ze=zp<0.5?2*zp*zp:1-Math.pow(-2*zp+2,2)/2;
+        renderAnim({animMax:lerpGeo(startMax,endMax,ze),tickMax:tickMax,remnant:remnant,int:zp,bracket:zp,blue:0,point:0}); },()=>renderAnim());
+    }
+    function exitAnim(){
+      if(animRAF) cancelAnimationFrame(animRAF); animating=false; state.animMode=false;
+      $("stage").classList.remove("animOn"); $("animArrows").hidden=true;
+      $("animateBtn").textContent="▶ Animate "+state.num+" ÷ "+state.den; $("animateBtn").classList.remove("stop"); render();
+    }
+
+    // ---------- inputs & toggles ----------
+    function readInputs(){
+      const nR=$("numInput").value.trim(),dR=$("denInput").value.trim(),msg=$("inputMsg");
+      $("numInput").classList.remove("bad"); $("denInput").classList.remove("bad"); msg.textContent="";
+      if(!/^\d+$/.test(nR)){ $("numInput").classList.add("bad"); msg.textContent="Numerator must be a whole number."; return false; }
+      if(!/^\d+$/.test(dR)){ $("denInput").classList.add("bad"); msg.textContent="Denominator must be a whole number."; return false; }
+      const n=parseInt(nR,10),d=parseInt(dR,10);
+      if(d===0){ $("denInput").classList.add("bad"); msg.textContent="You can't split into 0 parts."; return false; }
+      if(d<DEN_MIN||d>DEN_MAX){ $("denInput").classList.add("bad"); msg.textContent=`Denominator must be between ${DEN_MIN} and ${DEN_MAX}.`; return false; }
+      if(n>NUM_MAX){ $("numInput").classList.add("bad"); msg.textContent=`Keep the numerator ${NUM_MAX} or below.`; return false; }
+      state.num=n; state.den=d; return true;
+    }
+    function applyInputs(){ if(readInputs()){ if(state.animMode) exitAnim(); state.rangeMax=Math.max(1,Math.ceil(state.num/state.den-1e-9)); render(); } }
+    function setFraction(n,d,opts){ // programmatic (challenge setup)
+      opts=opts||{}; if(state.animMode) exitAnim();
+      state.num=n; state.den=d; state.rangeMax=Math.max(1,Math.ceil(n/d-1e-9));
+      $("numInput").value=String(n); $("denInput").value=String(d); $("inputMsg").textContent=""; $("numInput").classList.remove("bad"); $("denInput").classList.remove("bad");
+      if(opts.bar!=null){ state.showBar=opts.bar; $("barToggle").checked=opts.bar; }
+      if(opts.dec!=null){ state.showDecimal=opts.dec; $("decimalToggle").checked=opts.dec; }
+      render();
+    }
+    $("useBtn").addEventListener("click",applyInputs);
+    $("numInput").addEventListener("keydown",e=>{ if(e.key==="Enter") applyInputs(); });
+    $("denInput").addEventListener("keydown",e=>{ if(e.key==="Enter") applyInputs(); });
+    $("barToggle").addEventListener("change",e=>{ state.showBar=e.target.checked; render(); });
+    $("decimalToggle").addEventListener("change",e=>{ state.showDecimal=e.target.checked; render(); });
+    $("simplifyToggle").addEventListener("change",e=>{ state.simplify=e.target.checked; render(); });
+    $("mixedToggle").addEventListener("change",e=>{ state.mixed=e.target.checked; render(); });
+    $("animateBtn").addEventListener("click",()=>{ state.animMode?exitAnim():enterAnim(); });
+    $("animBack").addEventListener("click",()=>{ if(!animating) goToStep(state.animStep-1); });
+    $("animNext").addEventListener("click",()=>{ if(!animating) goToStep(state.animStep+1); });
+    document.addEventListener("keydown",e=>{ if(!state.animMode) return; if(e.key==="Escape"){ e.preventDefault(); exitAnim(); return; } if(animating) return; if(e.target&&e.target.tagName==="INPUT") return; if(e.key==="ArrowRight"){ e.preventDefault(); goToStep(state.animStep+1); } else if(e.key==="ArrowLeft"){ e.preventDefault(); goToStep(state.animStep-1); } });
+
+    // ================= CHALLENGE SYSTEM =================
+    // Each challenge weaves 2–3 of: predict, construct, compare, misconception, recurring, division.
+    const val=()=>state.num/state.den;
+    const between=(a,b)=>{ const v=val(); return v>a+1e-9 && v<b-1e-9; };
+    const round2=x=>Math.round(x*100)/100;
+    const CH = [
+      { id:"between-3-4", tags:["Construct","Decimal","Equivalence"],
+        prompt:`Drag the point to make a fraction <b>between 0.3 and 0.4</b>. Then turn on <b>Decimal</b> to see exactly where you landed.`,
+        setup:()=>setFraction(3,10,{dec:false}),
+        check:()=>{ const v=val(); if(between(0.3,0.4)) return {tone:"ok",msg:`Yes — ${fmtPlain(state.num,state.den)} = ${round2(v)} sits between 0.3 and 0.4. Can you find <em>another</em> fraction with a different denominator that also lands in there?`}; return {tone:"nudge",msg:`Right now you're at ${round2(v)} — ${v<0.3?"a little too small, drag right":"a little too big, drag left"}. You're aiming <em>between</em> 0.3 and 0.4.`}; },
+        hint:`Try tenths first (like 3/10 or 4/10), then switch the denominator to something bigger to squeeze in between.`,
+        further:`Find one with an <b>odd</b> denominator. Then find one that does <b>not</b> simplify at all.` },
+
+      { id:"share-3-4", tags:["Predict","Division"],
+        prompt:`You're about to share <b>3 ÷ 4</b> (3 whole things among 4 people). Predict the size of one share, then set 3/4 and press <b>Animate</b>.`,
+        setup:()=>setFraction(3,4),
+        predict:{ label:"One share will be…", options:["less than 1","exactly 1","more than 1"], answer:0,
+          reveal:()=>`3 ÷ 4 = ${decimalStr(3,4)}. Sharing 3 among 4 gives <b>less than one</b> each — a fraction less than 1.` },
+        hint:`If there were 4 things among 4 people, each gets exactly 1. With only 3 things, each share must be…?`,
+        further:`Predict <b>5 ÷ 4</b>. What has to be true about a ÷ b for each share to be more than 1?` },
+
+      { id:"denominator-size", tags:["Compare","Misconception"],
+        prompt:`Sam says <b>3/8 is bigger than 3/5</b> "because eighths sound like more pieces". Set 3/8, then set 3/5. Who's actually right?`,
+        setup:()=>setFraction(3,8,{dec:true}),
+        reveal:()=>`3/8 = ${decimalStr(3,8)} and 3/5 = ${decimalStr(3,5)}, so <b>3/5 is bigger</b>. Cutting a whole into <b>more</b> pieces makes each piece <b>smaller</b> — so 3 of the smaller eighths is less than 3 of the larger fifths.`,
+        hint:`Set each one and watch which point is further to the right. More pieces = smaller pieces.`,
+        further:`Write a rule a friend could use: when the numerators are the same, the bigger fraction is the one with the ______ denominator.` },
+
+      { id:"stop-or-recur", tags:["Predict","Recurring"],
+        prompt:`Before you check: which of <b>7/8, 2/3, 5/6</b> give a decimal that <b>stops</b>, and which go on <b>forever</b>? Set each and turn on <b>Decimal</b> to test yourself.`,
+        setup:()=>setFraction(7,8,{dec:true}),
+        check:()=>{ const t=terminating(state.num,state.den); return {tone:"ok",msg:`${fmtPlain(state.num,state.den)} = ${decimalStr(state.num,state.den)} — this one <b>${t?"stops":"recurs (goes on forever)"}</b>. Try the others and compare.`}; },
+        hint:`Look at the denominator once the fraction is simplified. What are its factors?`,
+        further:`What do the denominators of the <b>stopping</b> ones share? Invent a new fraction you're <b>sure</b> will stop, then check.` },
+
+      { id:"make-recurring", tags:["Construct","Recurring"],
+        prompt:`Make a fraction whose decimal <b>never ends</b> (it recurs). Turn on <b>Decimal</b> to confirm the dots appear.`,
+        setup:()=>setFraction(1,3,{dec:true}),
+        check:()=>{ const t=terminating(state.num,state.den); if(!t) return {tone:"ok",msg:`Nice — ${fmtPlain(state.num,state.den)} = ${decimalStr(state.num,state.den)} recurs. Now make one that <b>stops exactly</b>. What changed about the denominator?`}; return {tone:"nudge",msg:`${fmtPlain(state.num,state.den)} = ${decimalStr(state.num,state.den)} — that one stops. For a never-ending decimal, try a denominator with a factor of 3, 7 or 9.`}; },
+        hint:`Denominators like 3, 6, 7, 9, 11 tend to recur; 2, 4, 5, 8, 10 stop.`,
+        further:`Make a recurring decimal whose repeating block is <b>2 digits</b> long (like 0.1̇8̇).` },
+
+      { id:"same-point", tags:["Equivalence","Division","Compare"],
+        prompt:`Do <b>4/10</b> and <b>2/5</b> land on the <b>same point</b>? Set 4/10, press <b>Simplify</b>, then invent a <b>third</b> fraction that lands there too.`,
+        setup:()=>setFraction(4,10,{dec:true}),
+        check:()=>{ const v=val(); if(Math.abs(v-0.4)<1e-9) return {tone:"ok",msg:`You're on 0.4 (=${fmtPlain(state.num,state.den)}). 4/10, 2/5, 6/15… all share this exact point — they're <b>equivalent</b>. What's the same about them all?`}; return {tone:"nudge",msg:`You're on ${round2(v)}. Get back onto the 4/10 point (0.4) and try turning Simplify on and off — the point shouldn't move.`}; },
+        hint:`Equivalent fractions are different names for the same number, so they sit on the same spot.`,
+        further:`Find a fraction on the 0.4 point with a denominator bigger than 20.` },
+
+      { id:"half-or-one", tags:["Predict","Compare"],
+        prompt:`Is <b>5/8</b> closer to <b>1/2</b> or closer to <b>1</b>? Predict first, then drag to 5/8 and turn on <b>Decimal</b>.`,
+        setup:()=>setFraction(1,2,{dec:false}),
+        predict:{ label:"5/8 is closer to…", options:["1/2","exactly halfway","1"], answer:0,
+          reveal:()=>`5/8 = ${decimalStr(5,8)}. That's 0.125 above a half but 0.375 below 1 — so it's <b>closer to 1/2</b>. Benchmarking to 1/2 and 1 beats guessing.` },
+        hint:`Half is 4/8. How many eighths is 5/8 above a half? How many below a whole?`,
+        further:`Find a fraction (eighths) that IS closer to 1 than to 1/2. Where's the tipping point?` },
+
+      { id:"between-half-3-5", tags:["Construct","Compare","Density"],
+        prompt:`Find a fraction that sits <b>between 1/2 and 3/5</b>. Is there more than one? How many do you think fit in there?`,
+        setup:()=>setFraction(1,2,{dec:true}),
+        check:()=>{ const v=val(); if(between(0.5,0.6)) return {tone:"ok",msg:`${fmtPlain(state.num,state.den)} = ${round2(v)} — that's between 1/2 (0.5) and 3/5 (0.6). Now find one between <em>your</em> answer and 0.6. Could you keep going forever?`}; return {tone:"nudge",msg:`You're at ${round2(v)}. Aim between 0.5 and 0.6 — try a bigger denominator to fit in the gap.`}; },
+        hint:`1/2 = 0.5 and 3/5 = 0.6. A denominator like 20 or 100 gives you lots of room in between.`,
+        further:`How many fractions fit between 1/2 and 3/5? Convince yourself of the answer.` },
+
+      { id:"just-past-one", tags:["Improper","Division","Point"],
+        prompt:`Drag <b>past 1</b> to make a fraction between <b>1 and 2</b>. Read it as a <b>mixed number</b> (Mixed number is on). Which whole is it just above?`,
+        setup:()=>setFraction(9,10,{dec:false}),
+        check:()=>{ const v=val(); if(between(1,2)) return {tone:"ok",msg:`${fracHTMLplain()} = ${round2(v)} — an improper fraction sitting between 1 and 2. As a division, its numerator ÷ denominator is a bit more than 1.`}; return {tone:"nudge",msg:`You're at ${round2(v)}. Drag right, past the 1, to land between 1 and 2 (the line extends past 1).`}; },
+        hint:`To get past 1 you need the numerator bigger than the denominator (an improper fraction).`,
+        further:`Now make one between <b>2 and 3</b>, and predict its mixed number before you read it.` },
+
+      { id:"more-than-2", tags:["Predict","Improper"],
+        prompt:`Is <b>7/4</b> more or less than <b>2</b>? Predict, then set 7/4 and check on the line.`,
+        setup:()=>setFraction(3,4,{dec:false}),
+        predict:{ label:"7/4 is…", options:["less than 2","exactly 2","more than 2"], answer:0,
+          reveal:()=>`7/4 = ${decimalStr(7,4)} = 1¾. That's <b>less than 2</b>. 8/4 would be exactly 2, and 7/4 is one quarter short.` },
+        hint:`How many quarters make 2? Compare that with 7 quarters.`,
+        further:`What's the smallest number of quarters that is more than 2? Write it as an improper fraction and a mixed number.` },
+
+      { id:"as-close-to-one", tags:["Construct","Density","Compare"],
+        prompt:`Make a fraction as <b>close to 1 as you can — without reaching it</b>. How close did you get? Can you get closer?`,
+        setup:()=>setFraction(9,10,{dec:true}),
+        check:()=>{ const v=val(); if(v>=1) return {tone:"nudge",msg:`You've hit ${round2(v)} — that's 1 or more. Come just under 1 (like 9/10, 19/20, 99/100…).`}; const gap=round2(1-v); return {tone:"ok",msg:`${fmtPlain(state.num,state.den)} = ${decimalStr(state.num,state.den)} — only ${gap} away from 1. ${gap<=0.02?"Incredibly close! Is there a fraction even closer?":"Can you get closer? Try a bigger denominator."}`}; },
+        hint:`A bigger denominator makes smaller steps, so you can sneak closer to 1.`,
+        further:`Is there a <b>closest</b> fraction to 1? Or can you always find a closer one? Argue your case.` },
+
+      { id:"convince-8-10", tags:["Misconception","Equivalence"],
+        prompt:`Convince a friend that <b>8/10 and 4/5 are the same number</b> — use the <b>bar</b> and the <b>point</b> together. Reveal the idea when you're ready.`,
+        setup:()=>setFraction(8,10,{bar:true,dec:false}),
+        reveal:()=>`8/10 and 4/5 sit on the <b>same point</b>, and their bars shade the <b>same length</b> — 4/5 just groups the ten tenths into five larger fifths (two tenths per fifth). Same amount, different sized pieces. Press <b>Simplify</b> to watch 8/10 regroup into 4/5 without the point moving.`,
+        hint:`Turn Simplify on and off. Does the point move? Does the shaded length change?`,
+        further:`Write three <b>more</b> fractions equal to 4/5. What are you doing to the numerator and denominator each time?` }
+    ];
+    function fracHTMLplain(){ return fmtPlain(state.num,state.den); }
+
+    // challenge runtime
+    let curCh=null, lastId=null, predictChoice=-1;
+    const worked=new Set(), metChallenges=new Set();
+    function showFeedback(tone,msg){ const f=$("feedback"); f.className="feedback show "+tone; f.innerHTML=msg; }
+    function clearFeedback(){ const f=$("feedback"); f.className="feedback"; f.innerHTML=""; }
+    function renderChallenge(ch){
+      curCh=ch; predictChoice=-1; clearFeedback();
+      $("chIntro").style.display="none"; $("chActive").classList.add("show");
+      $("chTags").innerHTML = ch.tags.map(t=>`<span class="chTag">${t}</span>`).join("");
+      $("chPrompt").innerHTML = ch.prompt;
+      $("hintText").innerHTML = ch.hint||""; $("furtherText").innerHTML = ch.further||"";
+      $("challengeCard").querySelectorAll("details").forEach(d=>d.open=false);
+      const pr=$("predictRow");
+      if(ch.predict){ pr.hidden=false; pr.innerHTML=`<span class="plabel">${ch.predict.label}</span>`+ch.predict.options.map((o,i)=>`<button class="pchip" data-i="${i}" type="button" aria-pressed="false">${o}</button>`).join("");
+        pr.querySelectorAll(".pchip").forEach(b=>b.addEventListener("click",()=>{ predictChoice=+b.dataset.i; pr.querySelectorAll(".pchip").forEach(x=>x.setAttribute("aria-pressed", x===b?"true":"false")); }));
+        $("checkBtn").textContent="Check my prediction";
+      } else if(ch.reveal){ pr.hidden=true; pr.innerHTML=""; $("checkBtn").textContent="Reveal the idea"; }
+      else { pr.hidden=true; pr.innerHTML=""; $("checkBtn").textContent="Check my thinking"; }
+      if(ch.setup) ch.setup();
+    }
+    function pickChallenge(){
+      let pool=CH.filter(c=>c.id!==lastId); if(!pool.length) pool=CH;
+      const ch=pool[Math.floor(Math.random()*pool.length)]; lastId=ch.id;
+      worked.add(ch.id); updateProgress();
+      renderChallenge(ch);
+    }
+    function evaluate(){
+      if(!curCh) return;
+      worked.add(curCh.id);
+      if(curCh.predict){
+        if(predictChoice<0){ showFeedback("nudge","Make your prediction first — tap one of the options above, then check."); return; }
+        const correct = predictChoice===curCh.predict.answer;
+        const rv = curCh.predict.reveal();
+        if(correct){ metChallenges.add(curCh.id); showFeedback("ok",`You predicted “${curCh.predict.options[predictChoice]}”. ${rv} Nice reasoning — try the Animate button to see it happen.`); }
+        else{ showFeedback("nudge",`You predicted “${curCh.predict.options[predictChoice]}”. ${rv} Set it up and watch — then have another go at predicting a new one.`); }
+      } else if(curCh.reveal){
+        metChallenges.add(curCh.id); showFeedback("reveal", curCh.reveal());
+      } else if(curCh.check){
+        const r=curCh.check(); if(r.tone==="ok") metChallenges.add(curCh.id); showFeedback(r.tone, r.msg);
+      }
+      updateProgress();
+    }
+    function closeChallenge(){ curCh=null; $("chActive").classList.remove("show"); $("chIntro").style.display="flex"; clearFeedback(); }
+    $("shuffleBtn").addEventListener("click",pickChallenge);
+    $("anotherBtn").addEventListener("click",pickChallenge);
+    $("checkBtn").addEventListener("click",evaluate);
+    $("closeChBtn").addEventListener("click",closeChallenge);
+
+    function updateProgress(){
+      $("progressText").textContent = `Challenges worked through: ${worked.size}` + (metChallenges.size?` · met: ${metChallenges.size}`:"");
+      const btn=$("saveBtn"); btn.disabled = !(signedIn && worked.size>0);
+    }
+
+    // ================= SECURE SAVE (optional, dynamic import) =================
+    let mmt=null, signedIn=false;
+    async function loadQuiz(){ if(mmt) return mmt; mmt=(await import("/portal/shared/quizClient.js")).MMTQuiz; mmt.init(); return mmt; }
+    $("signinBtn").addEventListener("click",async()=>{
+      const code=$("codeInput").value.trim(); const msg=$("signinMsg"); msg.style.color="var(--pink)"; msg.textContent="";
+      if(!code){ msg.textContent="Enter your student code."; return; }
+      msg.style.color="var(--muted)"; msg.textContent="Checking…";
+      try{ const q=await loadQuiz(); const res=await q.signIn(code); if(res.ok){ signedIn=true; const nm=(res.profile&&(res.profile.firstName||res.profile.name))||"Signed in"; $("whoami").textContent="👤 "+nm; $("signinBar").classList.add("hide"); updateProgress(); } else { msg.style.color="var(--pink)"; msg.textContent=res.error||"Could not sign in."; } }
+      catch(e){ msg.style.color="var(--pink)"; msg.textContent="Sign-in unavailable right now — you can still explore."; }
+    });
+    $("skipBtn").addEventListener("click",()=>{ $("signinBar").classList.add("hide"); $("whoami").textContent="Exploring (not saving)"; });
+    $("codeInput").addEventListener("keydown",e=>{ if(e.key==="Enter") $("signinBtn").click(); });
+    $("saveBtn").addEventListener("click",async()=>{
+      const msg=$("saveMsg"); msg.style.color="var(--muted)"; msg.textContent="Saving…";
+      try{ const q=await loadQuiz();
+        const res=await q.saveAchievement({ tool:"Fraction Thinking Explorer — Student", topic:"Fractions, Decimals and Percentages", level:"Explorer", score:metChallenges.size, total:Math.max(worked.size,1), types:[...worked] });
+        if(res&&res.saved){ msg.style.color="var(--green-dark)"; msg.textContent="Saved to your progress ✓"; }
+        else { msg.style.color="var(--pink)"; msg.textContent="Sign in first to save."; }
+      } catch(e){ msg.style.color="var(--pink)"; msg.textContent="Couldn't save right now."; }
+    });
+
+    // init
+    render();
+  })();
+  </script>
+</body>
+</html>

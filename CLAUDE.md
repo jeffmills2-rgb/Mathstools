@@ -9,7 +9,15 @@
 > Relationships (3G), Properties of Geometrical Figures (3H) and Data
 > Classification & Visualisation (3I). Also live: schoolyard NPCs now default to
 > a RANDOM Stage 4 topic (a teacher task still overrides). `adventureManifest.js`
-> lists all 14 topics and matches the live game. Nothing is pending deploy.
+> lists all 14 topics and matches the live game.
+> **NEW (being pushed 2026-07-08):** a **Fraction Bar + Number Line** teacher
+> interactive tool (`interactive-tools/stage-4/number/fraction-bar-number-line/`)
+> with a "Tools ▾" menu, plus two student pages in `online-quizzes/stage-4/number/`:
+> the **Fraction Thinking Explorer** (open shuffler) and the **Fractions Number
+> Line Quiz** (guided 8-stage progression; file kept as `fraction-thinking-quest.html`).
+> The Quiz is **trilingual (EN/AR/FA)** and now **randomises every stage's values**
+> each attempt (same learning intention). Both student pages are registered in
+> `mmtToolRegistry.js`. See §5.
 > Full details: the game repo's CLAUDE.md (per-phase sections + "Schoolyard
 > default topics").
 
@@ -100,6 +108,29 @@ portal/PLACEMENT.md , portal/README.md   migration + structure notes
 - All Firebase quizzes were migrated to the secure exchange (via `quizClient.js`
   or inline). The decimal-zoom rounding quiz was converted from a public
   leaderboard to a secure achievements quiz.
+- **Fraction Bar + Number Line family (2026-07-08):**
+  - **Teacher tool** `interactive-tools/stage-4/number/fraction-bar-number-line/index.html`
+    — self-contained (inline CSS/JS): a fraction shown as a part-whole bar, a
+    point/decimal on a (double) number line, and as division (Animate). Denominator
+    2–100, Bar/Number-Line/Decimal/Simplify toggles, smooth zoom-out, drag the
+    point, arrow-key nudge. Has a **"Tools ▾"** menu → **Student Quiz** link.
+  - **Student pages** in `online-quizzes/stage-4/number/`, both registered in
+    `mmtToolRegistry.js` and using the secure `MMTQuiz` save (dynamic import → work
+    offline; **no typed answers stored**, only structured `types[]` flags):
+    - `fraction-thinking-explorer.html` — open "Explore + shuffler" (superseded for
+      classroom use by the Quiz; kept enabled).
+    - `fraction-thinking-quest.html` — **"Fractions Number Line Quiz"** (title/registry
+      renamed; filename kept). Guided **8-stage** progression
+      (understand→equivalence→density→recurring→division→improper→compare→convince),
+      **trilingual EN/AR/FA** (selected language on top, English beneath; number line
+      stays LTR/Western numerals), part-b checkable inputs + reasoning chips stored as
+      `types[]` tags. **Every stage randomises its values per attempt** via per-stage
+      `gen()` functions cached in `P` (`{token}` templates filled by `fill()`); same
+      learning intention each time, cleared on reset. `score/total` = stages completed.
+    - Tested headlessly (jsdom): all 8 stages generate valid params in all 3 langs,
+      no leftover `{tokens}`, satisfiable across 200 random trials.
+    - TODO: AR/FA strings want a fluent proofread; hub cards for the student pages;
+      teacher portal export of the `types[]` reasoning tags.
 
 ## 6. Mills Maths Adventure (game source repo)
 - Vite + React + R3F. `src/` (game), `functions/` (Cloud Functions),

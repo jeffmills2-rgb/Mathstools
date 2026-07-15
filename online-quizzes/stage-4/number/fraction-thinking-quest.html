@@ -1,0 +1,706 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Fractions Number Line Quiz | Mills Maths Tools</title>
+  <style>
+    :root{
+      --bg:#f8fafc; --card:#ffffff; --ink:#0f172a; --muted:#64748b; --border:#e2e8f0;
+      --shadow:0 18px 45px rgba(15,23,42,.13);
+      --blue:#2563eb; --blue-dark:#1d4ed8; --green:#22c55e; --green-dark:#15803d; --purple:#7c3aed;
+      --amber:#d97706; --line:#334155; --line-soft:#94a3b8; --pink:#db2777;
+      --uiFont:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      --mathFont:"STIX Two Math","Cambria Math","Latin Modern Math","Times New Roman",Georgia,serif;
+    }
+    *{ box-sizing:border-box; }
+    body{ margin:0; font-family:var(--uiFont); color:var(--ink); min-height:100dvh;
+      background:radial-gradient(circle at top left,rgba(37,99,235,.14),transparent 32rem),radial-gradient(circle at top right,rgba(124,58,237,.12),transparent 34rem),var(--bg); overflow-x:hidden; }
+    button,input{ font:inherit; }
+    .app{ min-height:100dvh; display:flex; flex-direction:column; }
+
+    /* bilingual lines: target language on top, English beneath */
+    .tl{ display:block; }
+    .tl[lang="ar"], .tl[lang="fa"]{ font-size:1.02em; }
+    .el{ display:block; font-size:.78em; opacity:.72; font-weight:600; margin-top:1px; }
+    bdi{ unicode-bidi:isolate; }
+
+    .mmtTopbar{ background:linear-gradient(135deg,#0f172a,#123b7a 55%,#2563eb); color:#fff; padding:12px 22px;
+      display:grid; grid-template-columns:minmax(150px,1fr) auto minmax(150px,1fr); align-items:center; gap:14px; }
+    .mmtBrand{ display:flex; align-items:center; gap:11px; text-decoration:none; color:#fff; font-weight:900; }
+    .mmtBrandLogo{ width:40px; height:40px; border-radius:9px; background:#fff; color:#1d4ed8; display:grid; place-items:center; font-weight:1000; letter-spacing:-.08em; }
+    .mmtBrandText strong{ display:block; font-size:1.05rem; line-height:1; } .mmtBrandText span{ display:block; font-size:.72rem; opacity:.82; font-weight:650; }
+    .mmtTopTitle{ font-weight:850; font-size:clamp(1rem,2vw,1.4rem); letter-spacing:-.03em; text-align:center; }
+    .topActions{ justify-self:end; display:flex; align-items:center; gap:10px; font-size:.82rem; font-weight:800; }
+    .langTog{ display:inline-flex; border:1px solid rgba(255,255,255,.3); border-radius:10px; overflow:hidden; }
+    .langTog button{ border:none; background:transparent; color:#fff; font-weight:900; font-size:.82rem; padding:6px 10px; cursor:pointer; }
+    .langTog button.on{ background:#fff; color:#1d4ed8; }
+    .whoami{ opacity:.92; }
+
+    .signin{ background:#eef4ff; border-bottom:1px solid var(--border); padding:8px 18px; display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; font-size:.88rem; font-weight:700; color:#334155; }
+    .signin.hide{ display:none; }
+    .signin input{ border:1px solid var(--border); border-radius:10px; padding:7px 10px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; width:130px; }
+    .signin .sBtn{ border:1px solid var(--blue); background:var(--blue); color:#fff; font-weight:900; padding:7px 13px; border-radius:10px; cursor:pointer; }
+    .signin .sGhost{ border:1px solid var(--border); background:#fff; color:var(--muted); font-weight:800; padding:7px 11px; border-radius:10px; cursor:pointer; }
+    .signin .sMsg{ color:var(--pink); font-weight:800; }
+
+    .wrap{ width:min(940px, calc(100vw - 32px)); margin:16px auto 30px; display:flex; flex-direction:column; gap:14px; }
+
+    .progress{ background:#fff; border:1px solid var(--border); border-radius:16px; padding:12px 16px; box-shadow:var(--shadow); }
+    .progTop{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
+    .progTop .ttl{ font-weight:950; font-size:1.02rem; letter-spacing:-.02em; }
+    .progTop .ttl b{ color:var(--purple); }
+    .progTop .rst{ border:none; background:none; color:var(--muted); font-weight:800; font-size:.8rem; cursor:pointer; text-decoration:underline; }
+    .dots{ display:flex; gap:7px; flex-wrap:wrap; }
+    .dot{ width:30px; height:30px; border-radius:50%; border:2px solid var(--border); background:#fff; color:var(--muted); font-weight:900; font-size:.82rem; cursor:pointer; display:grid; place-items:center; transition:.14s; }
+    .dot:hover{ border-color:var(--blue); }
+    .dot.current{ border-color:var(--purple); color:var(--purple); box-shadow:0 0 0 3px rgba(124,58,237,.16); }
+    .dot.done{ background:var(--green); border-color:var(--green); color:#fff; }
+
+    .task{ background:linear-gradient(135deg,#faf5ff,#eef4ff); border:1px solid var(--border); border-radius:18px; padding:16px 20px; box-shadow:var(--shadow); }
+    .tags{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px; }
+    .tag{ font-size:.66rem; font-weight:900; letter-spacing:.04em; text-transform:uppercase; color:#6d28d9; background:#ede9fe; border-radius:999px; padding:3px 9px; }
+    .prompt{ font-size:clamp(1.04rem,2.1vw,1.22rem); font-weight:800; line-height:1.5; }
+    .prompt.small{ font-size:clamp(.98rem,1.9vw,1.12rem); }
+    .prompt b{ color:var(--purple); }
+    .partLabel{ display:inline-block; font-size:.7rem; font-weight:950; letter-spacing:.06em; text-transform:uppercase; color:var(--purple); background:#ede9fe; border-radius:999px; padding:3px 10px; margin-bottom:8px; }
+    .partLabel.b{ color:var(--green-dark); background:#dcfce7; }
+    .partB{ margin-top:14px; border-top:2px dashed var(--border); padding-top:14px; animation:revealB .35s ease; }
+    .partB[hidden]{ display:none; }
+    @keyframes revealB{ from{ opacity:0; transform:translateY(-6px); } to{ opacity:1; transform:none; } }
+    .predictRow{ display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; align-items:center; }
+    .predictRow .plabel{ font-weight:850; color:var(--muted); font-size:.86rem; }
+    .pchip{ border:1px solid var(--border); background:#fff; color:var(--ink); font-weight:850; padding:8px 14px; border-radius:16px; cursor:pointer; text-align:center; }
+    .pchip[aria-pressed="true"]{ background:#dbeafe; border-color:var(--blue); color:var(--blue-dark); }
+    .taskBtns{ display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; align-items:center; }
+    .checkBtn{ border:1px solid var(--green); background:var(--green); color:#fff; font-weight:900; font-size:.96rem; padding:10px 18px; border-radius:12px; cursor:pointer; text-align:center; }
+    .checkBtn:hover{ background:var(--green-dark); }
+    .shareBtn{ border:1px solid var(--purple); background:var(--purple); color:#fff; font-weight:900; padding:10px 16px; border-radius:12px; cursor:pointer; text-align:center; }
+    .shareBtn.stop{ background:#ef4444; border-color:#ef4444; }
+    .shareBtn[hidden]{ display:none; }
+    .feedback{ margin-top:12px; min-height:0; font-weight:800; font-size:.98rem; line-height:1.45; border-radius:12px; }
+    .feedback.show{ padding:11px 14px; }
+    .feedback.ok{ background:#dcfce7; color:#166534; border:1px solid #86efac; }
+    .feedback.nudge{ background:#fef9c3; color:#854d0e; border:1px solid #fde68a; }
+    .feedback.reveal{ background:#e0e7ff; color:#3730a3; border:1px solid #c7d2fe; }
+    .feedback .el{ opacity:.8; }
+    .disc details{ background:#fff; border:1px solid var(--border); border-radius:10px; padding:2px 12px; margin-top:8px; }
+    .disc summary{ cursor:pointer; font-weight:900; padding:8px 0; color:var(--purple); }
+    .disc p{ margin:0 0 10px; color:var(--line); font-weight:650; line-height:1.5; }
+    .furtherInput{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:4px 0 10px; }
+    .fin{ display:inline-flex; flex-direction:column; align-items:center; gap:5px; }
+    .fbox{ width:64px; text-align:center; border:2px solid var(--border); border-radius:10px; padding:7px 6px; background:#fff; font-family:var(--mathFont); font-weight:700; font-size:1.35rem; outline:none; }
+    .fbox.wide{ width:96px; }
+    .fbox:focus{ border-color:var(--blue); box-shadow:0 0 0 3px rgba(37,99,235,.16); }
+    .fin .fbar{ width:52px; height:3px; background:var(--line); border-radius:2px; }
+    .fchips{ display:flex; gap:8px; flex-wrap:wrap; }
+    .fchoice{ border:1px solid var(--border); background:#fff; color:var(--ink); font-weight:850; padding:8px 14px; border-radius:16px; cursor:pointer; text-align:center; }
+    .fchoice[aria-pressed="true"]{ background:#dbeafe; border-color:var(--blue); color:var(--blue-dark); }
+    .furtherReasons{ margin:2px 0 10px; }
+    .rlabel{ font-size:.82rem; font-weight:850; color:var(--muted); margin-bottom:6px; }
+    .rchip{ border:1px dashed var(--line-soft); background:#fff; color:var(--line); font-weight:750; font-size:.86rem; padding:7px 12px; border-radius:14px; cursor:pointer; margin:0 6px 6px 0; text-align:center; }
+    .rchip.on{ background:#ede9fe; border:1px solid var(--purple); color:#6d28d9; font-weight:850; }
+    .furtherBtns{ display:flex; gap:10px; }
+    .fCheck{ border:1px solid var(--amber); background:var(--amber); color:#fff; font-weight:900; padding:9px 16px; border-radius:11px; cursor:pointer; text-align:center; }
+    .ffb{ margin-top:8px; font-weight:800; font-size:.92rem; line-height:1.4; }
+    .ffb.show{ border-radius:10px; padding:9px 12px; }
+    .ffb.ok{ background:#dcfce7; color:#166534; border:1px solid #86efac; }
+    .ffb.nudge{ background:#fef9c3; color:#854d0e; border:1px solid #fde68a; }
+    .navRow{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:14px; }
+    .navBtn{ border:1px solid var(--border); background:#fff; color:var(--line); font-weight:900; padding:10px 16px; border-radius:12px; cursor:pointer; text-align:center; }
+    .navBtn:disabled{ opacity:.4; cursor:not-allowed; }
+    .navBtn.next{ background:var(--blue); border-color:var(--blue); color:#fff; }
+    .navBtn.next:hover:not(:disabled){ background:var(--blue-dark); }
+
+    .work{ background:#fff; border:1px solid var(--border); border-radius:18px; padding:12px clamp(8px,2vw,16px) 12px; box-shadow:var(--shadow); margin:12px 0 2px; }
+    .stepper{ display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap; padding:2px 0 8px; font-weight:850; color:var(--line); }
+    .stepper .lbl{ font-size:.92rem; }
+    .stepBtn{ width:38px; height:38px; border-radius:11px; border:1px solid var(--border); background:#fff; color:var(--blue-dark); font-size:1.3rem; font-weight:900; cursor:pointer; display:grid; place-items:center; }
+    .stepBtn:hover{ background:#eef4ff; }
+    .stepBtn:disabled{ opacity:.4; cursor:not-allowed; }
+    .partsVal{ min-width:44px; text-align:center; font-size:1.15rem; font-weight:950; font-variant-numeric:tabular-nums; }
+    .nline{ width:100%; height:auto; max-height:42vh; display:block; margin:0 auto; touch-action:none; cursor:ew-resize; user-select:none; -webkit-user-select:none; }
+    .nline text{ font-family:var(--mathFont); }
+    .chips{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; padding-top:8px; }
+    .chip{ border:1px solid var(--border); background:#fff; color:var(--line); font-weight:850; font-size:.86rem; padding:7px 13px; border-radius:14px; cursor:pointer; display:inline-flex; align-items:center; gap:7px; text-align:center; }
+    .chip .d{ width:11px; height:11px; border-radius:3px; background:var(--line-soft); flex:0 0 auto; }
+    .chip[aria-pressed="true"]{ background:#eef2ff; border-color:var(--blue); color:var(--blue-dark); }
+    .chip[aria-pressed="true"] .d{ background:var(--blue); }
+    .chip.suggest{ box-shadow:0 0 0 3px rgba(124,58,237,.16); border-color:var(--purple); }
+    .animArrows{ display:flex; align-items:center; justify-content:center; gap:14px; padding-top:8px; }
+    .animArrows[hidden]{ display:none; }
+    .arrowBtn{ width:42px; height:42px; border-radius:50%; border:1px solid var(--border); background:#fff; color:var(--purple); font-size:1.4rem; font-weight:900; display:grid; place-items:center; cursor:pointer; }
+    .arrowBtn:disabled{ opacity:.35; cursor:not-allowed; }
+    .animCaption{ font-size:clamp(.9rem,1.8vw,1.05rem); font-weight:750; text-align:center; min-width:min(64vw,480px); }
+    .animCaption .hl{ color:var(--purple); font-weight:900; } .animCaption .dec{ color:var(--blue); font-weight:900; }
+
+    .savebar{ display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap; font-weight:800; color:var(--muted); font-size:.9rem; }
+    .saveBtn{ border:1px solid var(--blue); background:var(--blue); color:#fff; font-weight:900; padding:10px 18px; border-radius:12px; cursor:pointer; text-align:center; }
+    .saveBtn:disabled{ opacity:.5; cursor:not-allowed; }
+
+    @media (max-width:640px){ .mmtTopbar{ grid-template-columns:1fr; justify-items:center; } }
+    @media (prefers-reduced-motion:reduce){ *{ animation-duration:.001ms !important; transition-duration:.001ms !important; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="mmtTopbar">
+      <a class="mmtBrand" href="https://www.millsmathstools.au" target="_self"><span class="mmtBrandLogo">MMT</span><span class="mmtBrandText"><strong>MMT</strong><span>Mills Maths Tools</span></span></a>
+      <div class="mmtTopTitle" id="ttlTop">Fractions Number Line Quiz</div>
+      <div class="topActions">
+        <div class="langTog" id="langTog">
+          <button type="button" data-lang="en" class="on">EN</button>
+          <button type="button" data-lang="ar">ع</button>
+          <button type="button" data-lang="fa">فا</button>
+        </div>
+        <span class="whoami" id="whoami"></span>
+      </div>
+    </header>
+
+    <div class="signin" id="signinBar">
+      <span id="siPrompt">Sign in to save your progress (optional):</span>
+      <input id="codeInput" placeholder="Student code" maxlength="12" autocomplete="off" />
+      <button class="sBtn" id="signinBtn" type="button">Sign in</button>
+      <button class="sGhost" id="skipBtn" type="button">Just explore</button>
+      <span class="sMsg" id="signinMsg"></span>
+    </div>
+
+    <main class="wrap">
+      <div class="progress">
+        <div class="progTop">
+          <div class="ttl" id="stageLine"></div>
+          <button class="rst" id="resetBtn" type="button">Start over</button>
+        </div>
+        <div class="dots" id="dots"></div>
+      </div>
+
+      <div class="task">
+        <div class="tags" id="tags"></div>
+        <span class="partLabel" id="lblPartA">Part (a)</span>
+        <div class="prompt" id="prompt"></div>
+        <div class="predictRow" id="predictRow" hidden></div>
+
+        <div class="work">
+          <div class="stepper">
+            <span class="lbl" id="lblParts">Equal parts (denominator):</span>
+            <button class="stepBtn" id="partsDown" type="button" aria-label="Fewer parts">−</button>
+            <span class="partsVal" id="partsVal">10</span>
+            <button class="stepBtn" id="partsUp" type="button" aria-label="More parts">+</button>
+          </div>
+          <svg class="nline" id="nline" viewBox="0 0 1000 300" role="img" aria-label="Fraction on a number line"></svg>
+          <div class="animArrows" id="animArrows" hidden>
+            <button class="arrowBtn" id="animBack" type="button" aria-label="Previous step">‹</button>
+            <div class="animCaption" id="animCaption"></div>
+            <button class="arrowBtn" id="animNext" type="button" aria-label="Next step">›</button>
+          </div>
+          <div class="chips" id="chips">
+            <button class="chip" id="barChip" type="button" aria-pressed="false"><span class="d"></span><span>Bar</span></button>
+            <button class="chip" id="decChip" type="button" aria-pressed="false"><span class="d"></span><span>Decimal</span></button>
+            <button class="chip" id="simChip" type="button" aria-pressed="false"><span class="d"></span><span>Simplify</span></button>
+          </div>
+        </div>
+
+        <div class="taskBtns">
+          <button class="checkBtn" id="checkBtn" type="button">Check my thinking</button>
+          <button class="shareBtn" id="shareBtn" type="button" hidden>▶ Share it out</button>
+        </div>
+        <div class="feedback" id="feedback"></div>
+        <div class="disc"><details data-k="h"><summary id="hintSummary">💡 Hint</summary><p id="hintText"></p></details></div>
+
+        <div class="partB" id="partB" hidden>
+          <span class="partLabel b" id="lblPartB">Part (b)</span>
+          <div class="prompt small" id="furtherText"></div>
+          <div class="furtherInput" id="furtherInput"></div>
+          <div class="furtherReasons" id="furtherReasons"></div>
+          <div class="furtherBtns"><button class="fCheck" id="furtherCheck" type="button">Check part (b)</button></div>
+          <div class="ffb" id="furtherFb"></div>
+        </div>
+
+        <div class="navRow">
+          <button class="navBtn" id="prevBtn" type="button">‹ Previous</button>
+          <button class="navBtn next" id="nextBtn" type="button">Next stage ›</button>
+        </div>
+      </div>
+
+      <div class="savebar">
+        <span id="progressText">Stages completed: 0 / 8</span>
+        <button class="saveBtn" id="saveBtn" type="button" disabled>Save my progress</button>
+        <span id="saveMsg"></span>
+      </div>
+    </main>
+  </div>
+
+  <script>
+  (function(){
+    "use strict";
+    const $ = id => document.getElementById(id);
+    const NS = "http://www.w3.org/2000/svg";
+    const DEN_MIN=2, DEN_MAX=100, NUM_MAX=400;
+    const state = { num:1, den:2, showBar:false, showDecimal:false, simplify:false, mixed:true, rangeMax:1, animMode:false, animStep:1 };
+
+    // ========== i18n ==========
+    let LANG = "en";
+    try{ LANG = localStorage.getItem("mmt-ftq-lang") || "en"; }catch(_){ }
+    function fill(s,vars){ return vars? String(s).replace(/\{(\w+)\}/g,(m,k)=> vars[k]!=null? "<bdi>"+vars[k]+"</bdi>":"") : s; }
+    function L(o,vars){ if(o==null) return ""; if(typeof o==="string") o={en:o};
+      const en=fill(o.en||"",vars); if(LANG==="en"||!o[LANG]) return en;
+      return '<span class="tl" dir="rtl" lang="'+LANG+'">'+fill(o[LANG],vars)+'</span><span class="el">'+en+'</span>'; }
+    const md = s => "<bdi>"+s+"</bdi>";
+
+    const UI = {
+      title:{en:"Fractions Number Line Quiz",ar:"اختبار خط أعداد الكسور",fa:"آزمون خط اعداد کسری"},
+      siPrompt:{en:"Sign in to save your progress (optional):",ar:"سجّل الدخول لحفظ تقدّمك (اختياري):",fa:"برای ذخیره پیشرفت وارد شوید (اختیاری):"},
+      codeph:{en:"Student code",ar:"رمز الطالب",fa:"کد دانش‌آموز"},
+      signIn:{en:"Sign in",ar:"تسجيل الدخول",fa:"ورود"},
+      justExplore:{en:"Just explore",ar:"استكشف فقط",fa:"فقط کاوش"},
+      startover:{en:"Start over",ar:"ابدأ من جديد",fa:"شروع دوباره"},
+      stageOf:{en:"Stage {n} of {t} — ",ar:"المرحلة {n} من {t} — ",fa:"مرحله {n} از {t} — "},
+      partA:{en:"Part (a)",ar:"الجزء (أ)",fa:"بخش (الف)"},
+      partB:{en:"Part (b)",ar:"الجزء (ب)",fa:"بخش (ب)"},
+      partsLabel:{en:"Equal parts (denominator):",ar:"أجزاء متساوية (المقام):",fa:"بخش‌های مساوی (مخرج):"},
+      chipBar:{en:"Bar",ar:"الشريط",fa:"نوار"},
+      chipDec:{en:"Decimal",ar:"عدد عشري",fa:"اعشاری"},
+      chipSim:{en:"Simplify",ar:"تبسيط",fa:"ساده‌سازی"},
+      checkThinking:{en:"Check my thinking",ar:"تحقّق من تفكيري",fa:"بررسی فکرم"},
+      checkPrediction:{en:"Check my answer",ar:"تحقّق من إجابتي",fa:"بررسی پاسخم"},
+      share:{en:"▶ Share it out",ar:"▶ وزّعها",fa:"▶ تقسیمش کن"},
+      stop:{en:"✕ Stop",ar:"✕ إيقاف",fa:"✕ توقف"},
+      hint:{en:"💡 Hint",ar:"💡 تلميح",fa:"💡 راهنمایی"},
+      checkPartB:{en:"Check part (b)",ar:"تحقّق من الجزء (ب)",fa:"بررسی بخش (ب)"},
+      howKnow:{en:"How did you know? (tap any that fit — this helps your teacher see your thinking)",ar:"كيف عرفت؟ (اضغط ما يناسب — هذا يساعد معلّمك على رؤية تفكيرك)",fa:"از کجا فهمیدی؟ (هر کدام مناسب است بزن — به معلمت کمک می‌کند فکرت را ببیند)"},
+      prev:{en:"‹ Previous",ar:"‹ السابق",fa:"‹ قبلی"},
+      next:{en:"Next stage ›",ar:"المرحلة التالية ›",fa:"مرحله بعد ›"},
+      completed:{en:"Stages completed: {d} / {t}",ar:"المراحل المكتملة: {d} / {t}",fa:"مراحل کامل‌شده: {d} / {t}"},
+      extensions:{en:" · extensions: {e}",ar:" · إضافات: {e}",fa:" · تمرین بیشتر: {e}"},
+      save:{en:"Save my progress",ar:"احفظ تقدّمي",fa:"ذخیره پیشرفت"},
+      saving:{en:"Saving…",ar:"جارٍ الحفظ…",fa:"در حال ذخیره…"},
+      saved:{en:"Saved ✓",ar:"تم الحفظ ✓",fa:"ذخیره شد ✓"},
+      signFirst:{en:"Sign in first to save.",ar:"سجّل الدخول أولاً للحفظ.",fa:"ابتدا وارد شوید تا ذخیره شود."},
+      saveErr:{en:"Couldn't save right now.",ar:"تعذّر الحفظ الآن.",fa:"الان ذخیره نشد."},
+      enterCode:{en:"Enter your student code.",ar:"أدخل رمز الطالب.",fa:"کد دانش‌آموزت را وارد کن."},
+      checking:{en:"Checking…",ar:"جارٍ التحقّق…",fa:"در حال بررسی…"},
+      signUnavail:{en:"Sign-in unavailable — you can still work through the quest.",ar:"تسجيل الدخول غير متاح — يمكنك متابعة الرحلة.",fa:"ورود در دسترس نیست — می‌توانی سفر را ادامه دهی."},
+      working:{en:"Working (not saving)",ar:"تعمل (بدون حفظ)",fa:"در حال کار (بدون ذخیره)"},
+      useToolFirst:{en:"Use the tool first, then answer.",ar:"استخدم الأداة أولاً ثم أجب.",fa:"اول از ابزار استفاده کن، بعد پاسخ بده."},
+      chooseFirst:{en:"Choose one of the options above first.",ar:"اختر أحد الخيارات أعلاه أولاً.",fa:"اول یکی از گزینه‌های بالا را انتخاب کن."},
+      lookAgain:{en:" Take another look with the tool, then choose again.",ar:" انظر مرة أخرى بالأداة ثم اختر من جديد.",fa:" دوباره با ابزار نگاه کن، سپس دوباره انتخاب کن."},
+      pickOne:{en:"Pick one of the options.",ar:"اختر أحد الخيارات.",fa:"یکی از گزینه‌ها را انتخاب کن."},
+      typeFrac:{en:"Type a fraction — a top and a bottom number.",ar:"اكتب كسراً — بسطاً ومقاماً.",fa:"یک کسر بنویس — صورت و مخرج."},
+      typeNum:{en:"Type a number.",ar:"اكتب عدداً.",fa:"یک عدد بنویس."},
+      range2100:{en:"Use 2–100 for the bottom number.",ar:"استخدم 2–100 للمقام.",fa:"برای مخرج از 2 تا 100 استفاده کن."},
+      shareHint:{en:" Now press Share it out to see it.",ar:" الآن اضغط «وزّعها» لتراها.",fa:" حالا «تقسیمش کن» را بزن تا ببینی."},
+      chose:{en:'You chose “{opt}”. ',ar:"اخترت «{opt}». ",fa:"«{opt}» را انتخاب کردی. "}
+    };
+    const TAGS = {
+      Understand:{en:"Understand",ar:"فهم",fa:"درک"}, Compare:{en:"Compare",ar:"مقارنة",fa:"مقایسه"},
+      Equivalence:{en:"Equivalence",ar:"تكافؤ",fa:"هم‌ارزی"}, Reasoning:{en:"Reasoning",ar:"استدلال",fa:"استدلال"},
+      Construct:{en:"Construct",ar:"إنشاء",fa:"ساختن"}, Density:{en:"Density",ar:"كثافة",fa:"چگالی"},
+      Recurring:{en:"Recurring",ar:"دوري",fa:"متناوب"}, Division:{en:"Division",ar:"قسمة",fa:"تقسیم"},
+      Improper:{en:"Improper",ar:"كسر غير حقيقي",fa:"کسر بزرگ‌تر از ۱"}, Point:{en:"Point",ar:"نقطة",fa:"نقطه"},
+      Misconception:{en:"Misconception",ar:"مفهوم خاطئ",fa:"کج‌فهمی"}, Communicate:{en:"Communicate",ar:"تواصل",fa:"ارتباط"}
+    };
+
+    // ---------- maths (engine) ----------
+    function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ [a,b]=[b,a%b]; } return a||1; }
+    function reduce(n,d){ if(n===0) return {n:0,d:1}; const g=gcd(n,d); return {n:n/g,d:d/g}; }
+    function terminating(n,d){ let dd=d/gcd(n,d); while(dd%2===0)dd/=2; while(dd%5===0)dd/=5; return dd===1; }
+    const OVERDOT="̇";
+    function decimalParts(num,den){ const intPart=Math.floor(num/den); let rem=num%den; if(rem===0) return {intPart,nonRep:"",rep:""};
+      const digits=[],seen={}; let repStart=-1; while(rem!==0){ if(seen[rem]!==undefined){ repStart=seen[rem]; break; } seen[rem]=digits.length; rem*=10; digits.push(Math.floor(rem/den)); rem%=den; }
+      if(rem===0) return {intPart,nonRep:digits.join(""),rep:""}; return {intPart,nonRep:digits.slice(0,repStart).join(""),rep:digits.slice(repStart).join("")}; }
+    function decimalStr(n,d){ const p=decimalParts(n,d); if(!p.nonRep&&!p.rep) return String(p.intPart); let r=""; if(p.rep){ const s=p.rep; r=(s.length===1)?s+OVERDOT:s[0]+OVERDOT+s.slice(1,-1)+s[s.length-1]+OVERDOT; } return p.intPart+"."+p.nonRep+r; }
+    const fmt=(n,d)=>n+"/"+d, round2=x=>Math.round(x*100)/100, val=()=>state.num/state.den;
+    const between=(a,b)=>{ const v=val(); return v>a+1e-9 && v<b-1e-9; };
+
+    // ---------- geometry / render (engine) ----------
+    const LEFT=88, RIGHT=912, W=RIGHT-LEFT, LINE_Y=158;
+    const HALO={ stroke:"#fff","stroke-width":"4","paint-order":"stroke","stroke-linejoin":"round" };
+    function el(tag,attrs,text){ const e=document.createElementNS(NS,tag); for(const k in attrs) e.setAttribute(k,attrs[k]); if(text!=null) e.textContent=text; return e; }
+    function svgFrac(cx,topY,n,d,useMixed,fs){ const g=el("g",{}); const cw=fs*0.6;
+      function txt(x,y,s,fw,size){ const t=el("text",Object.assign({x:x,y:y,"text-anchor":"middle","font-weight":fw||"700","font-size":size||fs,fill:"var(--line)"},HALO)); t.textContent=s; return t; }
+      if(d<=0||n===0||n%d===0){ g.appendChild(txt(cx,topY+fs*1.1,(n%d===0?String(n/d):"0"),"800",fs*1.15)); return g; }
+      let wholeStr="",nn=n; if(useMixed&&n>d){ wholeStr=String(Math.floor(n/d)); nn=n%d; }
+      const numStr=String(nn),denStr=String(d), barW=Math.max(numStr.length,denStr.length)*cw+10, wholeW=wholeStr?(wholeStr.length*cw*1.15+8):0;
+      const startX=cx-(wholeW+barW)/2, fracCx=startX+wholeW+barW/2, barY=topY+fs;
+      if(wholeStr) g.appendChild(txt(startX+wholeW/2,barY+fs*0.34,wholeStr,"800",fs*1.15));
+      g.appendChild(txt(fracCx,barY-fs*0.28,numStr));
+      g.appendChild(el("line",{x1:fracCx-barW/2,y1:barY,x2:fracCx+barW/2,y2:barY,stroke:"var(--line)","stroke-width":Math.max(2,fs*0.09),"stroke-linecap":"round"}));
+      g.appendChild(txt(fracCx,barY+fs*0.92,denStr)); return g; }
+    function drawDecimal(g, cx, baselineY, n, d, fs, fill){
+      const p=decimalParts(n,d);
+      const s = p.rep ? (p.intPart+"."+p.nonRep+p.rep) : (p.intPart+(p.nonRep?"."+p.nonRep:""));
+      const t=el("text",Object.assign({x:cx,y:baselineY,"text-anchor":"middle","font-weight":"800","font-size":fs,fill},HALO)); t.textContent=s; g.appendChild(t);
+      if(p.rep){ try{ const start=s.length-p.rep.length, last=s.length-1;
+        const dot=idx=>{ const a=t.getStartPositionOfChar(idx), b=t.getEndPositionOfChar(idx); g.appendChild(el("circle",{cx:((a.x+b.x)/2).toFixed(2),cy:(baselineY-fs*0.98).toFixed(2),r:(fs*0.085).toFixed(2),fill})); };
+        dot(start); if(last!==start) dot(last); }catch(e){} }
+    }
+    function computeGeom(){ const value=state.num/state.den, partSpan=Math.max(1,Math.ceil(value-1e-9));
+      let effN=state.num,effD=state.den; if(state.simplify){ const r=reduce(state.num,state.den); effN=r.n; effD=r.d; }
+      const visibleMax=Math.max(partSpan,state.rangeMax), overshoot=visibleMax<=partSpan, extraTenths=overshoot?Math.max(1,Math.round(0.4*effD)):0, drawMax=visibleMax+extraTenths/effD;
+      return {value,partSpan,visibleMax,effN,effD,extraTenths,drawMax}; }
+    function xFor(v,m){ return LEFT+(v/m)*W; }
+    function render(opts){ opts=opts||{}; const svg=$("nline"); while(svg.firstChild) svg.removeChild(svg.firstChild); const g=el("g",{}); svg.appendChild(g);
+      const {value,partSpan,visibleMax,effN,effD,extraTenths,drawMax}=computeGeom();
+      const m=(opts.forceMax!=null)?opts.forceMax:drawMax, tickMax=(opts.forceMax!=null)?Math.round(opts.forceMax):visibleMax;
+      const parts=effD*partSpan, partsExt=parts+extraTenths, labelStep=tickMax<=12?1:Math.ceil(tickMax/10);
+      for(let w=0;w<=tickMax;w++){ const x=xFor(w,m); g.appendChild(el("line",{x1:x.toFixed(2),y1:LINE_Y-42,x2:x.toFixed(2),y2:LINE_Y+14,stroke:"var(--line-soft)","stroke-width":"1.4","stroke-dasharray":w===0?"0":"3 4","stroke-opacity":w===0?"0.9":"0.7"})); }
+      const BH=42, bt=LINE_Y-BH/2;
+      if(state.showBar){ const bx0=xFor(0,m),bxV=xFor(value,m),bx1=xFor(partSpan,m);
+        g.appendChild(el("rect",{x:bxV.toFixed(2),y:bt,width:(bx1-bxV).toFixed(2),height:BH,fill:"var(--blue)","fill-opacity":"0.15"}));
+        g.appendChild(el("rect",{x:bx0.toFixed(2),y:bt,width:(bxV-bx0).toFixed(2),height:BH,fill:"var(--blue)","fill-opacity":"0.85"}));
+        g.appendChild(el("rect",{x:bx0.toFixed(2),y:bt,width:(bx1-bx0).toFixed(2),height:BH,fill:"none",stroke:"var(--line)","stroke-width":"2",rx:"4"})); }
+      g.appendChild(el("line",{x1:LEFT-14,y1:LINE_Y,x2:RIGHT+14,y2:LINE_Y,stroke:"var(--line)","stroke-width":"3.2","stroke-linecap":"round"}));
+      for(let i=0;i<=partsExt;i++){ if(i%effD===0) continue; const x=xFor(i/effD,m); g.appendChild(el("line",{x1:x.toFixed(2),y1:LINE_Y-9,x2:x.toFixed(2),y2:LINE_Y+9,stroke:"var(--line)","stroke-width":"1.8","stroke-linecap":"round"})); }
+      for(let w=0;w<=tickMax;w++){ const x=xFor(w,m); g.appendChild(el("line",{x1:x.toFixed(2),y1:LINE_Y-15,x2:x.toFixed(2),y2:LINE_Y+15,stroke:"var(--line)","stroke-width":"3","stroke-linecap":"round"}));
+        if(w===0||w===tickMax||w%labelStep===0){ const lbl=el("text",{x:x.toFixed(2),y:LINE_Y+40,"text-anchor":"middle","font-weight":"800","font-size":"22",fill:"var(--line)"}); lbl.textContent=String(w); g.appendChild(lbl); } }
+      const px=xFor(value,m), rw=15, rh=9, ti=7;
+      g.appendChild(el("path",{d:`M ${(px-rw).toFixed(2)} ${LINE_Y} L ${(px-rw+ti).toFixed(2)} ${LINE_Y-rh} L ${(px+rw-ti).toFixed(2)} ${LINE_Y-rh} L ${(px+rw).toFixed(2)} ${LINE_Y} L ${(px+rw-ti).toFixed(2)} ${LINE_Y+rh} L ${(px-rw+ti).toFixed(2)} ${LINE_Y+rh} Z`,fill:"var(--blue)",stroke:"#fff","stroke-width":"2","stroke-linejoin":"round"}));
+      if(state.showDecimal){ drawDecimal(g, px, LINE_Y-34, state.num, state.den, 27, "var(--blue)"); }
+      g.appendChild(svgFrac(px,LINE_Y+52,effN,effD,state.mixed,24));
+      $("partsVal").textContent=String(state.den); $("partsDown").disabled=state.den<=DEN_MIN; $("partsUp").disabled=state.den>=DEN_MAX;
+    }
+
+    // ---------- drag ----------
+    let dragging=false, animRAF=null;
+    const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    function numFromClientX(clientX){ const svg=$("nline"), r=svg.getBoundingClientRect(), vx=(clientX-r.left)/r.width*1000;
+      const geom=computeGeom(), effD=geom.effD, dm=state._dragMax||geom.drawMax;
+      let value=(vx-LEFT)/W*dm; value=Math.max(0,Math.min(dm-1/effD,value));
+      const units=Math.round(value*effD); let newNum=Math.max(0,Math.min(NUM_MAX,Math.round(units*(state.den/effD))));
+      if(newNum!==state.num){ state.num=newNum; } render({forceMax:dm}); }
+    function settleDrag(fromMax){ const toMax=computeGeom().drawMax;
+      if(reduceMotion||typeof requestAnimationFrame!=="function"||Math.abs(toMax-fromMax)<1e-4){ render(); return; }
+      cancelAnimationFrame(animRAF); let t0=null; const dur=430;
+      function f(now){ if(t0===null)t0=now; let p=Math.min(1,(now-t0)/dur); const e=p<0.5?2*p*p:1-Math.pow(-2*p+2,2)/2; render({forceMax:fromMax*Math.pow(toMax/fromMax,e)}); if(p<1){animRAF=requestAnimationFrame(f);}else render(); } animRAF=requestAnimationFrame(f); }
+    (function bindDrag(){ const svg=$("nline");
+      svg.addEventListener("pointerdown",e=>{ if(state.animMode) return; e.preventDefault(); cancelAnimationFrame(animRAF); dragging=true; state._dragMax=computeGeom().drawMax; svg.setPointerCapture(e.pointerId); numFromClientX(e.clientX); });
+      svg.addEventListener("pointermove",e=>{ if(dragging) numFromClientX(e.clientX); });
+      function end(e){ if(!dragging) return; dragging=false; const f=state._dragMax; state._dragMax=null; state._targetV=val(); try{svg.releasePointerCapture(e.pointerId);}catch(_){} if(f) settleDrag(f); else render(); }
+      svg.addEventListener("pointerup",end); svg.addEventListener("pointercancel",end); })();
+
+    // ---------- parts stepper ----------
+    function setParts(d){ d=Math.max(DEN_MIN,Math.min(DEN_MAX,d)); const v=(state._targetV!=null)?state._targetV:val(); state.den=d; state.num=Math.max(0,Math.min(NUM_MAX,Math.round(v*d))); state.rangeMax=Math.max(1,Math.ceil(state.num/state.den-1e-9)); render(); }
+    $("partsDown").addEventListener("click",()=>{ if(!state.animMode) setParts(state.den-1); });
+    $("partsUp").addEventListener("click",()=>{ if(!state.animMode) setParts(state.den+1); });
+
+    // ---------- chips ----------
+    function bindChip(id,key){ const b=$(id); b.addEventListener("click",()=>{ state[key]=!state[key]; b.setAttribute("aria-pressed",state[key]?"true":"false"); render(); }); }
+    bindChip("barChip","showBar"); bindChip("decChip","showDecimal"); bindChip("simChip","simplify");
+    function setChips(bar,dec,sim){ state.showBar=bar; state.showDecimal=dec; state.simplify=sim;
+      $("barChip").setAttribute("aria-pressed",bar?"true":"false"); $("decChip").setAttribute("aria-pressed",dec?"true":"false"); $("simChip").setAttribute("aria-pressed",sim?"true":"false"); }
+    function suggestChips(list){ [["barChip","bar"],["decChip","dec"],["simChip","sim"]].forEach(([id,k])=>$(id).classList.toggle("suggest",list.indexOf(k)>=0)); }
+
+    // ---------- division animation ----------
+    let animating=false;
+    function animRangeFor(step){ const value=state.num/state.den; return (step<=2)?Math.max(1,state.num):value*2.4; }
+    function captionFor(step){ const n=state.num,d=state.den,dec=decimalStr(n,d);
+      const o = step===1 ? {en:`<span class="hl">${n} ÷ ${d}</span> — start with <span class="hl">${n}</span> as a length.`, ar:`<span class="hl">${n} ÷ ${d}</span> — ابدأ بالطول <span class="hl">${n}</span>.`, fa:`<span class="hl">${n} ÷ ${d}</span> — با طول <span class="hl">${n}</span> شروع کن.`}
+        : step===2 ? {en:`Share the <span class="hl">${n}</span> into <span class="hl">${d}</span> equal parts (one shown in blue).`, ar:`وزّع <span class="hl">${n}</span> على <span class="hl">${d}</span> أجزاء متساوية (واحد باللون الأزرق).`, fa:`<span class="hl">${n}</span> را به <span class="hl">${d}</span> بخش مساوی تقسیم کن (یکی آبی).`}
+        : {en:`One share = <span class="dec">${dec}</span> — where <span class="hl">${n}/${d}</span> sits.`, ar:`النصيب الواحد = <span class="dec">${dec}</span> — موضع <span class="hl">${n}/${d}</span>.`, fa:`هر سهم = <span class="dec">${dec}</span> — جای <span class="hl">${n}/${d}</span>.`};
+      return L(o); }
+    function updateArrows(){ $("animCaption").innerHTML=captionFor(state.animStep); $("animBack").disabled=state.animStep<=1||animating; $("animNext").disabled=state.animStep>=3||animating; }
+    function renderAnim(o){ o=o||{}; const svg=$("nline"); while(svg.firstChild) svg.removeChild(svg.firstChild); const g=el("g",{}); svg.appendChild(g);
+      const n=state.num,d=state.den,value=n/d,step=state.animStep, m=(o.animMax!=null)?o.animMax:animRangeFor(step), tickMax=(o.tickMax!=null)?Math.round(o.tickMax):Math.round(animRangeFor(step));
+      const intOp=(o.int!=null)?o.int:(step===1?1:0),bracketOp=(o.bracket!=null)?o.bracket:(step<=2?1:0),blueOp=(o.blue!=null)?o.blue:(step>=2?1:0),pointOp=(o.point!=null)?o.point:(step===3?1:0),remnantOp=(o.remnant!=null)?o.remnant:0;
+      g.appendChild(el("line",{x1:LEFT-14,y1:LINE_Y,x2:RIGHT+14,y2:LINE_Y,stroke:"var(--line)","stroke-width":"3.2","stroke-linecap":"round"}));
+      g.appendChild(el("line",{x1:xFor(0,m).toFixed(2),y1:LINE_Y-13,x2:xFor(0,m).toFixed(2),y2:LINE_Y+13,stroke:"var(--line-soft)","stroke-width":"2.4","stroke-linecap":"round"}));
+      { const z=el("text",{x:xFor(0,m).toFixed(2),y:LINE_Y+40,"text-anchor":"middle","font-weight":"800","font-size":"22",fill:"var(--muted)"}); z.textContent="0"; g.appendChild(z); }
+      if(intOp>0.001){ const ig=el("g",{opacity:intOp.toFixed(3)}); const ls=tickMax<=12?1:Math.ceil(tickMax/10);
+        for(let w=1;w<=tickMax;w++){ const x=xFor(w,m); ig.appendChild(el("line",{x1:x.toFixed(2),y1:LINE_Y-13,x2:x.toFixed(2),y2:LINE_Y+13,stroke:"var(--line-soft)","stroke-width":"2.4","stroke-linecap":"round"}));
+          if(w===tickMax||w%ls===0){ const lb=el("text",{x:x.toFixed(2),y:LINE_Y+40,"text-anchor":"middle","font-weight":"800","font-size":"22",fill:"var(--muted)"}); lb.textContent=String(w); ig.appendChild(lb); } } g.appendChild(ig); }
+      if(remnantOp>0.001){ const rg=el("g",{opacity:remnantOp.toFixed(3)}); const ps=Math.max(1,Math.ceil(value-1e-9));
+        for(let i=1;i<ps*d;i++){ if(i%d===0) continue; const x=xFor(i/d,m); rg.appendChild(el("line",{x1:x.toFixed(2),y1:LINE_Y-9,x2:x.toFixed(2),y2:LINE_Y+9,stroke:"var(--line)","stroke-width":"1.8","stroke-linecap":"round"})); }
+        rg.appendChild(el("circle",{cx:xFor(value,m).toFixed(2),cy:LINE_Y,r:"7.5",fill:"var(--blue)",stroke:"#fff","stroke-width":"2.5"})); g.appendChild(rg); }
+      if(bracketOp>0.001){ const bg=el("g",{opacity:bracketOp.toFixed(3)}); const x0=xFor(0,m),xn=xFor(n,m),by=104;
+        bg.appendChild(el("line",{x1:x0.toFixed(2),y1:by,x2:xn.toFixed(2),y2:by,stroke:"var(--purple)","stroke-width":"3","stroke-linecap":"round"}));
+        bg.appendChild(el("line",{x1:x0.toFixed(2),y1:by,x2:x0.toFixed(2),y2:by+16,stroke:"var(--purple)","stroke-width":"3","stroke-linecap":"round"}));
+        bg.appendChild(el("line",{x1:xn.toFixed(2),y1:by,x2:xn.toFixed(2),y2:by+16,stroke:"var(--purple)","stroke-width":"3","stroke-linecap":"round"}));
+        const nt=el("text",Object.assign({x:((x0+xn)/2).toFixed(2),y:by-12,"text-anchor":"middle","font-weight":"800","font-size":"30",fill:"var(--purple)"},HALO)); nt.textContent=String(n); bg.appendChild(nt); g.appendChild(bg); }
+      if(blueOp>0.001){ const dg=el("g",{opacity:blueOp.toFixed(3)});
+        dg.appendChild(el("line",{x1:xFor(0,m).toFixed(2),y1:LINE_Y,x2:xFor(value,m).toFixed(2),y2:LINE_Y,stroke:"var(--blue)","stroke-width":"8","stroke-linecap":"round","stroke-opacity":"0.85"}));
+        for(let k=1;k<=d;k++){ const pv=k*value; if(pv>m+1e-6) break; const x=xFor(pv,m); dg.appendChild(el("line",{x1:x.toFixed(2),y1:LINE_Y-12,x2:x.toFixed(2),y2:LINE_Y+12,stroke:"var(--blue)","stroke-width":"2.6","stroke-linecap":"round"}));
+          if(pointOp>0.5&&k===1) continue; const t=el("text",Object.assign({x:x.toFixed(2),y:LINE_Y+34,"text-anchor":"middle","font-weight":(k===1?"900":"800"),"font-size":"16",fill:(k===1?"var(--blue-dark)":"var(--blue)")},HALO)); t.textContent=decimalStr(k*n,d); dg.appendChild(t); }
+        g.appendChild(dg); }
+      if(pointOp>0.001){ const pg=el("g",{opacity:pointOp.toFixed(3)}); const px=xFor(value,m);
+        pg.appendChild(el("circle",{cx:px.toFixed(2),cy:LINE_Y,r:"7.5",fill:"var(--blue)",stroke:"#fff","stroke-width":"2.5"}));
+        drawDecimal(pg, px, LINE_Y-34, n, d, 27, "var(--blue)");
+        pg.appendChild(svgFrac(px,LINE_Y+54,n,d,state.mixed,24)); g.appendChild(pg); } }
+    function lerpGeo(a,b,e){ return a*Math.pow(b/a,e); }
+    function animTween(dur,frameFn,doneFn){ cancelAnimationFrame(animRAF); animating=true; updateArrows();
+      if(reduceMotion||typeof requestAnimationFrame!=="function"){ frameFn(1,1); animating=false; if(doneFn)doneFn(); updateArrows(); return; }
+      let t0=null; function f(now){ if(t0===null)t0=now; let p=Math.min(1,(now-t0)/dur); const e=p<0.5?2*p*p:1-Math.pow(-2*p+2,2)/2; frameFn(p,e); if(p<1){animRAF=requestAnimationFrame(f);}else{ animating=false; if(doneFn)doneFn(); updateArrows(); } } animRAF=requestAnimationFrame(f); }
+    function goToStep(target){ if(animating) return; target=Math.max(1,Math.min(3,target)); const cur=state.animStep; if(target===cur) return;
+      const fromRange=animRangeFor(cur),toRange=animRangeFor(target); state.animStep=target; const tickMax=Math.round(Math.max(fromRange,toRange));
+      const i0=cur===1?1:0,i1=target===1?1:0,b0=cur<=2?1:0,b1=target<=2?1:0,l0=cur>=2?1:0,l1=target>=2?1:0,p0=cur===3?1:0,p1=target===3?1:0;
+      animTween(560,(p,e)=>{ renderAnim({animMax:lerpGeo(fromRange,toRange,e),tickMax:tickMax,int:i0+(i1-i0)*e,bracket:b0+(b1-b0)*e,blue:l0+(l1-l0)*e,point:p0+(p1-p0)*e}); },()=>renderAnim()); }
+    function enterAnim(){ if(state.num<1) return; if(animRAF) cancelAnimationFrame(animRAF); animating=false; state.animMode=true; state.animStep=1;
+      $("animArrows").hidden=false; $("shareBtn").innerHTML=L(UI.stop); $("shareBtn").classList.add("stop");
+      const startMax=state.rangeMax,endMax=animRangeFor(1),tickMax=Math.max(startMax,endMax);
+      animTween(950,(p,e)=>{ const remnant=Math.max(0,Math.min(1,(0.35-p)/0.35)); const zp=Math.max(0,Math.min(1,(p-0.30)/0.70)); const ze=zp<0.5?2*zp*zp:1-Math.pow(-2*zp+2,2)/2;
+        renderAnim({animMax:lerpGeo(startMax,endMax,ze),tickMax:tickMax,remnant:remnant,int:zp,bracket:zp,blue:0,point:0}); },()=>renderAnim()); }
+    function exitAnim(){ if(animRAF) cancelAnimationFrame(animRAF); animating=false; state.animMode=false; $("animArrows").hidden=true; $("shareBtn").innerHTML=L(UI.share); $("shareBtn").classList.remove("stop"); render(); }
+    $("shareBtn").addEventListener("click",()=>{ state.animMode?exitAnim():enterAnim(); });
+    $("animBack").addEventListener("click",()=>{ if(!animating) goToStep(state.animStep-1); });
+    $("animNext").addEventListener("click",()=>{ if(!animating) goToStep(state.animStep+1); });
+    document.addEventListener("keydown",e=>{ if(!state.animMode) return; if(e.key==="Escape"){ exitAnim(); return; } if(animating) return; if(e.key==="ArrowRight") goToStep(state.animStep+1); else if(e.key==="ArrowLeft") goToStep(state.animStep-1); });
+
+    // ================= STAGES (trilingual) =================
+    function setV(n,d){ if(state.animMode) exitAnim(); state.den=d; state.num=n; state._targetV=n/d; state.rangeMax=Math.max(1,Math.ceil(n/d-1e-9)); render(); }
+    const opt=(en,ar,fa)=>({en,ar,fa});
+    const rint=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+    const pick=a=>a[Math.floor(Math.random()*a.length)];
+    const round1=x=>Math.round(x*10)/10;
+    const STAGES=[
+      { id:"s1", title:{en:"Fractions are numbers",ar:"الكسور أعداد",fa:"کسرها عدد هستند"}, tags:["Understand","Compare"],
+        prompt:{en:`Every fraction has a <b>place on the line</b>. Drag the point to a fraction that is <b>more than 1/2 but less than 1</b>. Turn on the <b>Bar</b> — is more than half the whole shaded?`,
+                ar:`لكل كسر <b>موضع على الخط</b>. اسحب النقطة إلى كسر <b>أكبر من 1/2 وأصغر من 1</b>. شغّل <b>الشريط</b> — هل ظُلِّل أكثر من نصف الكل؟`,
+                fa:`هر کسر <b>جایی روی خط</b> دارد. نقطه را به کسری ببر که <b>بیشتر از 1/2 و کمتر از 1</b> باشد. <b>نوار</b> را روشن کن — آیا بیش از نیمی رنگ شده؟`},
+        chips:["bar"], gen:()=>{ const b=pick([[2,3],[3,4],[4,5]]); const sd=rint(6,12); return {b:b[0]+"/"+b[1], bv:b[0]/b[1], sn:Math.max(1,rint(1,Math.floor(sd*0.45))), sd}; },
+        setup:p=>{ setChips(true,false,false); setV(p.sn,p.sd); },
+        check:p=>{ const v=val(), eq=md(fmt(state.num,state.den)+" = "+round2(v));
+          if(v>0.5+1e-9 && v<1-1e-9) return {tone:"ok",msg:{en:`${eq} — yes, more than 1/2 and less than 1, and the bar is over half shaded. How do you know it's past a half?`,ar:`${eq} — نعم، أكبر من 1/2 وأصغر من 1، والشريط مظلّل لأكثر من النصف. كيف عرفت أنه تجاوز النصف؟`,fa:`${eq} — بله، بیشتر از 1/2 و کمتر از 1 است و بیش از نیمی از نوار رنگ شده. از کجا فهمیدی از نصف گذشته؟`}};
+          if(v>=1) return {tone:"nudge",msg:{en:`${eq} — that's a whole or more. Come back under 1.`,ar:`${eq} — هذا واحد صحيح أو أكثر. ارجع إلى أقل من 1.`,fa:`${eq} — این یک کامل یا بیشتر است. به کمتر از 1 برگرد.`}};
+          return {tone:"nudge",msg:{en:`${eq} — half is 0.5. Drag past halfway (but before 1).`,ar:`${eq} — النصف هو 0.5. اسحب إلى ما بعد المنتصف (وقبل 1).`,fa:`${eq} — نصف 0.5 است. از وسط بگذر (اما قبل از 1).`}}; },
+        hint:{en:`Half of your parts is halfway. Go past the middle (but stay under 1).`,ar:`نصف أجزائك هو المنتصف. تجاوز الوسط (وابقَ أقل من 1).`,fa:`نصف بخش‌هایت یعنی وسط. از وسط بگذر (اما زیر 1 بمان).`},
+        further:{ text:{en:`Make a fraction <b>more than {b}</b> (still under 1) and enter it.`,ar:`اصنع كسراً <b>أكبر من {b}</b> (وأقل من 1) وأدخله.`,fa:`کسری <b>بیشتر از {b}</b> (و کمتر از 1) بساز و وارد کن.`}, input:{kind:"fraction"},
+          check:(p,f)=>{ if(f.d<2||f.d>100) return {ok:false,msg:UI.range2100}; const v=f.n/f.d, eq=md(fmt(f.n,f.d)+" = "+round2(v));
+            return {ok:v>p.bv+1e-9&&v<1-1e-9, msg:(v>p.bv&&v<1)?{en:`${eq} — past ${md(p.b)} and under 1. 👍`,ar:`${eq} — تجاوز ${md(p.b)} وأقل من 1. 👍`,fa:`${eq} — از ${md(p.b)} گذشت و کمتر از 1 است. 👍`}:{en:`${eq} — aim above ${md(p.b)} and below 1.`,ar:`${eq} — استهدف أكبر من ${md(p.b)} وأقل من 1.`,fa:`${eq} — هدف: بیشتر از ${md(p.b)} و کمتر از 1.`}}; },
+          reasons:[opt("I compared it to {b}","قارنته بـ {b}","با {b} مقایسه کردم"),opt("I turned it into a decimal","حوّلته إلى عدد عشري","به عدد اعشاری تبدیل کردم"),opt("I saw the bar was past it","رأيت الشريط تجاوزه","دیدم نوار از آن گذشته")] } },
+
+      { id:"s2", title:{en:"The same place, a new name",ar:"المكان نفسه، اسم جديد",fa:"همان جا، نامی جدید"}, tags:["Equivalence","Reasoning"],
+        gen:()=>{ const bs=pick([[1,2],[1,3],[2,3],[1,4],[3,4],[1,5],[2,5],[3,5],[4,5]]); const a=bs[0],b=bs[1],k=rint(2,4); return {a,b,k,parts:b,sn:a*k,sd:b*k,start:(a*k)+"/"+(b*k),target:a+"/"+b,tv:a/b}; },
+        prompt:{en:`The point is on <b>{start}</b>. Use the <b>Equal parts</b> stepper to change it to <b>{parts}</b> parts and watch the point. <b>Does the point move?</b>`,
+                ar:`النقطة على <b>{start}</b>. استخدم مبدّل <b>الأجزاء المتساوية</b> لتغييره إلى <b>{parts}</b> أجزاء وراقب النقطة. <b>هل تتحرّك النقطة؟</b>`,
+                fa:`نقطه روی <b>{start}</b> است. با دکمه <b>بخش‌های مساوی</b> آن را به <b>{parts}</b> بخش تغییر بده و نقطه را نگاه کن. <b>آیا نقطه جابه‌جا می‌شود؟</b>`},
+        chips:["sim"], setup:p=>{ setChips(false,true,false); setV(p.sn,p.sd); },
+        predict:{ label:{en:"When you change to {parts} parts, the point…",ar:"عند التغيير إلى {parts} أجزاء، النقطة…",fa:"وقتی به {parts} بخش تغییر می‌دهی، نقطه…"},
+          options:[opt("moves to a new place","تنتقل إلى مكان جديد","به جای جدید می‌رود"),opt("stays exactly where it is","تبقى في مكانها تماماً","دقیقاً همان جا می‌ماند")], answer:1,
+          require:p=>state.den!==p.sd, requireMsg:{en:`First use the stepper to change the Equal parts to {parts} — then answer.`,ar:`أولاً غيّر الأجزاء المتساوية إلى {parts} بالمبدّل — ثم أجب.`,fa:`اول با دکمه، بخش‌های مساوی را به {parts} تغییر بده — بعد پاسخ بده.`},
+          reveal:p=>({en:`It <b>stays put</b>: ${md(p.start)} and ${md(p.target)} are the same number, so they share the point. New parts just give the same place a new name.`,ar:`تبقى في مكانها: ${md(p.start)} و ${md(p.target)} هما العدد نفسه، فيتشاركان النقطة. الأجزاء الجديدة تعطي المكان نفسه اسماً جديداً.`,fa:`همان جا می‌ماند: ${md(p.start)} و ${md(p.target)} یک عدد هستند و نقطه مشترک دارند. بخش‌های جدید فقط نامی تازه به همان جا می‌دهند.`}) },
+        hint:{en:`Equivalent fractions are different names for the same number, so they share a point.`,ar:`الكسور المتكافئة أسماء مختلفة للعدد نفسه، لذا تتشارك النقطة.`,fa:`کسرهای هم‌ارز نام‌های مختلف یک عددند، پس یک نقطه دارند.`},
+        further:{ text:{en:`Read the point's new name (with {parts} parts) and enter it as a fraction.`,ar:`اقرأ الاسم الجديد للنقطة (بـ {parts} أجزاء) وأدخله ككسر.`,fa:`نام جدید نقطه (با {parts} بخش) را بخوان و به‌صورت کسر وارد کن.`}, input:{kind:"fraction"},
+          check:(p,f)=>{ const v=f.n/f.d, eq=md(fmt(f.n,f.d)+" = "+round2(v));
+            if(f.n===p.a&&f.d===p.b) return {ok:true,msg:{en:`Yes — ${md(p.target+" = "+round2(p.tv))}, the very same point as ${md(p.start)}.`,ar:`نعم — ${md(p.target+" = "+round2(p.tv))}، النقطة نفسها مثل ${md(p.start)}.`,fa:`بله — ${md(p.target+" = "+round2(p.tv))}، همان نقطه‌ی ${md(p.start)}.`}};
+            if(Math.abs(v-p.tv)<1e-9) return {ok:false,msg:{en:`${eq} is equal, but with ${md(p.parts)} parts the name is ${md(p.target)}.`,ar:`${eq} مساوٍ، لكن بـ ${md(p.parts)} أجزاء الاسم هو ${md(p.target)}.`,fa:`${eq} برابر است، اما با ${md(p.parts)} بخش نامش ${md(p.target)} است.`}};
+            return {ok:false,msg:{en:`${eq} — the point is at ${md(round2(p.tv))} with ${md(p.parts)} parts. What's it called?`,ar:`${eq} — النقطة عند ${md(round2(p.tv))} بـ ${md(p.parts)} أجزاء. ماذا تُسمّى؟`,fa:`${eq} — نقطه با ${md(p.parts)} بخش روی ${md(round2(p.tv))} است. نامش چیست؟`}}; },
+          reasons:[opt("I read the new name off the line","قرأت الاسم الجديد من الخط","نام جدید را از خط خواندم"),opt("I grouped the small parts into bigger ones","جمعت الأجزاء الصغيرة في أكبر","بخش‌های کوچک را در بزرگ‌تر گروه کردم"),opt("I kept the same point","حافظت على النقطة نفسها","همان نقطه را نگه داشتم")] } },
+
+      { id:"s3", title:{en:"Squeeze in between",ar:"اعثر على كسر بينهما",fa:"جا دادن در میان"}, tags:["Construct","Density"],
+        prompt:{en:`Make a fraction that sits <b>between 0.3 and 0.4</b>. Turn on <b>Decimal</b> to check. Then find a <b>different</b> one — how many do you think fit in the gap?`,
+                ar:`اصنع كسراً يقع <b>بين 0.3 و 0.4</b>. شغّل <b>العدد العشري</b> للتحقق. ثم اعثر على كسر <b>مختلف</b> — كم كسراً تظنّ أنه يقع في الفجوة؟`,
+                fa:`کسری بساز که <b>بین 0.3 و 0.4</b> باشد. برای بررسی <b>اعشاری</b> را روشن کن. سپس یکی <b>دیگر</b> پیدا کن — فکر می‌کنی چند تا در این فاصله جا می‌شود؟`},
+        chips:["dec"], gen:()=>{ const t=rint(2,8); return {t,lo:round1(t/10),hi:round1((t+1)/10)}; },
+        setup:p=>{ setChips(false,true,false); setV(p.t,10); },
+        check:p=>{ const v=val(), eq=md(fmt(state.num,state.den)+" = "+round2(v));
+          if(between(p.lo,p.hi)) return {tone:"ok",msg:{en:`${eq} — between ${md(p.lo)} and ${md(p.hi)}. Now find another with different parts. Could you keep finding more?`,ar:`${eq} — بين ${md(p.lo)} و ${md(p.hi)}. الآن اعثر على آخر بأجزاء مختلفة. هل يمكنك إيجاد المزيد باستمرار؟`,fa:`${eq} — بین ${md(p.lo)} و ${md(p.hi)}. حالا یکی دیگر با بخش‌های متفاوت پیدا کن. می‌توانی همیشه بیشتر پیدا کنی؟`}};
+          return {tone:"nudge",msg:{en:`${eq} — ${v<p.lo?"too small, drag right":"too big, drag left"}. Aim between ${md(p.lo)} and ${md(p.hi)} (more parts gives smaller steps).`,ar:`${eq} — ${v<p.lo?"صغير جداً، اسحب يميناً":"كبير جداً، اسحب يساراً"}. استهدف بين ${md(p.lo)} و ${md(p.hi)} (أجزاء أكثر = خطوات أصغر).`,fa:`${eq} — ${v<p.lo?"خیلی کوچک، به راست بکش":"خیلی بزرگ، به چپ بکش"}. هدف بین ${md(p.lo)} و ${md(p.hi)} (بخش بیشتر = گام کوچک‌تر).`}}; },
+        hint:{en:`Tenths land ON {lo} and {hi}. Use more parts (like 20 or 100) to fit between.`,ar:`الأعشار تقع على {lo} و {hi}. استخدم أجزاء أكثر (مثل 20 أو 100) لتقع بينهما.`,fa:`دهم‌ها روی {lo} و {hi} می‌افتند. برای جا شدن در میان از بخش بیشتر (مثل 20 یا 100) استفاده کن.`},
+        further:{ text:{en:`How many fractions fit between {lo} and {hi}?`,ar:`كم كسراً يقع بين {lo} و {hi}؟`,fa:`چند کسر بین {lo} و {hi} جا می‌شود؟`}, input:{kind:"choice",options:[opt("just a few","قليلة فقط","فقط چند تا"),opt("lots, but a fixed number","كثيرة، لكن عدد محدود","زیاد، اما تعداد معیّن"),opt("infinitely many","عدد لا نهائي","بی‌نهایت")]},
+          check:(p,i)=>({ ok:i===2, msg:i===2?{en:`Right — infinitely many. You can always cut into more parts and fit another one in.`,ar:`صحيح — عدد لا نهائي. يمكنك دائماً التقسيم إلى أجزاء أكثر وإيجاد كسر آخر.`,fa:`درست — بی‌نهایت. همیشه می‌توانی به بخش‌های بیشتر تقسیم کنی و یکی دیگر جا دهی.`}:{en:`Think about using more and more parts — is there ever a 'last' one?`,ar:`فكّر في استخدام أجزاء أكثر فأكثر — هل هناك كسر 'أخير'؟`,fa:`به بخش‌های بیشتر و بیشتر فکر کن — آیا اصلاً «آخری» وجود دارد؟`} }),
+          reasons:[opt("I can always split into more parts","يمكنني دائماً التقسيم إلى أجزاء أكثر","همیشه می‌توانم به بخش بیشتر تقسیم کنم"),opt("There's always room for one more","هناك دائماً متسع لواحد آخر","همیشه جا برای یکی دیگر هست"),opt("Bigger denominators make smaller gaps","المقامات الأكبر تصنع فجوات أصغر","مخرج بزرگ‌تر فاصله کوچک‌تر می‌سازد")] } },
+
+      { id:"s4", title:{en:"Does it stop, or go forever?",ar:"هل ينتهي أم يستمر؟",fa:"تمام می‌شود یا بی‌پایان است؟"}, tags:["Recurring","Reasoning"],
+        prompt:{en:`Make a fraction whose decimal <b>never ends</b> (it recurs — watch for the dots). Then make one that <b>stops</b> exactly. What's different about the number of equal parts?`,
+                ar:`اصنع كسراً عدده العشري <b>لا ينتهي</b> (دوري — راقب النقاط). ثم اصنع كسراً <b>ينتهي</b> تماماً. ما الفرق في عدد الأجزاء المتساوية؟`,
+                fa:`کسری بساز که اعشارش <b>هرگز تمام نشود</b> (متناوب — به نقطه‌ها دقت کن). سپس یکی بساز که دقیقاً <b>متوقف</b> شود. تفاوت در تعداد بخش‌های مساوی چیست؟`},
+        chips:["dec"], gen:()=>{ const s=pick([[1,2],[3,4],[2,5],[1,4],[3,8],[1,5],[7,10],[3,10]]); return {sn:s[0],sd:s[1]}; },
+        setup:p=>{ setChips(false,true,false); setV(p.sn,p.sd); },
+        check:p=>{ const t=terminating(state.num,state.den), eq=md(fmt(state.num,state.den)+" = "+decimalStr(state.num,state.den));
+          if(!t) return {tone:"ok",msg:{en:`${eq} — it recurs. Now make one that stops. What factors do the 'stopping' ones have?`,ar:`${eq} — إنه دوري. الآن اصنع كسراً ينتهي. ما عوامل الكسور 'المنتهية'؟`,fa:`${eq} — متناوب است. حالا یکی بساز که متوقف شود. مخرجِ کسرهای «متوقف‌شونده» چه عامل‌هایی دارد؟`}};
+          return {tone:"nudge",msg:{en:`${eq} — that one stops (its decimal ends). Change it to a fraction whose decimal never ends.`,ar:`${eq} — هذا ينتهي (عدده العشري ينتهي). غيّره إلى كسر لا ينتهي عدده العشري.`,fa:`${eq} — این متوقف می‌شود (اعشارش تمام می‌شود). به کسری تغییرش بده که اعشارش تمام نشود.`}}; },
+        hint:{en:`Some denominators give a decimal that stops; others go on forever. Try a few and watch for the dots.`,ar:`بعض المقامات تعطي عدداً عشرياً ينتهي، وأخرى تستمر. جرّب عدة كسور وراقب النقاط.`,fa:`بعضی مخرج‌ها اعشار متوقف می‌دهند، بعضی بی‌پایان. چند تا امتحان کن و به نقطه‌ها نگاه کن.`},
+        further:{ text:{en:`Make a recurring decimal with a <b>2-digit repeating block</b> (like 0.1̇8̇). Enter the fraction.`,ar:`اصنع عدداً عشرياً دورياً بكتلة تكرار من <b>رقمين</b> (مثل 0.1̇8̇). أدخل الكسر.`,fa:`یک اعشار متناوب با <b>دوره‌ی تکرار ۲ رقمی</b> بساز (مثل 0.1̇8̇). کسر را وارد کن.`}, input:{kind:"fraction"},
+          check:(p,f)=>{ if(f.d<2||f.d>100) return {ok:false,msg:UI.range2100}; const t=terminating(f.n,f.d), rep=decimalParts(f.n,f.d).rep, eq=md(fmt(f.n,f.d)+" = "+decimalStr(f.n,f.d));
+            if(t) return {ok:false,msg:{en:`${md(fmt(f.n,f.d))} stops — you need one that recurs.`,ar:`${md(fmt(f.n,f.d))} ينتهي — تحتاج كسراً دورياً.`,fa:`${md(fmt(f.n,f.d))} متوقف می‌شود — به یکی متناوب نیاز داری.`}};
+            return {ok:rep.length===2, msg:rep.length===2?{en:`${eq} — a 2-digit repeat! 🎉`,ar:`${eq} — تكرار من رقمين! 🎉`,fa:`${eq} — تکرار ۲ رقمی! 🎉`}:{en:`${eq} — recurs, but the block is ${rep.length} digit(s). Keep testing until the repeat is exactly 2 digits.`,ar:`${eq} — دوري، لكن الكتلة ${rep.length} رقم. استمر بالمحاولة حتى يصبح التكرار رقمين بالضبط.`,fa:`${eq} — متناوب است، اما دوره ${rep.length} رقم است. ادامه بده تا تکرار دقیقاً ۲ رقم شود.`}}; },
+          reasons:[opt("I checked how long the repeating block was","تحققت من طول كتلة التكرار","طول دوره‌ی تکرار را بررسی کردم"),opt("I tried a few denominators and watched the dots","جربت عدة مقامات وراقبت النقاط","چند مخرج امتحان کردم و نقطه‌ها را دیدم"),opt("I reasoned about the denominator's factors","استدللت من عوامل المقام","درباره‌ی عامل‌های مخرج استدلال کردم")] } },
+
+      { id:"s5", title:{en:"Sharing it out (fraction as division)",ar:"التوزيع (الكسر كقسمة)",fa:"تقسیم کردن (کسر به‌عنوان تقسیم)"}, tags:["Division","Reasoning"],
+        gen:()=>{ const b=rint(3,6); const a=rint(Math.floor(b/2)+1,b-1); const c=rint(3,9); const e=rint(c+1,12); return {a,b,c,e,dec:decimalStr(a,b),af:a+"/"+b,ce:c+"/"+e,cv:c/e,cdiv:c+" ÷ "+e}; },
+        prompt:{en:`<b>{a} cakes shared among {b} people</b> is {a} ÷ {b}. Press <b>Share it out</b> to watch it, then decide how big one share is.`,
+                ar:`<b>{a} كعكات توزَّع على {b} أشخاص</b> هي {a} ÷ {b}. اضغط <b>وزّعها</b> لتشاهدها، ثم قرّر حجم النصيب الواحد.`,
+                fa:`<b>{a} کیک بین {b} نفر</b> یعنی {a} ÷ {b}. <b>تقسیمش کن</b> را بزن تا ببینی، سپس تصمیم بگیر هر سهم چقدر است.`},
+        chips:[], share:true, setup:p=>{ setChips(false,false,false); setV(p.a,p.b); },
+        predict:{ label:{en:"One share of {a} ÷ {b} is…",ar:"نصيب واحد من {a} ÷ {b} هو…",fa:"هر سهم از {a} ÷ {b}…"},
+          options:[opt("less than 1/2","أقل من 1/2","کمتر از 1/2"),opt("between 1/2 and 1","بين 1/2 و 1","بین 1/2 و 1"),opt("more than 1","أكثر من 1","بیشتر از 1")], answer:1,
+          reveal:p=>({en:`${md(p.a+" ÷ "+p.b+" = "+p.dec)} — <b>between 1/2 and 1</b>. ${md(p.a)} cakes shared ${md(p.b)} ways gives each person ${md(p.af)} of a cake.`,ar:`${md(p.a+" ÷ "+p.b+" = "+p.dec)} — <b>بين 1/2 و 1</b>. توزيع ${md(p.a)} كعكات على ${md(p.b)} يعطي كل شخص ${md(p.af)} كعكة.`,fa:`${md(p.a+" ÷ "+p.b+" = "+p.dec)} — <b>بین 1/2 و 1</b>. ${md(p.a)} کیک بین ${md(p.b)} نفر یعنی هر نفر ${md(p.af)} کیک.`}) },
+        hint:{en:`Half a cake each would use only half the cakes. You have more than that — a bit more than half each.`,ar:`نصف كعكة لكل شخص يستخدم نصف الكعكات فقط. لديك أكثر من ذلك — أكثر قليلاً من النصف لكلٍّ.`,fa:`نصف کیک برای هر نفر فقط نصف کیک‌ها را می‌خواهد. تو بیشتر داری — کمی بیشتر از نصف برای هر کس.`},
+        further:{ text:{en:`Divisions make fractions: <b>a ÷ b = a/b</b>. Without the tool, what is <b>{cdiv}</b> as a fraction? Enter it.`,ar:`القسمة تصنع كسوراً: <b>a ÷ b = a/b</b>. بدون الأداة، ما هو <b>{cdiv}</b> ككسر؟ أدخله.`,fa:`تقسیم کسر می‌سازد: <b>a ÷ b = a/b</b>. بدون ابزار، <b>{cdiv}</b> به‌صورت کسر چیست؟ وارد کن.`}, input:{kind:"fraction"},
+          check:(p,f)=>{ const v=f.n/f.d, eq=md(fmt(f.n,f.d)+" = "+round2(v));
+            if(f.n===p.c&&f.d===p.e) return {ok:true,msg:{en:`Yes — ${md(p.c+" ÷ "+p.e+" = "+p.ce+" = "+round2(p.cv))}. The dividend becomes the numerator.`,ar:`نعم — ${md(p.c+" ÷ "+p.e+" = "+p.ce+" = "+round2(p.cv))}. المقسوم يصبح البسط.`,fa:`بله — ${md(p.c+" ÷ "+p.e+" = "+p.ce+" = "+round2(p.cv))}. مقسوم می‌شود صورت.`}};
+            if(Math.abs(v-p.cv)<1e-9) return {ok:true,msg:{en:`${eq} — equal to ${md(p.ce)}. a ÷ b always makes the fraction a/b.`,ar:`${eq} — مساوٍ لـ ${md(p.ce)}. a ÷ b تصنع دائماً الكسر a/b.`,fa:`${eq} — برابر ${md(p.ce)}. a ÷ b همیشه کسر a/b می‌سازد.`}};
+            return {ok:false,msg:{en:`${eq} — remember a ÷ b = a/b, so ${md(p.c+" ÷ "+p.e)} = ?`,ar:`${eq} — تذكّر a ÷ b = a/b، إذن ${md(p.c+" ÷ "+p.e)} = ؟`,fa:`${eq} — یادت باشد a ÷ b = a/b، پس ${md(p.c+" ÷ "+p.e)} = ؟`}}; },
+          reasons:[opt("A division a ÷ b makes the fraction a/b","القسمة a ÷ b تصنع الكسر a/b","تقسیم a ÷ b کسر a/b می‌سازد"),opt("The dividend is the numerator","المقسوم هو البسط","مقسوم همان صورت است"),opt("I checked the decimal","تحققت من العدد العشري","اعشار را بررسی کردم")] } },
+
+      { id:"s6", title:{en:"Past the whole",ar:"ما بعد الواحد الصحيح",fa:"فراتر از یک کامل"}, tags:["Improper","Point"],
+        gen:()=>{ const w=rint(1,3); let w2=rint(1,4); while(w2===w) w2=rint(1,4); return {w,w1:w+1,w2,w3:w2+1,sn:w*10-1,sd:10}; },
+        prompt:{en:`Drag <b>past {w}</b> to make a fraction between <b>{w} and {w1}</b>. Read it as a <b>mixed number</b> underneath. Which whole is it just above?`,
+                ar:`اسحب <b>إلى ما بعد {w}</b> لتصنع كسراً بين <b>{w} و {w1}</b>. اقرأه كـ <b>عدد كسري</b> بالأسفل. فوق أي عدد صحيح يقع مباشرة؟`,
+                fa:`<b>از {w} بگذر</b> تا کسری بین <b>{w} و {w1}</b> بسازی. آن را به‌صورت <b>عدد مخلوط</b> در پایین بخوان. درست بالای کدام عدد کامل است؟`},
+        chips:[], setup:p=>{ setChips(false,false,false); setV(p.sn,p.sd); },
+        check:p=>{ const v=val(), eq=md(fmt(state.num,state.den)+" = "+round2(v));
+          if(between(p.w,p.w1)) return {tone:"ok",msg:{en:`${eq}, a mixed number just above ${md(p.w)}. As a division, ${md(state.num+" ÷ "+state.den)} is a bit more than ${md(p.w)}.`,ar:`${eq}، عدد كسري فوق ${md(p.w)} مباشرة. كقسمة، ${md(state.num+" ÷ "+state.den)} أكبر قليلاً من ${md(p.w)}.`,fa:`${eq}، عدد مخلوط درست بالای ${md(p.w)}. به‌عنوان تقسیم، ${md(state.num+" ÷ "+state.den)} کمی بیشتر از ${md(p.w)} است.`}};
+          return {tone:"nudge",msg:{en:`${eq} — drag right, past ${md(p.w)}. The line keeps going past the whole.`,ar:`${eq} — اسحب يميناً، إلى ما بعد ${md(p.w)}. الخط يستمر بعد الواحد الصحيح.`,fa:`${eq} — به راست بکش، از ${md(p.w)} بگذر. خط بعد از عدد کامل ادامه دارد.`}}; },
+        hint:{en:`To get past a whole the numerator must be bigger than the denominator (an improper fraction).`,ar:`لتتجاوز عدداً صحيحاً يجب أن يكون البسط أكبر من المقام (كسر غير حقيقي).`,fa:`برای گذشتن از یک عدد کامل باید صورت از مخرج بزرگ‌تر باشد (کسر بزرگ‌تر از ۱).`},
+        further:{ text:{en:`Make a fraction between <b>{w2} and {w3}</b> and enter it.`,ar:`اصنع كسراً بين <b>{w2} و {w3}</b> وأدخله.`,fa:`کسری بین <b>{w2} و {w3}</b> بساز و وارد کن.`}, input:{kind:"fraction"},
+          check:(p,f)=>{ if(f.d<2||f.d>100) return {ok:false,msg:UI.range2100}; const v=f.n/f.d, eq=md(fmt(f.n,f.d)+" = "+round2(v));
+            return {ok:v>p.w2+1e-9&&v<p.w3-1e-9, msg:(v>p.w2&&v<p.w3)?{en:`${eq} — between ${md(p.w2)} and ${md(p.w3)} (just above ${md(p.w2)}).`,ar:`${eq} — بين ${md(p.w2)} و ${md(p.w3)} (فوق ${md(p.w2)} مباشرة).`,fa:`${eq} — بین ${md(p.w2)} و ${md(p.w3)} (درست بالای ${md(p.w2)}).`}:{en:`${eq} — aim between ${md(p.w2)} and ${md(p.w3)}. The top must be a bit more than ${md(p.w2)}× the bottom.`,ar:`${eq} — استهدف بين ${md(p.w2)} و ${md(p.w3)}. البسط يجب أن يكون أكثر قليلاً من ${md(p.w2)}× المقام.`,fa:`${eq} — هدف بین ${md(p.w2)} و ${md(p.w3)}. صورت باید کمی بیشتر از ${md(p.w2)}× مخرج باشد.`}}; },
+          reasons:[opt("The top is a few times the bottom","البسط أضعاف المقام","صورت چند برابر مخرج است"),opt("I read it as a whole and a bit","قرأته كعدد صحيح وزيادة","آن را «یک عدد کامل و کمی» خواندم"),opt("I used the decimal","استخدمت العدد العشري","از عدد اعشاری استفاده کردم")] } },
+
+      { id:"s7", title:{en:"Order them",ar:"رتّبها",fa:"مرتب‌شان کن"}, tags:["Compare","Misconception"],
+        gen:()=>{ const p1=rint(2,4); const d1=2*p1+rint(1,3); const d2=rint(p1+1,2*p1-1); const f1=p1+"/"+d1, f2=p1+"/"+d2;
+          const correct=f1+", 1/2, "+f2, all=[correct, f2+", 1/2, "+f1, "1/2, "+f1+", "+f2];
+          for(let i=all.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const tmp=all[i]; all[i]=all[j]; all[j]=tmp; }
+          return {p1,d1,d2,f1,f2,f1v:p1/d1,f2v:p1/d2,d1dec:decimalStr(p1,d1),d2dec:decimalStr(p1,d2), opts:all.map(s=>({en:s})), ans:all.indexOf(correct)}; },
+        prompt:{en:`Use the line and <b>Decimal</b> to place <b>{f1}</b>, <b>1/2</b> and <b>{f2}</b>. Put them in order from <b>smallest to largest</b>.`,
+                ar:`استخدم الخط و<b>العدد العشري</b> لوضع <b>{f1}</b> و<b>1/2</b> و<b>{f2}</b>. رتّبها من <b>الأصغر إلى الأكبر</b>.`,
+                fa:`با خط و <b>اعشاری</b> جای <b>{f1}</b>، <b>1/2</b> و <b>{f2}</b> را پیدا کن. آنها را از <b>کوچک به بزرگ</b> مرتب کن.`},
+        chips:["dec"], setup:p=>{ setChips(false,true,false); setV(p.p1,p.d1); },
+        predict:{ label:{en:"Smallest → largest is…",ar:"من الأصغر إلى الأكبر…",fa:"از کوچک به بزرگ…"},
+          options:p=>p.opts, answer:p=>p.ans,
+          reveal:p=>({en:`${md(p.f1+" = "+p.d1dec)}, 1/2 = 0.5, ${md(p.f2+" = "+p.d2dec)} — smallest to largest is <b>${md(p.f1+", 1/2, "+p.f2)}</b>. Note ${md(p.f1)} &lt; ${md(p.f2)} even though the denominators differ: more parts makes each part smaller.`,ar:`${md(p.f1+" = "+p.d1dec)}، 1/2 = 0.5، ${md(p.f2+" = "+p.d2dec)} — من الأصغر إلى الأكبر <b>${md(p.f1+", 1/2, "+p.f2)}</b>. لاحظ ${md(p.f1)} &lt; ${md(p.f2)}: أجزاء أكثر تجعل كل جزء أصغر.`,fa:`${md(p.f1+" = "+p.d1dec)}، 1/2 = 0.5، ${md(p.f2+" = "+p.d2dec)} — از کوچک به بزرگ <b>${md(p.f1+", 1/2, "+p.f2)}</b>. توجه: ${md(p.f1)} &lt; ${md(p.f2)}؛ بخش بیشتر هر بخش را کوچک‌تر می‌کند.`}) },
+        hint:{en:`Set each one, read its decimal, then line the three decimals up in order.`,ar:`اضبط كل واحد، اقرأ عدده العشري، ثم رتّب الأعداد الثلاثة.`,fa:`هر کدام را بگذار، اعشارش را بخوان، بعد سه اعشار را مرتب کن.`},
+        further:{ text:{en:`Enter a fraction that sits <b>between {f1} and {f2}</b>.`,ar:`أدخل كسراً يقع <b>بين {f1} و {f2}</b>.`,fa:`کسری وارد کن که <b>بین {f1} و {f2}</b> باشد.`}, input:{kind:"fraction"},
+          check:(p,f)=>{ if(f.d<2||f.d>100) return {ok:false,msg:UI.range2100}; const v=f.n/f.d, eq=md(fmt(f.n,f.d)+" = "+round2(v)), lo=p.f1v, hi=p.f2v;
+            return {ok:v>lo+1e-9&&v<hi-1e-9, msg:(v>lo&&v<hi)?{en:`${eq} — nicely between ${md(p.f1)} and ${md(p.f2)}.`,ar:`${eq} — يقع جيداً بين ${md(p.f1)} و ${md(p.f2)}.`,fa:`${eq} — خوب بین ${md(p.f1)} و ${md(p.f2)}.`}:{en:`${eq} — aim between ${md(p.f1)} and ${md(p.f2)}.`,ar:`${eq} — استهدف بين ${md(p.f1)} و ${md(p.f2)}.`,fa:`${eq} — هدف بین ${md(p.f1)} و ${md(p.f2)}.`}}; },
+          reasons:[opt("I used the two decimals","استخدمت العددين العشريين","از دو اعشار استفاده کردم"),opt("I chose a denominator with room in between","اخترت مقاماً يترك متسعاً بينهما","مخرجی انتخاب کردم که جا داشته باشد"),opt("I checked it sat between them","تحققت أنه يقع بينهما","بررسی کردم که بینشان است")] } },
+
+      { id:"s8", title:{en:"Convince me",ar:"أقنعني",fa:"مرا قانع کن"}, tags:["Equivalence","Communicate"],
+        gen:()=>{ const bs=pick([[1,2],[1,3],[2,3],[3,4],[1,5],[2,5],[3,5],[4,5]]); const a=bs[0],b=bs[1],k=rint(2,4);
+          const us=[[2,3],[3,4],[2,5],[3,5],[1,3],[1,4]]; let u=pick(us); while(u[0]===a&&u[1]===b) u=pick(us);
+          return {a,b,k,sn:a*k,sd:b*k,start:(a*k)+"/"+(b*k),target:a+"/"+b, u:u[0]+"/"+u[1],uc:u[0],ud:u[1],uv:u[0]/u[1],uex:(u[0]*2)+"/"+(u[1]*2),udec:round2(u[0]/u[1])}; },
+        prompt:{en:`Turn on the <b>Bar</b>, then press <b>Simplify</b> and watch the blue point as {start} regroups into {target}. Does the point move?`,
+                ar:`شغّل <b>الشريط</b>، ثم اضغط <b>تبسيط</b> وراقب النقطة الزرقاء بينما يتحوّل {start} إلى {target}. هل تتحرك النقطة؟`,
+                fa:`<b>نوار</b> را روشن کن، سپس <b>ساده‌سازی</b> را بزن و نقطه‌ی آبی را ببین که {start} به {target} تبدیل می‌شود. آیا نقطه جابه‌جا می‌شود؟`},
+        chips:["bar","sim"], setup:p=>{ setChips(true,false,false); setV(p.sn,p.sd); },
+        predict:{ label:{en:"When you Simplify, the point…",ar:"عند التبسيط، النقطة…",fa:"وقتی ساده‌سازی می‌کنی، نقطه…"},
+          options:[opt("moves to a new place","تنتقل إلى مكان جديد","به جای جدید می‌رود"),opt("stays in the same place","تبقى في المكان نفسه","همان جا می‌ماند")], answer:1,
+          reveal:p=>({en:`It <b>stays put</b>: ${md(p.start)} and ${md(p.target)} are the same number, so they share the point and shade the same length — Simplify just regroups the small parts into fewer, larger ones. Same amount, larger parts. That's your argument!`,ar:`تبقى في مكانها: ${md(p.start)} و ${md(p.target)} هما العدد نفسه، فيتشاركان النقطة ويظلّلان الطول نفسه — التبسيط يعيد تجميع الأجزاء الصغيرة في أجزاء أقل وأكبر. الكمية نفسها بأجزاء أكبر. هذه حجّتك!`,fa:`همان جا می‌ماند: ${md(p.start)} و ${md(p.target)} یک عدد هستند، پس نقطه مشترک دارند و طول یکسانی رنگ می‌شود — ساده‌سازی فقط بخش‌های کوچک را در بخش‌های کمتر و بزرگ‌تر گروه می‌کند. همان مقدار با بخش‌های بزرگ‌تر. این استدلال توست!`}) },
+        hint:{en:`Toggle Simplify on and off and watch the blue point — does it jump, or stay?`,ar:`شغّل التبسيط وأطفئه وراقب النقطة الزرقاء — هل تقفز أم تبقى؟`,fa:`ساده‌سازی را روشن و خاموش کن و نقطه‌ی آبی را ببین — می‌پرد یا می‌ماند؟`},
+        further:{ text:{en:`Now a brand-new one: enter a fraction <b>equal to {u}</b> (any name except {u} itself).`,ar:`الآن كسر جديد تماماً: أدخل كسراً <b>يساوي {u}</b> (أي اسم عدا {u} نفسه).`,fa:`حالا یکی کاملاً جدید: کسری <b>برابر {u}</b> وارد کن (هر نامی جز خود {u}).`}, input:{kind:"fraction"},
+          check:(p,f)=>{ if(f.d<2||f.d>100) return {ok:false,msg:UI.range2100}; const v=f.n/f.d, eq=md(fmt(f.n,f.d)+" = "+round2(v));
+            if(f.n===p.uc&&f.d===p.ud) return {ok:false,msg:{en:`That's ${md(p.u)} itself — find a different name (like ${md(p.uex)}).`,ar:`هذا ${md(p.u)} نفسه — اعثر على اسم مختلف (مثل ${md(p.uex)}).`,fa:`این خودِ ${md(p.u)} است — نامی دیگر پیدا کن (مثل ${md(p.uex)}).`}};
+            return {ok:Math.abs(v-p.uv)<1e-9, msg:Math.abs(v-p.uv)<1e-9?{en:`${md(fmt(f.n,f.d)+" = "+p.u)}. Equivalent — you scaled top and bottom by the same number.`,ar:`${md(fmt(f.n,f.d)+" = "+p.u)}. متكافئ — ضربت البسط والمقام بالعدد نفسه.`,fa:`${md(fmt(f.n,f.d)+" = "+p.u)}. هم‌ارز — صورت و مخرج را در یک عدد ضرب کردی.`}:{en:`${eq} — not ${md(p.u)} yet (${md(p.u+" ≈ "+p.udec)}).`,ar:`${eq} — ليس ${md(p.u)} بعد (${md(p.u+" ≈ "+p.udec)}).`,fa:`${eq} — هنوز ${md(p.u)} نیست (${md(p.u+" ≈ "+p.udec)}).`}}; },
+          reasons:[opt("I multiplied top and bottom by the same number","ضربت البسط والمقام بالعدد نفسه","صورت و مخرج را در یک عدد ضرب کردم"),opt("I kept the value the same","حافظت على القيمة نفسها","مقدار را ثابت نگه داشتم"),opt("I checked the decimal","تحققت من العدد العشري","اعشار را بررسی کردم")] } }
+    ];
+
+    let cur=0, predictChoice=-1;
+    const done=new Set(), extMet=new Set(), reasonSel={}, P={};
+    function stageP(id){ if(!P[id]){ const st=STAGES.find(x=>x.id===id); P[id]= (st&&st.gen)? st.gen():{}; } return P[id]; }
+    function fbShow(tone,msgObj,vars){ const f=$("feedback"); f.className="feedback show "+tone; f.innerHTML=L(msgObj,vars); }
+    function fbClear(){ const f=$("feedback"); f.className="feedback"; f.innerHTML=""; }
+    function renderDots(){ const d=$("dots"); d.innerHTML=""; STAGES.forEach((s,i)=>{ const b=document.createElement("button"); b.className="dot"+(i===cur?" current":"")+(done.has(s.id)?" done":""); b.textContent=done.has(s.id)?"✓":String(i+1); b.title=(s.title[LANG]||s.title.en); b.addEventListener("click",()=>goStage(i)); d.appendChild(b); }); }
+    function goStage(i){ cur=Math.max(0,Math.min(STAGES.length-1,i)); const s=STAGES[cur]; const p=stageP(s.id); predictChoice=-1; fbClear();
+      $("stageLine").innerHTML = L(UI.stageOf,{n:cur+1,t:STAGES.length}) + L(s.title);
+      $("tags").innerHTML=s.tags.map(t=>`<span class="tag">${L(TAGS[t]||{en:t})}</span>`).join("");
+      $("prompt").innerHTML=L(s.prompt,p); $("hintText").innerHTML=L(s.hint||{en:""},p);
+      document.querySelectorAll(".disc details").forEach(x=>x.open=false);
+      renderFurther(s,p);
+      $("partB").hidden = !done.has(s.id);
+      const pr=$("predictRow");
+      if(s.predict){ pr.hidden=false; const opts=(typeof s.predict.options==="function")?s.predict.options(p):s.predict.options;
+        pr.innerHTML=`<span class="plabel">${L(s.predict.label,p)}</span>`+opts.map((o,i)=>`<button class="pchip" data-i="${i}" type="button" aria-pressed="false">${L(o,p)}</button>`).join("");
+        pr.querySelectorAll(".pchip").forEach(b=>b.addEventListener("click",()=>{ predictChoice=+b.dataset.i; pr.querySelectorAll(".pchip").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false")); }));
+        $("checkBtn").innerHTML=L(UI.checkPrediction); }
+      else { pr.hidden=true; pr.innerHTML=""; $("checkBtn").innerHTML=L(UI.checkThinking); }
+      $("shareBtn").hidden=!s.share;
+      if(state.animMode) exitAnim();
+      suggestChips(s.chips||[]);
+      if(s.setup) s.setup(p);
+      $("prevBtn").disabled=cur===0; $("nextBtn").disabled=cur===STAGES.length-1;
+      renderDots(); saveLocal();
+    }
+    function renderFurther(s,p){
+      const f=s.further, inp=$("furtherInput"), rz=$("furtherReasons"), fb=$("furtherFb");
+      $("furtherText").innerHTML=L((f&&f.text)||{en:""},p); fb.className="ffb"; fb.innerHTML=""; inp._sel=-1;
+      if(!f||!f.input){ inp.innerHTML=""; rz.innerHTML=""; $("furtherCheck").style.display="none"; return; }
+      $("furtherCheck").style.display=""; $("furtherCheck").innerHTML=L(UI.checkPartB);
+      if(f.input.kind==="fraction") inp.innerHTML=`<span class="fin"><input class="fbox" id="fNum" inputmode="numeric" placeholder="?" autocomplete="off"><span class="fbar"></span><input class="fbox" id="fDen" inputmode="numeric" placeholder="?" autocomplete="off"></span>`;
+      else if(f.input.kind==="number") inp.innerHTML=`<input class="fbox wide" id="fVal" inputmode="numeric" placeholder="?" autocomplete="off">`;
+      else if(f.input.kind==="choice"){ inp.innerHTML=`<div class="fchips">`+f.input.options.map((o,i)=>`<button class="fchoice" data-i="${i}" type="button" aria-pressed="false">${L(o,p)}</button>`).join("")+`</div>`;
+        inp.querySelectorAll(".fchoice").forEach(b=>b.addEventListener("click",()=>{ inp._sel=+b.dataset.i; inp.querySelectorAll(".fchoice").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false")); })); }
+      const chosen=reasonSel[s.id]||[];
+      rz.innerHTML=`<div class="rlabel">${L(UI.howKnow)}</div>`+
+        (f.reasons||[]).map((r,i)=>`<button class="rchip${chosen.indexOf(i)>=0?' on':''}" data-i="${i}" type="button" aria-pressed="${chosen.indexOf(i)>=0}">${L(r,p)}</button>`).join("");
+      rz.querySelectorAll(".rchip").forEach(b=>b.addEventListener("click",()=>{ const i=+b.dataset.i; const arr=reasonSel[s.id]||(reasonSel[s.id]=[]); const q=arr.indexOf(i); if(q>=0)arr.splice(q,1); else arr.push(i); const on=arr.indexOf(i)>=0; b.classList.toggle("on",on); b.setAttribute("aria-pressed",on); saveLocal(); if(signedIn) autoSave(); }));
+    }
+    function ffbShow(ok,msgObj,vars){ const fb=$("furtherFb"); fb.className="ffb show "+(ok?"ok":"nudge"); fb.innerHTML=L(msgObj,vars); }
+    function furtherCheck(){
+      const s=STAGES[cur], p=stageP(s.id), f=s.further, inp=$("furtherInput"); if(!f||!f.input) return; let r;
+      if(f.input.kind==="fraction"){ const n=parseInt(($("fNum")||{}).value,10), d=parseInt(($("fDen")||{}).value,10); if(!(n>=0)||!(d>=1)){ ffbShow(false,UI.typeFrac); return; } r=f.check(p,{n,d}); }
+      else if(f.input.kind==="number"){ const v=parseInt(($("fVal")||{}).value,10); if(!(v>=0)){ ffbShow(false,UI.typeNum); return; } r=f.check(p,v); }
+      else { const sel=inp._sel; if(sel==null||sel<0){ ffbShow(false,UI.pickOne); return; } r=f.check(p,sel); }
+      ffbShow(r.ok, r.msg);
+      if(r.ok){ extMet.add(s.id); updateProgress(); saveLocal(); if(signedIn) autoSave(); }
+    }
+    $("furtherCheck").addEventListener("click",furtherCheck);
+    function markDone(){ const s=STAGES[cur]; $("partB").hidden=false; if(!done.has(s.id)){ done.add(s.id); renderDots(); updateProgress(); saveLocal(); if(signedIn) autoSave(); } }
+    function combine(prefixObj,vars,revObj,extraObj){ const j={}; ["en","ar","fa"].forEach(k=>{ j[k]=fill(prefixObj[k]||prefixObj.en,vars)+(revObj[k]||revObj.en)+((extraObj&&(extraObj[k]||extraObj.en))||""); }); return j; }
+    function evaluate(){ const s=STAGES[cur], p=stageP(s.id);
+      if(s.predict){
+        if(s.predict.require && !s.predict.require(p)){ fbShow("nudge", s.predict.requireMsg||UI.useToolFirst, p); return; }
+        if(predictChoice<0){ fbShow("nudge",UI.chooseFirst); return; }
+        const opts=(typeof s.predict.options==="function")?s.predict.options(p):s.predict.options;
+        const ans=(typeof s.predict.answer==="function")?s.predict.answer(p):s.predict.answer;
+        const ok=predictChoice===ans, rv=s.predict.reveal(p), o=opts[predictChoice];
+        if(ok){ fbShow("ok", combine(UI.chose,{opt:(o[LANG]||o.en)}, rv, s.share?UI.shareHint:null)); markDone(); }
+        else { fbShow("nudge", combine(UI.chose,{opt:(o[LANG]||o.en)}, rv, UI.lookAgain)); } }
+      else if(s.check){ const r=s.check(p); fbShow(r.tone, r.msg); if(r.tone==="ok") markDone(); }
+    }
+    function updateProgress(){ $("progressText").innerHTML=L(UI.completed,{d:done.size,t:STAGES.length})+(extMet.size?L(UI.extensions,{e:extMet.size}):""); $("saveBtn").disabled=!(signedIn && (done.size>0||extMet.size>0)); }
+    $("checkBtn").addEventListener("click",evaluate);
+    $("prevBtn").addEventListener("click",()=>goStage(cur-1));
+    $("nextBtn").addEventListener("click",()=>goStage(cur+1));
+    $("resetBtn").addEventListener("click",()=>{ done.clear(); extMet.clear(); Object.keys(reasonSel).forEach(k=>delete reasonSel[k]); Object.keys(P).forEach(k=>delete P[k]); cur=0; try{localStorage.removeItem(LS);}catch(_){ } updateProgress(); goStage(0); });
+
+    // ---------- static UI translation ----------
+    function applyLang(){
+      try{ localStorage.setItem("mmt-ftq-lang",LANG); }catch(_){ }
+      document.querySelectorAll("#langTog button").forEach(b=>b.classList.toggle("on",b.dataset.lang===LANG));
+      $("ttlTop").innerHTML=L(UI.title);
+      $("siPrompt").innerHTML=L(UI.siPrompt);
+      $("codeInput").setAttribute("placeholder", UI.codeph[LANG]||UI.codeph.en);
+      $("signinBtn").innerHTML=L(UI.signIn); $("skipBtn").innerHTML=L(UI.justExplore);
+      $("resetBtn").innerHTML=L(UI.startover);
+      $("lblPartA").innerHTML=L(UI.partA); $("lblPartB").innerHTML=L(UI.partB);
+      $("lblParts").innerHTML=L(UI.partsLabel);
+      $("barChip").innerHTML='<span class="d"></span>'+L(UI.chipBar);
+      $("decChip").innerHTML='<span class="d"></span>'+L(UI.chipDec);
+      $("simChip").innerHTML='<span class="d"></span>'+L(UI.chipSim);
+      $("hintSummary").innerHTML=L(UI.hint);
+      $("prevBtn").innerHTML=L(UI.prev); $("nextBtn").innerHTML=L(UI.next);
+      $("saveBtn").innerHTML=L(UI.save);
+      if(!state.animMode) $("shareBtn").innerHTML=L(UI.share);
+      updateProgress(); goStage(cur);
+    }
+    $("langTog").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b) return; LANG=b.dataset.lang; applyLang(); });
+
+    // ---------- local resume ----------
+    const LS="mmt-ftq-progress-v1";
+    function saveLocal(){ try{ localStorage.setItem(LS, JSON.stringify({cur, done:[...done], ext:[...extMet], reasons:reasonSel})); }catch(_){ } }
+    function loadLocal(){ try{ const j=JSON.parse(localStorage.getItem(LS)||"null"); if(j){ (j.done||[]).forEach(x=>done.add(x)); (j.ext||[]).forEach(x=>extMet.add(x)); if(j.reasons) Object.assign(reasonSel,j.reasons); cur=Math.max(0,Math.min(STAGES.length-1,j.cur||0)); } }catch(_){ } }
+
+    // ================= SECURE SAVE (optional) =================
+    let mmt=null, signedIn=false, lastSaved="", saveTimer=null;
+    async function loadQuiz(){ if(mmt) return mmt; mmt=(await import("/portal/shared/quizClient.js")).MMTQuiz; mmt.init(); return mmt; }
+    function payload(){ const types=[...done]; extMet.forEach(id=>types.push("ext:"+id)); Object.keys(reasonSel).forEach(id=>(reasonSel[id]||[]).forEach(i=>types.push("why:"+id+":"+i)));
+      return { tool:"Fractions Number Line Quiz — Student", topic:"Fractions, Decimals and Percentages", level:"Quiz", score:done.size, total:STAGES.length, types }; }
+    function progSig(){ let rc=0; Object.keys(reasonSel).forEach(id=>rc+=(reasonSel[id]||[]).length); return done.size+"|"+extMet.size+"|"+rc; }
+    function autoSave(){ if(!signedIn) return; clearTimeout(saveTimer); saveTimer=setTimeout(async()=>{ if(progSig()===lastSaved) return; try{ const q=await loadQuiz(); await q.saveAchievement(payload()); lastSaved=progSig(); }catch(_){ } },1800); }
+    $("signinBtn").addEventListener("click",async()=>{ const code=$("codeInput").value.trim(), msg=$("signinMsg"); msg.style.color="var(--pink)"; msg.innerHTML="";
+      if(!code){ msg.innerHTML=L(UI.enterCode); return; } msg.style.color="var(--muted)"; msg.innerHTML=L(UI.checking);
+      try{ const q=await loadQuiz(); const res=await q.signIn(code); if(res.ok){ signedIn=true; const nm=(res.profile&&(res.profile.firstName||res.profile.name))||""; $("whoami").textContent="👤 "+nm; $("signinBar").classList.add("hide"); updateProgress(); autoSave(); }
+        else { msg.style.color="var(--pink)"; msg.textContent=res.error||"Could not sign in."; } }
+      catch(e){ msg.style.color="var(--pink)"; msg.innerHTML=L(UI.signUnavail); } });
+    $("skipBtn").addEventListener("click",()=>{ $("signinBar").classList.add("hide"); $("whoami").innerHTML=L(UI.working); });
+    $("codeInput").addEventListener("keydown",e=>{ if(e.key==="Enter") $("signinBtn").click(); });
+    $("saveBtn").addEventListener("click",async()=>{ const msg=$("saveMsg"); msg.style.color="var(--muted)"; msg.innerHTML=L(UI.saving);
+      try{ const q=await loadQuiz(); const res=await q.saveAchievement(payload()); if(res&&res.saved){ lastSaved=progSig(); msg.style.color="var(--green-dark)"; msg.innerHTML=L(UI.saved); } else { msg.style.color="var(--pink)"; msg.innerHTML=L(UI.signFirst); } }
+      catch(e){ msg.style.color="var(--pink)"; msg.innerHTML=L(UI.saveErr); } });
+
+    // init
+    loadLocal(); render(); applyLang();
+  })();
+  </script>
+</body>
+</html>

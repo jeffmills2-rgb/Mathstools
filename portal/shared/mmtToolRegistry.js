@@ -126,6 +126,22 @@ export const MMT_TOOLS = Object.freeze([
     supportsAdventureAttempts: false, supportsSkillBreakdown: false,
     notes: "Converted from a public-leaderboard quiz to a secure achievements quiz (Phase 4A.1).",
   },
+  {
+    toolId: "fraction-thinking-explorer", title: "Fraction Thinking Explorer — Student", category: "Quiz",
+    enabled: true, resultCollection: "achievements", richCollection: null,
+    achievementToolName: "Fraction Thinking Explorer — Student", topics: ["fdp"], stage: "Stage 4",
+    launchUrl: "/online-quizzes/stage-4/number/fraction-thinking-explorer.html",
+    supportsAdventureAttempts: false, supportsSkillBreakdown: false,
+    notes: "Open exploration + thinking-challenge shuffler (predict/construct/compare/misconception/recurring/division). Informational feedback, no typed answers; achievement = challenges met/worked. score/total are challenge counts, not marks. NOTE: superseded for classroom use by the guided 'Fraction Thinking Quest' — keep or set enabled:false to hide.",
+  },
+  {
+    toolId: "fractions-number-line-quiz", title: "Fractions Number Line Quiz — Student", category: "Quiz",
+    enabled: true, resultCollection: "achievements", richCollection: null,
+    achievementToolName: "Fractions Number Line Quiz — Student", topics: ["fdp"], stage: "Stage 4",
+    launchUrl: "/online-quizzes/stage-4/number/fraction-thinking-quest.html",
+    supportsAdventureAttempts: false, supportsSkillBreakdown: false,
+    notes: "Guided 8-stage progression (understand→equivalence→density→recurring→division→improper→compare→convince) with RANDOMISED values (same learning intention each attempt). EN/Arabic/Farsi bilingual. Minimal student UI: drag the point + an 'equal parts' stepper + contextual chips. Informational feedback, no typed answers; part-b checkable inputs + reasoning tags stored in types[]. score/total = stages completed. localStorage resume + secure achievement save.",
+  },
   // Disabled placeholder — no standalone Pythagoras quiz yet (Adventure covers it).
   // Demonstrates the enable/disable switch; flip enabled + set launchUrl when built.
   {
