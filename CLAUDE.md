@@ -20,6 +20,19 @@
 > `mmtToolRegistry.js`. See §5.
 > Full details: the game repo's CLAUDE.md (per-phase sections + "Schoolyard
 > default topics").
+> **NEW (being pushed 2026-07-18): the Adventure's "Fraction Farm"** — a THIRD
+> region (large late-afternoon farming world, portal BEHIND the island spawn)
+> with FOUR in-world fraction challenges, each 15 rounds + local-only bests +
+> a trophy stand (trophy.glb): **Fence Challenge** (fraction of a length on a
+> locked side-on number-line view, banded points + BULLSEYE), **The Round-Up**
+> (f/d/% OF AN AMOUNT — herd cows into a pen; herd regroups into equal
+> groups), **Order the Parts** (order f/d/% — swap carrots, confetti/reveal),
+> **Crate Packing** (HCF as biggest common group size — animated fruit
+> splitting, spill = remainder). Also: island + schoolyard renamed on portals
+> ("Fraction Farm" / "Retrieval Practice Playground"), the player is now a
+> rigged main1.glb (Space = jump, Shift = run), and the welcome screen is
+> name-only (character creator retired). Game-source checks 391 → 420, all
+> passing. Full details: the game repo's CLAUDE.md (F1–F7, W7).
 
 ---
 
