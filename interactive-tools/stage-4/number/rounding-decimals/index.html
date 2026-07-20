@@ -399,6 +399,25 @@
     }
     .toggle span{ display:block; font-size:.92rem; line-height:1.32; }
 
+    /* Segmented controls (Stage 3/4 and Zoom in/out) */
+    .segRow{ display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+    .segBtn{
+      appearance:none;
+      font-family:inherit;
+      font-size:13.5px;
+      font-weight:900;
+      cursor:pointer;
+      background:white;
+      border:1px solid var(--border);
+      color:var(--ink);
+      border-radius:12px;
+      padding:10px 8px;
+      transition:.16s ease;
+    }
+    .segBtn:hover:not([aria-pressed="true"]){ border-color:#c7d2fe; transform:translateY(-1px); box-shadow:0 8px 20px rgba(37,99,235,.10); }
+    .segBtn[aria-pressed="true"]{ background:var(--blue); color:#fff; border-color:var(--blue); box-shadow:0 8px 20px rgba(37,99,235,.18); }
+    .segBtn:focus-visible{ outline:3px solid rgba(37,99,235,.28); outline-offset:2px; }
+
     .stage{
       min-width:0;
       min-height:0;
@@ -862,13 +881,14 @@
         <span class="mmtBrandText"><strong>MMT</strong><span>Mills Maths Tools</span></span>
       </a>
 
-      <div class="mmtTopTitle">Decimal Zoom Rounding</div>
+      <div class="mmtTopTitle" id="topTitle">Decimal Zoom Rounding</div>
 
       <div class="topActions">
         <div class="toolsMenuWrap">
           <button class="btn" id="toolsBtn" type="button" aria-haspopup="true" aria-expanded="false">Tools ▾</button>
           <nav class="toolsMenu" id="toolsMenu" aria-label="Tools menu">
-            <a class="toolLink" href="../../../../online-quizzes/stage-4/number/decimal-zoom.html">Student Quiz</a>
+            <a class="toolLink" href="../../../../online-quizzes/stage-3/number/whole-number-zoom.html">Stage 3 Student Quiz</a>
+            <a class="toolLink" href="../../../../online-quizzes/stage-4/number/decimal-zoom.html">Stage 4 Student Quiz</a>
           </nav>
         </div>
         <button class="btn" id="topNewBtn" type="button">New number</button>
@@ -883,6 +903,24 @@
         <p class="panelHint">Use the number line to show rounding as choosing the closest place-value benchmark.</p>
 
         <div class="optionCard">
+          <p class="cardTitle">Stage</p>
+          <div class="segRow" role="group" aria-label="Stage">
+            <button class="segBtn" id="stage3Btn" type="button" aria-pressed="false">Stage 3</button>
+            <button class="segBtn" id="stage4Btn" type="button" aria-pressed="true">Stage 4</button>
+          </div>
+          <p class="miniNote" id="stageNote">Stage&nbsp;4: round a decimal down through the places (whole number, tenths, hundredths…). Stage&nbsp;3: round whole numbers to the nearest 10, 100, 1000, 10&nbsp;000 or 100&nbsp;000 — no decimals.</p>
+        </div>
+
+        <div class="optionCard">
+          <p class="cardTitle">Direction</p>
+          <div class="segRow" role="group" aria-label="Rounding direction">
+            <button class="segBtn" id="dirInBtn" type="button" aria-pressed="true">Zoom in</button>
+            <button class="segBtn" id="dirOutBtn" type="button" aria-pressed="false">Zoom out</button>
+          </div>
+          <p class="miniNote" id="dirNote">Zoom&nbsp;in: start at the biggest place and zoom in to the smallest. Zoom&nbsp;out: start at the smallest place and zoom out to the biggest.</p>
+        </div>
+
+        <div class="optionCard">
           <p class="cardTitle">Mode</p>
           <button class="tbtn" id="estimateToggle" type="button" aria-pressed="true">Estimate mode</button>
           <p class="miniNote">On: students click to estimate, then reveal and zoom in. Off: the position is shown and you zoom in and out using the magnifier buttons on the number line.</p>
@@ -895,7 +933,7 @@
             <button class="tbtn" id="restartBtn" type="button">Restart this number</button>
           </div>
           <div class="controlGrid">
-            <label class="miniNote" for="customInput">Enter a custom decimal. The tool builds the rounding steps automatically.</label>
+            <label class="miniNote" id="customLabel" for="customInput">Enter a custom decimal. The tool builds the rounding steps automatically.</label>
             <div class="inputRow">
               <input class="textInput" id="customInput" inputmode="decimal" autocomplete="off" value="32.6397" aria-label="Custom positive decimal number" />
               <button class="tbtn" id="useCustomBtn" type="button">Use</button>
@@ -1117,6 +1155,12 @@
       const panelToggle = $("panelToggle");
       const toolsBtn = $("toolsBtn");
       const toolsMenu = $("toolsMenu");
+      const topTitle = $("topTitle");
+      const customLabel = $("customLabel");
+      const stage3Btn = $("stage3Btn");
+      const stage4Btn = $("stage4Btn");
+      const dirInBtn = $("dirInBtn");
+      const dirOutBtn = $("dirOutBtn");
 
       /* State */
       let model;
@@ -1128,6 +1172,11 @@
       let showMid = true;
       let showDigit = false;
       let estimateMode = true;
+      let stage = 4;            // 4 = decimals (default), 3 = whole numbers
+      let zoomDir = "in";       // "in" = biggest→smallest (default), "out" = smallest→biggest
+      let customHintDefault = "Examples: 321.69 or 0.284618";
+
+      const DEFAULTS = { 4: "32.6397", 3: "48327" };
 
       function parseDecimalInput(raw){
         let value = raw.trim();
@@ -1160,14 +1209,41 @@
         };
       }
 
+      /* Stage 3: a positive whole number (no decimals), up to hundred-thousands. */
+      function parseWholeInput(raw){
+        let value = String(raw).trim().replace(/[,\s]/g, "");
+        if(!/^\d+$/.test(value)){
+          throw new Error("Please enter a whole number, e.g. 4800 or 483271.");
+        }
+        value = value.replace(/^0+(?=\d)/, "");
+        if(value.length > MAX_INTEGER_DIGITS){
+          throw new Error(`Use no more than ${MAX_INTEGER_DIGITS} digits (up to hundred-thousands).`);
+        }
+        if(Number(value) === 0){
+          throw new Error("Please enter a whole number greater than 0.");
+        }
+        return { intPart:value, fracPart:"", D:0, scale:1, N:Number(value), originalText:addCommas(value) };
+      }
+      function parseInput(raw){
+        return stage === 3 ? parseWholeInput(raw) : parseDecimalInput(raw);
+      }
+
       function startExponentFor(m){
+        if(stage === 3){
+          // Coarsest sensible rounding = the leading digit's place (string length avoids
+          // log10 float error at exact powers of ten); capped at hundred-thousands.
+          const lead = String(m.N).length - 1;
+          return Math.max(1, Math.min(5, lead));
+        }
         const integerValue = Number(m.intPart);
         if(integerValue > 0) return Math.floor(Math.log10(integerValue));
         // For numbers less than 1, begin with tenths unless there is only one decimal place.
         return m.D === 1 ? 0 : -1;
       }
       function endExponentFor(m){
-        // We stop one decimal place before the full precision, because the final digit is the deciding digit.
+        // Stage 3 stops at the nearest ten (no ones/decimals for whole numbers).
+        if(stage === 3) return 1;
+        // Stage 4: stop one decimal place before full precision — the final digit is the deciding digit.
         return -(m.D - 1);
       }
       function buildLevels(m){
@@ -1201,8 +1277,26 @@
             decidingPlace: placeName(exp - 1)
           });
         }
+        // Levels are built biggest→smallest (zoom in). For "zoom out" the guided
+        // sequence starts at the smallest place, so play them in reverse order.
+        if(zoomDir === "out") out.reverse();
+        out.forEach((L, idx) => { L.i = idx; });
         return out;
       }
+
+      /* Index helpers — the array is in PLAY order, but the magnifiers act on the
+         real number line, so they always target finer/coarser regardless of dir. */
+      function finestIndex(){
+        let idx = 0;
+        for(let i=1;i<levels.length;i++) if(levels[i].step < levels[idx].step) idx = i;
+        return idx;
+      }
+      function coarsestIndex(){
+        let idx = 0;
+        for(let i=1;i<levels.length;i++) if(levels[i].step > levels[idx].step) idx = i;
+        return idx;
+      }
+      function finerDelta(){ return zoomDir === "in" ? 1 : -1; }
 
       function fmt(value, dp){
         const divisorPower = model.D - dp;
@@ -1442,18 +1536,25 @@
 
       function renderBigNum(){
         const s = actualText();
-        const dot = s.indexOf(".");
         const L = levels[level];
         const decidingExp = L.exp - 1;
-        let charIdx = -1;
-        if(decidingExp >= 0){
-          charIdx = dot - 1 - decidingExp;
-        } else {
-          charIdx = dot + (-decidingExp);
+        // Assign a place-value exponent to each DIGIT character, skipping commas and
+        // the decimal point. Works for whole numbers (with grouping commas) and decimals.
+        const dot = s.indexOf(".");
+        const places = new Array(s.length).fill(null);
+        let p = 0;
+        for(let k = (dot === -1 ? s.length : dot) - 1; k >= 0; k--){
+          if(/\d/.test(s[k])){ places[k] = p; p++; }
+        }
+        if(dot !== -1){
+          let fp = -1;
+          for(let k = dot + 1; k < s.length; k++){
+            if(/\d/.test(s[k])){ places[k] = fp; fp--; }
+          }
         }
         let html = "";
         for(let k=0;k<s.length;k++){
-          const cls = (k===charIdx) ? "place" : "lead";
+          const cls = (places[k] === decidingExp) ? "place" : "lead";
           html += `<span class="${cls}">${s[k]}</span>`;
         }
         bignum.innerHTML = html;
@@ -1525,14 +1626,18 @@
           submitBtn.style.display = "none";
           nextBtn.style.display = "none";
           summaryBtn.style.display = last ? "" : "none";
-          prompt.textContent = last
+          prompt.textContent = (level === finestIndex())
             ? `Showing where ${actualText()} sits — fully zoomed in. Use the − magnifier to zoom back out.`
             : `Showing where ${actualText()} sits. Use the magnifiers to zoom in and out.`;
         } else {
           submitBtn.style.display = revealed ? "none" : "";
           submitBtn.disabled = guessFrac==null;
           nextBtn.style.display = (revealed && !last) ? "" : "none";
-          if(!last) nextBtn.textContent = `Zoom in to the ${levels[level+1].targetPlace} interval →`;
+          if(!last){
+            const nxt = levels[level+1];
+            const word = nxt.step < levels[level].step ? "Zoom in" : "Zoom out";
+            nextBtn.textContent = `${word} to the ${nxt.targetPlace} interval →`;
+          }
           summaryBtn.style.display = (revealed && last) ? "" : "none";
 
           if(!revealed){
@@ -1545,13 +1650,16 @@
         }
         svg.classList.toggle("locked", revealed || animating || !estimateMode);
 
-        $("zoomInBtn").disabled  = animating || last;
-        $("zoomOutBtn").disabled = animating || first;
+        // Magnifiers + stage zoom nav act on the real number line (finer/coarser),
+        // so they disable at the finest / coarsest interval regardless of direction.
+        const fineIdx = finestIndex(), coarseIdx = coarsestIndex();
+        $("zoomInBtn").disabled  = animating || level===fineIdx;
+        $("zoomOutBtn").disabled = animating || level===coarseIdx;
 
         $("backBtn").disabled = animating || (estimateMode ? (first && !revealed) : first);
         $("fwdBtn").disabled  = animating || last;
-        $("stageZoomOutBtn").disabled = animating || (estimateMode ? (first && !revealed) : first);
-        $("stageZoomInBtn").disabled  = animating || last;
+        $("stageZoomOutBtn").disabled = animating || level===coarseIdx;
+        $("stageZoomInBtn").disabled  = animating || level===fineIdx;
         document.querySelectorAll(".tbtn.jump").forEach((b,i)=>{
           b.setAttribute("aria-current", i===level ? "true":"false");
         });
@@ -1643,15 +1751,13 @@
         if(estimateMode && revealed){ revealed=false; guessFrac=null; render(); }
         else goToLevel(level-1, true);
       });
-      $("zoomInBtn").addEventListener("click", ()=>goToLevel(level+1,true));
-      $("zoomOutBtn").addEventListener("click", ()=>goToLevel(level-1,true));
-      // Stage-level zoom nav (under Submit) — mirrors the teacher panel Back / Forward.
-      $("stageZoomInBtn").addEventListener("click", ()=>goToLevel(level+1,true));
-      $("stageZoomOutBtn").addEventListener("click", ()=>{
-        if(animating) return;
-        if(estimateMode && revealed){ revealed=false; guessFrac=null; render(); }
-        else goToLevel(level-1, true);
-      });
+      // Magnifiers: zoom in = finer interval, zoom out = coarser interval (real
+      // number-line direction), independent of the guided play direction.
+      $("zoomInBtn").addEventListener("click", ()=>goToLevel(level + finerDelta(), true));
+      $("zoomOutBtn").addEventListener("click", ()=>goToLevel(level - finerDelta(), true));
+      // Stage-level zoom nav (under Submit) — same literal finer/coarser meaning.
+      $("stageZoomInBtn").addEventListener("click", ()=>goToLevel(level + finerDelta(), true));
+      $("stageZoomOutBtn").addEventListener("click", ()=>goToLevel(level - finerDelta(), true));
       $("estimateToggle").addEventListener("click", ()=>{
         if(animating) return;
         estimateMode = !estimateMode;
@@ -1680,7 +1786,7 @@
       function isHalfwayForAnyStep(m){
         return buildLevels(m).some(L => m.N === L.mid);
       }
-      function randomRaw(){
+      function randomDecimalRaw(){
         let raw, m;
         do{
           const intPart = 1 + Math.floor(Math.random()*99);
@@ -1691,9 +1797,24 @@
         } while(isHalfwayForAnyStep(m));
         return raw;
       }
+      function randomWholeRaw(){
+        let raw, m;
+        do{
+          // 3–6 digit whole numbers so several rounding steps exist.
+          const digits = 3 + Math.floor(Math.random()*4);
+          let s = String(1 + Math.floor(Math.random()*9));
+          for(let k=1;k<digits;k++) s += String(Math.floor(Math.random()*10));
+          raw = s;
+          m = parseWholeInput(raw);
+        } while(isHalfwayForAnyStep(m));
+        return raw;
+      }
+      function randomRaw(){
+        return stage === 3 ? randomWholeRaw() : randomDecimalRaw();
+      }
 
       function setModelFromRaw(raw, keepMessage=false){
-        model = parseDecimalInput(raw);
+        model = parseInput(raw);
         levels = buildLevels(model);
         level=0;
         guessFrac=null;
@@ -1702,7 +1823,7 @@
         summary.classList.remove("show");
         customInput.value = actualText();
         renderJumpButtons();
-        if(!keepMessage) setInputMessage("Examples: 321.69 or 0.284618", "");
+        if(!keepMessage) setInputMessage(customHintDefault, "");
         render();
       }
       function restartCurrentNumber(){
@@ -1722,7 +1843,7 @@
       }
       function useCustom(){
         try{
-          const parsed = parseDecimalInput(customInput.value);
+          const parsed = parseInput(customInput.value);
           setModelFromRaw(parsed.originalText, true);
           setInputMessage(`Using ${parsed.originalText}. ${levels.length} rounding step${levels.length===1?"":"s"} generated.`, "ok");
         } catch(err){
@@ -1741,7 +1862,7 @@
       customInput.addEventListener("input", ()=>{
         customInput.classList.remove("invalid");
         inputMsg.classList.remove("error","ok");
-        inputMsg.textContent = "Examples: 321.69 or 0.284618";
+        inputMsg.textContent = customHintDefault;
       });
 
       $("midToggle").addEventListener("click", ()=>{ showMid=!showMid; render(); });
@@ -1793,7 +1914,45 @@
         if(evt.key === "Escape") setToolsOpen(false);
       });
 
-      setModelFromRaw("32.6397");
+      /* Stage (3 / 4) and Direction (zoom in / out) controls */
+      function updateStageUI(){
+        stage3Btn.setAttribute("aria-pressed", stage===3 ? "true" : "false");
+        stage4Btn.setAttribute("aria-pressed", stage===4 ? "true" : "false");
+        dirInBtn.setAttribute("aria-pressed", zoomDir==="in" ? "true" : "false");
+        dirOutBtn.setAttribute("aria-pressed", zoomDir==="out" ? "true" : "false");
+        topTitle.textContent = stage===3 ? "Whole Number Zoom Rounding" : "Decimal Zoom Rounding";
+        if(stage === 3){
+          customInput.setAttribute("inputmode", "numeric");
+          customInput.setAttribute("aria-label", "Custom positive whole number");
+          customLabel.textContent = "Enter a whole number. The tool builds the rounding steps automatically.";
+          customHintDefault = "Examples: 4800 or 483271";
+        } else {
+          customInput.setAttribute("inputmode", "decimal");
+          customInput.setAttribute("aria-label", "Custom positive decimal number");
+          customLabel.textContent = "Enter a custom decimal. The tool builds the rounding steps automatically.";
+          customHintDefault = "Examples: 321.69 or 0.284618";
+        }
+      }
+      function setStage(s){
+        if(animating || stage===s) return;
+        stage = s;
+        updateStageUI();
+        setModelFromRaw(DEFAULTS[stage]);
+      }
+      function setDir(d){
+        if(animating || zoomDir===d) return;
+        zoomDir = d;
+        updateStageUI();
+        levels = buildLevels(model);   // rebuild in the new play order
+        restartCurrentNumber();
+      }
+      stage3Btn.addEventListener("click", ()=>setStage(3));
+      stage4Btn.addEventListener("click", ()=>setStage(4));
+      dirInBtn.addEventListener("click", ()=>setDir("in"));
+      dirOutBtn.addEventListener("click", ()=>setDir("out"));
+
+      updateStageUI();
+      setModelFromRaw(DEFAULTS[stage]);
     })();
   </script>
 </body>

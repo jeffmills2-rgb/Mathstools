@@ -119,12 +119,20 @@ export const MMT_TOOLS = Object.freeze([
     supportsAdventureAttempts: false, supportsSkillBreakdown: false, notes: "Migrated.",
   },
   {
-    toolId: "decimal-zoom-quiz", title: "Decimal Zoom Rounding — Student Quiz", category: "Quiz",
+    toolId: "decimal-zoom-quiz", title: "Decimal Zoom Rounding — Stage 4 Student Quiz", category: "Quiz",
     enabled: true, resultCollection: "achievements", richCollection: null,
     achievementToolName: "Decimal Zoom Rounding Quiz", topics: ["fdp"], stage: "Stage 4",
     launchUrl: "/online-quizzes/stage-4/number/decimal-zoom.html",
     supportsAdventureAttempts: false, supportsSkillBreakdown: false,
-    notes: "Converted from a public-leaderboard quiz to a secure achievements quiz (Phase 4A.1).",
+    notes: "Converted from a public-leaderboard quiz to a secure achievements quiz (Phase 4A.1). Retitled Stage 4 when the Stage 3 whole-number companion shipped; achievementToolName kept as 'Decimal Zoom Rounding Quiz' for record continuity.",
+  },
+  {
+    toolId: "whole-number-zoom-quiz", title: "Whole Number Zoom Rounding — Stage 3 Student Quiz", category: "Quiz",
+    enabled: true, resultCollection: "achievements", richCollection: null,
+    achievementToolName: "Whole Number Zoom Rounding Quiz", topics: ["whole-numbers"], stage: "Stage 3",
+    launchUrl: "/online-quizzes/stage-3/number/whole-number-zoom.html",
+    supportsAdventureAttempts: false, supportsSkillBreakdown: false,
+    notes: "Stage 3 whole-number companion to the Decimal Zoom quiz — rounds to the nearest 10/100/1000/10 000/100 000 (no decimals). Same Sweet/Mild/Medium/Spicy structure + secure achievements save; masteryTopic 'rounding-whole-numbers'.",
   },
   {
     toolId: "fraction-thinking-explorer", title: "Fraction Thinking Explorer — Student", category: "Quiz",

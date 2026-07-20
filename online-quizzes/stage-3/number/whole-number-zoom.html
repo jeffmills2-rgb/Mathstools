@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Decimal Zoom Rounding — Stage 4 Student Quiz | Mills Maths Tools</title>
+  <title>Whole Number Zoom Rounding — Stage 3 Student Quiz | Mills Maths Tools</title>
 
   <style>
     :root{
@@ -364,15 +364,15 @@
             <button class="startBtn" data-level="sweet" type="button">Start</button>
           </div>
           <div class="levelRow mild">
-            <div><p class="name">Mild</p><p class="sub">Round to 1, 2 or 3 decimal places. You can zoom all the way to the helpful model.</p></div>
+            <div><p class="name">Mild</p><p class="sub">Round to the nearest 10, 100 or 1000. You can zoom all the way to the helpful model.</p></div>
             <button class="startBtn" data-level="mild" type="button">Start</button>
           </div>
           <div class="levelRow medium">
-            <div><p class="name">Medium</p><p class="sub">Round to 1, 2 or 3 decimal places. The final helpful zoom is locked, so you decide from the previous view.</p></div>
+            <div><p class="name">Medium</p><p class="sub">Round to the nearest 10, 100 or 1000. The final helpful zoom is locked, so you decide from the previous view.</p></div>
             <button class="startBtn" data-level="medium" type="button">Start</button>
           </div>
           <div class="levelRow spicy">
-            <div><p class="name">Spicy</p><p class="sub">Pure fluency: nearest ten, whole number, 1dp, 2dp or 3dp. No number line.</p></div>
+            <div><p class="name">Spicy</p><p class="sub">Pure fluency: nearest 10, 100, 1000, 10 000 or 100 000. No number line.</p></div>
             <button class="startBtn" data-level="spicy" type="button">Start</button>
           </div>
         </div>
@@ -432,7 +432,7 @@
         <span class="brandText"><strong>MMT</strong><span>Mills Maths Tools</span></span>
       </a>
       <div class="titleBox">
-        <h1>Decimal Zoom Rounding — Stage 4</h1>
+        <h1>Whole Number Zoom Rounding — Stage 3</h1>
         <p id="levelTitle">Choose a level to start</p>
       </div>
       <div class="topActions">
@@ -473,7 +473,7 @@
         <div class="qaPanel" id="qaPanel">
           <p class="prompt" id="prompt">Choose a level to begin.</p>
           <div class="answerRow hidden" id="answerRow">
-            <input class="ansInput" id="ansInput" autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="decimal" />
+            <input class="ansInput" id="ansInput" autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="numeric" />
             <button class="btn enter" id="enterBtn" type="button">Enter ↵</button>
           </div>
           <div class="msg" id="msg">Enter your code and choose a level.</div>
@@ -515,7 +515,7 @@
   const db = getFirestore(app);
   const functions = getFunctions(app, "us-central1");
   const ACHIEVEMENTS_COLLECTION = "achievements";
-  const QUIZ_TOOL = "Decimal Zoom Rounding Quiz";
+  const QUIZ_TOOL = "Whole Number Zoom Rounding Quiz";
   let firebaseReady = false;     // app/SDK ready (sign-in happens on code entry)
   let currentStudent = null;     // safe profile from the secure exchange
 
@@ -579,31 +579,24 @@
     return `the nearest ${stepLabel(exp)} (${decimalPlaceText(-exp)})`;
   }
   function taskText(exp){
-    if(exp === 1) return "Round to the nearest ten";
-    if(exp === 0) return "Round to the nearest whole number";
-    return `Round to ${-exp} decimal place${-exp===1?"":"s"}`;
+    return `Round to the nearest ${addCommas(String(pow10(exp)))}`;
   }
 
-  function parseDecimalInput(raw){
-    let value = String(raw).trim();
-    if(value.startsWith(".")) value = "0" + value;
-    if(!/^\d+\.\d+$/.test(value)) throw new Error("Invalid decimal");
-    let [intPart, fracPart] = value.split(".");
-    intPart = intPart.replace(/^0+(?=\d)/, "") || "0";
-    if(fracPart.length < 1 || fracPart.length > MAX_DECIMALS) throw new Error("Invalid decimal length");
-    if(intPart.length > MAX_INTEGER_DIGITS) throw new Error("Too many integer digits");
-    if(Number(intPart) === 0 && /^0+$/.test(fracPart)) throw new Error("Use a positive number");
-    const D = fracPart.length;
-    const scale = pow10(D);
-    const N = Number(intPart) * scale + Number(fracPart);
-    return { intPart, fracPart, D, scale, N, originalText:`${intPart}.${fracPart}` };
+  function parseWholeInput(raw){
+    let value = String(raw).trim().replace(/[,\s]/g, "");
+    if(!/^\d+$/.test(value)) throw new Error("Invalid whole number");
+    value = value.replace(/^0+(?=\d)/, "") || "0";
+    if(value.length > MAX_INTEGER_DIGITS) throw new Error("Too many digits");
+    if(Number(value) === 0) throw new Error("Use a positive number");
+    return { intPart:value, fracPart:"", D:0, scale:1, N:Number(value), originalText:addCommas(value) };
   }
   function startExponentFor(m){
-    const integerValue = Number(m.intPart);
-    if(integerValue > 0) return Math.floor(Math.log10(integerValue));
-    return m.D === 1 ? 0 : -1;
+    // Coarsest sensible rounding = the leading digit's place (string length avoids
+    // log10 float error at exact powers of ten); capped at hundred-thousands.
+    const lead = String(m.N).length - 1;
+    return Math.max(1, Math.min(5, lead));
   }
-  function endExponentFor(m){ return -(m.D - 1); }
+  function endExponentFor(m){ return 1; }  // nearest ten is the finest step
   function buildLevels(m){
     let startExp = startExponentFor(m);
     const endExp = endExponentFor(m);
@@ -642,7 +635,7 @@
   function isHalfwayForTarget(m, exp){ return buildLevels(m).some(L => L.exp === exp && m.N === L.mid); }
 
   function makeQuestion(raw, level, targetExp=null){
-    const model = parseDecimalInput(raw);
+    const model = parseWholeInput(raw);
     const levels = buildLevels(model);
     const targetLevel = targetExp == null ? null : levels.find(L => L.exp === targetExp);
     const targetIndex = targetLevel ? targetLevel.i : -1;
@@ -653,29 +646,29 @@
       stepScores:[], stepDetails:[]
     };
   }
-  function randomRawTool(){
+  function randomRawTool(minDigits=3){
     let raw, m;
+    const lo = Math.max(2, minDigits);
     do{
-      const intPart = randInt(1,99);
-      let frac = String(Math.floor(Math.random()*10000)).padStart(4,"0");
-      if(/^0+$/.test(frac)) frac = String(randInt(1,9999)).padStart(4,"0");
-      raw = `${intPart}.${frac}`;
-      m = parseDecimalInput(raw);
+      const digits = randInt(lo, 6);
+      let s = String(randInt(1,9));
+      for(let k=1;k<digits;k++) s += String(randInt(0,9));
+      raw = s;
+      m = parseWholeInput(raw);
     } while(isHalfwayForAnyStep(m));
     return raw;
   }
   function randomRawForSpicy(targetExp){
     let raw, m, q;
-    const minD = targetExp < 0 ? (-targetExp + 1) : 1;
     do{
-      const intPart = randInt(1,994);
-      const D = randInt(minD,7);
-      let frac = String(Math.floor(Math.random()*pow10(D))).padStart(D,"0");
-      if(/^0+$/.test(frac)) frac = String(randInt(1,pow10(D)-1)).padStart(D,"0");
-      raw = `${intPart}.${frac}`;
-      m = parseDecimalInput(raw);
+      // At least targetExp+1 digits so rounding to that place is meaningful; up to 6.
+      const digits = randInt(Math.min(6, targetExp + 1), 6);
+      let s = String(randInt(1,9));
+      for(let k=1;k<digits;k++) s += String(randInt(0,9));
+      raw = s;
+      m = parseWholeInput(raw);
       q = makeQuestion(raw, "spicy", targetExp);
-    } while(isHalfwayForTarget(m,targetExp) || !q.targetLevel || Number(answerFor(q)) >= 1000);
+    } while(isHalfwayForTarget(m,targetExp) || !q.targetLevel);
     return raw;
   }
   function generateQuestions(level){
@@ -684,13 +677,13 @@
       if(level === "sweet"){
         out.push(makeQuestion(randomRawTool(), level, null));
       } else if(level === "mild" || level === "medium"){
-        const targetExp = randPick([-1,-2,-3]);
+        const targetExp = randPick([1,2,3]);
         let q;
-        do{ q = makeQuestion(randomRawTool(), level, targetExp); } while(!q.targetLevel);
+        do{ q = makeQuestion(randomRawTool(targetExp + 2), level, targetExp); } while(!q.targetLevel || q.targetIndex < 1);
         q.maxZoomIndex = level === "mild" ? q.targetIndex : Math.max(0, q.targetIndex - 1);
         out.push(q);
       } else {
-        const targetExp = randPick([1,0,-1,-2,-3]);
+        const targetExp = randPick([1,2,3,4,5]);
         const q = makeQuestion(randomRawForSpicy(targetExp), level, targetExp);
         out.push(q);
       }
@@ -870,9 +863,12 @@
     const L = state.level === "sweet" ? q.levels[state.lineLevel] : (q.targetLevel || q.levels[state.lineLevel]);
     const decidingExp = L.exp - 1;
     const dot = s.indexOf(".");
-    let charIdx = decidingExp >= 0 ? dot - 1 - decidingExp : dot + (-decidingExp);
+    const places = new Array(s.length).fill(null);
+    let pl = 0;
+    for(let k=(dot===-1?s.length:dot)-1;k>=0;k--){ if(/\d/.test(s[k])){ places[k]=pl; pl++; } }
+    if(dot!==-1){ let fp=-1; for(let k=dot+1;k<s.length;k++){ if(/\d/.test(s[k])){ places[k]=fp; fp--; } } }
     let html = "";
-    for(let k=0;k<s.length;k++) html += `<span class="${k===charIdx?'place':'lead'}">${s[k]}</span>`;
+    for(let k=0;k<s.length;k++) html += `<span class="${places[k]===decidingExp?'place':'lead'}">${s[k]}</span>`;
     bignum.innerHTML = html;
     ideaText.textContent = state.level === "sweet" ? `Estimate for ${L.name}` : `Check the ${L.decidingPlace} digit`;
   }
@@ -1061,7 +1057,7 @@
     q.response = raw.trim(); q.correct = correct; q.attempted = true; q.score = correct ? 1 : 0;
     setInputState(correct ? "ok" : "bad");
     if(correct){ setMessage("ok", "✅ Correct!"); dropConfetti(55); }
-    else if(!formatted){ setMessage("bad", `❌ Not quite. The correct answer is <b>${expected}</b>. Check the required decimal-place formatting.`); }
+    else if(!formatted){ setMessage("bad", `❌ Not quite. The correct answer is <b>${expected}</b>. Enter a whole number (digits only).`); }
     else { setMessage("bad", `❌ Not quite. The correct answer is <b>${expected}</b>.`); }
     renderControls();
   }
@@ -1204,7 +1200,7 @@
     const s = currentStudent || {};
     return {
       tool: QUIZ_TOOL,
-      topic: "Rounding & Decimals",
+      topic: "Rounding whole numbers",
       source: "Mills Maths Tools",
       studentCode: s.studentCode || state.studentCode,
       studentName: s.name || "",
@@ -1217,7 +1213,7 @@
       level: state.level,
       score, total: max, percent: pct,
       xpEarned: xp,
-      masteryTopic: "rounding-decimals",
+      masteryTopic: "rounding-whole-numbers",
       createdAt: serverTimestamp(),
       createdAtClient: new Date().toISOString()
     };

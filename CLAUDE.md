@@ -20,19 +20,25 @@
 > `mmtToolRegistry.js`. See §5.
 > Full details: the game repo's CLAUDE.md (per-phase sections + "Schoolyard
 > default topics").
-> **NEW (being pushed 2026-07-18): the Adventure's "Fraction Farm"** — a THIRD
-> region (large late-afternoon farming world, portal BEHIND the island spawn)
-> with FOUR in-world fraction challenges, each 15 rounds + local-only bests +
-> a trophy stand (trophy.glb): **Fence Challenge** (fraction of a length on a
-> locked side-on number-line view, banded points + BULLSEYE), **The Round-Up**
-> (f/d/% OF AN AMOUNT — herd cows into a pen; herd regroups into equal
-> groups), **Order the Parts** (order f/d/% — swap carrots, confetti/reveal),
-> **Crate Packing** (HCF as biggest common group size — animated fruit
-> splitting, spill = remainder). Also: island + schoolyard renamed on portals
-> ("Fraction Farm" / "Retrieval Practice Playground"), the player is now a
-> rigged main1.glb (Space = jump, Shift = run), and the welcome screen is
-> name-only (character creator retired). Game-source checks 391 → 420, all
-> passing. Full details: the game repo's CLAUDE.md (F1–F7, W7).
+> **The Adventure's "Fraction Farm"** (deployed 2026-07-18, commit `0ec63a1`)
+> — a THIRD region (large late-afternoon farming world, portal BEHIND the
+> island spawn) with in-world fraction challenges, each 15 rounds +
+> local-only bests + a trophy stand (trophy.glb): **Fence Challenge**
+> (fraction of a length on a locked side-on number-line view, banded points
+> + BULLSEYE), **The Round-Up** (f/d/% OF AN AMOUNT — herd cows into a pen;
+> herd regroups into equal groups), **Order the Parts** (order f/d/% — swap
+> carrots, confetti/reveal), **Crate Packing** (HCF as biggest common group
+> size — animated fruit splitting, spill = remainder; host Peck the Bird).
+> Also live: portal renames ("Fraction Farm" / "Retrieval Practice
+> Playground"), rigged main1.glb player (Space = jump, Shift = run),
+> name-only welcome screen (character creator retired).
+> **NOT yet deployed (built 2026-07-18, game source): The Milk Splitter** —
+> terminating vs recurring decimals: the machine performs the division live
+> (digits grow, tank drains; recurring = endless drip loop 🔁), predict
+> STOPS/REPEATS then pick the dot-notation jug; host Milkman Pearce + a
+> Meshy milk-truck.glb. Needs `npm run build` → copy `dist/.` → push.
+> Game-source checks 391 → 425, all passing. Full details: the game repo's
+> CLAUDE.md (F1–F8, W7).
 
 ---
 
