@@ -1073,7 +1073,7 @@
              + `<path class="nl-arrow" d="M ${rx+AXIS_AH} ${BASE} L ${rx} ${BASE-AXIS_AW} L ${rx} ${BASE+AXIS_AW} Z"/>`;
       }
       const pow10 = n => Math.pow(10, n);
-      const addCommas = s => s.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      const addCommas = s => s.replace(/\B(?=(\d{3})+(?!\d))/g, "\u00a0");
 
       function syncViewBox(){
         const r = svg.getBoundingClientRect();

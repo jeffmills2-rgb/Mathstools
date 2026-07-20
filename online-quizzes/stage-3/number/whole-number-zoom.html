@@ -536,7 +536,7 @@
   const pow10 = n => Math.pow(10,n);
   const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
   const xpos = f => MARGIN + f * SPAN;
-  const addCommas = s => s.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  const addCommas = s => s.replace(/\B(?=(\d{3})+(?!\d))/g, "\u00a0");
   const randInt = (a,b)=>Math.floor(Math.random()*(b-a+1))+a;
   const randPick = arr => arr[Math.floor(Math.random()*arr.length)];
 
@@ -630,7 +630,7 @@
     return addCommas(whole) + "." + frac;
   }
   function fmt(value, dp){ return fmtForModel(currentQuestion().model, value, dp); }
-  function answerFor(q){ return fmtForModel(q.model, q.targetLevel.result, q.targetLevel.dpEnd).replace(/,/g,""); }
+  function answerFor(q){ return fmtForModel(q.model, q.targetLevel.result, q.targetLevel.dpEnd).replace(/[\s,]/g,""); }
   function isHalfwayForAnyStep(m){ return buildLevels(m).some(L => m.N === L.mid); }
   function isHalfwayForTarget(m, exp){ return buildLevels(m).some(L => L.exp === exp && m.N === L.mid); }
 
@@ -909,9 +909,9 @@
       const L = q.levels[state.lineLevel];
       promptEl.innerHTML = `<small>Question ${state.qIndex+1} of ${TOTAL_QUESTIONS}</small>Click the number line to estimate where <span class="num">${q.raw}</span> sits when rounding to ${L.name}.`;
     } else if(state.level === "spicy"){
-      promptEl.innerHTML = `<small>Question ${state.qIndex+1} of ${TOTAL_QUESTIONS}</small>${q.targetLevel.task}: <span class="num">${q.raw}</span>`;
+      promptEl.innerHTML = `<small>Question ${state.qIndex+1} of ${TOTAL_QUESTIONS}</small>${q.targetLevel.task}`;
     } else {
-      promptEl.innerHTML = `<small>Question ${state.qIndex+1} of ${TOTAL_QUESTIONS}</small>${q.targetLevel.task}: <span class="num">${q.raw}</span>`;
+      promptEl.innerHTML = `<small>Question ${state.qIndex+1} of ${TOTAL_QUESTIONS}</small>${q.targetLevel.task}`;
     }
   }
   function renderControls(){
@@ -1039,7 +1039,7 @@
       if(state.qIndex < TOTAL_QUESTIONS-1) nextQuestion(); else finishQuiz();
     }
   }
-  function normalizeAnswer(s){ return String(s||"").trim().replace(/,/g,""); }
+  function normalizeAnswer(s){ return String(s||"").replace(/[\s,]/g,""); }
   function validFormatForTarget(raw, exp){
     const s = normalizeAnswer(raw);
     if(exp >= 0) return /^\d+$/.test(s);
@@ -1052,13 +1052,14 @@
     const raw = ansInput.value;
     if(!raw.trim()){ setMessage("warn", "Type your answer, then press <b>Enter</b>."); return; }
     const expected = answerFor(q);
+    const expectedDisplay = fmtForModel(q.model, q.targetLevel.result, q.targetLevel.dpEnd);
     const formatted = validFormatForTarget(raw, q.targetExp);
     const correct = formatted && normalizeAnswer(raw) === expected;
     q.response = raw.trim(); q.correct = correct; q.attempted = true; q.score = correct ? 1 : 0;
     setInputState(correct ? "ok" : "bad");
     if(correct){ setMessage("ok", "✅ Correct!"); dropConfetti(55); }
-    else if(!formatted){ setMessage("bad", `❌ Not quite. The correct answer is <b>${expected}</b>. Enter a whole number (digits only).`); }
-    else { setMessage("bad", `❌ Not quite. The correct answer is <b>${expected}</b>.`); }
+    else if(!formatted){ setMessage("bad", `❌ Not quite. The correct answer is <b>${expectedDisplay}</b>. Enter a whole number (digits only).`); }
+    else { setMessage("bad", `❌ Not quite. The correct answer is <b>${expectedDisplay}</b>.`); }
     renderControls();
   }
   function nextQuestion(){
@@ -1186,7 +1187,7 @@
         const detail = q.stepScores.map((s,j)=>`${j+1}: ${s}/10`).join(", ");
         tr.innerHTML = `<td>${i+1}</td><td class="num">${q.raw}</td><td>${detail}</td><td class="val">${q.score}/10</td>`;
       } else {
-        const expected = answerFor(q);
+        const expected = fmtForModel(q.model, q.targetLevel.result, q.targetLevel.dpEnd);
         tr.innerHTML = `<td>${i+1}</td><td>${q.targetLevel.task}: <span class="num">${q.raw}</span></td><td class="num">${q.response || "—"}</td><td class="num">${expected}</td><td>${q.correct ? '<span class="correctText">Correct</span>' : '<span class="wrongText">Incorrect</span>'}</td>`;
       }
       summaryBody.appendChild(tr);
