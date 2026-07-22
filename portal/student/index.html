@@ -5,6 +5,26 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MMT Student Platform</title>
 <link rel="stylesheet" href="../shared/portalStyles.css"/>
+<style>
+  .modal-back{position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
+  .modal-back.show{display:flex}
+  .modal{background:#fff;border-radius:var(--radius);max-width:560px;width:100%;max-height:88vh;overflow:auto;box-shadow:0 20px 60px rgba(15,23,42,.3)}
+  .modal-head{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line)}
+  .modal-head h2{margin:0;font-size:1.15rem}
+  .modal-head .x{appearance:none;border:1px solid var(--line);background:#fff;width:34px;height:34px;border-radius:9px;font-size:1.05rem;cursor:pointer}
+  .modal-body{padding:18px 20px}
+  .modal-foot{padding:13px 20px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-end}
+  .tasklist{list-style:none;margin:0;padding:0}
+  .tasklist li{display:flex;align-items:center;gap:12px;padding:12px 2px;border-bottom:1px solid var(--line)}
+  .tasklist li:last-child{border-bottom:0}
+  .tasklist .em{width:38px;height:38px;border-radius:10px;background:var(--chip);display:grid;place-items:center;font-size:1.15rem;flex:0 0 auto}
+  .tasklist .body{flex:1}
+  .tasklist .ttl{font-weight:700}
+  .tasklist .sub{font-size:.82rem;color:var(--muted)}
+  .due{font-size:.76rem;font-weight:700;padding:3px 9px;border-radius:999px;background:#fef9c3;color:#854d0e;white-space:nowrap}
+  .due.soon{background:#fee2e2;color:#991b1b}
+  .due.done{background:#dcfce7;color:#166534}
+</style>
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "c7e5713b5e4f4993907eb285797dc89b"}'></script><!-- End Cloudflare Web Analytics -->
 </head>
 <body>
@@ -43,6 +63,12 @@
     <div class="card stat"><div class="label">Total XP</div><div class="value" id="statXp">0</div></div>
   </div>
 
+  <section class="card section" id="tasksCard" style="display:none">
+    <h2>Tasks set by your teacher</h2>
+    <p class="hint">Finish these online quizzes before their due date.</p>
+    <ul class="tasklist" id="tasksBody"></ul>
+  </section>
+
   <section class="card section">
     <h2>Mills Maths Adventure</h2>
     <p class="hint">Your Adventure missions and story attempts.</p>
@@ -65,6 +91,8 @@
   </section>
 </main>
 
+<div class="modal-back" id="taskModalBack"><div class="modal" id="taskModal"></div></div>
+
 <script type="module">
 import { initPortal, loginStudent, logout, getProfile, getRole, normaliseCode } from "../shared/codeExchangeClient.js";
 import { COLLECTIONS } from "../shared/firebaseConfig.js";
@@ -74,7 +102,7 @@ import { getEnabledTools } from "../shared/mmtToolRegistry.js";
 import { normaliseAchievement, summarise, formatDate } from "../shared/resultUtils.js";
 
 const $ = (id) => document.getElementById(id);
-let all = [], current = null;
+let all = [], current = null, tasks = [];
 
 initPortal();
 
@@ -103,6 +131,7 @@ async function doLogin(){
   }
   current = res.profile;
   await loadResults();
+  await loadTasks();
   showDashboard();
 }
 
@@ -128,6 +157,8 @@ function showDashboard(){
   const topics = [...new Set(all.map(r=>r.topic).filter(Boolean))];
   const pf = $("topicFilter"); topics.forEach(t=>{ const o=document.createElement("option"); o.value=t; o.textContent=t; pf.appendChild(o); });
   render();
+  renderTasks();
+  openTasksPopup();
 }
 
 function filtered(){
@@ -172,6 +203,57 @@ function copySummary(){
   const text = `${name} — MMT results\nAttempts: ${s.attempts}\nAverage: ${s.averagePercent}%\nBest: ${s.bestPercent}%\nTotal XP: ${s.totalXp}`;
   navigator.clipboard?.writeText(text);
   const b=$("copyBtn"); const o=b.textContent; b.textContent="Copied!"; setTimeout(()=>b.textContent=o,1200);
+}
+
+// ---- Teacher-set dashboard tasks -----------------------------------------
+async function loadTasks(){
+  tasks = [];
+  try{
+    const db = getDb();
+    const q = query(collection(db, COLLECTIONS.dashboardAssignments),
+      where("teacherCode","==", current.teacherCode||""),
+      where("className","==", current.className||""),
+      where("active","==", true));
+    const snap = await getDocs(q);
+    tasks = snap.docs.map(d=>({ id:d.id, ...d.data() })).sort((a,b)=>(a.dueAt||Infinity)-(b.dueAt||Infinity));
+  }catch(err){ console.warn("dashboard tasks unavailable:", err); }
+}
+function taskDone(t){ return all.some(r=>(r.toolId||"")===t.toolId); }
+function launchFor(t){ if(t.launchUrl) return t.launchUrl; const tool=getEnabledTools().find(x=>x.toolId===t.toolId); return tool?tool.launchUrl:"#"; }
+function dueChip(t,done){
+  if(done) return `<span class="due done">Done</span>`;
+  if(!t.dueAt) return "";
+  const soon=(t.dueAt-Date.now())/86400000 <= 7;
+  return `<span class="due ${soon?"soon":""}">${new Date(t.dueAt).toLocaleDateString(undefined,{weekday:"short",day:"numeric",month:"short"})}</span>`;
+}
+function taskRow(t){
+  const done=taskDone(t); const url=launchFor(t);
+  return `<li>
+    <span class="em">${done?"✅":"📝"}</span>
+    <span class="body"><div class="ttl">${esc(t.title||t.toolId)}</div><div class="sub">${done?"Completed — nice work!":"Online quiz"}</div></span>
+    ${dueChip(t,done)}
+    ${done?"":`<a class="btn primary" style="padding:7px 12px" href="${esc(url)}" target="_blank" rel="noopener">Start</a>`}
+  </li>`;
+}
+function renderTasks(){
+  const card=$("tasksCard"), body=$("tasksBody");
+  if(!tasks.length){ card.style.display="none"; return; }
+  card.style.display=""; body.innerHTML = tasks.map(taskRow).join("");
+}
+function openTasksPopup(){
+  const pending = tasks.filter(t=>!taskDone(t));
+  if(!pending.length) return;
+  const back=$("taskModalBack"), modal=$("taskModal");
+  modal.innerHTML = `
+    <div class="modal-head"><h2>📋 You have tasks to do!</h2><button class="x" type="button" id="tpClose">✕</button></div>
+    <div class="modal-body"><p class="hint">Your teacher has set these. Finish them before the due date.</p>
+      <ul class="tasklist">${pending.map(taskRow).join("")}</ul></div>
+    <div class="modal-foot"><button class="btn" type="button" id="tpLater">Later</button></div>`;
+  back.classList.add("show");
+  const close=()=>back.classList.remove("show");
+  $("tpClose").addEventListener("click", close);
+  $("tpLater").addEventListener("click", close);
+  back.addEventListener("click", e=>{ if(e.target===back) close(); });
 }
 
 function esc(s){ return String(s??"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }

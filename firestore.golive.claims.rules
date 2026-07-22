@@ -1,12 +1,14 @@
 rules_version = '2';
 
-// Mills Maths Tools — PRODUCTION claim-based rules (Phase 4A go-live).
+// Mills Maths Tools — PRODUCTION claim-based rules (Phase 4A go-live + classes +
+// dashboard tasks).
 //
 // Every client signs in via the secure code-exchange Cloud Functions
 // (exchangeStudentCode / exchangeTeacherCode), which mint a Firebase Auth custom
-// token carrying { role, studentCode | teacherCode }. These rules scope all
-// reads/writes to the signed-in owner. Identity is managed server-side only.
-// Default-deny. Deploy by pasting into Firebase Console → Firestore → Rules.
+// token carrying { role, studentCode | teacherCode, className }. These rules
+// scope all reads/writes to the signed-in owner. Identity + all teacher-set
+// collections are written server-side (Admin SDK) only. Default-deny.
+// Deploy by pasting into Firebase Console → Firestore → Rules.
 
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -52,6 +54,41 @@ service cloud.firestore {
         && request.resource.data.studentCode == myStudent()
         && request.resource.data.source == 'mills-maths-adventure';
       allow update, delete: if false;
+    }
+
+    // Adventure assignments (teacher-set Adventure tasks): a teacher reads their
+    // own class's tasks; a student reads ACTIVE tasks for their own class. Writes
+    // go through the createAdventureTask / updateAdventureTask /
+    // setAdventureTaskActive Functions only (Admin SDK). The student query MUST
+    // filter by teacherCode + className + active to satisfy this rule.
+    match /adventureAssignments/{id} {
+      allow read: if (isTeacher() && resource.data.teacherCode == myTeacher())
+                  || (isStudent()
+                      && resource.data.teacherCode == request.auth.token.teacherCode
+                      && resource.data.className  == request.auth.token.className
+                      && resource.data.active == true);
+      allow create, update, delete: if false;
+    }
+
+    // Dashboard assignments (teacher-set online-quiz tasks): same shape as
+    // adventure assignments. A teacher reads their own; a student reads ACTIVE
+    // tasks for their own class. Writes go through the createDashboardTask /
+    // updateDashboardTask / setDashboardTaskActive Functions only (Admin SDK).
+    match /dashboardAssignments/{id} {
+      allow read: if (isTeacher() && resource.data.teacherCode == myTeacher())
+                  || (isStudent()
+                      && resource.data.teacherCode == request.auth.token.teacherCode
+                      && resource.data.className  == request.auth.token.className
+                      && resource.data.active == true);
+      allow create, update, delete: if false;
+    }
+
+    // Classes: a teacher reads/lists only their own (a query MUST filter by
+    // teacherCode == claim). Written server-side by createClass / setClassActive
+    // (Admin SDK), never from the client. Students never read this collection.
+    match /classes/{classId} {
+      allow read: if isTeacher() && resource.data.teacherCode == myTeacher();
+      allow create, update, delete: if false;
     }
 
     // Everything else — including identity writes and any other collection

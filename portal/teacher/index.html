@@ -6,15 +6,84 @@
 <title>MMT Teacher Platform</title>
 <link rel="stylesheet" href="../shared/portalStyles.css"/>
 <style>
+  /* Login code toggle (kept from the original page). */
   .code-input-wrap{position:relative;display:flex;align-items:center}
   .code-input-wrap input{flex:1;padding-right:70px}
   .code-toggle{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:#eef2ff;border:1px solid #c7d2fe;color:#1e3a8a;border-radius:8px;padding:6px 11px;font-size:.8rem;font-weight:700;cursor:pointer}
-  .addrow{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
-  .addrow .field{margin:0;min-width:150px;flex:1}
-  .addrow .field input{width:100%;padding:9px 11px;border:1px solid var(--line,#e2e8f0);border-radius:9px;font-size:.92rem}
+
+  /* ---- Button-first home ------------------------------------------------- */
+  .sectionlabel{font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700;margin:22px 4px 10px}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+  .tilewrap{position:relative}
+  .tile{width:100%;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;cursor:pointer;text-align:left;transition:transform .08s ease,border-color .08s ease;display:flex;flex-direction:column;gap:4px;min-height:118px}
+  .tile:hover{transform:translateY(-2px);border-color:#c7d2fe}
+  .tile .ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:1.4rem;background:var(--chip)}
+  .tile.data .ic{background:#ecfdf5}
+  .tile.soon{opacity:.72}
+  .tile.soon:hover{transform:none;border-color:var(--line)}
+  .tile h3{margin:6px 0 0;font-size:1.02rem}
+  .tile p{margin:0;font-size:.83rem;color:var(--muted)}
+  .badgecount{position:absolute;top:12px;right:12px;background:var(--mmt-blue);color:#fff;font-size:.72rem;font-weight:800;border-radius:999px;padding:2px 8px}
+  .soonpill{position:absolute;top:12px;right:12px;background:#f1f5f9;color:var(--muted);font-size:.66rem;font-weight:800;letter-spacing:.04em;border-radius:999px;padding:3px 9px;text-transform:uppercase}
+
+  /* ---- Modal shell ------------------------------------------------------- */
+  .modal{padding:0;max-width:720px}
+  .modal.wide{max-width:880px}
+  .modal-head{position:sticky;top:0;background:#fff;display:flex;justify-content:space-between;align-items:center;padding:16px 22px;border-bottom:1px solid var(--line);z-index:2;border-radius:var(--radius) var(--radius) 0 0}
+  .modal-head h2{margin:0;font-size:1.12rem;display:flex;align-items:center;gap:9px}
+  .modal-head .x{appearance:none;border:1px solid var(--line);background:#fff;width:34px;height:34px;border-radius:9px;font-size:1.05rem;cursor:pointer;line-height:1}
+  .modal-body{padding:20px 22px}
+  .modal-foot{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--line);padding:13px 22px;display:flex;gap:10px;justify-content:flex-end;border-radius:0 0 var(--radius) var(--radius)}
+
+  /* ---- Forms / tabs ------------------------------------------------------ */
+  .hint{color:var(--muted);font-size:.85rem;margin:0 0 14px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .field textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:.95rem;font-family:inherit;min-height:150px;resize:vertical;line-height:1.7;letter-spacing:.02em}
+  .field select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:.95rem;background:#fff}
+  .tabs{display:flex;gap:6px;background:#f1f5f9;padding:4px;border-radius:11px;margin-bottom:18px}
+  .tabs button{flex:1;appearance:none;border:0;background:transparent;padding:9px;border-radius:8px;font-weight:700;font-size:.88rem;cursor:pointer;color:var(--muted)}
+  .tabs button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+  .codechip{font-family:ui-monospace,Menlo,monospace;background:#f1f5f9;border:1px solid var(--line);border-radius:7px;padding:2px 7px;font-size:.85rem;font-weight:700;letter-spacing:.05em}
+
+  /* ---- Adventure location picker ---------------------------------------- */
+  .loctabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+  .loctab{flex:1;min-width:150px;border:1.5px solid var(--line);border-radius:12px;padding:12px;cursor:pointer;background:#fff;text-align:left}
+  .loctab.on{border-color:var(--mmt-blue);background:#eff6ff}
+  .loctab.disabled{opacity:.6;cursor:not-allowed}
+  .loctab .lt{font-weight:800;font-size:.92rem}
+  .loctab .ld{font-size:.76rem;color:var(--muted)}
+  .targetrow{display:flex;align-items:center;gap:11px;padding:10px 13px;border:1px solid var(--line);border-radius:11px;margin-bottom:8px;cursor:pointer}
+  .targetrow:hover{background:#f8fafc}
+  .targetrow.on{border-color:var(--mmt-blue);background:#eff6ff}
+  .targetrow input{width:17px;height:17px}
+  .targetrow .em{font-size:1.3rem}
+  .targetrow .tt{font-weight:700}
+  .targetrow .td{font-size:.8rem;color:var(--muted)}
+  .preview{margin-top:16px;background:#0f172a;color:#e2e8f0;border-radius:12px;padding:15px 18px}
+  .preview .lbl{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:6px}
+  .preview .obj{font-size:1.02rem;font-weight:700;color:#fde68a}
+  .soonbanner{background:#fffbeb;border:1px solid #fde68a;border-radius:11px;padding:12px 14px;font-size:.85rem;color:#854d0e;margin-top:6px}
+
+  /* ---- Task rows --------------------------------------------------------- */
+  .settask{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 13px;border:1px solid var(--line);border-radius:11px;margin-bottom:8px}
+  .settask .meta{font-size:.8rem;color:var(--muted)}
   .task-actions{display:flex;gap:8px;align-items:center;justify-content:flex-end;white-space:nowrap}
   .task-x{width:30px;height:30px;border-radius:50%;border:1px solid #fecaca;background:#fef2f2;color:#dc2626;font-size:1rem;font-weight:800;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0}
   .task-x:hover{background:#dc2626;color:#fff;border-color:#dc2626}
+  .btn.sm{padding:6px 10px;font-size:.82rem;border-radius:8px}
+  /* ---- Quiz checklist (Set Dashboard Task) ------------------------------- */
+  .checklist{border:1px solid var(--line);border-radius:12px;max-height:300px;overflow:auto}
+  .grouphd{padding:9px 14px;background:#f8fafc;font-weight:700;font-size:.76rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);position:sticky;top:0}
+  .check{display:flex;gap:11px;align-items:center;padding:11px 14px;border-top:1px solid var(--line);cursor:pointer}
+  .check:hover{background:#f8fafc}
+  .check input{width:17px;height:17px;flex:0 0 auto;margin:0}
+  .check .t{font-weight:600}
+  .quizrow{display:flex;align-items:center;gap:10px;padding:9px 14px;border-top:1px solid var(--line)}
+  .quizrow:hover{background:#f8fafc}
+  .qcheck{display:flex;align-items:center;gap:11px;flex:1;cursor:pointer;margin:0}
+  .qcheck input{width:17px;height:17px;flex:0 0 auto;margin:0}
+  .qcheck .t{font-weight:600}
+  .subsetbtn{white-space:nowrap;flex:0 0 auto}
 </style>
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "c7e5713b5e4f4993907eb285797dc89b"}'></script><!-- End Cloudflare Web Analytics -->
 </head>
@@ -52,80 +121,43 @@
   </section>
 
   <div class="cards">
+    <div class="card stat"><div class="label">Classes</div><div class="value" id="statClasses">0</div></div>
     <div class="card stat"><div class="label">Students</div><div class="value" id="statStudents">0</div></div>
     <div class="card stat"><div class="label">Attempts</div><div class="value" id="statAttempts">0</div></div>
     <div class="card stat"><div class="label">Average</div><div class="value" id="statAvg">0%</div></div>
     <div class="card stat"><div class="label">Need support</div><div class="value" id="statSupport">0</div></div>
   </div>
 
-  <section class="card section">
-    <h2>Filters</h2>
-    <div class="filters">
-      <select id="classFilter"><option value="">All classes</option></select>
-      <input id="searchInput" placeholder="Search student or code"/>
-      <select id="toolFilter"><option value="">All tools</option></select>
-      <select id="topicFilter"><option value="">All topics</option></select>
-      <select id="dateFilter"><option value="">Any time</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last term (90 days)</option></select>
-      <span class="spacer" style="flex:1"></span>
-      <button class="btn" id="csvBtn" type="button">Export CSV</button>
-      <button class="btn" id="copyBtn" type="button">Copy summary</button>
-    </div>
-    <div class="msg" id="advNote"></div>
-  </section>
+  <div class="sectionlabel">Set things up</div>
+  <div class="tiles">
+    <div class="tilewrap"><button class="tile" type="button" id="tileAddStudent">
+      <div class="ic">👤</div><h3>Add Student</h3><p>One student, or paste a whole list at once.</p></button></div>
+    <div class="tilewrap"><button class="tile" type="button" id="tileAddClass">
+      <div class="ic">🏫</div><h3>Add Class</h3><p>Create a class to sort your students into.</p></button></div>
+    <div class="tilewrap"><button class="tile" type="button" id="tileAdvTask">
+      <div class="ic">🗺️</div><h3>Set Adventure Task</h3><p>Send students to a place in the Adventure.</p></button></div>
+    <div class="tilewrap"><button class="tile" type="button" id="tileDashTask">
+      <div class="ic">📋</div><h3>Set Dashboard Task</h3><p>Assign online quizzes with a due date.</p></button></div>
+  </div>
 
-  <section class="card section">
-    <h2>Add a student</h2>
-    <p class="hint">Creates a unique student code linked to you. To start a new class, just type a new class name.</p>
-    <div class="addrow">
-      <div class="field"><label for="newFirst">First name</label><input id="newFirst" autocomplete="off"/></div>
-      <div class="field"><label for="newSurname">Surname</label><input id="newSurname" autocomplete="off"/></div>
-      <div class="field"><label for="newClass">Class</label><input id="newClass" placeholder="e.g. 7MAB" autocomplete="off"/></div>
-      <button class="btn primary" id="addStudentBtn" type="button">Add student</button>
-    </div>
-    <div class="msg" id="addMsg"></div>
-  </section>
-
-  <section class="card section">
-    <h2>Set an Adventure task</h2>
-    <p class="hint">Choose a class and a character, then a topic. Every student in that class will see the task delivered by that character in Mills Maths Adventure.</p>
-    <div class="addrow">
-      <div class="field"><label for="taskClass">Class</label><select id="taskClass"></select></div>
-      <div class="field"><label for="taskNpc">Character</label><select id="taskNpc"></select></div>
-      <div class="field"><label for="taskTopic">Topic</label><select id="taskTopic"></select></div>
-      <div class="field" style="min-width:110px"><label for="taskQs">Questions</label><input id="taskQs" type="number" min="1" max="50" value="10"/></div>
-      <div class="field" style="min-width:120px"><label for="taskDiffMin">Difficulty</label>
-        <div style="display:flex;gap:6px;align-items:center">
-          <select id="taskDiffMin"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
-          <span class="muted">to</span>
-          <select id="taskDiffMax"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option></select>
-        </div>
-      </div>
-      <div class="field" style="min-width:150px"><label for="taskDue">Due (optional)</label><input id="taskDue" type="date"/></div>
-      <div class="field" style="min-width:170px"><label for="taskBadge">Reward (optional)</label><select id="taskBadge"></select></div>
-      <button class="btn primary" id="setTaskBtn" type="button">Set task</button>
-      <button class="btn ghost hidden" id="cancelEditBtn" type="button">Cancel</button>
-    </div>
-    <div class="msg" id="taskMsg"></div>
-    <div id="taskList" style="margin-top:10px"></div>
-  </section>
-
-  <section class="card section">
-    <h2>Students</h2>
-    <p class="hint">Click a student for their detailed results.</p>
-    <div id="studentsBody"></div>
-  </section>
-
-  <section class="card section">
-    <h2>Results</h2>
-    <p class="hint">Individual attempts across your tools.</p>
-    <div id="resultsBody"></div>
-  </section>
+  <div class="sectionlabel">See how they're going</div>
+  <div class="tiles">
+    <div class="tilewrap"><button class="tile data" type="button" id="tileStudents">
+      <div class="ic">👥</div><h3>Students &amp; Classes</h3><p>Your roster, codes and per-student results.</p></button>
+      <span class="badgecount" id="bcStudents">0</span></div>
+    <div class="tilewrap"><button class="tile data" type="button" id="tileResults">
+      <div class="ic">📊</div><h3>Results &amp; Analytics</h3><p>Every attempt across your tools, filterable.</p></button></div>
+    <div class="tilewrap"><button class="tile data" type="button" id="tileTasks">
+      <div class="ic">✅</div><h3>Manage Tasks</h3><p>See, edit or remove tasks you've set.</p></button>
+      <span class="badgecount" id="bcTasks">0</span></div>
+  </div>
+  <div class="msg" id="advNote" style="margin-top:16px"></div>
 </main>
 
 <div class="modal-back" id="modalBack"><div class="modal" id="modal"></div></div>
 
 <script type="module">
-import { initPortal, loginTeacher, logout, normaliseCode, getDb, createStudent, createAdventureTask, setAdventureTaskActive, updateAdventureTask } from "../shared/codeExchangeClient.js";
+import { initPortal, loginTeacher, logout, normaliseCode, getDb, createStudent, createClass, setClassActive, createAdventureTask, setAdventureTaskActive, updateAdventureTask, createDashboardTask, updateDashboardTask, setDashboardTaskActive } from "../shared/codeExchangeClient.js";
 import { COLLECTIONS } from "../shared/firebaseConfig.js";
 import { ADVENTURE_NPCS, ADVENTURE_STAGES, ADVENTURE_BADGES, getStageTopics, npcDefaultTopic } from "../shared/adventureManifest.js";
 import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
@@ -134,50 +166,64 @@ import { normaliseAchievement, summarise, rollupByStudent, toCSV, summaryText } 
 
 const $ = (id)=>document.getElementById(id);
 let teacher=null, students=[], all=[], attemptsByCode=new Map();
-let editingId=null; // assignmentId currently being edited, or null
+let classes=[];               // flat class-name list the pickers use
+let classesData=[];           // [{name, classId|null}] — saved classes ∪ roster-derived
+let taskBadge=0;              // adventure + dashboard task count for the tile badge
+let dtSelected=[], dtPoll=null, dtPopup=null; // dashboard-task selection + subset-builder state
+let editingId=null;           // adventure assignment being edited, or null
+
+// Number Island vs Retrieval Practice Playground split of the NPC list.
+const ISLAND_IDS = ["pip","fern","alby"];
+const ISLAND_PLACE = { pip:"Integer Dunes", fern:"Fraction Volcano", alby:"Champion's Grove" };
+// What each Number Island character does by default (display wording only).
+const ISLAND_DOES = { pip:"Addition & Subtraction facts", alby:"Multiplication facts", fern:"Division facts" };
+// Fraction Farm challenges (in-world). id + host must match the game's
+// farmRecords.js keys and the objective template in farmTaskObjective.js.
+const FARM_CHALLENGES = [
+  {id:"fence",  name:"Fence Challenge",   em:"🚧", skill:"Fraction of a length",              host:"Pip"},
+  {id:"roundup",name:"The Round-Up",      em:"🐄", skill:"F/D/% of an amount",                host:"Fern"},
+  {id:"order",  name:"Order the Parts",   em:"🥕", skill:"Ordering F/D/%",                    host:"Alby"},
+  {id:"crate",  name:"Crate Packing",     em:"📦", skill:"Highest common factor",             host:"Robot"},
+  {id:"milk",   name:"The Milk Splitter", em:"🥛", skill:"Terminating vs recurring decimals", host:"the Milkman"},
+  {id:"weigh",  name:"The Weigh Station", em:"⚖️", skill:"Rounding & estimation",             host:"the Weigh Master"},
+  {id:"trade",  name:"The Trading Post",  em:"🏪", skill:"FDP conversions",                   host:"Steve"},
+  {id:"veggie", name:"The Veggie Plot",   em:"🌱", skill:"Multiplying fractions",             host:"Trevor"},
+  {id:"plank",  name:"Plank the Gap",     em:"🪵", skill:"Adding & subtracting fractions",    host:"Woody"},
+  {id:"shop",   name:"The Farm Shop",     em:"🛒", skill:"Percentages capstone",              host:"Sunny"},
+];
 
 initPortal();
 
-function showMsg(t,type="info"){ const m=$("loginMsg"); m.textContent=t; m.className=`msg show ${type}`; }
-function pctClass(p){ return p>=70?"hi":p>=50?"mid":"lo"; }
 function esc(s){ return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function pctClass(p){ return p>=70?"hi":p>=50?"mid":"lo"; }
 function hashColour(s){ let h=0; for(const c of String(s)) h=(h*31+c.charCodeAt(0))>>>0; return `linear-gradient(135deg,hsl(${h%360} 70% 45%),hsl(${(h+60)%360} 70% 45%))`; }
+function showMsg(t,type="info"){ const m=$("loginMsg"); m.textContent=t; m.className=`msg show ${type}`; }
+function classOptions(sel){ return classes.length ? classes.map(c=>`<option ${c===sel?"selected":""}>${esc(c)}</option>`).join("") : `<option value="">(add a class or student first)</option>`; }
 
+// ---- Modal helpers ---------------------------------------------------------
+const back=$("modalBack"), modalEl=$("modal");
+function openModal(html, wide){ modalEl.className="modal"+(wide?" wide":""); modalEl.innerHTML=html; back.classList.add("show"); }
+function closeModal(){ back.classList.remove("show"); if(dtPoll){ clearInterval(dtPoll); dtPoll=null; } }
+function head(title){ return `<div class="modal-head"><h2>${title}</h2><button class="x" type="button" data-close>✕</button></div>`; }
+function foot(right){ return `<div class="modal-foot"><button class="btn" type="button" data-close>Close</button>${right||""}</div>`; }
+back.addEventListener("click", e=>{ if(e.target===back) closeModal(); });
+modalEl.addEventListener("click", e=>{ if(e.target.closest("[data-close]")) closeModal(); });
+
+// ---- Login (unchanged behaviour) -------------------------------------------
 $("codeInput").addEventListener("input", e=>{ e.target.value=normaliseCode(e.target.value); });
 $("codeInput").addEventListener("keydown", e=>{ if(e.key==="Enter") $("loginBtn").click(); });
 $("codeToggle").addEventListener("click", ()=>{ const i=$("codeInput"); const hidden=i.type==="password"; i.type=hidden?"text":"password"; $("codeToggle").textContent=hidden?"Hide":"Show"; i.focus(); });
 $("loginBtn").addEventListener("click", doLogin);
 $("signoutBtn").addEventListener("click", async ()=>{ await logout(); location.reload(); });
-["classFilter","toolFilter","topicFilter","dateFilter"].forEach(id=> $(id).addEventListener("change", render));
-$("searchInput").addEventListener("input", render);
-$("csvBtn").addEventListener("click", exportCsv);
-$("copyBtn").addEventListener("click", copySummary);
-$("addStudentBtn").addEventListener("click", addStudent);
 
-async function addStudent(){
-  const firstName=$("newFirst").value.trim(), surname=$("newSurname").value.trim();
-  const className=$("newClass").value.trim().toUpperCase();
-  const m=$("addMsg");
-  if(!firstName && !surname){ m.className="msg bad show"; m.textContent="Enter the student's name."; return; }
-  if(!className){ m.className="msg bad show"; m.textContent="Enter a class name."; return; }
-  const btn=$("addStudentBtn"); btn.disabled=true; btn.textContent="Adding…";
-  try{
-    const stu = await createStudent({ firstName, surname, className });
-    m.className="msg ok show";
-    m.innerHTML = `Added <strong>${esc(stu.name)}</strong> — student code <strong>${esc(stu.studentCode)}</strong>. Give this code to the student.`;
-    students.push({ id: stu.studentCode, ...stu });
-    if(![...$("classFilter").options].some(o=>o.value===className)){
-      const o=document.createElement("option"); o.value=className; o.textContent=className; $("classFilter").appendChild(o);
-    }
-    $("newFirst").value=""; $("newSurname").value=""; $("newFirst").focus(); // keep class for batch adds
-    render();
-  }catch(err){
-    m.className="msg bad show"; m.textContent=(err && err.message) || "Could not add the student.";
-  }finally{
-    btn.disabled=false; btn.textContent="Add student";
-  }
-}
-$("modalBack").addEventListener("click", e=>{ if(e.target===$("modalBack")) $("modalBack").classList.remove("show"); });
+// Tile wiring
+$("tileAddStudent").addEventListener("click", openAddStudent);
+$("tileAddClass").addEventListener("click", openAddClass);
+$("tileAdvTask").addEventListener("click", ()=>openAdvTask());
+$("tileDashTask").addEventListener("click", openDashTask);
+$("tileStudents").addEventListener("click", openStudents);
+$("tileResults").addEventListener("click", openResults);
+$("tileTasks").addEventListener("click", openTasks);
 
 async function doLogin(){
   const code = normaliseCode($("codeInput").value);
@@ -193,13 +239,10 @@ async function doLogin(){
 
 async function loadData(){
   const db = getDb();
-  // Students owned by this teacher (claim-scoped query).
   const sSnap = await getDocs(query(collection(db, COLLECTIONS.students), where("teacherCode","==", teacher.teacherCode)));
   students = sSnap.docs.map(d=>({ id:d.id, studentCode:d.data().studentCode||d.id, ...d.data() }));
-  // Compact results for this teacher (claim-scoped query).
   const aSnap = await getDocs(query(collection(db, COLLECTIONS.achievements), where("teacherCode","==", teacher.teacherCode)));
   all = aSnap.docs.map(d=> normaliseAchievement({ id:d.id, ...d.data() })).sort((a,b)=> b.time - a.time);
-  // Rich Adventure attempts — BEST EFFORT. A missing/denied query must not break the dashboard.
   attemptsByCode = new Map();
   try{
     const rSnap = await getDocs(query(collection(db, COLLECTIONS.adventureAttempts), where("teacherCode","==", teacher.teacherCode)));
@@ -209,6 +252,35 @@ async function loadData(){
     console.warn("adventureAttempts not available:", err);
     $("advNote").className="msg info show"; $("advNote").textContent="Rich Adventure details are unavailable right now — showing compact results only.";
   }
+  // Classes: load first-class class objects (best effort — the collection/rules
+  // may not be deployed yet, in which case we fall back to roster-derived names).
+  classesData = [];
+  try{
+    const cSnap = await getDocs(query(collection(db, COLLECTIONS.classes), where("teacherCode","==", teacher.teacherCode)));
+    classesData = cSnap.docs.map(d=>({ name:String(d.data().name||"").toUpperCase(), classId:d.id, active:d.data().active!==false }))
+      .filter(c=>c.name && c.active).map(c=>({ name:c.name, classId:c.classId }));
+  }catch(err){ console.warn("classes collection not available yet:", err); }
+  rebuildClasses();
+  // Task badge count (best effort — collections/rules may not be live yet).
+  taskBadge = 0;
+  try{
+    const [aC,dC] = await Promise.all([
+      getDocs(query(collection(db, COLLECTIONS.adventureAssignments), where("teacherCode","==", teacher.teacherCode))),
+      getDocs(query(collection(db, COLLECTIONS.dashboardAssignments), where("teacherCode","==", teacher.teacherCode))),
+    ]);
+    taskBadge = aC.docs.filter(d=>d.data().active!==false).length + dC.docs.filter(d=>d.data().active!==false).length;
+  }catch(e){ /* task collections/rules not live yet */ }
+}
+
+// Merge saved class objects with any class names implied by the roster, so an
+// empty saved class persists AND a legacy class (known only via its students)
+// still shows. `classes` is the flat name list the pickers use.
+function rebuildClasses(){
+  const byName=new Map();
+  classesData.forEach(c=> byName.set(c.name, { name:c.name, classId:c.classId }));
+  students.map(s=>s.className).filter(Boolean).forEach(n=>{ const N=String(n).toUpperCase(); if(!byName.has(N)) byName.set(N, { name:N, classId:null }); });
+  classesData = [...byName.values()].sort((a,b)=>a.name.localeCompare(b.name));
+  classes = classesData.map(c=>c.name);
 }
 
 function showDashboard(){
@@ -218,268 +290,484 @@ function showDashboard(){
   $("avatar").textContent = (teacher.teacherName||"T").slice(0,2).toUpperCase(); $("avatar").style.background = hashColour(teacher.teacherCode);
   $("profileName").textContent = teacher.teacherName || teacher.teacherCode;
   $("profileMeta").textContent = `Teacher code: ${teacher.teacherCode} · ${teacher.school||""}`;
-  const classes=[...new Set(students.map(s=>s.className).filter(Boolean))].sort();
-  classes.forEach(c=>{ const o=document.createElement("option"); o.value=c; o.textContent=c; $("classFilter").appendChild(o); });
-  getEnabledTools().forEach(t=>{ const o=document.createElement("option"); o.value=t.toolId; o.textContent=t.title; $("toolFilter").appendChild(o); });
-  [...new Set(all.map(r=>r.topic).filter(Boolean))].forEach(t=>{ const o=document.createElement("option"); o.value=t; o.textContent=t; $("topicFilter").appendChild(o); });
-  setupTaskForm(classes);
-  render();
+  refreshStats();
 }
 
-// ---- Set Adventure task ---------------------------------------------------
-function setupTaskForm(classes){
-  // Class options (mirror the roster's classes).
-  $("taskClass").innerHTML = classes.length
-    ? classes.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join("")
-    : `<option value="">(add a student to create a class)</option>`;
-  // Character options.
-  $("taskNpc").innerHTML = ADVENTURE_NPCS.map(n=>`<option value="${n.id}">${esc(n.name)}</option>`).join("");
-  // Topic options (Stage 4 for now).
-  const topics = getStageTopics("stage4");
-  $("taskTopic").innerHTML = topics.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join("");
-  // Reward badge options (optional) — awarded on completion ("get to the end").
-  $("taskBadge").innerHTML = `<option value="">No reward badge</option>`+
-    ADVENTURE_BADGES.map(b=>`<option value="${b.id}">${b.icon} ${esc(b.name)}</option>`).join("");
-  // Default the topic to the chosen character's theme, and note off-theme picks.
-  const syncTheme=()=>{ const def=npcDefaultTopic($("taskNpc").value); if(def) $("taskTopic").value=def; offThemeNote(); };
-  $("taskNpc").addEventListener("change", syncTheme);
-  $("taskTopic").addEventListener("change", offThemeNote);
-  $("taskClass").addEventListener("change", ()=>{ cancelEdit(); loadTasks(); });
-  $("setTaskBtn").addEventListener("click", setTask);
-  $("cancelEditBtn").addEventListener("click", cancelEdit);
-  syncTheme();
-  loadTasks();
+function refreshStats(){
+  const roster = buildRoster({});
+  const s = summarise(all);
+  $("statClasses").textContent = classes.length;
+  $("statStudents").textContent = students.length || roster.length;
+  $("statAttempts").textContent = s.attempts;
+  $("statAvg").textContent = s.averagePercent + "%";
+  $("statSupport").textContent = roster.filter(r=>r.needsSupport).length;
+  $("bcStudents").textContent = students.length || roster.length;
+  $("bcTasks").textContent = taskBadge;
 }
 
-function offThemeNote(){
-  const npc = ADVENTURE_NPCS.find(n=>n.id===$("taskNpc").value);
-  const m=$("taskMsg");
-  if(npc && $("taskTopic").value!==npc.defaultTopic){
-    const topicName = getStageTopics("stage4").find(t=>t.id===npc.defaultTopic)?.name || npc.defaultTopic;
-    m.className="msg info show";
-    m.textContent=`${npc.name} usually teaches ${topicName} — students will see a short generic intro for this off-theme task.`;
-  } else { m.className="msg"; m.textContent=""; }
+// ============================ ADD STUDENT ============================
+function openAddStudent(){
+  openModal(head("👤 Add Student")+`
+    <div class="modal-body">
+      <div class="tabs">
+        <button type="button" id="tabSingle" class="on" data-as="single">One student</button>
+        <button type="button" id="tabBulk" data-as="bulk">Add many (paste a list)</button>
+      </div>
+      <div id="paneSingle">
+        <div class="grid2">
+          <div class="field"><label>First name</label><input id="asFirst" autocomplete="off"/></div>
+          <div class="field"><label>Surname</label><input id="asLast" autocomplete="off"/></div>
+        </div>
+        <div class="field"><label>Class</label><select id="asClass">${classOptions()}</select></div>
+      </div>
+      <div id="paneBulk" class="hidden">
+        <div class="field"><label>Paste students — one per line, "First Surname"</label>
+          <textarea id="asBulk" placeholder="Ava Nguyen&#10;Liam Brown&#10;Mia Patel"></textarea></div>
+        <div class="field"><label>Add all of them to class</label><select id="asBulkClass">${classOptions()}</select></div>
+        <p class="hint">Each line becomes a new student in the chosen class, with its own login code.</p>
+      </div>
+      <div class="msg" id="asMsg"></div>
+    </div>
+    ${foot(`<button class="btn primary" id="asBtn" type="button">Add student</button>`)}`);
+  modalEl.querySelectorAll("[data-as]").forEach(b=> b.addEventListener("click", ()=>asTab(b.dataset.as)));
+  $("asBtn").addEventListener("click", doAddStudent);
 }
-
-async function setTask(){
-  const className=$("taskClass").value;
-  const npcId=$("taskNpc").value;
-  const topicId=$("taskTopic").value;
-  const m=$("taskMsg");
-  if(!className){ m.className="msg bad show"; m.textContent="Choose a class (add a student first to create one)."; return; }
-  const min=Number($("taskDiffMin").value)||1, max=Math.max(min, Number($("taskDiffMax").value)||5);
-  const requiredQuestions=Math.min(50, Math.max(1, Number($("taskQs").value)||10));
-  const dueVal=$("taskDue").value;
-  const dueAt = dueVal ? new Date(dueVal+"T23:59:59").getTime() : null;
-  const npcName = ADVENTURE_NPCS.find(n=>n.id===npcId)?.name || "Character";
-  const topicName = getStageTopics("stage4").find(t=>t.id===topicId)?.name || topicId;
-  const payload={
-    npcId, className,
-    stages:["stage4"], selectedTopics:[topicId], selectedSkills:[],
-    difficultyRange:{min,max}, requiredQuestions, adaptiveOn:true, dueAt,
-    rewardBadge: $("taskBadge").value || null,
-    title:`${npcName}: ${topicName}`,
-    description:`A ${topicName} task set by your teacher.`,
-  };
-  const btn=$("setTaskBtn"); btn.disabled=true; btn.textContent= editingId?"Updating…":"Setting…";
-  try{
-    if(editingId){
-      await updateAdventureTask({ assignmentId:editingId, ...payload });
-      m.className="msg ok show";
-      m.innerHTML=`Updated <strong>${esc(topicName)}</strong> for <strong>${esc(className)}</strong>, delivered by <strong>${esc(npcName)}</strong>.`;
-      cancelEdit();
-    } else {
-      await createAdventureTask(payload);
-      m.className="msg ok show";
-      m.innerHTML=`Set <strong>${esc(topicName)}</strong> for <strong>${esc(className)}</strong>, delivered by <strong>${esc(npcName)}</strong>.`;
+function asTab(which){
+  const s=which==="single";
+  $("tabSingle").classList.toggle("on",s); $("tabBulk").classList.toggle("on",!s);
+  $("paneSingle").classList.toggle("hidden",!s); $("paneBulk").classList.toggle("hidden",s);
+  $("asBtn").textContent = s ? "Add student" : "Add all students";
+}
+async function doAddStudent(){
+  const bulk = $("tabBulk").classList.contains("on");
+  const m=$("asMsg"); const btn=$("asBtn");
+  if(bulk){
+    const className=$("asBulkClass").value;
+    const lines=$("asBulk").value.split("\n").map(l=>l.trim()).filter(Boolean);
+    if(!className){ m.className="msg bad show"; m.textContent="Choose a class first (add one under Add Class)."; return; }
+    if(!lines.length){ m.className="msg bad show"; m.textContent="Paste at least one student."; return; }
+    btn.disabled=true; btn.textContent=`Adding 0/${lines.length}…`;
+    const added=[], failed=[];
+    for(let i=0;i<lines.length;i++){
+      const parts=lines[i].split(/\s+/); const firstName=parts.shift()||""; const surname=parts.join(" ");
+      try{
+        const stu=await createStudent({ firstName, surname, className });
+        added.push(stu); students.push({ id:stu.studentCode, ...stu });
+      }catch(err){ failed.push(`${lines[i]} — ${(err&&err.message)||"failed"}`); }
+      btn.textContent=`Adding ${i+1}/${lines.length}…`;
     }
-    loadTasks();
-  }catch(err){
-    m.className="msg bad show"; m.textContent=(err && err.message) || "Could not set the task.";
-  }finally{
-    btn.disabled=false; btn.textContent= editingId?"Update task":"Set task";
+    ensureClass(className);
+    m.className = failed.length ? "msg info show" : "msg ok show";
+    m.innerHTML = `Added <strong>${added.length}</strong> of ${lines.length} to <strong>${esc(className)}</strong>.`+
+      (added.length?`<br>`+added.map(s=>`${esc(s.name||"")} — <span class="codechip">${esc(s.studentCode)}</span>`).join("<br>"):"")+
+      (failed.length?`<br><span style="color:var(--bad)">Skipped:</span> ${failed.map(esc).join("; ")}`:"");
+    $("asBulk").value=""; refreshStats();
+    btn.disabled=false; btn.textContent="Add all students";
+  } else {
+    const firstName=$("asFirst").value.trim(), surname=$("asLast").value.trim(), className=$("asClass").value;
+    if(!firstName && !surname){ m.className="msg bad show"; m.textContent="Enter the student's name."; return; }
+    if(!className){ m.className="msg bad show"; m.textContent="Choose a class first (add one under Add Class)."; return; }
+    btn.disabled=true; btn.textContent="Adding…";
+    try{
+      const stu=await createStudent({ firstName, surname, className });
+      students.push({ id:stu.studentCode, ...stu }); ensureClass(className);
+      m.className="msg ok show";
+      m.innerHTML=`Added <strong>${esc(stu.name)}</strong> to <strong>${esc(className)}</strong> — login code <span class="codechip">${esc(stu.studentCode)}</span>. Give this code to the student.`;
+      $("asFirst").value=""; $("asLast").value=""; $("asFirst").focus(); refreshStats();
+    }catch(err){ m.className="msg bad show"; m.textContent=(err&&err.message)||"Could not add the student."; }
+    finally{ btn.disabled=false; btn.textContent="Add student"; }
   }
 }
+function ensureClass(name){ const N=String(name||"").toUpperCase(); if(N && !classes.includes(N)){ classesData.push({ name:N, classId:null }); rebuildClasses(); refreshStats(); } }
 
-// Load a task into the form for editing.
-function startEditTask(t){
-  if(!t) return;
-  editingId=t.id;
-  if([...$("taskClass").options].some(o=>o.value===(t.className||""))) $("taskClass").value=t.className||"";
-  $("taskNpc").value=t.npcId||"pip";
-  $("taskTopic").value=(t.selectedTopics||[])[0]||npcDefaultTopic(t.npcId)||"integers";
-  $("taskQs").value=t.requiredQuestions||10;
-  $("taskDiffMin").value=String(t.difficultyRange?.min||1);
-  $("taskDiffMax").value=String(t.difficultyRange?.max||5);
-  $("taskDue").value= t.dueAt ? new Date(t.dueAt).toISOString().slice(0,10) : "";
-  $("taskBadge").value= t.rewardBadge || "";
-  $("setTaskBtn").textContent="Update task";
-  $("cancelEditBtn").classList.remove("hidden");
-  offThemeNote();
-  $("taskNpc").scrollIntoView({behavior:"smooth",block:"center"});
+// ============================ ADD CLASS ============================
+function openAddClass(){
+  openModal(head("🏫 Add Class")+`
+    <div class="modal-body">
+      <p class="hint">Classes fill the dropdowns when you add students and set tasks. A class you add here is saved to your account and stays in the list even before it has any students.</p>
+      <div class="field"><label>Class name</label><input id="acName" placeholder="e.g. 7MAB" style="text-transform:uppercase"/></div>
+      <div class="msg" id="acMsg"></div>
+      <div class="sectionlabel" style="margin-left:0">Your classes</div>
+      <div id="acList"></div>
+    </div>
+    ${foot(`<button class="btn primary" id="acBtn" type="button">Add class</button>`)}`);
+  $("acBtn").addEventListener("click", doAddClass);
+  $("acName").addEventListener("keydown", e=>{ if(e.key==="Enter") doAddClass(); });
+  renderClassList();
+}
+function renderClassList(){
+  const box=$("acList");
+  box.innerHTML = classesData.length ? classesData.map(c=>{
+    const n=students.filter(s=>(s.className||"")===c.name).length;
+    const canRemove = c.classId && n===0;
+    return `<div class="settask"><div><strong>${esc(c.name)}</strong> <span class="meta">· ${n} student${n===1?"":"s"}</span></div>
+      ${canRemove?`<button class="btn sm" type="button" data-rmclass="${esc(c.name)}">Remove</button>`:""}</div>`;
+  }).join("") : `<p class="muted">No classes yet.</p>`;
+  box.querySelectorAll("[data-rmclass]").forEach(b=> b.addEventListener("click", ()=>removeClass(b.dataset.rmclass)));
+}
+async function doAddClass(){
+  const name=$("acName").value.trim().toUpperCase(); const m=$("acMsg"); const btn=$("acBtn");
+  if(!name){ m.className="msg bad show"; m.textContent="Enter a class name."; return; }
+  if(classes.includes(name)){ m.className="msg bad show"; m.textContent="That class already exists."; return; }
+  btn.disabled=true; btn.textContent="Adding…";
+  try{
+    const res=await createClass(name);
+    if(!classesData.some(c=>c.name===(res.name||name))) classesData.push({ name:res.name||name, classId:res.classId||null });
+    rebuildClasses();
+    m.className="msg ok show"; m.innerHTML=`Saved <strong>${esc(name)}</strong>. It stays in your list even before you add students.`;
+    $("acName").value=""; renderClassList(); refreshStats();
+  }catch(err){ m.className="msg bad show"; m.textContent=(err&&err.message)||"Could not add the class."; }
+  finally{ btn.disabled=false; btn.textContent="Add class"; }
+}
+async function removeClass(name){
+  const cd=classesData.find(c=>c.name===name);
+  if(!cd || !cd.classId) return;
+  if(!confirm(`Remove the class ${name}? It has no students, so this just clears it from your lists.`)) return;
+  try{
+    await setClassActive(cd.classId, false);
+    classesData=classesData.filter(c=>c.name!==name); rebuildClasses(); renderClassList(); refreshStats();
+  }catch(err){ const m=$("acMsg"); m.className="msg bad show"; m.textContent=(err&&err.message)||"Could not remove the class."; }
 }
 
-function cancelEdit(){
-  editingId=null;
-  $("setTaskBtn").textContent="Set task";
-  $("cancelEditBtn").classList.add("hidden");
+// ============================ SET ADVENTURE TASK ============================
+let advSel = { location:"island", targetId:"pip" };
+function openAdvTask(edit){
+  advSel = { location:"island", targetId:"pip" };
+  if(edit){
+    advSel.location = edit.location==="farm" ? "farm" : (ISLAND_IDS.includes(edit.npcId)?"island":"playground");
+    advSel.targetId = edit.location==="farm" ? edit.challengeId : edit.npcId;
+  }
+  editingId = edit ? edit.id : null;
+  const topics = getStageTopics("stage4");
+  openModal(head(editingId?"🗺️ Edit Adventure Task":"🗺️ Set Adventure Task")+`
+    <div class="modal-body">
+      <p class="hint">Pick a place in the Adventure, then exactly what students should do there. The in-world objective updates to match, and completion shows under Manage Tasks.</p>
+      <div class="loctabs">
+        <div class="loctab" data-loc="island"><div class="lt">🏝️ Number Island</div><div class="ld">Pip, Fern &amp; Alby</div></div>
+        <div class="loctab" data-loc="playground"><div class="lt">🎡 Retrieval Practice Playground</div><div class="ld">Your 9 staff characters</div></div>
+        <div class="loctab" data-loc="farm"><div class="lt">🚜 Fraction Farm</div><div class="ld">Pick one of the challenges</div></div>
+      </div>
+      <div id="advTargets"></div>
+      <div class="grid2" style="margin-top:14px">
+        <div class="field"><label>Class</label><select id="atClass">${classOptions()}</select></div>
+        <div class="field" id="advTopicField"><label>Topic</label><select id="atTopic">${topics.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join("")}</select></div>
+      </div>
+      <div class="grid2" id="advQDRow">
+        <div class="field"><label>Questions</label><input id="atQs" type="number" min="1" max="50" value="10"/></div>
+        <div class="field"><label>Difficulty</label>
+          <div style="display:flex;gap:6px;align-items:center">
+            <select id="atMin"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
+            <span class="muted">to</span>
+            <select id="atMax"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option></select>
+          </div></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Due (optional)</label><input id="atDue" type="date"/></div>
+        <div class="field"><label>Reward (optional)</label><select id="atBadge"><option value="">No reward badge</option>${ADVENTURE_BADGES.map(b=>`<option value="${b.id}">${b.icon} ${esc(b.name)}</option>`).join("")}</select></div>
+      </div>
+      <div id="advPreview"></div>
+      <div class="msg" id="atMsg"></div>
+    </div>
+    ${foot(`<button class="btn primary" id="atBtn" type="button">${editingId?"Update task":"Set task"}</button>`)}`, true);
+
+  modalEl.querySelectorAll(".loctab").forEach(t=> t.addEventListener("click", ()=> advLoc(t.dataset.loc)));
+  $("atBtn").addEventListener("click", doAdvTask);
+  $("atTopic").addEventListener("change", renderAdvPreview);
+  if(edit){
+    $("atClass").value = edit.className||"";
+    $("atTopic").value = (edit.selectedTopics||[])[0] || npcDefaultTopic(edit.npcId) || topics[0].id;
+    $("atQs").value = edit.requiredQuestions||10;
+    $("atMin").value = String(edit.difficultyRange?.min||1);
+    $("atMax").value = String(edit.difficultyRange?.max||5);
+    $("atDue").value = edit.dueAt ? new Date(edit.dueAt).toISOString().slice(0,10) : "";
+    $("atBadge").value = edit.rewardBadge||"";
+  }
+  renderAdvTargets(!edit);
+}
+function advLoc(loc){
+  advSel.location=loc; advSel.targetId=null;
+  modalEl.querySelectorAll(".loctab").forEach(t=> t.classList.toggle("on", t.dataset.loc===loc));
+  renderAdvTargets(true);
+}
+function renderAdvTargets(syncTopic){
+  const box=$("advTargets");
+  modalEl.querySelectorAll(".loctab").forEach(t=> t.classList.toggle("on", t.dataset.loc===advSel.location));
+  const isFarm = advSel.location==="farm";
+  const tf=$("advTopicField"), qd=$("advQDRow");
+  if(tf) tf.style.display = isFarm?"none":""; if(qd) qd.style.display = isFarm?"none":"";
+  if(isFarm){
+    if(!advSel.targetId || !FARM_CHALLENGES.some(c=>c.id===advSel.targetId)) advSel.targetId=FARM_CHALLENGES[0].id;
+    box.innerHTML = FARM_CHALLENGES.map(c=>targetRow(c.id,c.em,c.name,`${c.skill} · hosted by ${c.host}`,false)).join("");
+    box.querySelectorAll(".targetrow").forEach(r=> r.addEventListener("click", ()=>pickTarget(r.dataset.id, false)));
+    renderAdvPreview(); return;
+  }
+  const list = advSel.location==="island"
+    ? ADVENTURE_NPCS.filter(n=>ISLAND_IDS.includes(n.id))
+    : ADVENTURE_NPCS.filter(n=>!ISLAND_IDS.includes(n.id));
+  if(!advSel.targetId || !list.some(n=>n.id===advSel.targetId)) advSel.targetId=list[0].id;
+  box.innerHTML = list.map(n=>{
+    const place = advSel.location==="island" ? (ISLAND_PLACE[n.id]||"") : "Retrieval Practice Playground";
+    const defT = getStageTopics("stage4").find(t=>t.id===n.defaultTopic)?.name || n.defaultTopic;
+    const does = (advSel.location==="island" && ISLAND_DOES[n.id]) ? ISLAND_DOES[n.id] : `usually ${defT}`;
+    return targetRow(n.id, advSel.location==="island"?"⭐":"🧑‍🏫", n.name, `${place} · ${does}`, false);
+  }).join("");
+  box.querySelectorAll(".targetrow").forEach(r=> r.addEventListener("click", ()=>pickTarget(r.dataset.id, syncTopic)));
+  if(syncTopic){ const def=npcDefaultTopic(advSel.targetId); if(def) $("atTopic").value=def; }
+  renderAdvPreview();
+}
+function targetRow(id, em, title, desc, disabled){
+  return `<div class="targetrow ${advSel.targetId===id?"on":""}" data-id="${esc(id)}" ${disabled?'style="opacity:.55;pointer-events:none"':""}>
+    <input type="radio" name="advtarget" ${advSel.targetId===id?"checked":""} ${disabled?"disabled":""}/>
+    <span class="em">${em}</span><span><div class="tt">${esc(title)}</div><div class="td">${esc(desc)}</div></span></div>`;
+}
+function pickTarget(id, syncTopic){
+  advSel.targetId=id;
+  modalEl.querySelectorAll(".targetrow").forEach(r=>{ const on=r.dataset.id===id; r.classList.toggle("on",on); const rb=r.querySelector("input"); if(rb) rb.checked=on; });
+  if(syncTopic){ const def=npcDefaultTopic(id); if(def) $("atTopic").value=def; }
+  renderAdvPreview();
+}
+function npcName(id){ return ADVENTURE_NPCS.find(n=>n.id===id)?.name || id; }
+function advObjective(){
+  if(advSel.location==="farm"){
+    const c=FARM_CHALLENGES.find(x=>x.id===advSel.targetId);
+    return c ? `Find ${c.host} to complete the ${c.name} in Fraction Farm` : "";
+  }
+  const topicName = getStageTopics("stage4").find(t=>t.id===$("atTopic").value)?.name || $("atTopic").value;
+  if(advSel.location==="island"){
+    const place = ISLAND_PLACE[advSel.targetId]||"Number Island";
+    return `Find ${npcName(advSel.targetId)} in ${place} to practise ${topicName}`;
+  }
+  return `Find ${npcName(advSel.targetId)} in the Retrieval Practice Playground to practise ${topicName}`;
+}
+function renderAdvPreview(){
+  const obj = advObjective();
+  const off = advSel.location!=="farm" && (()=>{ const n=ADVENTURE_NPCS.find(n=>n.id===advSel.targetId); return n && $("atTopic").value!==n.defaultTopic; })();
+  const offMsg = off ? `<div class="td" style="color:#fbbf24;margin-top:8px">${esc(npcName(advSel.targetId))} usually teaches something else — students see a short generic intro for this off-theme task.</div>` : "";
+  $("advPreview").innerHTML = obj
+    ? `<div class="preview"><div class="lbl">In-world objective students will see</div><div class="obj">“${esc(obj)}”</div>${offMsg}</div>`
+    : `<div class="preview"><div class="lbl">In-world objective</div><div class="muted">Pick a target above to preview it.</div></div>`;
+}
+async function doAdvTask(){
+  const className=$("atClass").value; const m=$("atMsg");
+  if(!className){ m.className="msg bad show"; m.textContent="Choose a class."; return; }
+  const dueVal=$("atDue").value; const dueAt = dueVal ? new Date(dueVal+"T23:59:59").getTime() : null;
+  const btn=$("atBtn");
+  // ---- Fraction Farm challenge task ----
+  if(advSel.location==="farm"){
+    const c=FARM_CHALLENGES.find(x=>x.id===advSel.targetId);
+    if(!c){ m.className="msg bad show"; m.textContent="Pick a farm challenge."; return; }
+    const payload={ location:"farm", challengeId:c.id, className, dueAt, rewardBadge:$("atBadge").value||null,
+      title:`Fraction Farm: ${c.name}`, description:`Complete the ${c.name} in Fraction Farm.` };
+    btn.disabled=true; btn.textContent= editingId?"Updating…":"Setting…";
+    try{
+      if(editingId){ await updateAdventureTask({ assignmentId:editingId, ...payload }); m.className="msg ok show"; m.innerHTML=`Updated <strong>${esc(c.name)}</strong> for <strong>${esc(className)}</strong>.`; editingId=null; }
+      else { await createAdventureTask(payload); taskBadge+=1; m.className="msg ok show"; m.innerHTML=`Set <strong>${esc(c.name)}</strong> for <strong>${esc(className)}</strong> in Fraction Farm.`; }
+      refreshStats();
+    }catch(err){ m.className="msg bad show"; m.textContent=(err&&err.message)||"Could not set the task."; }
+    finally{ btn.disabled=false; btn.textContent= editingId?"Update task":"Set task"; }
+    return;
+  }
+  // ---- Number Island / Retrieval Practice Playground task ----
+  const npcId=advSel.targetId; const topicId=$("atTopic").value;
+  const min=Number($("atMin").value)||1, max=Math.max(min, Number($("atMax").value)||5);
+  const requiredQuestions=Math.min(50, Math.max(1, Number($("atQs").value)||10));
+  const topicName = getStageTopics("stage4").find(t=>t.id===topicId)?.name || topicId;
+  const payload={ npcId, className, stages:["stage4"], selectedTopics:[topicId], selectedSkills:[],
+    difficultyRange:{min,max}, requiredQuestions, adaptiveOn:true, dueAt, rewardBadge:$("atBadge").value||null,
+    title:`${npcName(npcId)}: ${topicName}`, description:`A ${topicName} task set by your teacher.` };
+  btn.disabled=true; btn.textContent= editingId?"Updating…":"Setting…";
+  try{
+    if(editingId){ await updateAdventureTask({ assignmentId:editingId, ...payload }); m.className="msg ok show"; m.innerHTML=`Updated <strong>${esc(topicName)}</strong> for <strong>${esc(className)}</strong>, delivered by <strong>${esc(npcName(npcId))}</strong>.`; editingId=null; }
+    else { await createAdventureTask(payload); taskBadge+=1; m.className="msg ok show"; m.innerHTML=`Set <strong>${esc(topicName)}</strong> for <strong>${esc(className)}</strong>, delivered by <strong>${esc(npcName(npcId))}</strong>.`; }
+    refreshStats();
+  }catch(err){ m.className="msg bad show"; m.textContent=(err&&err.message)||"Could not set the task."; }
+  finally{ btn.disabled=false; btn.textContent= editingId?"Update task":"Set task"; }
 }
 
-async function loadTasks(){
-  const className=$("taskClass").value;
-  const box=$("taskList");
-  if(!className){ box.innerHTML=""; return; }
+// ============================ SET DASHBOARD TASK (soon) ============================
+function quizGroups(){
+  const groups={};
+  getEnabledTools().filter(t=>t.category==="Quiz").forEach(t=>{ const g=t.stage||"Other"; (groups[g]=groups[g]||[]).push(t); });
+  return groups;
+}
+function openDashTask(){
+  const groups=quizGroups();
+  openModal(head("📋 Set Dashboard Task")+`
+    <div class="modal-body">
+      <p class="hint">Pick the quizzes to assign to <strong>one class</strong>. Quizzes with a <em>Choose sub-topics</em> button can be narrowed to specific question types. Students get a pop-up with these tasks and the due date next time they open their dashboard.</p>
+      <div class="grid2">
+        <div class="field"><label>Class</label><select id="dtClass">${classOptions()}</select></div>
+        <div class="field"><label>Due date (optional)</label><input id="dtDue" type="date"/></div>
+      </div>
+      <div class="field"><label>Quizzes</label>
+        <div class="checklist">${Object.entries(groups).map(([g,items])=>`
+          <div class="grouphd">${esc(g)}</div>
+          ${items.map(t=>`<div class="quizrow">
+            <label class="qcheck"><input type="checkbox" class="dtWhole" value="${esc(t.toolId)}" data-title="${esc(t.title)}" data-url="${esc(t.launchUrl||"")}"/><span class="t">${esc(t.title)}</span></label>
+            ${BUILDER_IDS.has(t.toolId)?`<button class="btn sm subsetbtn" type="button" data-cust="${esc(t.toolId)}">Choose sub-topics ↗</button>`:``}
+          </div>`).join("")}
+        `).join("")}</div>
+        <details style="margin-top:6px"><summary class="muted" style="cursor:pointer;font-size:.8rem">Pop-up blocked? Paste a generated quiz link instead</summary>
+          <div style="display:flex;gap:8px;margin-top:8px"><input id="dtPasteLink" placeholder="Paste a generated quiz link" style="flex:1;padding:8px 10px;border:1px solid var(--line);border-radius:9px"/><button class="btn sm" id="dtPasteAdd" type="button">Add</button></div>
+        </details>
+      </div>
+      <div class="field"><label>Assigning to this class (<span id="dtCount">0</span>)</label>
+        <div id="dtSelList"></div>
+      </div>
+      <div class="msg" id="dtBuildMsg"></div>
+      <div class="msg" id="dtMsg"></div>
+    </div>
+    ${foot(`<button class="btn primary" id="dtBtn" type="button">Set task</button>`)}`, true);
+  dtSelected=[];
+  $("dtBtn").addEventListener("click", doDashTask);
+  $("dtPasteAdd").addEventListener("click", addPastedLink);
+  modalEl.querySelectorAll(".dtWhole").forEach(cb=> cb.addEventListener("change", ()=>toggleWhole(cb)));
+  modalEl.querySelectorAll("[data-cust]").forEach(b=> b.addEventListener("click", ()=>openSubsetBuilder(b.dataset.cust)));
+  renderDtSelected();
+}
+// Quizzes that have a built-in "Create student quiz link" subset builder.
+const BUILDER_QUIZZES = [
+  {toolId:"integers-quiz",            title:"Computation with Integers",         launchUrl:"/online-quizzes/stage-4/number/computation-with-integers.html"},
+  {toolId:"angle-relationships-quiz", title:"Angle Relationships",               launchUrl:"/online-quizzes/stage-4/measurement-space/angle-relationships.html"},
+  {toolId:"fdp-quiz",                 title:"Fractions, Decimals & Percentages", launchUrl:"/online-quizzes/stage-4/number/fractions-decimals-percentages.html"},
+  {toolId:"algebraic-techniques",     title:"Algebraic Techniques",              launchUrl:"/online-quizzes/stage-4/algebra/algebraic-techniques.html"},
+];
+const BUILDER_IDS = new Set(BUILDER_QUIZZES.map(q=>q.toolId));
+// Normalise a full builder URL to a site-absolute path so the stored task works
+// on any origin (the teacher may build on localhost but students open it live).
+function siteRelUrl(u){ try{ const x=new URL(u, location.href); return x.pathname + x.search; }catch(e){ return u; } }
+function toggleWhole(cb){
+  const toolId=cb.value;
+  if(cb.checked){ if(!dtSelected.some(s=>s.toolId===toolId&&s.mode==="whole")) dtSelected.push({toolId, title:cb.dataset.title, launchUrl:cb.dataset.url, mode:"whole"}); }
+  else { const i=dtSelected.findIndex(s=>s.toolId===toolId&&s.mode==="whole"); if(i>=0) dtSelected.splice(i,1); }
+  renderDtSelected();
+}
+function openSubsetBuilder(toolId){
+  const q=BUILDER_QUIZZES.find(x=>x.toolId===toolId); const m=$("dtBuildMsg");
+  if(!q) return;
+  dtPopup = window.open(q.launchUrl, "mmtSubsetBuilder", "width=920,height=820");
+  if(!dtPopup){ m.className="msg bad show"; m.textContent="Pop-up blocked — allow pop-ups for this site, or use the paste option under the list."; return; }
+  m.className="msg info show"; m.innerHTML=`Set up <strong>${esc(q.title)}</strong> in the pop-up and click <strong>Generate unique link</strong> — I'll pull it in automatically.`;
+  if(dtPoll) clearInterval(dtPoll);
+  dtPoll = setInterval(()=>{
+    try{
+      if(!dtPopup || dtPopup.closed){ clearInterval(dtPoll); dtPoll=null; return; }
+      const el = dtPopup.document.getElementById("assignmentLinkOut");
+      const val = el && el.value ? el.value.trim() : "";
+      if(val && /[?&](assignment=1|types=)/.test(val)){
+        const rel = siteRelUrl(val);
+        if(!dtSelected.some(s=>s.launchUrl===rel)){
+          dtSelected.push({ toolId:q.toolId, title:`${q.title} (sub-topics)`, launchUrl:rel, mode:"custom" });
+          renderDtSelected();
+          m.className="msg ok show"; m.innerHTML=`Added a custom <strong>${esc(q.title)}</strong> — you can close the pop-up.`;
+        }
+      }
+    }catch(err){ /* not ready / blocked — keep polling; paste fallback covers it */ }
+  }, 700);
+}
+function addPastedLink(){
+  const v=$("dtPasteLink").value.trim(); const m=$("dtBuildMsg");
+  if(!v) return;
+  const q=BUILDER_QUIZZES.find(x=>v.includes(x.launchUrl));
+  if(!q){ m.className="msg bad show"; m.textContent="That doesn't look like one of the subset-quiz links."; return; }
+  const rel=siteRelUrl(v);
+  if(!dtSelected.some(s=>s.launchUrl===rel)){ dtSelected.push({ toolId:q.toolId, title:`${q.title} (sub-topics)`, launchUrl:rel, mode:"custom" }); renderDtSelected(); }
+  $("dtPasteLink").value=""; m.className="msg ok show"; m.textContent="Added to the list.";
+}
+function renderDtSelected(){
+  const box=$("dtSelList"); const cnt=$("dtCount"); if(!box) return;
+  if(cnt) cnt.textContent=dtSelected.length;
+  if(!dtSelected.length){ box.innerHTML=`<p class="muted" style="font-size:.85rem">Nothing selected yet — tick a quiz above, or choose sub-topics.</p>`; return; }
+  box.innerHTML=dtSelected.map((s,i)=>`<div class="settask"><div><strong>${s.mode==="custom"?"🔗":"📝"} ${esc(s.title)}</strong>${s.mode==="custom"?`<div class="meta" style="word-break:break-all">${esc(s.launchUrl)}</div>`:`<span class="meta"> · whole quiz</span>`}</div><button class="btn sm" type="button" data-rmsel="${i}">Remove</button></div>`).join("");
+  box.querySelectorAll("[data-rmsel]").forEach(b=> b.addEventListener("click", ()=>{ const i=Number(b.dataset.rmsel); const removed=dtSelected.splice(i,1)[0]; if(removed && removed.mode==="whole"){ const cb=[...modalEl.querySelectorAll(".dtWhole")].find(c=>c.value===removed.toolId); if(cb) cb.checked=false; } renderDtSelected(); }));
+}
+async function doDashTask(){
+  const className=$("dtClass").value, dueVal=$("dtDue").value; const m=$("dtMsg"); const btn=$("dtBtn");
+  if(!className){ m.className="msg bad show"; m.textContent="Choose a class."; return; }
+  const quizzes=dtSelected.map(s=>({toolId:s.toolId, title:s.title, launchUrl:s.launchUrl}));
+  if(!quizzes.length){ m.className="msg bad show"; m.textContent="Pick at least one quiz, or choose sub-topics."; return; }
+  const dueAt = dueVal ? new Date(dueVal+"T23:59:59").getTime() : null;
+  btn.disabled=true; btn.textContent="Setting…";
+  try{
+    const res=await createDashboardTask({ className, quizzes, dueAt });
+    const n=(res.created||[]).length; taskBadge += n; refreshStats();
+    m.className="msg ok show"; m.innerHTML=`Set <strong>${n}</strong> task${n===1?"":"s"} for <strong>${esc(className)}</strong>${dueVal?`, due <strong>${new Date(dueVal).toLocaleDateString()}</strong>`:""}. Students see a pop-up on their dashboard.`;
+    modalEl.querySelectorAll(".dtWhole:checked").forEach(i=>i.checked=false);
+    dtSelected=[]; renderDtSelected();
+  }catch(err){ m.className="msg bad show"; m.textContent=(err&&err.message)||"Could not set the task."; }
+  finally{ btn.disabled=false; btn.textContent="Set task"; }
+}
+// Students in a task's class who have any achievement for the assigned quiz.
+function dashCompleters(t){
+  const cls=t.className||""; const set=new Set();
+  for(const a of all){ if((a.toolId||"")!==t.toolId) continue; if(cls && (a.className||"")!==cls) continue; set.add(a.studentCode||a.studentName||"?"); }
+  return set;
+}
+async function loadDashTasks(className){
+  const box=$("mtDashBody"); if(!box) return;
   try{
     const db=getDb();
-    const snap=await getDocs(query(collection(db,"adventureAssignments"),
-      where("teacherCode","==",teacher.teacherCode), where("className","==",className)));
-    const rows=snap.docs.map(d=>({id:d.id,...d.data()})).filter(t=>t.active!==false)
-      .sort((a,b)=>(b.assignedAt||0)-(a.assignedAt||0));
-    if(!rows.length){ box.innerHTML=`<p class="muted">No Adventure tasks set for ${esc(className)} yet.</p>`; return; }
-    const npcName=(id)=>ADVENTURE_NPCS.find(n=>n.id===id)?.name||id;
-    const topicName=(id)=>getStageTopics("stage4").find(t=>t.id===id)?.name||id;
-    const classSize=students.filter(s=>(s.className||"")===className).length;
-    box.innerHTML=`<table><thead><tr><th>Character</th><th>Topic</th><th>Questions</th><th>Difficulty</th><th>Due</th><th>Done</th><th></th></tr></thead><tbody>`+
-      rows.map(t=>{ const done=taskCompleters(t.id).size;
-        return `<tr><td>${esc(npcName(t.npcId))}</td><td>${esc((t.selectedTopics||[]).map(topicName).join(", "))}</td>
-        <td>${t.requiredQuestions||"—"}</td><td>${t.difficultyRange?`${t.difficultyRange.min}–${t.difficultyRange.max}`:"—"}</td>
+    const constraints=[where("teacherCode","==",teacher.teacherCode)];
+    if(className) constraints.push(where("className","==",className));
+    const snap=await getDocs(query(collection(db,"dashboardAssignments"),...constraints));
+    const rows=snap.docs.map(d=>({id:d.id,...d.data()})).filter(t=>t.active!==false).sort((a,b)=>(b.assignedAt||0)-(a.assignedAt||0));
+    if(!rows.length){ box.innerHTML=`<p class="muted">No dashboard tasks set${className?` for ${esc(className)}`:""} yet.</p>`; return; }
+    box.innerHTML=`<table><thead><tr><th>Class</th><th>Quiz</th><th>Due</th><th>Done</th><th></th></tr></thead><tbody>`+
+      rows.map(t=>{ const classSize=students.filter(s=>(s.className||"")===(t.className||"")).length; const done=dashCompleters(t).size;
+        return `<tr><td>${esc(t.className||"—")}</td><td>${esc(t.title||t.toolId)}</td>
         <td>${t.dueAt?new Date(t.dueAt).toLocaleDateString():"—"}</td>
         <td><span class="pct ${done>=classSize&&classSize?'hi':done?'mid':'lo'}">${done}/${classSize||"—"}</span></td>
-        <td><div class="task-actions">
-          <button class="btn" data-view="${esc(t.id)}" type="button">View</button>
-          <button class="btn" data-edit="${esc(t.id)}" type="button">Edit</button>
-          <button class="task-x" data-remove="${esc(t.id)}" type="button" title="Remove this task" aria-label="Remove this task">✕</button>
-        </div></td></tr>`;}).join("")+`</tbody></table>`;
-    box.querySelectorAll("[data-remove]").forEach(b=> b.addEventListener("click", ()=> removeTask(b.dataset.remove, b)));
-    box.querySelectorAll("[data-view]").forEach(b=> b.addEventListener("click", ()=> openTaskDetail(rows.find(t=>t.id===b.dataset.view))));
-    box.querySelectorAll("[data-edit]").forEach(b=> b.addEventListener("click", ()=> startEditTask(rows.find(t=>t.id===b.dataset.edit))));
-  }catch(err){
-    box.innerHTML=`<p class="muted">Could not load current tasks${err&&err.message?": "+esc(err.message):""}.</p>`;
-  }
+        <td><div class="task-actions"><button class="task-x" data-drm="${esc(t.id)}" type="button" title="Remove" aria-label="Remove">✕</button></div></td></tr>`;}).join("")+`</tbody></table>`;
+    box.querySelectorAll("[data-drm]").forEach(b=> b.addEventListener("click", ()=> removeDashTask(b.dataset.drm, className)));
+  }catch(err){ box.innerHTML=`<p class="muted">Could not load dashboard tasks${err&&err.message?": "+esc(err.message):""}.</p>`; }
+}
+async function removeDashTask(id, className){
+  if(!confirm("Remove this dashboard task? Students will no longer see it.")) return;
+  try{ await setDashboardTaskActive(id, false); taskBadge=Math.max(0,taskBadge-1); refreshStats(); loadDashTasks(className||""); }
+  catch(err){ alert((err&&err.message)||"Could not remove the task."); }
 }
 
-// Best achievement per student for a given task (matched by adventureTaskId or
-// levelKey, both == assignmentId for teacher tasks). Returns Map(code → info).
-function taskCompleters(assignmentId){
-  const byStu=new Map();
-  for(const a of all){
-    const r=a.raw||{};
-    if(r.adventureTaskId!==assignmentId && r.levelKey!==assignmentId) continue;
-    const k=a.studentCode||a.studentName||"?";
-    const cur=byStu.get(k);
-    if(!cur){ byStu.set(k,{studentCode:a.studentCode,studentName:a.studentName,percent:a.percent,attempts:1}); }
-    else { cur.attempts++; if(a.percent>cur.percent) cur.percent=a.percent; }
-  }
-  return byStu;
-}
-
-function openTaskDetail(t){
-  if(!t) return;
-  const className=t.className||$("taskClass").value;
-  const npcName=ADVENTURE_NPCS.find(n=>n.id===t.npcId)?.name||t.npcId;
-  const topicName=getStageTopics("stage4").find(x=>x.id===(t.selectedTopics||[])[0])?.name||(t.selectedTopics||[]).join(", ");
-  const completers=taskCompleters(t.id);
-  const roster=students.filter(s=>(s.className||"")===className);
-  const PASS=60;
-  const doneRows=roster.map(s=>{ const info=completers.get(s.studentCode); return { name:s.name||s.studentName||s.studentCode, code:s.studentCode, done:Boolean(info), percent:info?info.percent:null, attempts:info?info.attempts:0 }; })
-    .sort((a,b)=> (a.done===b.done? (a.name||"").localeCompare(b.name||"") : (a.done?-1:1)));
-  // Include any completer not in the roster (e.g. moved class) at the end.
-  for(const [code,info] of completers){ if(!roster.some(s=>s.studentCode===code)) doneRows.push({name:info.studentName||code,code,done:true,percent:info.percent,attempts:info.attempts}); }
-  const doneCount=doneRows.filter(r=>r.done).length;
-  const body=doneRows.map(r=>`<tr>
-    <td>${esc(r.name)}</td><td>${esc(r.code||"—")}</td>
-    <td>${r.done?'<span class="badge ok">done</span>':'<span class="badge support">not yet</span>'}</td>
-    <td>${r.percent!=null?`<span class="pct ${r.percent>=70?'hi':r.percent>=PASS?'mid':'lo'}">${r.percent}%</span>`:"—"}</td>
-    <td>${r.attempts||"—"}</td></tr>`).join("");
-  $("modal").innerHTML=`
-    <div style="display:flex;justify-content:space-between;align-items:center">
-      <h3 style="margin:0">${esc(npcName)}: ${esc(topicName)}</h3><button class="btn" id="closeModal" type="button">Close</button>
-    </div>
-    <div class="muted" style="margin:4px 0 12px">Class ${esc(className)} · ${doneCount}/${roster.length||doneRows.length} completed</div>
-    <table><thead><tr><th>Student</th><th>Code</th><th>Status</th><th>Best</th><th>Attempts</th></tr></thead><tbody>${body||""}</tbody></table>
-    ${doneRows.length?"":'<p class="muted">No students in this class yet.</p>'}`;
-  $("modalBack").classList.add("show");
-  $("closeModal").addEventListener("click", ()=> $("modalBack").classList.remove("show"));
-}
-
-async function removeTask(assignmentId, btn){
-  if(!assignmentId) return;
-  if(!confirm("Remove this Adventure task? Students in this class will no longer see it.")) return;
-  if(btn){ btn.disabled=true; btn.textContent="Removing…"; }
-  try{
-    await setAdventureTaskActive(assignmentId, false);
-    loadTasks();
-  }catch(err){
-    const m=$("taskMsg"); m.className="msg bad show"; m.textContent=(err && err.message) || "Could not remove the task.";
-    if(btn){ btn.disabled=false; btn.textContent="Remove"; }
-  }
-}
-
-function filteredResults(){
-  const cls=$("classFilter").value, tool=$("toolFilter").value, topic=$("topicFilter").value;
-  const days=Number($("dateFilter").value||0), search=normaliseCode($("searchInput").value);
-  const cutoff = days ? Date.now()-days*86400000 : 0;
-  return all.filter(r =>
-    (!cls || r.className===cls) && (!tool || r.toolId===tool) && (!topic || r.topic===topic) &&
-    (!cutoff || r.time>=cutoff) &&
-    (!search || (r.studentCode||"").includes(search) || (r.studentName||"").toUpperCase().includes(search)));
-}
-
-// Full class roster: every student you own (filtered by class/search) PLUS anyone
-// who has results, with stats merged from the filtered results. New students with
-// no activity yet still appear (attempts 0).
-function buildRoster(){
-  const cls=$("classFilter").value, search=normaliseCode($("searchInput").value);
-  const rows = filteredResults();
+// ============================ STUDENTS & CLASSES ============================
+function buildRoster({cls="", search=""}){
+  const rows = all;
   const map = new Map();
   students.forEach(s=>{ const code=s.studentCode||s.id; map.set(code, { studentCode:code, studentName:s.name||s.studentName||"", className:s.className||"", items:[] }); });
   rows.forEach(r=>{ const k=r.studentCode||"?"; if(!map.has(k)) map.set(k,{ studentCode:k, studentName:r.studentName||"", className:r.className||"", items:[] }); map.get(k).items.push(r); });
   return [...map.values()]
     .filter(s=> (!cls || s.className===cls) && (!search || (s.studentCode||"").includes(search) || (s.studentName||"").toUpperCase().includes(search)))
     .map(s=>{ const items=s.items.sort((a,b)=>b.time-a.time); const sum=summarise(items);
-      return { studentCode:s.studentCode, studentName:s.studentName, className:s.className,
-        attempts:sum.attempts, bestPercent:sum.bestPercent, averagePercent:sum.averagePercent,
-        lastActive: items[0]?items[0].dateLabel:"—", needsSupport: sum.attempts>0 && sum.averagePercent<50 }; })
+      return { studentCode:s.studentCode, studentName:s.studentName, className:s.className, attempts:sum.attempts, bestPercent:sum.bestPercent, averagePercent:sum.averagePercent, lastActive: items[0]?items[0].dateLabel:"—", needsSupport: sum.attempts>0 && sum.averagePercent<50 }; })
     .sort((a,b)=> (a.className||"").localeCompare(b.className||"") || (a.studentName||"").localeCompare(b.studentName||""));
 }
-
-function render(){
-  const rows = filteredResults();
-  const roster = buildRoster();
-  const s = summarise(rows);
-  $("statStudents").textContent = roster.length || students.length;
-  $("statAttempts").textContent = s.attempts;
-  $("statAvg").textContent = s.averagePercent + "%";
-  $("statSupport").textContent = roster.filter(r=>r.needsSupport).length;
-
-  $("studentsBody").innerHTML = roster.length ? studentTable(roster) :
-    `<div class="empty"><div class="big">No students yet</div>Use “Add a student” above to create your first student code.</div>`;
-  $("resultsBody").innerHTML = rows.length ? resultsTable(rows) :
-    `<div class="empty"><div class="big">No results match these filters</div>Try widening the class, tool or date filters.</div>`;
-
-  document.querySelectorAll("[data-student]").forEach(el=> el.addEventListener("click", ()=> openStudent(el.dataset.student)));
+function openStudents(){
+  openModal(head("👥 Students &amp; Classes")+`
+    <div class="modal-body">
+      <div class="filters">
+        <select id="stCls"><option value="">All classes</option>${classes.map(c=>`<option>${esc(c)}</option>`).join("")}</select>
+        <input id="stSearch" placeholder="Search student or code"/>
+        <span class="spacer" style="flex:1"></span>
+        <button class="btn sm" type="button" id="stAdd">+ Add student</button>
+      </div>
+      <div id="stBody"></div>
+    </div>${foot("")}`, true);
+  const draw=()=>{
+    const roster=buildRoster({cls:$("stCls").value, search:normaliseCode($("stSearch").value)});
+    $("stBody").innerHTML = roster.length ? studentTable(roster) : `<div class="empty"><div class="big">No students match</div>Try a different class or clear the search.</div>`;
+    $("stBody").querySelectorAll("[data-student]").forEach(el=> el.addEventListener("click", ()=>openStudent(el.dataset.student)));
+  };
+  $("stCls").addEventListener("change", draw); $("stSearch").addEventListener("input", draw);
+  $("stAdd").addEventListener("click", openAddStudent);
+  draw();
 }
-
 function studentTable(roll){
   const head=`<table><thead><tr><th>Student</th><th>Code</th><th>Class</th><th>Attempts</th><th>Best</th><th>Average</th><th>Last active</th></tr></thead><tbody>`;
   const body=roll.map(r=>`<tr data-student="${esc(r.studentCode)}" style="cursor:pointer">
     <td>${esc(r.studentName||"—")} ${r.needsSupport?'<span class="badge support">support</span>':''}</td>
-    <td>${esc(r.studentCode||"—")}</td><td>${esc(r.className||"—")}</td>
+    <td><span class="codechip">${esc(r.studentCode||"—")}</span></td><td>${esc(r.className||"—")}</td>
     <td>${r.attempts}</td><td class="pct ${pctClass(r.bestPercent)}">${r.bestPercent}%</td>
     <td class="pct ${pctClass(r.averagePercent)}">${r.averagePercent}%</td><td>${esc(r.lastActive)}</td></tr>`).join("");
   return head+body+"</tbody></table>";
 }
-
-function resultsTable(rows){
-  const head=`<table><thead><tr><th>Student</th><th>Class</th><th>Tool</th><th>Topic</th><th>Type</th><th>Score</th><th>%</th><th>Date</th></tr></thead><tbody>`;
-  const body=rows.map(r=>`<tr>
-    <td>${esc(r.studentName||r.studentCode)}</td><td>${esc(r.className||"—")}</td>
-    <td>${esc(r.tool||"—")}</td><td>${esc(r.topic||"—")}</td>
-    <td>${r.missionKind?`<span class="badge kind">${esc(r.missionKind)}</span>`:"—"}</td>
-    <td>${r.score}/${r.total}</td><td class="pct ${pctClass(r.percent)}">${r.percent}%</td><td>${esc(r.dateLabel)}</td></tr>`).join("");
-  return head+body+"</tbody></table>";
-}
-
 function openStudent(code){
   const recs = all.filter(r=>r.studentCode===code);
   const stu = students.find(s=>s.studentCode===code) || {};
@@ -503,32 +791,146 @@ function openStudent(code){
   } else {
     rich = `<p class="muted" style="margin-top:12px">No rich Adventure details available for this student (compact results shown above).</p>`;
   }
-  $("modal").innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:center">
-      <h3 style="margin:0">${esc(name)}</h3><button class="btn" id="closeModal" type="button">Close</button>
-    </div>
-    <div class="muted" style="margin:4px 0 12px">${esc(code)} · ${esc(stu.className||recs[0]?.className||"—")}</div>
-    <div class="cards"><div class="card stat"><div class="label">Attempts</div><div class="value">${s.attempts}</div></div>
-      <div class="card stat"><div class="label">Average</div><div class="value">${s.averagePercent}%</div></div>
-      <div class="card stat"><div class="label">Best</div><div class="value">${s.bestPercent}%</div></div>
-      <div class="card stat"><div class="label">XP</div><div class="value">${s.totalXp}</div></div></div>
-    ${resultsTable(recs)}
-    ${rich}`;
-  $("modalBack").classList.add("show");
-  $("closeModal").addEventListener("click", ()=> $("modalBack").classList.remove("show"));
+  openModal(head(esc(name))+`
+    <div class="modal-body">
+      <div class="muted" style="margin:-4px 0 12px"><span class="codechip">${esc(code)}</span> · ${esc(stu.className||recs[0]?.className||"—")}</div>
+      <div class="cards"><div class="card stat"><div class="label">Attempts</div><div class="value">${s.attempts}</div></div>
+        <div class="card stat"><div class="label">Average</div><div class="value">${s.averagePercent}%</div></div>
+        <div class="card stat"><div class="label">Best</div><div class="value">${s.bestPercent}%</div></div>
+        <div class="card stat"><div class="label">XP</div><div class="value">${s.totalXp}</div></div></div>
+      ${resultsTable(recs)}
+      ${rich}
+    </div>${foot(`<button class="btn" type="button" id="backStudents">← Back to list</button>`)}`, true);
+  $("backStudents").addEventListener("click", openStudents);
 }
 
-function exportCsv(){
-  const csv = toCSV(filteredResults());
-  const blob = new Blob([csv], {type:"text/csv"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob); a.download = `mmt-results-${teacher.teacherCode}.csv`; a.click();
-  URL.revokeObjectURL(a.href);
+// ============================ RESULTS & ANALYTICS ============================
+function openResults(){
+  openModal(head("📊 Results &amp; Analytics")+`
+    <div class="modal-body">
+      <div class="filters">
+        <select id="rCls"><option value="">All classes</option>${classes.map(c=>`<option>${esc(c)}</option>`).join("")}</select>
+        <select id="rTool"><option value="">All tools</option>${getEnabledTools().map(t=>`<option value="${t.toolId}">${esc(t.title)}</option>`).join("")}</select>
+        <select id="rTopic"><option value="">All topics</option>${[...new Set(all.map(r=>r.topic).filter(Boolean))].map(t=>`<option>${esc(t)}</option>`).join("")}</select>
+        <select id="rDate"><option value="">Any time</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last term (90 days)</option></select>
+        <input id="rSearch" placeholder="Search student or code"/>
+        <span class="spacer" style="flex:1"></span>
+        <button class="btn sm" type="button" id="rCsv">Export CSV</button>
+        <button class="btn sm" type="button" id="rCopy">Copy summary</button>
+      </div>
+      <div id="rBody"></div>
+    </div>${foot("")}`, true);
+  const draw=()=>{ const rows=resultsFiltered(); $("rBody").innerHTML = rows.length ? resultsTable(rows) : `<div class="empty"><div class="big">No results match these filters</div>Try widening the class, tool or date filters.</div>`; };
+  ["rCls","rTool","rTopic","rDate"].forEach(id=> $(id).addEventListener("change", draw));
+  $("rSearch").addEventListener("input", draw);
+  $("rCsv").addEventListener("click", ()=>{ const csv=toCSV(resultsFiltered()); const blob=new Blob([csv],{type:"text/csv"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`mmt-results-${teacher.teacherCode}.csv`; a.click(); URL.revokeObjectURL(a.href); });
+  $("rCopy").addEventListener("click", ()=>{ const text=summaryText(resultsFiltered(), `${teacher.teacherName||teacher.teacherCode} — class results`); navigator.clipboard?.writeText(text); const b=$("rCopy"); const o=b.textContent; b.textContent="Copied!"; setTimeout(()=>b.textContent=o,1200); });
+  draw();
 }
-function copySummary(){
-  const text = summaryText(filteredResults(), `${teacher.teacherName||teacher.teacherCode} — class results`);
-  navigator.clipboard?.writeText(text);
-  const b=$("copyBtn"); const o=b.textContent; b.textContent="Copied!"; setTimeout(()=>b.textContent=o,1200);
+function resultsFiltered(){
+  const cls=$("rCls").value, tool=$("rTool").value, topic=$("rTopic").value;
+  const days=Number($("rDate").value||0), search=normaliseCode($("rSearch").value);
+  const cutoff = days ? Date.now()-days*86400000 : 0;
+  return all.filter(r => (!cls || r.className===cls) && (!tool || r.toolId===tool) && (!topic || r.topic===topic) &&
+    (!cutoff || r.time>=cutoff) && (!search || (r.studentCode||"").includes(search) || (r.studentName||"").toUpperCase().includes(search)));
+}
+function resultsTable(rows){
+  const head=`<table><thead><tr><th>Student</th><th>Class</th><th>Tool</th><th>Topic</th><th>Type</th><th>Score</th><th>%</th><th>Date</th></tr></thead><tbody>`;
+  const body=rows.map(r=>`<tr>
+    <td>${esc(r.studentName||r.studentCode)}</td><td>${esc(r.className||"—")}</td>
+    <td>${esc(r.tool||"—")}</td><td>${esc(r.topic||"—")}</td>
+    <td>${r.missionKind?`<span class="badge kind">${esc(r.missionKind)}</span>`:"—"}</td>
+    <td>${r.score}/${r.total}</td><td class="pct ${pctClass(r.percent)}">${r.percent}%</td><td>${esc(r.dateLabel)}</td></tr>`).join("");
+  return head+body+"</tbody></table>";
+}
+
+// ============================ MANAGE TASKS ============================
+async function openTasks(){
+  openModal(head("✅ Manage Tasks")+`
+    <div class="modal-body">
+      <div class="filters"><select id="mtClass"><option value="">All classes</option>${classes.map(c=>`<option>${esc(c)}</option>`).join("")}</select>
+        <span class="spacer" style="flex:1"></span>
+        <button class="btn sm" type="button" id="mtNewAdv">+ Adventure task</button>
+        <button class="btn sm" type="button" id="mtNewDash">+ Dashboard task</button></div>
+      <div class="sectionlabel" style="margin-left:0">Adventure tasks</div>
+      <div id="mtBody"><p class="muted">Loading…</p></div>
+      <div class="sectionlabel" style="margin-left:0">Dashboard tasks (online quizzes)</div>
+      <div id="mtDashBody"><p class="muted">Loading…</p></div>
+    </div>${foot("")}`, true);
+  $("mtNewAdv").addEventListener("click", ()=>openAdvTask());
+  $("mtNewDash").addEventListener("click", ()=>openDashTask());
+  $("mtClass").addEventListener("change", ()=>{ loadTasks($("mtClass").value); loadDashTasks($("mtClass").value); });
+  loadTasks(""); loadDashTasks("");
+}
+async function loadTasks(className){
+  const box=$("mtBody");
+  try{
+    const db=getDb();
+    const constraints=[where("teacherCode","==",teacher.teacherCode)];
+    if(className) constraints.push(where("className","==",className));
+    const snap=await getDocs(query(collection(db,"adventureAssignments"),...constraints));
+    const rows=snap.docs.map(d=>({id:d.id,...d.data()})).filter(t=>t.active!==false).sort((a,b)=>(b.assignedAt||0)-(a.assignedAt||0));
+    if(!rows.length){ box.innerHTML=`<p class="muted">No Adventure tasks set${className?` for ${esc(className)}`:""} yet.</p>`; return; }
+    const topicName=(id)=>getStageTopics("stage4").find(t=>t.id===id)?.name||id;
+    const farmName=(id)=>FARM_CHALLENGES.find(c=>c.id===id)?.name||id;
+    const farmHost=(id)=>FARM_CHALLENGES.find(c=>c.id===id)?.host||"Farm";
+    box.innerHTML=`<table><thead><tr><th>Class</th><th>Character</th><th>Task</th><th>Qs</th><th>Difficulty</th><th>Due</th><th>Done</th><th></th></tr></thead><tbody>`+
+      rows.map(t=>{ const done=taskCompleters(t.id).size; const classSize=students.filter(s=>(s.className||"")===(t.className||"")).length;
+        const isFarm=t.location==="farm";
+        const character=isFarm?farmHost(t.challengeId):npcName(t.npcId);
+        const taskLabel=isFarm?`🚜 ${farmName(t.challengeId)}`:(t.selectedTopics||[]).map(topicName).join(", ");
+        return `<tr><td>${esc(t.className||"—")}</td><td>${esc(character)}</td><td>${esc(taskLabel)}</td>
+        <td>${isFarm?15:(t.requiredQuestions||"—")}</td><td>${isFarm?"—":(t.difficultyRange?`${t.difficultyRange.min}–${t.difficultyRange.max}`:"—")}</td>
+        <td>${t.dueAt?new Date(t.dueAt).toLocaleDateString():"—"}</td>
+        <td><span class="pct ${done>=classSize&&classSize?'hi':done?'mid':'lo'}">${done}/${classSize||"—"}</span></td>
+        <td><div class="task-actions">
+          <button class="btn sm" data-view="${esc(t.id)}" type="button">View</button>
+          <button class="btn sm" data-edit="${esc(t.id)}" type="button">Edit</button>
+          <button class="task-x" data-remove="${esc(t.id)}" type="button" title="Remove" aria-label="Remove">✕</button>
+        </div></td></tr>`;}).join("")+`</tbody></table>`;
+    box.querySelectorAll("[data-remove]").forEach(b=> b.addEventListener("click", ()=> removeTask(b.dataset.remove)));
+    box.querySelectorAll("[data-view]").forEach(b=> b.addEventListener("click", ()=> openTaskDetail(rows.find(t=>t.id===b.dataset.view))));
+    box.querySelectorAll("[data-edit]").forEach(b=> b.addEventListener("click", ()=> openAdvTask(rows.find(t=>t.id===b.dataset.edit))));
+  }catch(err){ box.innerHTML=`<p class="muted">Could not load tasks${err&&err.message?": "+esc(err.message):""}.</p>`; }
+}
+function taskCompleters(assignmentId){
+  const byStu=new Map();
+  for(const a of all){ const r=a.raw||{}; if(r.adventureTaskId!==assignmentId && r.levelKey!==assignmentId) continue;
+    const k=a.studentCode||a.studentName||"?"; const cur=byStu.get(k);
+    if(!cur){ byStu.set(k,{studentCode:a.studentCode,studentName:a.studentName,percent:a.percent,attempts:1}); }
+    else { cur.attempts++; if(a.percent>cur.percent) cur.percent=a.percent; } }
+  return byStu;
+}
+function openTaskDetail(t){
+  if(!t) return;
+  const className=t.className||"";
+  const isFarm=t.location==="farm";
+  const npcLabel=isFarm?(FARM_CHALLENGES.find(c=>c.id===t.challengeId)?.host||"Farm"):npcName(t.npcId);
+  const topicName=isFarm?(FARM_CHALLENGES.find(c=>c.id===t.challengeId)?.name||t.challengeId):(getStageTopics("stage4").find(x=>x.id===(t.selectedTopics||[])[0])?.name||(t.selectedTopics||[]).join(", "));
+  const completers=taskCompleters(t.id);
+  const roster=students.filter(s=>(s.className||"")===className);
+  const PASS=60;
+  const doneRows=roster.map(s=>{ const info=completers.get(s.studentCode); return { name:s.name||s.studentName||s.studentCode, code:s.studentCode, done:Boolean(info), percent:info?info.percent:null, attempts:info?info.attempts:0 }; })
+    .sort((a,b)=> (a.done===b.done? (a.name||"").localeCompare(b.name||"") : (a.done?-1:1)));
+  for(const [code,info] of completers){ if(!roster.some(s=>s.studentCode===code)) doneRows.push({name:info.studentName||code,code,done:true,percent:info.percent,attempts:info.attempts}); }
+  const doneCount=doneRows.filter(r=>r.done).length;
+  const body=doneRows.map(r=>`<tr><td>${esc(r.name)}</td><td><span class="codechip">${esc(r.code||"—")}</span></td>
+    <td>${r.done?'<span class="badge ok">done</span>':'<span class="badge support">not yet</span>'}</td>
+    <td>${r.percent!=null?`<span class="pct ${r.percent>=70?'hi':r.percent>=PASS?'mid':'lo'}">${r.percent}%</span>`:"—"}</td>
+    <td>${r.attempts||"—"}</td></tr>`).join("");
+  openModal(head(`${esc(npcLabel)}: ${esc(topicName)}`)+`
+    <div class="modal-body">
+      <div class="muted" style="margin:-4px 0 12px">Class ${esc(className||"—")} · ${doneCount}/${roster.length||doneRows.length} completed</div>
+      <table><thead><tr><th>Student</th><th>Code</th><th>Status</th><th>Best</th><th>Attempts</th></tr></thead><tbody>${body||""}</tbody></table>
+      ${doneRows.length?"":'<p class="muted">No students in this class yet.</p>'}
+    </div>${foot(`<button class="btn" type="button" id="backTasks">← Back to tasks</button>`)}`, true);
+  $("backTasks").addEventListener("click", openTasks);
+}
+async function removeTask(assignmentId){
+  if(!assignmentId) return;
+  if(!confirm("Remove this Adventure task? Students in this class will no longer see it.")) return;
+  try{ await setAdventureTaskActive(assignmentId, false); loadTasks($("mtClass")?.value||""); }
+  catch(err){ alert((err&&err.message)||"Could not remove the task."); }
 }
 </script>
 </body>

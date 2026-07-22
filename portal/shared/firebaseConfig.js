@@ -28,6 +28,9 @@ export const COLLECTIONS = Object.freeze({
   teachers: "teachers",
   achievements: "achievements",
   adventureAttempts: "adventureAttempts",
+  adventureAssignments: "adventureAssignments",
+  dashboardAssignments: "dashboardAssignments",
+  classes: "classes",
 });
 
 // The deployed secure code-exchange callables.

@@ -145,6 +145,64 @@ export async function setAdventureTaskActive(assignmentId, active) {
   return res.data;
 }
 
+/**
+ * Create (or reactivate) a class the teacher owns. Calls the secure createClass
+ * Cloud Function, which authorises via the signed-in teacher's claim and writes
+ * the class server-side (stamped with the teacher's own teacherCode). Classes are
+ * first-class objects so an empty class persists across reloads. Returns
+ * { classId, name, teacherCode, active, existed } or throws.
+ */
+export async function createClass(name) {
+  initPortal();
+  const call = httpsCallable(_functions, "createClass");
+  const res = await call({ name });
+  return res.data;
+}
+
+/**
+ * Enable/disable (soft-remove) a class the teacher owns. Calls the secure
+ * setClassActive Cloud Function. `active:false` hides the class from the pickers
+ * without touching any students in it. Returns { classId, active } or throws.
+ */
+export async function setClassActive(classId, active) {
+  initPortal();
+  const call = httpsCallable(_functions, "setClassActive");
+  const res = await call({ classId, active: active === true });
+  return res.data;
+}
+
+/**
+ * Set one or more online-quiz "dashboard tasks" for a class (teacher-only).
+ * Calls the secure createDashboardTask Cloud Function. `payload` carries
+ * { className, quizzes:[{toolId,title,launchUrl}], dueAt }. One task doc is
+ * created per quiz. Returns { created:[...] } or throws.
+ */
+export async function createDashboardTask(payload) {
+  initPortal();
+  const call = httpsCallable(_functions, "createDashboardTask");
+  const res = await call(payload || {});
+  return res.data;
+}
+
+/** Change a dashboard task's due date (teacher-only). Returns { assignmentId, dueAt }. */
+export async function updateDashboardTask(assignmentId, dueAt) {
+  initPortal();
+  const call = httpsCallable(_functions, "updateDashboardTask");
+  const res = await call({ assignmentId, dueAt });
+  return res.data;
+}
+
+/**
+ * Enable/disable (soft-remove) a dashboard task the teacher owns. `active:false`
+ * removes it from the students' pop-up immediately. Returns { assignmentId, active }.
+ */
+export async function setDashboardTaskActive(assignmentId, active) {
+  initPortal();
+  const call = httpsCallable(_functions, "setDashboardTaskActive");
+  const res = await call({ assignmentId, active: active === true });
+  return res.data;
+}
+
 /** Subscribe to auth restoration (custom-token sessions persist by default). */
 export function onAuth(cb) { initPortal(); return onAuthStateChanged(_auth, cb); }
 
