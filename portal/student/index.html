@@ -24,6 +24,19 @@
   .due{font-size:.76rem;font-weight:700;padding:3px 9px;border-radius:999px;background:#fef9c3;color:#854d0e;white-space:nowrap}
   .due.soon{background:#fee2e2;color:#991b1b}
   .due.done{background:#dcfce7;color:#166534}
+  /* Login readiness: button starts disabled with a spinner until the page's
+     scripts + Firebase SDK have loaded, then flips to an enabled "Sign in". */
+  #loginBtn:disabled{opacity:.7;cursor:progress}
+  .btn-spin{display:inline-block;width:14px;height:14px;margin-right:8px;vertical-align:-2px;border:2px solid rgba(255,255,255,.5);border-top-color:#fff;border-radius:50%;animation:btnspin .7s linear infinite}
+  #loginBtn:not(:disabled) .btn-spin{display:none}
+  @keyframes btnspin{to{transform:rotate(360deg)}}
+  .loginhint{font-size:.8rem;color:var(--muted);margin-top:8px;text-align:center;transition:opacity .2s ease}
+  .loginhint.ready{color:#15803d}
+  .loginhint.hidden{display:none}
+  .loginprog{height:5px;border-radius:999px;background:#e5e7eb;overflow:hidden;margin-top:12px;display:none}
+  .loginprog.show{display:block}
+  .loginprog>i{display:block;height:100%;width:38%;border-radius:999px;background:var(--mmt-blue,#3b5bdb);animation:progslide 1.05s ease-in-out infinite}
+  @keyframes progslide{0%{margin-left:-40%}100%{margin-left:100%}}
 </style>
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "c7e5713b5e4f4993907eb285797dc89b"}'></script><!-- End Cloudflare Web Analytics -->
 </head>
@@ -44,8 +57,17 @@
     <div class="secure"><span>🔒</span><span><strong>Secure sign-in.</strong> Your code is checked by our server and you are signed in with a secure token. We never read your record before you sign in.</span></div>
     <div class="field"><label for="codeInput">Student code</label><input id="codeInput" placeholder="e.g. 8F6AYH" autocomplete="off"/></div>
     <div class="field hidden" id="pinField"><label for="pinInput">PIN (if your teacher set one)</label><input id="pinInput" placeholder="••••" autocomplete="off"/></div>
-    <button class="btn primary" id="loginBtn" type="button" style="width:100%">Sign in</button>
+    <button class="btn primary" id="loginBtn" type="button" style="width:100%" disabled><span class="btn-spin" aria-hidden="true"></span>Connecting…</button>
+    <div class="loginhint" id="loginHint">Getting a secure connection ready…</div>
+    <div class="loginprog" id="loginProg"><i></i></div>
     <div class="msg" id="loginMsg"></div>
+    <script>
+      // Safety net (runs even if the module below never loads, e.g. a blocked or
+      // very slow Firebase CDN): re-enable the button after 12s so a student is
+      // never permanently locked out. The module's markLoginReady overrides this
+      // the moment everything is actually ready.
+      window.__loginSafety=setTimeout(function(){ var b=document.getElementById('loginBtn'); if(b&&b.disabled){ b.disabled=false; b.textContent='Sign in'; var h=document.getElementById('loginHint'); if(h){ h.textContent='Taking longer than usual — you can try signing in.'; } } }, 12000);
+    </script>
   </section>
 </main>
 
@@ -72,7 +94,7 @@
   <section class="card section">
     <h2>Mills Maths Adventure</h2>
     <p class="hint">Your Adventure missions and story attempts.</p>
-    <p><a class="btn primary" href="/game-platforms/mills-maths-adventure/" target="_blank" rel="noopener">Play Mills Maths Adventure →</a></p>
+    <p><a class="btn primary" id="playAdventureLink" href="/game-platforms/mills-maths-adventure/" target="_blank" rel="noopener">Play Mills Maths Adventure →</a></p>
     <div id="adventureBody"></div>
   </section>
 
@@ -115,6 +137,16 @@ $("codeInput").addEventListener("input", e=>{ e.target.value = normaliseCode(e.t
 $("codeInput").addEventListener("keydown", e=>{ if(e.key==="Enter") $("loginBtn").click(); });
 $("loginBtn").addEventListener("click", doLogin);
 $("signoutBtn").addEventListener("click", async ()=>{ await logout(); location.reload(); });
+
+// Login readiness: this module only runs once the page's scripts AND the Firebase
+// SDK modules it imports have finished downloading — which is exactly when the
+// Sign in button becomes safe to use. Until now it was disabled with a spinner so
+// early clicks weren't silently lost. Enable it and drop the connecting state.
+(function markLoginReady(){
+  if(window.__loginSafety){ clearTimeout(window.__loginSafety); window.__loginSafety=null; }
+  const b=$("loginBtn"); if(b){ b.disabled=false; b.textContent="Sign in"; }
+  const h=$("loginHint"); if(h){ h.textContent="Ready — enter your code and sign in."; h.classList.add("ready"); setTimeout(()=>h.classList.add("hidden"), 1800); }
+})();
 $("copyBtn").addEventListener("click", copySummary);
 $("printBtn").addEventListener("click", ()=> window.print());
 ["toolFilter","topicFilter","dateFilter"].forEach(id=> $(id).addEventListener("change", render));
@@ -122,13 +154,22 @@ $("printBtn").addEventListener("click", ()=> window.print());
 async function doLogin(){
   const code = normaliseCode($("codeInput").value);
   if(!code){ showMsg("Enter your student code first.","bad"); return; }
-  $("loginBtn").disabled=true; $("loginBtn").textContent="Signing in...";
+  const btn=$("loginBtn"), prog=$("loginProg");
+  // Stay in a loading state through BOTH sign-in AND the results load so the
+  // button never flips back to a clickable "Sign in" mid-load (which looked like
+  // a failure). Only reset on a real error.
+  if(window.__loginSafety){ clearTimeout(window.__loginSafety); window.__loginSafety=null; }
+  btn.disabled=true; btn.innerHTML='<span class="btn-spin" aria-hidden="true"></span>Signing in…';
+  if(prog) prog.classList.add("show");
+  $("loginMsg").className="msg";
   const res = await loginStudent(code, $("pinInput").value);
-  $("loginBtn").disabled=false; $("loginBtn").textContent="Sign in";
   if(!res.ok){
+    btn.disabled=false; btn.textContent="Sign in";
+    if(prog) prog.classList.remove("show");
     if(/pin/i.test(res.error||"")){ $("pinField").classList.remove("hidden"); }
     showMsg(res.error || "Could not sign in.","bad"); return;
   }
+  btn.innerHTML='<span class="btn-spin" aria-hidden="true"></span>Loading your dashboard…';
   current = res.profile;
   await loadResults();
   await loadTasks();
@@ -157,6 +198,11 @@ function showDashboard(){
   const topics = [...new Set(all.map(r=>r.topic).filter(Boolean))];
   const pf = $("topicFilter"); topics.forEach(t=>{ const o=document.createElement("option"); o.value=t; o.textContent=t; pf.appendChild(o); });
   render();
+  // Carry the student's code into the game so it signs them in automatically —
+  // otherwise the game opens signed-out and their Adventure/Farm completions
+  // never reach their teacher. The plain href stays as a fallback.
+  const play=$("playAdventureLink");
+  if(play && current.studentCode){ play.href=`/game-platforms/mills-maths-adventure/?code=${encodeURIComponent(current.studentCode)}`; }
   renderTasks();
   openTasksPopup();
 }

@@ -11,6 +11,20 @@
   .code-input-wrap input{flex:1;padding-right:70px}
   .code-toggle{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:#eef2ff;border:1px solid #c7d2fe;color:#1e3a8a;border-radius:8px;padding:6px 11px;font-size:.8rem;font-weight:700;cursor:pointer}
 
+  /* Login readiness: button starts disabled with a spinner until the page's
+     scripts + Firebase SDK have loaded, then flips to an enabled "Sign in". */
+  #loginBtn:disabled{opacity:.7;cursor:progress}
+  .btn-spin{display:inline-block;width:14px;height:14px;margin-right:8px;vertical-align:-2px;border:2px solid rgba(255,255,255,.5);border-top-color:#fff;border-radius:50%;animation:btnspin .7s linear infinite}
+  #loginBtn:not(:disabled) .btn-spin{display:none}
+  @keyframes btnspin{to{transform:rotate(360deg)}}
+  .loginhint{font-size:.8rem;color:var(--muted);margin-top:8px;text-align:center;transition:opacity .2s ease}
+  .loginhint.ready{color:#15803d}
+  .loginhint.hidden{display:none}
+  .loginprog{height:5px;border-radius:999px;background:#e5e7eb;overflow:hidden;margin-top:12px;display:none}
+  .loginprog.show{display:block}
+  .loginprog>i{display:block;height:100%;width:38%;border-radius:999px;background:var(--mmt-blue,#3b5bdb);animation:progslide 1.05s ease-in-out infinite}
+  @keyframes progslide{0%{margin-left:-40%}100%{margin-left:100%}}
+
   /* ---- Button-first home ------------------------------------------------- */
   .sectionlabel{font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700;margin:22px 4px 10px}
   .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
@@ -93,6 +107,7 @@
   <div class="sub">Teacher Platform</div>
   <div class="spacer"></div>
   <div class="who hidden" id="whoChip"></div>
+  <button class="btn ghost hidden" id="refreshBtn" type="button" title="Reload results and completions">↻ Refresh</button>
   <button class="btn ghost hidden" id="signoutBtn" type="button">Sign out</button>
 </header>
 
@@ -108,8 +123,17 @@
         <button type="button" id="codeToggle" class="code-toggle" aria-label="Show or hide code">Show</button>
       </div>
     </div>
-    <button class="btn primary" id="loginBtn" type="button" style="width:100%">Sign in</button>
+    <button class="btn primary" id="loginBtn" type="button" style="width:100%" disabled><span class="btn-spin" aria-hidden="true"></span>Connecting…</button>
+    <div class="loginhint" id="loginHint">Getting a secure connection ready…</div>
+    <div class="loginprog" id="loginProg"><i></i></div>
     <div class="msg" id="loginMsg"></div>
+    <script>
+      // Safety net (runs even if the module below never loads, e.g. a blocked or
+      // very slow Firebase CDN): re-enable the button after 12s so a teacher is
+      // never permanently locked out. The module's markLoginReady overrides this
+      // the moment everything is actually ready.
+      window.__loginSafety=setTimeout(function(){ var b=document.getElementById('loginBtn'); if(b&&b.disabled){ b.disabled=false; b.textContent='Sign in'; var h=document.getElementById('loginHint'); if(h){ h.textContent='Taking longer than usual — you can try signing in.'; } } }, 12000);
+    </script>
   </section>
 </main>
 
@@ -202,8 +226,20 @@ function classOptions(sel){ return classes.length ? classes.map(c=>`<option ${c=
 
 // ---- Modal helpers ---------------------------------------------------------
 const back=$("modalBack"), modalEl=$("modal");
+// A function that re-renders whatever data view is currently open, so Refresh
+// can update it in place (set when a data modal opens, cleared on close).
+let currentRefresh=null;
+// Reload results/students/tasks from Firebase and re-render, so a teacher can
+// watch completions arrive during a lesson without reloading the whole page.
+async function refreshData(btn){
+  const orig = btn ? btn.textContent : null;
+  if(btn){ btn.disabled=true; btn.textContent="Refreshing…"; }
+  try{ await loadData(); refreshStats(); if(back.classList.contains("show") && typeof currentRefresh==="function") currentRefresh(); }
+  catch(e){ /* non-fatal */ }
+  if(btn){ btn.textContent="✓ Updated"; btn.disabled=false; setTimeout(()=>{ btn.textContent=orig||"↻ Refresh"; }, 1400); }
+}
 function openModal(html, wide){ modalEl.className="modal"+(wide?" wide":""); modalEl.innerHTML=html; back.classList.add("show"); }
-function closeModal(){ back.classList.remove("show"); if(dtPoll){ clearInterval(dtPoll); dtPoll=null; } }
+function closeModal(){ back.classList.remove("show"); currentRefresh=null; if(dtPoll){ clearInterval(dtPoll); dtPoll=null; } }
 function head(title){ return `<div class="modal-head"><h2>${title}</h2><button class="x" type="button" data-close>✕</button></div>`; }
 function foot(right){ return `<div class="modal-foot"><button class="btn" type="button" data-close>Close</button>${right||""}</div>`; }
 back.addEventListener("click", e=>{ if(e.target===back) closeModal(); });
@@ -215,6 +251,17 @@ $("codeInput").addEventListener("keydown", e=>{ if(e.key==="Enter") $("loginBtn"
 $("codeToggle").addEventListener("click", ()=>{ const i=$("codeInput"); const hidden=i.type==="password"; i.type=hidden?"text":"password"; $("codeToggle").textContent=hidden?"Hide":"Show"; i.focus(); });
 $("loginBtn").addEventListener("click", doLogin);
 $("signoutBtn").addEventListener("click", async ()=>{ await logout(); location.reload(); });
+$("refreshBtn").addEventListener("click", ()=> refreshData($("refreshBtn")));
+
+// Login readiness: this module only runs once the page's scripts AND the Firebase
+// SDK modules it imports have finished downloading — which is exactly when the
+// Sign in button becomes safe to use. Until now it was disabled with a spinner so
+// early clicks weren't silently lost. Enable it and drop the connecting state.
+(function markLoginReady(){
+  if(window.__loginSafety){ clearTimeout(window.__loginSafety); window.__loginSafety=null; }
+  const b=$("loginBtn"); if(b){ b.disabled=false; b.textContent="Sign in"; }
+  const h=$("loginHint"); if(h){ h.textContent="Ready — enter your code and sign in."; h.classList.add("ready"); setTimeout(()=>h.classList.add("hidden"), 1800); }
+})();
 
 // Tile wiring
 $("tileAddStudent").addEventListener("click", openAddStudent);
@@ -228,10 +275,21 @@ $("tileTasks").addEventListener("click", openTasks);
 async function doLogin(){
   const code = normaliseCode($("codeInput").value);
   if(!code){ showMsg("Enter your teacher code first.","bad"); return; }
-  $("loginBtn").disabled=true; $("loginBtn").textContent="Signing in...";
+  const btn=$("loginBtn"), prog=$("loginProg");
+  // Stay in a loading state through BOTH sign-in AND the dashboard data load so
+  // the button never flips back to a clickable "Sign in" mid-load (which looked
+  // like a failure). Only reset on a real error.
+  if(window.__loginSafety){ clearTimeout(window.__loginSafety); window.__loginSafety=null; }
+  btn.disabled=true; btn.innerHTML='<span class="btn-spin" aria-hidden="true"></span>Signing in…';
+  if(prog) prog.classList.add("show");
+  $("loginMsg").className="msg";
   const res = await loginTeacher(code);
-  $("loginBtn").disabled=false; $("loginBtn").textContent="Sign in";
-  if(!res.ok){ showMsg(res.error || "Could not sign in.","bad"); return; }
+  if(!res.ok){
+    btn.disabled=false; btn.textContent="Sign in";
+    if(prog) prog.classList.remove("show");
+    showMsg(res.error || "Could not sign in.","bad"); return;
+  }
+  btn.innerHTML='<span class="btn-spin" aria-hidden="true"></span>Loading your dashboard…';
   teacher = res.profile;
   await loadData();
   showDashboard();
@@ -243,6 +301,14 @@ async function loadData(){
   students = sSnap.docs.map(d=>({ id:d.id, studentCode:d.data().studentCode||d.id, ...d.data() }));
   const aSnap = await getDocs(query(collection(db, COLLECTIONS.achievements), where("teacherCode","==", teacher.teacherCode)));
   all = aSnap.docs.map(d=> normaliseAchievement({ id:d.id, ...d.data() })).sort((a,b)=> b.time - a.time);
+  // Adventure records store a generic "Mills Maths Adventure" topic; show the
+  // actual challenge/mission name instead (kept in the record's level field).
+  for(const r of all){
+    if(r.toolId==="mills-maths-adventure" || r.tool==="Mills Maths Adventure"){
+      const lvl = r.raw && (r.raw.level || r.raw.missionTitle);
+      if(lvl && lvl!=="Challenge") r.topic = String(lvl).replace(/^Fraction Farm:\s*/,"");
+    }
+  }
   attemptsByCode = new Map();
   try{
     const rSnap = await getDocs(query(collection(db, COLLECTIONS.adventureAttempts), where("teacherCode","==", teacher.teacherCode)));
@@ -285,7 +351,7 @@ function rebuildClasses(){
 
 function showDashboard(){
   $("loginView").classList.add("hidden"); $("dashView").classList.remove("hidden");
-  $("whoChip").classList.remove("hidden"); $("signoutBtn").classList.remove("hidden");
+  $("whoChip").classList.remove("hidden"); $("signoutBtn").classList.remove("hidden"); $("refreshBtn").classList.remove("hidden");
   $("whoChip").textContent = `${teacher.teacherName||teacher.teacherCode} · ${teacher.school||""}`;
   $("avatar").textContent = (teacher.teacherName||"T").slice(0,2).toUpperCase(); $("avatar").style.background = hashColour(teacher.teacherCode);
   $("profileName").textContent = teacher.teacherName || teacher.teacherCode;
@@ -821,6 +887,7 @@ function openResults(){
       <div id="rBody"></div>
     </div>${foot("")}`, true);
   const draw=()=>{ const rows=resultsFiltered(); $("rBody").innerHTML = rows.length ? resultsTable(rows) : `<div class="empty"><div class="big">No results match these filters</div>Try widening the class, tool or date filters.</div>`; };
+  currentRefresh=draw;
   ["rCls","rTool","rTopic","rDate"].forEach(id=> $(id).addEventListener("change", draw));
   $("rSearch").addEventListener("input", draw);
   $("rCsv").addEventListener("click", ()=>{ const csv=toCSV(resultsFiltered()); const blob=new Blob([csv],{type:"text/csv"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`mmt-results-${teacher.teacherCode}.csv`; a.click(); URL.revokeObjectURL(a.href); });
@@ -860,6 +927,7 @@ async function openTasks(){
   $("mtNewAdv").addEventListener("click", ()=>openAdvTask());
   $("mtNewDash").addEventListener("click", ()=>openDashTask());
   $("mtClass").addEventListener("change", ()=>{ loadTasks($("mtClass").value); loadDashTasks($("mtClass").value); });
+  currentRefresh=()=>{ const c=$("mtClass")?$("mtClass").value:""; loadTasks(c); loadDashTasks(c); };
   loadTasks(""); loadDashTasks("");
 }
 async function loadTasks(className){
