@@ -63,7 +63,9 @@
     .sheet[dir="rtl"] .pageMeta{text-align:left}
     .studentLine{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:10px 0 14px;font-size:13px;font-weight:800;color:#374151}
     .studentLine div{border-bottom:1px solid #9ca3af;padding-bottom:6px;min-height:26px}
-    .questionGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .questionGrid{display:flex;flex-wrap:wrap;gap:10px}
+    .questionGrid>*{flex:0 0 calc(50% - 5px);max-width:calc(50% - 5px);box-sizing:border-box}
+    .qCard.full{flex-basis:100%;max-width:100%}
     .qCard{border:1.4px solid #111827;border-radius:12px;padding:10px;min-height:96px;break-inside:avoid;background:#fff;position:relative;overflow:hidden}
     .qHead{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px}
     .qNum{display:grid;place-items:center;min-width:25px;height:25px;border-radius:50%;background:#111827;color:#fff;font-weight:900;font-size:13px;flex:none}
@@ -86,7 +88,7 @@
     .workSpace{height:34px;border-bottom:1px dashed #9ca3af;margin-top:8px}
     .workSpace.large{height:72px}
     .workSpace.none{display:none}
-    .answerPage .questionGrid{grid-template-columns:1fr}
+    .answerPage .questionGrid>*{flex-basis:100%;max-width:100%}
     .answerList{columns:2;column-gap:22px;font-size:14px;line-height:1.55}
     .answerItem{break-inside:avoid;margin:0 0 4px;font-weight:700}
     .answerItem .ansNum{display:inline-block;min-width:28px;font-weight:950;color:#111827}

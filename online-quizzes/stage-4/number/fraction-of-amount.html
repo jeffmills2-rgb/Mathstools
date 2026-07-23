@@ -919,6 +919,13 @@
     certText.textContent = `You completed level ${cfg.name} on Calculating fractions of amounts and received a score of ${score} out of ${QUIZ_LEN}.`;
     progressFill.style.width = '100%';
     showModal(certModalBack);
+    if(window.MMTSave) window.MMTSave({
+      tool:"fraction-of-amount-student-quiz", topic:"fdp",
+      level:cfg.name, levelKey, score, total:QUIZ_LEN,
+      percent:Math.round((score/QUIZ_LEN)*100), masteryTopic:"fraction-of-amount",
+      types:["level:"+levelKey],
+      certificateText:`Fraction of an Amount — ${cfg.name}: ${score}/${QUIZ_LEN}`
+    });
   }
   async function copyCertificate(){
     const cfg = LEVELS[levelKey];
@@ -1032,5 +1039,85 @@
   buildChart();
 })();
 </script>
+
+<!-- ===== MMT student-code login + secure save (added 2026-07) ===== -->
+<div id="mmtLoginOverlay" style="position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(15,23,42,.55);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <div style="background:#fff;border-radius:22px;box-shadow:0 20px 60px rgba(0,0,0,.28);max-width:460px;width:100%;overflow:hidden;">
+    <div style="font-weight:1000;font-size:22px;padding:20px 22px 6px;color:#111827;">Student login</div>
+    <div style="padding:6px 22px 20px;">
+      <p style="color:#6b7280;font-weight:600;font-size:15px;line-height:1.45;margin:0 0 14px;">Enter your MMT student code so your result saves to your teacher&rsquo;s dashboard. No code? Press <b>Skip</b> to do the quiz without saving.</p>
+      <label for="mmtCodeInput" style="display:block;font-weight:900;color:#111827;margin-bottom:6px;">Student code</label>
+      <input id="mmtCodeInput" autocomplete="off" placeholder="enter code here" style="width:100%;height:52px;border:2px solid #e5e7eb;border-radius:14px;padding:0 14px;font-size:20px;font-weight:900;outline:none;text-transform:uppercase;box-sizing:border-box;" />
+      <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
+        <button id="mmtLoginBtn" type="button" style="flex:1;min-width:120px;border:none;border-radius:14px;padding:13px 18px;font-weight:1000;font-size:16px;cursor:pointer;background:#2563eb;color:#fff;">Start</button>
+        <button id="mmtSkipBtn" type="button" style="flex:1;min-width:120px;border:none;border-radius:14px;padding:13px 18px;font-weight:1000;font-size:16px;cursor:pointer;background:#f3f4f6;color:#111827;">Skip student code</button>
+      </div>
+      <div id="mmtLoginMsg" style="margin-top:10px;font-weight:900;font-size:14px;min-height:18px;"></div>
+    </div>
+  </div>
+</div>
+<div id="mmtSaveStatus" style="display:none;position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:2147483001;background:#111827;color:#fff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-weight:900;font-size:14px;padding:10px 18px;border-radius:999px;box-shadow:0 10px 30px rgba(0,0,0,.3);"></div>
+<script>
+/* MMT student-code login + secure achievement save.
+   Self-contained: shows a login overlay on load (above the quiz's own menu),
+   dynamically imports the shared secure quiz client so the page still runs
+   offline/locally (demo mode = no save), and exposes window.MMTSave(payload)
+   for the quiz to call when a student finishes. Never stores typed answers. */
+(function(){
+  "use strict";
+  var MMT=null, tried=false, mode="pending", student=null;
+  function normalise(c){ return String(c||"").trim().toUpperCase().replace(/[^A-Z0-9-]/g,""); }
+  async function load(){
+    if(tried) return MMT; tried=true;
+    try{ var mod=await import("/portal/shared/quizClient.js"); MMT=mod.MMTQuiz; MMT.init(); }
+    catch(e){ MMT=null; console.warn("MMT quiz client unavailable — demo mode only:", e&&e.message); }
+    return MMT;
+  }
+  var overlay=document.getElementById("mmtLoginOverlay");
+  var codeInput=document.getElementById("mmtCodeInput");
+  var loginBtn=document.getElementById("mmtLoginBtn");
+  var skipBtn=document.getElementById("mmtSkipBtn");
+  var msg=document.getElementById("mmtLoginMsg");
+  var statusEl=document.getElementById("mmtSaveStatus");
+  function hideOverlay(){ if(overlay) overlay.style.display="none"; }
+  function showStatus(t){ if(!statusEl) return; statusEl.textContent=t; statusEl.style.display="block"; }
+  async function doLogin(){
+    msg.style.color="#6b7280"; msg.textContent="Checking…";
+    var code=normalise(codeInput.value); codeInput.value=code;
+    if(!code){ msg.style.color="#dc2626"; msg.textContent="Please type your student code, or press Skip."; return; }
+    await load();
+    if(!MMT){ msg.style.color="#dc2626"; msg.textContent="Login isn’t available here — press Skip to do the quiz."; return; }
+    try{
+      var r=await MMT.signIn(code);
+      if(r&&r.ok){ student=r.profile; mode="registered"; msg.style.color="#16a34a";
+        msg.textContent="Signed in as "+((student&&student.name)||code); setTimeout(hideOverlay,450); }
+      else { msg.style.color="#dc2626"; msg.textContent=(r&&r.error)||"Could not sign in."; }
+    }catch(e){ msg.style.color="#dc2626"; msg.textContent="Could not sign in. You can Skip to continue."; }
+  }
+  if(loginBtn) loginBtn.addEventListener("click", doLogin);
+  if(skipBtn) skipBtn.addEventListener("click", function(){ mode="skip"; student=null; if(MMT){ try{MMT.skipDemo();}catch(e){} } hideOverlay(); });
+  if(codeInput){
+    codeInput.addEventListener("keydown", function(e){ if(e.key==="Enter"){ e.preventDefault(); e.stopPropagation(); doLogin(); } });
+    setTimeout(function(){ try{ codeInput.focus(); }catch(e){} }, 60);
+  }
+  window.MMTSave=async function(payload){
+    payload=payload||{};
+    if(mode!=="registered"){ showStatus("Not saved — no student code"); return {skipped:true}; }
+    showStatus("Saving…");
+    try{
+      await load();
+      if(MMT&&MMT.getMode&&MMT.getMode()==="registered"){
+        var r=await MMT.saveAchievement(payload);
+        showStatus(r&&r.saved ? "Saved to your dashboard ✓" : "Not saved");
+        return r;
+      }
+      showStatus("Not saved"); return {skipped:true};
+    }catch(e){ showStatus("Save failed (your result still counts locally)"); return {error:true}; }
+  };
+  window.MMTMode=function(){ return mode; };
+  load(); /* warm up so sign-in is instant */
+})();
+</script>
+
 </body>
 </html>

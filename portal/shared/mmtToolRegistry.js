@@ -158,6 +158,73 @@ export const MMT_TOOLS = Object.freeze([
     supportsAdventureAttempts: false, supportsSkillBreakdown: false,
     notes: "Guided 8-stage progression (understand→equivalence→density→recurring→division→improper→compare→convince) with RANDOMISED values (same learning intention each attempt). EN/Arabic/Farsi bilingual. Minimal student UI: drag the point + an 'equal parts' stepper + contextual chips. Informational feedback, no typed answers; part-b checkable inputs + reasoning tags stored in types[]. score/total = stages completed. localStorage resume + secure achievement save.",
   },
+  // Newly-migrated student quizzes (2026-07, secure code exchange + dashboard-linkable).
+  // Each page now shows the student-login modal on load and writes an `achievements`
+  // record via window.MMTSave; achievementToolName MUST match the `tool` string the page writes.
+  {
+    toolId: "fraction-of-amount-quiz", title: "Fraction of an Amount — Student Quiz", category: "Quiz",
+    enabled: true, resultCollection: "achievements", richCollection: null,
+    achievementToolName: "fraction-of-amount-student-quiz", topics: ["fdp"], stage: "Stage 4",
+    launchUrl: "/online-quizzes/stage-4/number/fraction-of-amount.html",
+    supportsAdventureAttempts: false, supportsSkillBreakdown: false,
+    notes: "Sweet/Mild/Medium/Spicy fraction-of-an-amount quiz (times-table chart tool). Added secure student-code login + achievements save (2026-07). masteryTopic 'fraction-of-amount'; no typed answers stored.",
+  },
+  {
+    toolId: "collecting-like-terms-quiz", title: "Collecting Like Terms — Student Quiz", category: "Quiz",
+    enabled: true, resultCollection: "achievements", richCollection: null,
+    achievementToolName: "collecting-like-terms-student-quiz", topics: ["algebra"], stage: "Stage 4",
+    launchUrl: "/online-quizzes/stage-4/algebra/collecting-like-terms.html",
+    supportsAdventureAttempts: false, supportsSkillBreakdown: false,
+    notes: "Escape-room style, 15 locks, EN/AR/FA. Added secure student-code login + achievements save (2026-07). score = locks broken; masteryTopic 'collecting-like-terms'.",
+  },
+  {
+    toolId: "number-groups-quiz", title: "Number Groups (Coefficients) — Student Quiz", category: "Quiz",
+    enabled: true, resultCollection: "achievements", richCollection: null,
+    achievementToolName: "number-groups-student-quiz", topics: ["algebra"], stage: "Stage 4",
+    launchUrl: "/online-quizzes/stage-4/algebra/number-groups.html",
+    supportsAdventureAttempts: false, supportsSkillBreakdown: false,
+    notes: "Seeing a coefficient × factor as equal groups (lead-in to like terms). Added secure student-code login + achievements save (2026-07). masteryTopic 'number-groups'. (Page <title> was a copy-paste of the like-terms quiz — content is the groups quiz.)",
+  },
+  {
+    toolId: "perimeter-area-rectangle-quiz", title: "Rectangles: Area & Perimeter — Student Quiz", category: "Quiz",
+    enabled: true, resultCollection: "achievements", richCollection: null,
+    achievementToolName: "perimeter-area-rectangle-student-quiz", topics: ["measurement-space"], stage: "Stage 4",
+    launchUrl: "/online-quizzes/stage-4/measurement-space/perimeter-area-rectangle.html",
+    supportsAdventureAttempts: false, supportsSkillBreakdown: false,
+    notes: "Dual area+perimeter quiz. Added secure student-code login + achievements save (2026-07). Saved score = area+perimeter combined out of 30 (2×15); area/perimeter subtotals stored in types[]. masteryTopic 'perimeter-area-rectangle'.",
+  },
+  {
+    toolId: "factor-circles-quiz", title: "Products & Factors: Escape the Factor Circle Room — Student Quiz", category: "Quiz",
+    enabled: true, resultCollection: "achievements", richCollection: null,
+    achievementToolName: "factor-circles-student-quiz", topics: ["number"], stage: "Stage 4",
+    launchUrl: "/online-quizzes/stage-4/number/factor-circles.html",
+    supportsAdventureAttempts: false, supportsSkillBreakdown: false,
+    notes: "Escape-room, 10 locks (factors/products). Added secure student-code login + achievements save on escape (2026-07). score = locks solved out of 10; masteryTopic 'factors-and-products'.",
+  },
+  {
+    toolId: "integer-addition-quiz", title: "Integer Addition & Subtraction — Student Quiz", category: "Quiz",
+    enabled: true, resultCollection: "achievements", richCollection: null,
+    achievementToolName: "integer-addition-student-quiz", topics: ["integers"], stage: "Stage 4",
+    launchUrl: "/online-quizzes/stage-4/number/integer-addition.html",
+    supportsAdventureAttempts: false, supportsSkillBreakdown: false,
+    notes: "Add/subtract integers, Sweet→Spicy, 15 questions. Added secure student-code login + achievements save (2026-07). masteryTopic 'integer-addition'.",
+  },
+  {
+    toolId: "integer-combined-signs-quiz", title: "Integers: Combined Signs — Student Quiz", category: "Quiz",
+    enabled: true, resultCollection: "achievements", richCollection: null,
+    achievementToolName: "integer-combined-signs-student-quiz", topics: ["integers"], stage: "Stage 4",
+    launchUrl: "/online-quizzes/stage-4/number/integer-combined-signs.html",
+    supportsAdventureAttempts: false, supportsSkillBreakdown: false,
+    notes: "Combined-signs integer quiz with worked solutions. Added secure student-code login + achievements save (2026-07). masteryTopic 'integer-combined-signs'.",
+  },
+  {
+    toolId: "negatives-on-the-number-line-quiz", title: "Negatives on the Number Line — Student Quiz", category: "Quiz",
+    enabled: true, resultCollection: "achievements", richCollection: null,
+    achievementToolName: "negatives-on-the-number-line-student-quiz", topics: ["integers"], stage: "Stage 4",
+    launchUrl: "/online-quizzes/stage-4/number/negatives-on-the-number-line.html",
+    supportsAdventureAttempts: false, supportsSkillBreakdown: false,
+    notes: "Missing-value on a number line incl. negatives, 20 questions. Added secure student-code login + achievements save on completion (2026-07). masteryTopic 'negatives-on-the-number-line'.",
+  },
   // Disabled placeholder — no standalone Pythagoras quiz yet (Adventure covers it).
   // Demonstrates the enable/disable switch; flip enabled + set launchUrl when built.
   {
