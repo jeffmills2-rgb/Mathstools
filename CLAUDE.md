@@ -10,6 +10,25 @@
 > Classification & Visualisation (3I). Also live: schoolyard NPCs now default to
 > a RANDOM Stage 4 topic (a teacher task still overrides). `adventureManifest.js`
 > lists all 14 topics and matches the live game.
+>
+> **NEW (2026-07-22, session — deployed): portal UX + teacher-visibility + game
+> compass.** (1) **Login readiness on both portals** (`portal/teacher/` +
+> `portal/student/`): the Sign in button starts disabled ("Connecting…" + spinner)
+> until the page scripts/Firebase SDK load, a progress bar runs through BOTH
+> sign-in AND the dashboard data load (no more mid-load flip back to a clickable
+> "Sign in"), and a 12s safety net prevents a lockout. (2) **Portal→game sign-in:**
+> the student dashboard "Play" link now carries `?code=` so the game auto-signs-in
+> (game side rebuilt). (3) **Results & Analytics Topic column** shows the actual
+> challenge/mission name for Adventure rows (e.g. "The Round-Up") instead of a
+> generic label — display-side, so existing rows are fixed too. (4) **Teacher
+> dashboard Refresh button** reloads results/completions and updates an open
+> Results / Manage Tasks view in place. (5) **Farm progress now reaches the
+> teacher:** the game uploads any farm set finished while signed in, and back-fills
+> locally-earned farm trophies on sign-in (see the game repo CLAUDE.md). (6)
+> **Task navigation compass** in the Adventure — a top-of-screen arrow to the next
+> teacher task (see the game repo CLAUDE.md). Deployed via commits `8fae9af` /
+> `9df6990` / `bae6a94`.
+
 > **NEW (being pushed 2026-07-08):** a **Fraction Bar + Number Line** teacher
 > interactive tool (`interactive-tools/stage-4/number/fraction-bar-number-line/`)
 > with a "Tools ▾" menu, plus two student pages in `online-quizzes/stage-4/number/`:
@@ -39,6 +58,37 @@
 > Meshy milk-truck.glb. Needs `npm run build` → copy `dist/.` → push.
 > Game-source checks 391 → 425, all passing. Full details: the game repo's
 > CLAUDE.md (F1–F8, W7).
+>
+> **NEW (built 2026-07-22, TEACHER PLATFORM v2 — being deployed):** the Teacher
+> Platform (`portal/teacher/index.html`) was redesigned **button-first** (a home
+> screen of tiles; every action opens a pop-up window). New capabilities, all
+> keeping the secure server-authed model:
+> - **Add Student** now supports **bulk** (paste one "First Surname" per line).
+> - **Saved classes** — new callables `createClass` / `setClassActive` + a
+>   `classes` collection (a teacher reads only their own). Classes now persist
+>   (even empty) instead of being derived from students.
+> - **Set Dashboard Task** — assign online quizzes to a class with a due date via
+>   new callables `createDashboardTask` / `updateDashboardTask` /
+>   `setDashboardTaskActive` + a `dashboardAssignments` collection. The **student
+>   portal** shows a **task pop-up** on login (+ a "Tasks set by your teacher"
+>   section). A task can be a **whole quiz** OR a **custom sub-topic subset**: the
+>   portal opens a quiz's existing "Create student quiz link" builder in a pop-up
+>   and reads the generated link back (same-origin), storing it site-relative.
+>   Only the 4 quizzes with a builder support subsets (integers, angles, fdp,
+>   algebraic-techniques).
+> - **Set Adventure Task** — reworked into locations (Number Island / Retrieval
+>   Practice Playground / **Fraction Farm**). Farm challenges are now assignable
+>   (see below). Number Island wording shows Pip = Addition & Subtraction facts,
+>   Alby = Multiplication facts, Fern = Division facts (portal display only).
+> - **Fraction Farm Adventure tasks** — a farm task = an `adventureAssignments`
+>   doc with `location:"farm"` + `challengeId` (the game reads it, shows an
+>   in-world objective, and writes a cloud completion tagged with the task id).
+>   Needs the game built + pushed. Full game side: the game repo's CLAUDE.md
+>   (DONE 2026-07-22 — Fraction Farm teacher tasks).
+> - **Rules:** the live rules now include `adventureAssignments`,
+>   `dashboardAssignments` AND `classes` blocks (an earlier go-live copy was
+>   missing `adventureAssignments` — restored). `firestore.golive.claims.rules`
+>   in the website repo matches the live rules.
 
 ---
 
@@ -91,7 +141,19 @@ NSW maths teacher. It now also has a **secure Student/Teacher Platform** and
   with the caller's own `teacherCode`) write the `adventureAssignments` collection;
   rules let a teacher manage their class's tasks and a student read active tasks
   matching their `teacherCode`+`className` claims. See §6 + the game repo's
-  `docs/teacher-adventure-tasks-plan.md`.
+  `docs/teacher-adventure-tasks-plan.md`. **Farm tasks (2026-07-22):** the same
+  callables also accept a farm shape (`location:"farm"` + `challengeId`, no NPC/
+  topic) — the game writes the completion (game repo CLAUDE.md).
+- **Saved classes (2026-07-22):** callables `createClass` (idempotent, doc id
+  `<TEACHERCODE>__<NAME>`) / `setClassActive`, both teacher-authed and stamped
+  with the caller's `teacherCode`, write a `classes` collection. Rules: a teacher
+  reads only their own; client writes denied.
+- **Dashboard tasks (2026-07-22):** callables `createDashboardTask` (one doc per
+  quiz), `updateDashboardTask`, `setDashboardTaskActive`, teacher-authed, write a
+  `dashboardAssignments` collection (fields `toolId`, `title`, `launchUrl`,
+  `className`, `dueAt`, `active`). Rules mirror `adventureAssignments` (teacher
+  reads own; student reads active tasks matching teacherCode+className). The
+  `launchUrl` can carry a quiz's `?assignment=1&level=…&types=…` subset params.
 - **Live Firestore rules are strict + claim-based:** a student reads only their
   own data; a teacher reads only their own class; results are create-only and
   scoped to the signed-in student; no client identity writes; no result
@@ -107,9 +169,11 @@ NSW maths teacher. It now also has a **secure Student/Teacher Platform** and
 ```
 index.html                         hub / homepage (nav links to portal + Adventure)
 portal/                            THE PLATFORM
-  student/index.html               Student Platform (own results/progress)
-  teacher/index.html               Teacher Platform (class results, roster, Add-student,
-                                   Set Adventure task: create/edit/remove + completion view)
+  student/index.html               Student Platform (results/progress + teacher-set task pop-up)
+  teacher/index.html               Teacher Platform — BUTTON-FIRST (v2, 2026-07-22): a tile home
+                                   screen → pop-ups for Add Student (single+bulk), Add Class,
+                                   Set Dashboard Task (quizzes + sub-topic builder), Set Adventure
+                                   Task (island/playground/farm), Students, Results, Manage Tasks
   admin/index.html                 disabled page (admin via Firebase Console)
   shared/ firebaseConfig.js · codeExchangeClient.js · quizClient.js ·
           mmtToolRegistry.js · resultUtils.js · portalStyles.css ·
@@ -204,8 +268,11 @@ portal/PLACEMENT.md , portal/README.md   migration + structure notes
   once, and a live-review polish pass on the newest diagrams (protractor,
   geometry shapes, data charts).
 - Teacher portal: revisit **graphs** (engagement/leaderboard — removed for now),
-  add student **enable/disable/edit** + a class-management view. (Adventure-TASK
-  create/edit/remove + completion view are now DONE — see §6.)
+  add student **enable/disable/edit**. (Adventure-TASK create/edit/remove +
+  completion view, **saved classes**, **dashboard/quiz tasks + sub-topic builder**
+  and **farm Adventure tasks** are now DONE — see the 2026-07-22 header block, §4.)
+  Follow-ups: subset builders for the other quizzes; a systemChecks farm-task
+  check; a class rename/merge view.
 - Adventure tasks — future polish: per-skill selection in the Set-task form (only
   topic-level today — now 14 Stage 4 topics), in-game due-date
   display/overdue handling, more stages/NPCs.

@@ -105,6 +105,14 @@ export const MMT_TOOLS = Object.freeze([
     supportsAdventureAttempts: false, supportsSkillBreakdown: false, notes: "Migrated.",
   },
   {
+    toolId: "area-of-a-triangle-quiz", title: "Area of a Triangle — Student Quiz", category: "Quiz",
+    enabled: true, resultCollection: "achievements", richCollection: null,
+    achievementToolName: "area-of-a-triangle-student-quiz", topics: ["measurement-space"], stage: "Stage 4",
+    launchUrl: "/online-quizzes/stage-4/measurement-space/area-of-a-triangle.html",
+    supportsAdventureAttempts: false, supportsSkillBreakdown: false,
+    notes: "Sweet/Mild/Medium/Spicy area-of-triangle quiz (⅓ obtuse from Mild up; Medium half-of-odd areas; Spicy find-a-missing-length). Optional student-code login + secure MMTQuiz achievements save; no typed answers; masteryTopic 'area-of-a-triangle'. Pairs with the interactive + worksheet creator.",
+  },
+  {
     toolId: "integers-quiz", title: "Computation with Integers — Student Quiz", category: "Quiz",
     enabled: true, resultCollection: "achievements", richCollection: null,
     achievementToolName: "integers-student-quiz", topics: ["integers"], stage: "Stage 4",

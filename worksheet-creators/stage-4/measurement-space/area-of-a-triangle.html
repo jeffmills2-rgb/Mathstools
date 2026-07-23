@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Triangles — Area Worksheet Maker</title>
+<style>
+  :root{
+    --bg:#f6f7fb;
+    --card:#ffffff;
+    --ink:#111827;
+    --muted:#6b7280;
+    --border:#e5e7eb;
+    --shadow:0 14px 40px rgba(0,0,0,.10);
+    --radius:18px;
+    --mathFont:"Cambria Math","STIX Two Math","STIXGeneral","Times New Roman",serif;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0;
+    font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    padding-bottom:44px;
+  }
+  .wrap{ max-width:1200px; margin:18px auto 40px; padding:0 16px; }
+  .card{ background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px; }
+  .title{ font-size:30px; font-weight:1000; margin:0 0 6px; }
+  .subtitle{ margin:0 0 16px; color:var(--muted); font-weight:850; font-size:18px; }
+
+  .controls{
+    display:flex; align-items:flex-end; justify-content:space-between; gap:14px; flex-wrap:wrap;
+    padding:14px; border:1px solid var(--border); border-radius:18px;
+    background:linear-gradient(180deg,#ffffff,#f9fafb);
+  }
+  .fieldRow{ display:flex; gap:18px; flex-wrap:wrap; align-items:flex-end; }
+  label{ display:block; font-weight:950; color:var(--ink); margin:0 0 8px; font-size:16px; }
+  select, input[type="number"]{
+    border:2px solid #e5e7eb; border-radius:16px; padding:14px; font-weight:950; font-size:18px;
+    background:#fff; min-width:230px; outline:none;
+  }
+  input[type="number"]{ min-width:200px; }
+  .btnRow{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:flex-end; }
+  button{
+    border:none; border-radius:16px; padding:14px 18px; font-weight:1000; cursor:pointer;
+    background:#f3f4f6; color:#111827; font-size:18px; transition:transform .04s ease, filter .15s ease;
+  }
+  button:active{ transform:scale(.98); }
+  button.primary{ background:#2563eb; color:#fff; }
+  button.ghost{ background:#eef2ff; color:#1d4ed8; }
+  button.danger{ background:#fee2e2; color:#991b1b; }
+
+  .outWrap{ margin-top:16px; }
+
+  .page{
+    margin-top:16px; background:#fff; border:1px solid var(--border); border-radius:18px;
+    box-shadow:0 10px 26px rgba(15,23,42,.08); overflow:hidden;
+  }
+  .pageHeader{
+    padding:12px 14px 10px; border-bottom:1px solid rgba(229,231,235,.95);
+    display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:wrap;
+  }
+  .hdrLeft{ display:flex; align-items:center; gap:10px; min-width:220px; }
+  .hdrLeft img{ width:28px; height:28px; object-fit:contain; display:block; }
+  .hdrTitle{ font-weight:1000; font-size:15px; line-height:1.1; }
+  .hdrSub{ color:var(--muted); font-weight:850; font-size:12px; margin-top:2px; }
+  .nameDate{ display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; justify-content:flex-end; margin-left:auto; }
+  .lineField{ display:flex; flex-direction:column; gap:4px; min-width:150px; }
+  .lineLabel{ font-size:11px; font-weight:950; color:var(--muted); }
+  .lineBox{ height:26px; border:2px solid #111827; border-radius:9px; background:#fff; }
+
+  .grid{ padding:12px 14px 14px; display:grid; gap:12px 14px; }
+  .grid.cols-2{ grid-template-columns:1fr 1fr; }
+
+  .qCard{ border:1px solid rgba(229,231,235,.95); border-radius:16px; padding:8px 10px 10px; background:#fff; break-inside:avoid; }
+  .qTop{ display:flex; align-items:center; gap:8px; margin-bottom:4px; flex-wrap:wrap; }
+  .qLab{ font-weight:950; font-size:13px; }
+  .qPrompt{ font-weight:850; font-size:13px; color:#111827; }
+
+  .diagramWrap{ display:flex; justify-content:center; align-items:center; margin:4px 0 6px; }
+  .diagramSvg{ width:100%; height:auto; display:block; max-height:190px; }
+
+  .answerStack{ display:flex; flex-direction:column; gap:6px; margin-top:2px; align-items:center; }
+  .ansRow{ display:flex; align-items:center; justify-content:center; gap:8px; width:100%; }
+  .ansLabel{ font-weight:950; font-size:15px; min-width:70px; text-align:right; font-family:var(--mathFont); }
+  .ansBox{
+    width:260px; max-width:80%; height:52px; border:2px solid #111827; border-radius:14px; background:#fff;
+    display:flex; align-items:center; justify-content:center; font-weight:1000; font-size:24px; color:#111827;
+  }
+  .ansBox.key{ color:#16a34a; border-color:#16a34a; background:rgba(22,163,74,.08); }
+
+  .pageFooter{
+    padding:8px 14px; border-top:1px solid rgba(229,231,235,.95); display:flex; align-items:center;
+    justify-content:center; gap:10px; font-weight:950; color:#111827; font-size:12px; background:rgba(255,255,255,.96);
+  }
+  .pageFooter a{ color:#2563eb; text-decoration:none; font-weight:1000; }
+
+  .mmtFooter{
+    position:fixed; left:0; right:0; bottom:0; height:44px; display:flex; align-items:center; justify-content:center;
+    padding:0 12px; background:rgba(255,255,255,.92); border-top:1px solid rgba(229,231,235,.95);
+    backdrop-filter:blur(8px); z-index:500; font-weight:900; color:#111827; text-align:center; font-size:13px;
+  }
+  .mmtFooter a{ color:#2563eb; text-decoration:none; font-weight:950; }
+
+  /* diagram element styles */
+  .tri-edge{ fill:rgba(37,99,235,.10); stroke:#111827; stroke-width:2.2; stroke-linejoin:round; }
+  .grid-line{ stroke:#dbe1ea; stroke-width:1; }
+  .alt-line{ stroke:#dc2626; stroke-width:1.8; stroke-dasharray:5 4; }
+  .ext-line{ stroke:#6b7280; stroke-width:1.3; stroke-dasharray:4 4; }
+  .ra-mark{ stroke:#dc2626; stroke-width:1.6; fill:none; }
+  .dot{ fill:#111827; }
+  .dlabel{ font-family:var(--mathFont); font-size:15px; font-weight:800; fill:#111827; paint-order:stroke; stroke:#fff; stroke-width:3px; }
+  .alabel{ font-family:var(--mathFont); font-size:15px; font-weight:900; fill:#1d4ed8; paint-order:stroke; stroke:#fff; stroke-width:3.5px; }
+  .qmark{ font-family:var(--mathFont); font-size:18px; font-weight:1000; fill:#dc2626; paint-order:stroke; stroke:#fff; stroke-width:3.5px; }
+
+  @media print{
+    @page{ size:A4 portrait; margin:8mm; }
+    body{ background:#fff; padding-bottom:0; }
+    .wrap{ max-width:none; margin:0; padding:0; }
+    .card{ box-shadow:none; border-radius:0; padding:0; }
+    .controls, .title, .subtitle, .mmtFooter{ display:none !important; }
+
+    .page{
+      margin:0; border:none; border-radius:0; box-shadow:none; page-break-after:always;
+      display:flex; flex-direction:column; height:calc(100vh - 6mm); box-sizing:border-box; overflow:hidden;
+    }
+    .page:last-child{ page-break-after:auto; }
+    .pageHeader{ flex:0 0 auto; padding:4mm 4mm 3mm; }
+    .pageFooter{ flex:0 0 auto; padding:3mm 4mm; }
+
+    .grid{
+      flex:1 1 auto; min-height:0; padding:2.5mm 4mm 3mm; gap:2mm 4mm;
+      grid-auto-rows:1fr; align-items:stretch;
+    }
+    .grid.partial{ grid-auto-rows:min-content; align-content:start; }
+
+    .qCard{
+      break-inside:avoid; padding:1.5mm 2.5mm 1.5mm;
+      display:flex; flex-direction:column; justify-content:space-between; min-height:0; overflow:hidden;
+    }
+    .qTop{ flex:0 0 auto; margin-bottom:0; }
+    .qLab{ font-size:9.5px; }
+    .qPrompt{ font-size:9.5px; }
+    .diagramWrap{ flex:1 1 auto; margin:0.5mm 0; min-height:0; }
+    .diagramSvg{ width:auto; height:100%; max-width:100%; max-height:100%; }
+    .answerStack{ flex:0 0 auto; gap:1mm; }
+    .ansLabel{ font-size:10.5px; min-width:44px; }
+    .ansBox{ height:9mm; width:120px; font-size:13px; }
+
+    .hdrTitle{ font-size:11px; } .hdrSub{ font-size:9px; }
+    .lineField{ min-width:80px; } .lineLabel{ font-size:8px; }
+    .lineBox{ height:16px; border-width:1.5px; } .hdrLeft img{ width:18px; height:18px; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1 class="title">Triangles — Area worksheet maker</h1>
+      <p class="subtitle">Printable A4 worksheets plus answer key. Layout fills the page automatically.</p>
+
+      <div class="controls">
+        <div class="fieldRow">
+          <div>
+            <label for="levelSel">Level</label>
+            <select id="levelSel">
+              <option value="sweet">Level 1 Sweet — whole area, grid</option>
+              <option value="mild" selected>Level 2 Mild — whole area, grid, ⅓ obtuse</option>
+              <option value="medium">Level 3 Medium — half-of-odd area, ⅓ obtuse</option>
+              <option value="spicy">Level 4 Spicy — find missing length, ⅓ obtuse</option>
+            </select>
+          </div>
+          <div>
+            <label for="countInp">Number of questions (1–48)</label>
+            <input id="countInp" type="number" min="1" max="48" value="10" />
+          </div>
+        </div>
+        <div class="btnRow">
+          <button id="genBtn" class="primary">Generate worksheet</button>
+          <button id="mixedBtn" class="ghost">Mixed questions</button>
+          <button id="printBtn" class="ghost">Print (Ctrl+P)</button>
+          <button id="resetBtn" class="danger">Reset</button>
+        </div>
+      </div>
+
+      <div id="out" class="outWrap"></div>
+    </div>
+  </div>
+
+  <div class="mmtFooter">
+    This tool and more can be found at&nbsp;<a href="https://www.millsmathstools.au">www.millsmathstools.au</a>
+  </div>
+
+<script>
+(() => {
+  const SITE = "https://www.millsmathstools.au";
+  const LEVELS = {
+    sweet:  { name:"Sweet",  grid:true,  parity:"even", mode:"area",    obtuse:"never", perPage:10, columns:2 },
+    mild:   { name:"Mild",   grid:true,  parity:"even", mode:"area",    obtuse:"third", perPage:10, columns:2 },
+    medium: { name:"Medium", grid:false, parity:"odd",  mode:"area",    obtuse:"third", perPage:10, columns:2 },
+    spicy:  { name:"Spicy",  grid:false, parity:"even", mode:"missing", obtuse:"third", perPage:10, columns:2 }
+  };
+  const MIXED_KEYS = ["sweet","mild","medium","spicy"];
+
+  const levelSel = document.getElementById("levelSel");
+  const countInp = document.getElementById("countInp");
+  const genBtn = document.getElementById("genBtn");
+  const printBtn = document.getElementById("printBtn");
+  const resetBtn = document.getElementById("resetBtn");
+  const out = document.getElementById("out");
+
+  const randInt = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+  const SVGNS = "http://www.w3.org/2000/svg";
+
+  // ---------- number generation ----------
+  function pickDims(parity){
+    // base,height with product < 144, matching parity of the PRODUCT
+    for (let i=0;i<400;i++){
+      let b, h;
+      if (parity==="odd"){
+        b = [3,5,7,9,11][randInt(0,4)];
+        h = [3,5,7,9,11][randInt(0,4)];
+      } else {
+        b = randInt(3,12);
+        h = randInt(3,12);
+        if ((b*h)%2!==0) continue;   // product must be even -> whole-number area
+      }
+      if (b*h>=144) continue;
+      if (b*h<12) continue;          // avoid trivially tiny
+      return {b,h};
+    }
+    return {b:6,h:8};
+  }
+
+  function pickApexInfo(b, obtuseMode){
+    // decide whether this triangle is obtuse, and where the apex sits (units from A)
+    let makeObtuse = obtuseMode==="always" ? true
+                   : obtuseMode==="third"  ? Math.random()<(1/3)
+                   : obtuseMode==="5050"   ? Math.random()<0.5
+                   : false;
+    if (makeObtuse){
+      const o = randInt(2, Math.max(2, Math.round(b*0.5)));  // overhang past the base
+      const apex = Math.random()<0.5 ? b+o : -o;             // lean right or left
+      return { apex, obtuse:true };
+    }
+    const r=Math.random();
+    let apex;
+    if (r<0.30) apex=0;             // right triangle (apex above left vertex)
+    else if (r<0.45) apex=b;       // right triangle (apex above right vertex)
+    else apex=randInt(1,b-1);      // acute (apex over the base interior)
+    return { apex, obtuse:false };
+  }
+
+  function generateQuestion(levelKey){
+    if (levelKey==="mixed") levelKey = MIXED_KEYS[randInt(0,MIXED_KEYS.length-1)];
+    const cfg = LEVELS[levelKey];
+    const {b,h} = pickDims(cfg.parity);
+    const {apex,obtuse} = pickApexInfo(b, cfg.obtuse);
+    const area = b*h/2;
+    const q = { levelKey, b, h, apex, obtuse, area, mode:cfg.mode };
+    if (cfg.mode==="missing"){
+      q.missing = Math.random()<0.5 ? "base" : "height";   // which length is unknown
+    }
+    return q;
+  }
+
+  // ---------- pretty area (mixed number for .5) ----------
+  function fmtArea(a){
+    if (Number.isInteger(a)) return String(a);
+    const whole=Math.floor(a);
+    return (whole>0 ? whole : "") + "½";
+  }
+
+  // ---------- diagram ----------
+  function el(name, attrs){
+    const e=document.createElementNS(SVGNS,name);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  function buildDiagram(q, showAnswers){
+    const cfg = LEVELS[q.levelKey];
+    const b=q.b, h=q.h, apex=q.apex;
+
+    const DW=252, DH=180;
+    const padL=26, padR=26, padT=18, padB=26;
+    const innerW=DW-padL-padR, innerH=DH-padT-padB;
+
+    // bounding box in units (obtuse apex can sit outside [0,b])
+    const xMin=Math.min(0,apex), xMax=Math.max(b,apex);
+    const bboxW=xMax-xMin;
+    let cell=Math.min(innerW/bboxW, innerH/h);
+    cell=Math.min(cell, 32);
+    const drawW=bboxW*cell, drawH=h*cell;
+    const originX=padL+(innerW-drawW)/2 - xMin*cell;   // so unit x=0 maps correctly with left overhang
+    const baseY=padT+(innerH+drawH)/2;
+
+    const X=x=>originX+x*cell;
+    const Y=y=>baseY-y*cell;
+
+    const svg=el("svg",{viewBox:`0 0 ${DW} ${DH}`,class:"diagramSvg",role:"img","aria-label":"triangle diagram"});
+    svg.appendChild(el("rect",{x:0,y:0,width:DW,height:DH,fill:"#fff"}));
+
+    // grid over the whole bounding box (sweet + mild)
+    if (cfg.grid){
+      const g=el("g",{});
+      for (let x=Math.ceil(xMin);x<=Math.floor(xMax);x++) g.appendChild(el("line",{x1:X(x),y1:Y(0),x2:X(x),y2:Y(h),class:"grid-line"}));
+      for (let y=0;y<=h;y++) g.appendChild(el("line",{x1:X(xMin),y1:Y(y),x2:X(xMax),y2:Y(y),class:"grid-line"}));
+      svg.appendChild(g);
+    }
+
+    // base extension (dashed) when the height foot lands outside the base
+    if (apex>b) svg.appendChild(el("line",{x1:X(b),y1:Y(0),x2:X(apex),y2:Y(0),class:"ext-line"}));
+    if (apex<0) svg.appendChild(el("line",{x1:X(0),y1:Y(0),x2:X(apex),y2:Y(0),class:"ext-line"}));
+
+    // triangle A(0,0) B(b,0) P(apex,h)
+    svg.appendChild(el("polygon",{points:`${X(0)},${Y(0)} ${X(b)},${Y(0)} ${X(apex)},${Y(h)}`,class:"tri-edge"}));
+
+    // altitude (height) + right-angle mark at the foot
+    svg.appendChild(el("line",{x1:X(apex),y1:Y(h),x2:X(apex),y2:Y(0),class:"alt-line"}));
+    const ras=Math.min(7, cell*0.5);
+    const dir=(apex < b/2) ? 1 : -1;   // right-angle square opens toward the base
+    svg.appendChild(el("polyline",{points:`${X(apex)+dir*ras},${Y(0)} ${X(apex)+dir*ras},${Y(0)-ras} ${X(apex)},${Y(0)-ras}`,class:"ra-mark"}));
+
+    // vertices
+    [[0,0],[b,0],[apex,h]].forEach(([x,y])=>svg.appendChild(el("circle",{cx:X(x),cy:Y(y),r:2.6,class:"dot"})));
+
+    // labels
+    const baseText  = (q.mode==="missing" && q.missing==="base")   ? "?" : (b+" cm");
+    const heightText= (q.mode==="missing" && q.missing==="height") ? "?" : (h+" cm");
+    const baseCls   = (q.mode==="missing" && q.missing==="base")   ? "qmark" : "dlabel";
+    const heightCls = (q.mode==="missing" && q.missing==="height") ? "qmark" : "dlabel";
+
+    // base label under the middle of the base segment AB
+    const bl=el("text",{x:X(b/2),y:baseY+18,"text-anchor":"middle",class:baseCls});
+    bl.textContent=baseText; svg.appendChild(bl);
+
+    // height label beside the altitude, offset toward the triangle body
+    const hlx = X(apex) + (apex < b/2 ? 14 : -14);
+    const hl=el("text",{x:hlx,y:Y(h/2),"text-anchor":"middle","dominant-baseline":"middle",class:heightCls});
+    hl.textContent=heightText; svg.appendChild(hl);
+
+    return svg;
+  }
+
+  // ---------- question card ----------
+  function promptText(q){
+    return q.mode==="missing"
+      ? "Area = "+fmtArea(q.area)+" cm². Find the missing length."
+      : "Find the area of the triangle.";
+  }
+
+  function makeCard(q, index, showAnswers){
+    const wrap=document.createElement("div"); wrap.className="qCard";
+    const top=document.createElement("div"); top.className="qTop";
+    top.innerHTML=`<span class="qLab">Q${index+1}.</span><span class="qPrompt">${promptText(q)}</span>`;
+    wrap.appendChild(top);
+
+    const dw=document.createElement("div"); dw.className="diagramWrap";
+    dw.appendChild(buildDiagram(q, showAnswers));
+    wrap.appendChild(dw);
+
+    const stack=document.createElement("div"); stack.className="answerStack";
+    if (q.mode==="missing"){
+      const label = q.missing==="base" ? "base =" : "height =";
+      const val = showAnswers ? (q.missing==="base"?q.b:q.h)+" cm" : "";
+      stack.innerHTML=`<div class="ansRow"><div class="ansLabel">${label}</div><div class="ansBox ${showAnswers?"key":""}">${val}</div></div>`;
+    } else {
+      const val = showAnswers ? fmtArea(q.area)+" cm²" : "";
+      stack.innerHTML=`<div class="ansRow"><div class="ansLabel">Area =</div><div class="ansBox ${showAnswers?"key":""}">${val}</div></div>`;
+    }
+    wrap.appendChild(stack);
+    return wrap;
+  }
+
+  // ---------- pages ----------
+  function pageHeaderHTML(levelName, pageLabel){
+    return `
+      <div class="pageHeader">
+        <div class="hdrLeft">
+          <img src="../../../assets/mmt.png" alt="MMT logo" onerror="this.style.display='none';" />
+          <div>
+            <div class="hdrTitle">Triangles — Area Worksheet (${levelName})</div>
+            <div class="hdrSub">${pageLabel}</div>
+          </div>
+        </div>
+        <div class="nameDate">
+          <div class="lineField"><div class="lineLabel">Name</div><div class="lineBox"></div></div>
+          <div class="lineField"><div class="lineLabel">Date</div><div class="lineBox"></div></div>
+        </div>
+      </div>`;
+  }
+  function pageFooterHTML(){
+    return `<div class="pageFooter">This tool and more can be found at <a href="${SITE}">www.millsmathstools.au</a></div>`;
+  }
+
+  function buildPages(questions, cfg, titleLabel, showAnswers){
+    const pages=[];
+    const perPage=cfg.perPage;
+    const totalPages=Math.ceil(questions.length/perPage);
+    for (let p=0;p<totalPages;p++){
+      const page=document.createElement("div"); page.className="page";
+      page.innerHTML=pageHeaderHTML(cfg.name, `${titleLabel} — Page ${p+1} of ${totalPages}`);
+
+      const start=p*perPage;
+      const slice=questions.slice(start, start+perPage);
+      const grid=document.createElement("div");
+      grid.className=`grid cols-${cfg.columns}`+(slice.length<perPage?" partial":"");
+      slice.forEach((q,i)=>grid.appendChild(makeCard(q, start+i, showAnswers)));
+      page.appendChild(grid);
+
+      const footer=document.createElement("div");
+      footer.innerHTML=pageFooterHTML();
+      page.appendChild(footer.firstElementChild);
+      pages.push(page);
+    }
+    return pages;
+  }
+
+  function generate(levelKey){
+    levelKey = levelKey || levelSel.value;
+    out.innerHTML="";
+    const cfg = (levelKey==="mixed")
+      ? { name:"Mixed", perPage:10, columns:2 }
+      : LEVELS[levelKey];
+    let n=Number(countInp.value);
+    if(!Number.isFinite(n)) n=cfg.perPage;
+    n=Math.max(1, Math.min(48, Math.round(n)));
+    countInp.value=String(n);
+
+    const questions=Array.from({length:n},()=>generateQuestion(levelKey));
+    const ws=buildPages(questions, cfg, "Worksheet", false);
+    const keyPages=buildPages(questions, cfg, "Answer key", true);
+    for(const pg of ws) out.appendChild(pg);
+    for(const pg of keyPages) out.appendChild(pg);
+    if(out.firstElementChild) out.firstElementChild.scrollIntoView({behavior:"smooth",block:"start"});
+  }
+
+  function resetAll(){ out.innerHTML=""; levelSel.value="mild"; countInp.value="10"; }
+
+  genBtn.addEventListener("click", ()=>generate());
+  document.getElementById("mixedBtn").addEventListener("click", ()=>generate("mixed"));
+  printBtn.addEventListener("click", ()=>window.print());
+  resetBtn.addEventListener("click", resetAll);
+
+  generate();
+})();
+</script>
+</body>
+</html>
