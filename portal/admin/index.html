@@ -505,7 +505,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { initializeAuth, inMemoryPersistence, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
   // Public web config — safe to ship (matches portal/shared/firebaseConfig.js).
@@ -520,7 +520,11 @@
   };
 
   const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
+  // In-memory auth ONLY: the console never restores a saved session (its own or a
+  // student/teacher one from the shared Firebase project). Every visit starts
+  // signed-out on the login screen, and the session is dropped on refresh/close —
+  // so the only way in is entering the admin email + password each time.
+  const auth = initializeAuth(app, { persistence: inMemoryPersistence });
   const db = getFirestore(app);
 
   // ---- state ----
