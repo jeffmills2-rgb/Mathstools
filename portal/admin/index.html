@@ -3,35 +3,984 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>MMT Admin — temporarily disabled</title>
-<link rel="stylesheet" href="../shared/portalStyles.css"/>
+<meta name="robots" content="noindex,nofollow"/>
+<title>MMT Admin Console</title>
+<style>
+  :root{
+    --bg:#eef2f9; --card:#ffffff; --ink:#0f172a; --muted:#64748b; --line:#e2e8f0;
+    --brand:#2563eb; --brand-dark:#1d4ed8; --brand-soft:#e0ebff;
+    --good:#16a34a; --good-soft:#dcfce7; --warn:#d97706; --warn-soft:#fef3c7;
+    --bad:#dc2626; --bad-soft:#fee2e2; --ink-soft:#334155;
+    --shadow:0 10px 30px rgba(15,23,42,.08); --shadow-lg:0 24px 60px rgba(15,23,42,.16);
+    --radius:16px; --radius-sm:11px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:radial-gradient(1200px 480px at 12% -8%,rgba(37,99,235,.14),transparent 60%),linear-gradient(180deg,#f6f9ff,var(--bg));min-height:100vh;font-size:14px;-webkit-font-smoothing:antialiased}
+  a{color:var(--brand)}
+  button{font:inherit;cursor:pointer;border:0;border-radius:999px;font-weight:800;transition:120ms ease;display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:38px;padding:9px 15px}
+  button:hover{transform:translateY(-1px)}
+  button:active{transform:translateY(0)}
+  button:disabled{opacity:.55;cursor:not-allowed;transform:none}
+  .btn-primary{background:var(--brand);color:#fff}
+  .btn-primary:hover{background:var(--brand-dark)}
+  .btn-soft{background:var(--brand-soft);color:var(--brand-dark)}
+  .btn-neutral{background:#eef2f7;color:var(--ink-soft)}
+  .btn-good{background:var(--good-soft);color:var(--good)}
+  .btn-danger{background:var(--bad-soft);color:var(--bad)}
+  .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
+  .btn-tiny{min-height:30px;padding:5px 10px;font-size:.78rem;font-weight:800}
+  input,select,textarea{width:100%;border:1px solid var(--line);background:#fff;border-radius:var(--radius-sm);padding:10px 12px;font:inherit;color:var(--ink);outline:none;transition:120ms ease}
+  input:focus,select:focus,textarea:focus{border-color:var(--brand);box-shadow:0 0 0 4px rgba(37,99,235,.13)}
+  textarea{min-height:120px;resize:vertical;line-height:1.5}
+  label{display:block;font-weight:700;font-size:.8rem;margin-bottom:6px;color:var(--ink-soft)}
+  .code{font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;font-weight:800;background:#f1f5f9;color:#0f172a;padding:4px 8px;border-radius:8px;letter-spacing:.03em;display:inline-block;font-size:.86rem}
+  .badge{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:4px 10px;font-size:.74rem;font-weight:800}
+  .badge.active{color:var(--good);background:var(--good-soft)}
+  .badge.inactive{color:var(--bad);background:var(--bad-soft)}
+  .badge.legacy{color:var(--warn);background:var(--warn-soft)}
+  .spinner{width:15px;height:15px;border:2.5px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:999px;display:none;animation:spin .7s linear infinite}
+  button.loading .spinner{display:inline-block}
+  button.loading .btn-label{opacity:.85}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* ---------- Login screen ---------- */
+  .login-wrap{min-height:100vh;display:grid;place-items:center;padding:24px}
+  .login-card{width:min(420px,100%);background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow-lg);padding:30px 28px}
+  .login-logo{width:52px;height:52px;border-radius:15px;background:var(--brand-soft);display:grid;place-items:center;margin-bottom:16px}
+  .login-logo img{width:36px;height:36px;object-fit:contain}
+  .login-card h1{font-size:1.35rem;margin:0 0 4px;letter-spacing:-.02em}
+  .login-card p.sub{color:var(--muted);margin:0 0 22px;font-size:.9rem;line-height:1.45}
+  .login-card .field{margin-bottom:14px}
+  .login-card button{width:100%;min-height:44px;font-size:.95rem}
+  .lock-note{margin-top:16px;font-size:.78rem;color:var(--muted);line-height:1.45;text-align:center}
+
+  /* ---------- App shell ---------- */
+  .app{display:none;min-height:100vh;grid-template-columns:232px 1fr}
+  .sidebar{background:#0f1b33;color:#cbd5e1;padding:18px 14px;display:flex;flex-direction:column;gap:6px;position:sticky;top:0;height:100vh}
+  .side-brand{display:flex;align-items:center;gap:10px;padding:6px 8px 16px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:8px}
+  .side-brand .logo{width:34px;height:34px;border-radius:10px;background:#fff;display:grid;place-items:center;flex:0 0 auto}
+  .side-brand .logo img{width:24px;height:24px;object-fit:contain}
+  .side-brand strong{color:#fff;font-size:.95rem;line-height:1.1;display:block}
+  .side-brand span{color:#7c8db5;font-size:.72rem}
+  .nav-item{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:11px;color:#aebbd4;font-weight:700;font-size:.9rem;cursor:pointer;border:0;background:transparent;width:100%;text-align:left;min-height:0}
+  .nav-item:hover{background:rgba(255,255,255,.07);color:#fff;transform:none}
+  .nav-item.active{background:var(--brand);color:#fff}
+  .nav-item .ico{width:18px;height:18px;flex:0 0 auto}
+  .nav-item .pill{margin-left:auto;background:rgba(255,255,255,.14);color:#dbe4f5;border-radius:999px;font-size:.7rem;padding:1px 8px;font-weight:800}
+  .nav-item.active .pill{background:rgba(255,255,255,.24);color:#fff}
+  .side-foot{margin-top:auto;border-top:1px solid rgba(255,255,255,.08);padding-top:12px;font-size:.76rem;color:#7c8db5}
+  .side-foot .who{color:#cbd5e1;font-weight:700;margin-bottom:8px;word-break:break-all}
+  .side-foot button{width:100%;background:rgba(255,255,255,.08);color:#e2e8f0;font-size:.82rem;min-height:34px}
+  .side-foot button:hover{background:rgba(255,255,255,.16)}
+
+  .main{min-width:0;padding:26px 30px 60px;max-width:1180px}
+  .page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+  .page-head h2{margin:0;font-size:1.5rem;letter-spacing:-.02em}
+  .page-head p{margin:5px 0 0;color:var(--muted);font-size:.92rem;max-width:640px;line-height:1.45}
+  .view{display:none;animation:fade .18s ease}
+  .view.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 20px}
+  .card+.card{margin-top:18px}
+  .card h3{margin:0 0 3px;font-size:1.08rem;letter-spacing:-.01em}
+  .card .hint{color:var(--muted);font-size:.85rem;margin:0 0 14px;line-height:1.4}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .field{margin-bottom:14px}
+  .row-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+  /* stat cards */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 18px}
+  .stat .k{font-size:.74rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:800}
+  .stat .v{font-size:2rem;font-weight:900;letter-spacing:-.03em;margin-top:2px;line-height:1}
+  .stat .d{font-size:.8rem;color:var(--muted);margin-top:5px}
+  .cap{margin-top:10px}
+  .cap-bar{height:8px;border-radius:999px;background:#eef2f7;overflow:hidden}
+  .cap-bar > i{display:block;height:100%;border-radius:999px;background:var(--good);transition:width .4s ease}
+  .cap-bar.warn > i{background:var(--warn)}
+  .cap-bar.over > i{background:var(--bad)}
+  .cap-label{font-size:.74rem;color:var(--muted);margin-top:5px;display:flex;justify-content:space-between}
+
+  /* tables */
+  .table-tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+  .table-tools .grow{flex:1 1 220px;min-width:0}
+  .table-tools select{width:auto;min-width:130px}
+  .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:var(--radius-sm);background:#fff;max-height:60vh}
+  table{width:100%;border-collapse:collapse;min-width:720px}
+  th,td{padding:10px 12px;text-align:left;border-bottom:1px solid #eef2f7;font-size:.86rem;vertical-align:middle}
+  th{position:sticky;top:0;background:#f8fafc;color:#475569;font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;font-weight:800;z-index:1}
+  tr:last-child td{border-bottom:0}
+  tbody tr:hover{background:#fafcff}
+  .check-cell{width:40px;text-align:center}
+  .rowcheck,.allcheck{width:17px;height:17px;accent-color:var(--brand);cursor:pointer}
+  .t-actions{display:flex;gap:6px;flex-wrap:nowrap}
+  .empty{padding:26px;text-align:center;color:var(--muted);background:#f8fafc;border:1px dashed var(--line);border-radius:var(--radius-sm);display:none}
+  .empty.show{display:block}
+
+  .bulkbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 12px;border:1px solid var(--line);background:#f8fafc;border-radius:var(--radius-sm);margin-bottom:12px}
+  .bulkbar .count{font-weight:800;color:var(--ink-soft);margin-right:auto}
+  .bulkbar select{width:auto;min-width:160px}
+
+  .msg{margin-top:12px;border-radius:var(--radius-sm);padding:10px 13px;font-weight:600;font-size:.86rem;display:none;line-height:1.4}
+  .msg.show{display:block}
+  .msg.ok{background:var(--good-soft);color:#166534}
+  .msg.warn{background:var(--warn-soft);color:#92400e}
+  .msg.bad{background:var(--bad-soft);color:#991b1b}
+  .msg.info{background:var(--brand-soft);color:var(--brand-dark)}
+
+  .callout{border:1px solid #bfdbfe;background:#eff6ff;color:#1e3a8a;border-radius:var(--radius-sm);padding:12px 14px;font-size:.85rem;line-height:1.5;margin-bottom:16px}
+  .callout strong{color:#1e40af}
+
+  /* modal */
+  .backdrop{position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:60;display:none;align-items:center;justify-content:center;padding:18px}
+  .backdrop.show{display:flex}
+  .modal{width:min(520px,100%);background:#fff;border-radius:20px;box-shadow:var(--shadow-lg);border:1px solid var(--line);padding:22px;max-height:90vh;overflow:auto}
+  .modal h3{margin:0 0 16px;font-size:1.15rem}
+
+  /* toast */
+  #toast{position:fixed;right:20px;bottom:20px;z-index:80;display:flex;flex-direction:column;gap:8px;max-width:340px}
+  .toast{background:#0f1b33;color:#fff;padding:11px 15px;border-radius:12px;font-size:.85rem;font-weight:600;box-shadow:var(--shadow-lg);animation:slideIn .2s ease}
+  .toast.ok{background:#14532d}.toast.bad{background:#7f1d1d}.toast.warn{background:#78350f}
+  @keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
+
+  .quick-actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+  .qa{display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--line);border-radius:var(--radius-sm);background:#fff;cursor:pointer;text-align:left;min-height:0;font-weight:700}
+  .qa:hover{border-color:var(--brand);background:#fafcff;transform:translateY(-1px)}
+  .qa .qa-ico{width:38px;height:38px;border-radius:11px;background:var(--brand-soft);display:grid;place-items:center;flex:0 0 auto;font-size:1.1rem}
+  .qa small{display:block;color:var(--muted);font-weight:600;font-size:.78rem;margin-top:2px}
+
+  @media(max-width:920px){
+    .app{grid-template-columns:1fr}
+    .sidebar{position:static;height:auto;flex-direction:row;flex-wrap:wrap;gap:6px}
+    .side-brand{width:100%;border-bottom:0;padding-bottom:6px;margin-bottom:0}
+    .nav-item{width:auto;flex:1 1 auto}
+    .nav-item .pill{display:none}
+    .side-foot{width:100%;margin-top:6px}
+    .side-foot button{width:auto}
+    .main{padding:20px 16px 50px}
+    .stats{grid-template-columns:1fr 1fr}
+    .grid-2,.grid-3{grid-template-columns:1fr}
+  }
+</style>
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "c7e5713b5e4f4993907eb285797dc89b"}'></script><!-- End Cloudflare Web Analytics -->
 </head>
 <body>
-<header class="topbar">
-  <div class="brand">Mills Maths Tools</div>
-  <div class="sub">Admin Console</div>
-</header>
 
-<div class="warn-banner" role="alert">
-  <strong>⚠ Admin identity management is temporarily disabled</strong> while the secure platform is being rebuilt.
+<!-- ============ LOGIN ============ -->
+<div id="loginWrap" class="login-wrap">
+  <form id="loginForm" class="login-card">
+    <div class="login-logo"><img src="../../assets/mmt.png" alt="MMT" onerror="this.style.display='none';this.parentNode.textContent='🔐'"/></div>
+    <h1>Admin Console</h1>
+    <p class="sub">Sign in with your admin account to manage teacher codes, student codes and classes for Mills Maths Tools.</p>
+    <div class="field">
+      <label for="loginEmail">Admin email</label>
+      <input id="loginEmail" type="email" autocomplete="username" placeholder="you@example.com" required/>
+    </div>
+    <div class="field">
+      <label for="loginPassword">Password</label>
+      <input id="loginPassword" type="password" autocomplete="current-password" placeholder="••••••••" required/>
+    </div>
+    <button type="submit" id="loginBtn" class="btn-primary"><span class="spinner"></span><span class="btn-label">Sign in</span></button>
+    <div id="loginMsg" class="msg" style="margin-top:14px"></div>
+    <p class="lock-note">This page is protected by a real Firebase account. Write access is granted only to the admin account — no shared secret is stored in the browser.</p>
+  </form>
 </div>
 
-<main class="wrap">
-  <section class="card section">
-    <h2>Manage students &amp; teachers in the Firebase Console for now</h2>
-    <p class="hint">Creating, editing, disabling, assigning or deleting student/teacher records from a web page is turned off under the secure rules model (Phase 3D/4A). There is <strong>no admin secret in this page</strong> and anonymous writes are <strong>not</strong> enabled.</p>
-    <p>Use the <a href="https://console.firebase.google.com/project/mills-maths-tools/firestore" target="_blank" rel="noopener">Firebase Console → Firestore</a> to manage the <code>students</code> and <code>teachers</code> collections until a dedicated admin-auth Cloud Function is built.</p>
+<!-- ============ APP ============ -->
+<div id="app" class="app">
+  <aside class="sidebar">
+    <div class="side-brand">
+      <span class="logo"><img src="../../assets/mmt.png" alt="MMT" onerror="this.style.display='none';this.parentNode.textContent='M'"/></span>
+      <span><strong>MMT Admin</strong><span>Control centre</span></span>
+    </div>
+    <button class="nav-item active" data-view="overview"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Overview</button>
+    <button class="nav-item" data-view="teachers"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 2 8l10 5 10-5-10-5Z"/><path d="M6 10.5V16c0 1.5 3 3 6 3s6-1.5 6-3v-5.5"/></svg>Teachers<span class="pill" id="navTeachers">0</span></button>
+    <button class="nav-item" data-view="students"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><path d="M16.5 8.2A3 3 0 0 1 19 13"/><path d="M17.5 14.5c2 .6 3.5 2.2 3.5 4.5"/></svg>Students<span class="pill" id="navStudents">0</span></button>
+    <button class="nav-item" data-view="classes"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v12H4z"/><path d="M4 21h16"/><path d="M8 9h8M8 13h5"/></svg>Classes<span class="pill" id="navClasses">0</span></button>
+    <button class="nav-item" data-view="settings"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.2.61.76 1.05 1.42 1.09H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>Settings</button>
+    <div class="side-foot">
+      <div class="who" id="whoAmI">—</div>
+      <button id="refreshAllBtn" class="btn-neutral" style="margin-bottom:8px">↻ Refresh data</button>
+      <button id="signOutBtn">Sign out</button>
+    </div>
+  </aside>
 
-    <h3 style="margin-top:18px">What a future secure Admin Console will do</h3>
-    <ul class="muted">
-      <li>Create teacher codes and student codes (server-side, via an admin-only Cloud Function).</li>
-      <li>Assign students to teachers and classes.</li>
-      <li>Disable / reactivate codes without deleting historical achievements.</li>
-      <li>All behind a real admin sign-in — never a shared secret in the browser.</li>
-    </ul>
-    <p class="muted" style="margin-top:14px"><em>All write actions on this page are intentionally disabled.</em></p>
-  </section>
-</main>
+  <main class="main">
+    <!-- OVERVIEW -->
+    <section class="view active" id="view-overview">
+      <div class="page-head">
+        <div><h2>Overview</h2><p>Live snapshot of everything on Mills Maths Tools. Use the caps to keep an eye on overall size (and Firebase cost, which you pay for).</p></div>
+        <button class="btn-soft" id="ovRefresh">↻ Refresh</button>
+      </div>
+      <div class="stats" id="statCards"></div>
+      <div class="card">
+        <h3>Quick actions</h3>
+        <p class="hint">Jump straight into the most common admin jobs.</p>
+        <div class="quick-actions">
+          <button class="qa" data-goto="teachers" data-open="newTeacher"><span class="qa-ico">➕</span><span>New teacher code<small>Create a teacher &amp; code</small></span></button>
+          <button class="qa" data-goto="students" data-open="bulk"><span class="qa-ico">📋</span><span>Bulk add a class<small>Paste a whole class list</small></span></button>
+          <button class="qa" data-goto="classes"><span class="qa-ico">🏫</span><span>Manage classes<small>Create / rename / disable</small></span></button>
+          <button class="qa" data-goto="settings"><span class="qa-ico">⚙️</span><span>Caps &amp; settings<small>Set size limits</small></span></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TEACHERS -->
+    <section class="view" id="view-teachers">
+      <div class="page-head">
+        <div><h2>Teachers</h2><p>Create teacher codes, see each teacher's classes and student counts, and disable, reactivate or delete codes.</p></div>
+      </div>
+      <div class="card" id="newTeacher">
+        <h3>Create teacher code</h3>
+        <p class="hint">Generates a memorable code from the surname plus four digits, e.g. <span class="code">MILLS4821</span>. The teacher signs in on the Teacher Dashboard by typing this code.</p>
+        <div class="grid-2">
+          <div class="field"><label for="tName">Teacher name</label><input id="tName" placeholder="Jeffrey Mills"/></div>
+          <div class="field"><label for="tSchool">School</label><input id="tSchool" placeholder="Coffs Harbour HS"/></div>
+        </div>
+        <div class="row-actions">
+          <button class="btn-primary" id="createTeacherBtn"><span class="spinner"></span><span class="btn-label">Generate teacher code</span></button>
+          <button class="btn-neutral" id="clearTeacherBtn">Clear</button>
+        </div>
+        <div id="teacherMsg" class="msg"></div>
+      </div>
+      <div class="card">
+        <div class="page-head" style="margin-bottom:12px">
+          <div><h3>Teacher list</h3></div>
+          <button class="btn-soft btn-tiny" id="copyTeachersBtn">Copy list</button>
+        </div>
+        <div class="table-tools">
+          <input class="grow" id="teacherSearch" placeholder="Search name, code or school"/>
+          <select id="teacherActiveFilter"><option value="all">All</option><option value="active">Active only</option><option value="inactive">Inactive only</option></select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Teacher</th><th>Code</th><th>School</th><th>Classes</th><th>Students</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="teacherBody"></tbody>
+          </table>
+        </div>
+        <div class="empty" id="teacherEmpty">No teachers yet. Create one above.</div>
+      </div>
+    </section>
+
+    <!-- STUDENTS -->
+    <section class="view" id="view-students">
+      <div class="page-head">
+        <div><h2>Students</h2><p>Add students one at a time or a whole class at once, assign them to a teacher and class, and edit, disable, reactivate, reassign or delete.</p></div>
+      </div>
+      <div class="grid-2">
+        <div class="card" id="singleAdd">
+          <h3>Add one student</h3>
+          <p class="hint">Creates one unique student code linked to a teacher and class.</p>
+          <div class="grid-2">
+            <div class="field"><label for="sFirst">First name</label><input id="sFirst" placeholder="Alex"/></div>
+            <div class="field"><label for="sLast">Surname</label><input id="sLast" placeholder="Smith"/></div>
+          </div>
+          <div class="grid-2">
+            <div class="field"><label for="sTeacher">Teacher code</label><select id="sTeacher"><option value="">Choose teacher</option></select></div>
+            <div class="field"><label for="sClass">Class</label><input id="sClass" placeholder="7MAB" style="text-transform:uppercase"/></div>
+          </div>
+          <div class="row-actions">
+            <button class="btn-primary" id="addSingleBtn"><span class="spinner"></span><span class="btn-label">Generate student code</span></button>
+            <button class="btn-neutral" id="clearSingleBtn">Clear</button>
+          </div>
+          <div id="singleMsg" class="msg"></div>
+        </div>
+        <div class="card" id="bulk">
+          <h3>Bulk add a class</h3>
+          <p class="hint">Paste one student per line ("Alex Smith"). Each gets a unique code, the chosen teacher and class. Codes are copied to your clipboard when done.</p>
+          <div class="grid-2">
+            <div class="field"><label for="bTeacher">Teacher code</label><select id="bTeacher"><option value="">Choose teacher</option></select></div>
+            <div class="field"><label for="bClass">Class</label><input id="bClass" placeholder="7MAB" style="text-transform:uppercase"/></div>
+          </div>
+          <div class="field"><label for="bNames">Student names</label><textarea id="bNames" placeholder="Alex Smith&#10;Mia Nguyen&#10;Noah Patel"></textarea></div>
+          <div class="row-actions">
+            <button class="btn-primary" id="bulkAddBtn"><span class="spinner"></span><span class="btn-label">Generate class codes</span></button>
+            <button class="btn-neutral" id="clearBulkBtn">Clear</button>
+          </div>
+          <div id="bulkMsg" class="msg"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="page-head" style="margin-bottom:12px">
+          <div><h3>Student codes</h3><p style="margin-top:2px">Filter, copy, edit, reassign, disable or delete. Legacy students without a teacher code are shown too.</p></div>
+        </div>
+        <div class="table-tools">
+          <input class="grow" id="studentSearch" placeholder="Search student, class, teacher or code"/>
+          <select id="studentTeacherFilter"><option value="">All teachers</option></select>
+          <select id="studentClassFilter"><option value="">All classes</option></select>
+          <select id="studentActiveFilter"><option value="all">All</option><option value="active">Active</option><option value="inactive">Inactive</option></select>
+          <button class="btn-soft btn-tiny" id="copyVisibleBtn">Copy visible</button>
+        </div>
+        <div class="bulkbar">
+          <label style="display:inline-flex;align-items:center;gap:7px;margin:0"><input type="checkbox" id="selectAll" class="allcheck"> Select visible</label>
+          <span class="count" id="selCount">0 selected</span>
+          <select id="bulkTeacher"><option value="">Reassign to teacher…</option></select>
+          <button class="btn-soft btn-tiny" id="bulkAssignBtn" disabled>Reassign</button>
+          <button class="btn-neutral btn-tiny" id="bulkClassBtn" disabled>Set class</button>
+          <button class="btn-danger btn-tiny" id="bulkDisableBtn" disabled>Disable</button>
+          <button class="btn-good btn-tiny" id="bulkReactivateBtn" disabled>Reactivate</button>
+          <button class="btn-ghost btn-tiny" id="bulkDeleteBtn" disabled style="color:var(--bad)">Delete</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th class="check-cell"></th><th>Student</th><th>Class</th><th>Code</th><th>Teacher</th><th>Teacher code</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="studentBody"></tbody>
+          </table>
+        </div>
+        <div class="empty" id="studentEmpty">No students match.</div>
+        <div id="studentMsg" class="msg"></div>
+      </div>
+    </section>
+
+    <!-- CLASSES -->
+    <section class="view" id="view-classes">
+      <div class="page-head">
+        <div><h2>Classes</h2><p>Saved classes persist even when empty. Create a class, rename it (students move with it), or disable it without touching any students.</p></div>
+      </div>
+      <div class="card" id="newClass">
+        <h3>Create class</h3>
+        <p class="hint">A class belongs to a teacher. It appears in that teacher's dashboard pickers immediately.</p>
+        <div class="grid-2">
+          <div class="field"><label for="cTeacher">Teacher code</label><select id="cTeacher"><option value="">Choose teacher</option></select></div>
+          <div class="field"><label for="cName">Class name</label><input id="cName" placeholder="7MAB" style="text-transform:uppercase"/></div>
+        </div>
+        <div class="row-actions">
+          <button class="btn-primary" id="createClassBtn"><span class="spinner"></span><span class="btn-label">Create class</span></button>
+        </div>
+        <div id="classMsg" class="msg"></div>
+      </div>
+      <div class="card">
+        <div class="page-head" style="margin-bottom:12px"><div><h3>All classes</h3></div></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Class</th><th>Teacher</th><th>Teacher code</th><th>Students</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="classBody"></tbody>
+          </table>
+        </div>
+        <div class="empty" id="classEmpty">No classes yet.</div>
+        <div id="classTableMsg" class="msg"></div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="view" id="view-settings">
+      <div class="page-head">
+        <div><h2>Settings</h2><p>Set soft caps to watch overall size and cost. Caps are a guardrail on the Overview page — they warn you, they don't block sign-ins.</p></div>
+      </div>
+      <div class="card">
+        <h3>Capacity caps</h3>
+        <p class="hint">These drive the coloured bars on the Overview. Set to 0 to hide a cap. Saved to your Firebase project so they follow you across devices.</p>
+        <div class="grid-3">
+          <div class="field"><label for="capTeachers">Max teachers</label><input id="capTeachers" type="number" min="0" step="1" placeholder="0"/></div>
+          <div class="field"><label for="capClasses">Max classes</label><input id="capClasses" type="number" min="0" step="1" placeholder="0"/></div>
+          <div class="field"><label for="capStudents">Max students</label><input id="capStudents" type="number" min="0" step="1" placeholder="0"/></div>
+        </div>
+        <div class="row-actions">
+          <button class="btn-primary" id="saveCapsBtn"><span class="spinner"></span><span class="btn-label">Save caps</span></button>
+        </div>
+        <div id="capsMsg" class="msg"></div>
+      </div>
+      <div class="card">
+        <h3>Admin account</h3>
+        <p class="hint">You are signed in as the admin account below. To change the password, use the Firebase Console → Authentication.</p>
+        <p style="margin:0"><span class="code" id="settingsWho">—</span></p>
+        <div class="callout" style="margin:14px 0 0">
+          <strong>Firebase Console:</strong> for anything not covered here (password reset, deleting the whole project, billing), open the
+          <a href="https://console.firebase.google.com/project/mills-maths-tools" target="_blank" rel="noopener">Firebase Console</a>.
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- edit student modal -->
+<div id="editBackdrop" class="backdrop" role="dialog" aria-modal="true">
+  <div class="modal">
+    <h3>Edit student</h3>
+    <form id="editForm">
+      <input type="hidden" id="editCode"/>
+      <div class="grid-2">
+        <div class="field"><label for="editFirst">First name</label><input id="editFirst"/></div>
+        <div class="field"><label for="editLast">Surname</label><input id="editLast"/></div>
+      </div>
+      <div class="grid-2">
+        <div class="field"><label for="editClass">Class</label><input id="editClass" style="text-transform:uppercase"/></div>
+        <div class="field"><label for="editTeacher">Teacher code</label><select id="editTeacher"><option value="">No teacher (legacy)</option></select></div>
+      </div>
+      <div class="row-actions" style="margin-top:6px">
+        <button type="submit" class="btn-primary" id="saveEditBtn"><span class="spinner"></span><span class="btn-label">Save changes</span></button>
+        <button type="button" class="btn-neutral" id="cancelEditBtn">Cancel</button>
+      </div>
+      <div id="editMsg" class="msg"></div>
+    </form>
+  </div>
+</div>
+
+<!-- rename class modal -->
+<div id="renameBackdrop" class="backdrop" role="dialog" aria-modal="true">
+  <div class="modal">
+    <h3>Rename class</h3>
+    <form id="renameForm">
+      <input type="hidden" id="renameOldId"/>
+      <p class="hint" id="renameHint" style="margin-top:0"></p>
+      <div class="field"><label for="renameNew">New class name</label><input id="renameNew" style="text-transform:uppercase"/></div>
+      <div class="row-actions">
+        <button type="submit" class="btn-primary" id="renameSaveBtn"><span class="spinner"></span><span class="btn-label">Rename &amp; move students</span></button>
+        <button type="button" class="btn-neutral" id="renameCancelBtn">Cancel</button>
+      </div>
+      <div id="renameMsg" class="msg"></div>
+    </form>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+  // Public web config — safe to ship (matches portal/shared/firebaseConfig.js).
+  const firebaseConfig = {
+    apiKey: "AIzaSyDYoJuHGslYY-cvV2rtuLkL6bE_hRDOESw",
+    authDomain: "mills-maths-tools.firebaseapp.com",
+    projectId: "mills-maths-tools",
+    storageBucket: "mills-maths-tools.firebasestorage.app",
+    messagingSenderId: "835000359454",
+    appId: "1:835000359454:web:d7876be83ee367b5006c0f",
+    measurementId: "G-35YCH5NJEG"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // ---- state ----
+  let teachers = [];   // {id, teacherCode, teacherName, school, active}
+  let students = [];   // {id, studentCode, name, firstName, surname, className, teacherCode, teacherName, active}
+  let classes = [];    // {id, name, teacherCode, active}
+  let caps = { teachers:0, classes:0, students:0 };
+  const selected = new Set();
+
+  // ---- helpers ----
+  const $ = id => document.getElementById(id);
+  const esc = v => String(v ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
+  const normCode = v => String(v||"").trim().toUpperCase().replace(/[^A-Z0-9-]/g,"");
+  const normClass = v => String(v||"").trim().toUpperCase();
+  const setLoading = (btn,on)=>{ if(!btn) return; btn.classList.toggle("loading",on); btn.disabled=on; };
+  function msg(el,text,type="ok"){ el.textContent=text; el.className=`msg show ${type}`; clearTimeout(el._t); el._t=setTimeout(()=>{el.className="msg";},6000); }
+  function toast(text,type=""){ const t=document.createElement("div"); t.className=`toast ${type}`; t.textContent=text; $("toast").appendChild(t); setTimeout(()=>{ t.style.opacity="0"; t.style.transition="opacity .3s"; setTimeout(()=>t.remove(),300); },3200); }
+  async function copyText(text){ try{ await navigator.clipboard.writeText(text); return true; }catch{ return false; } }
+
+  function splitName(full){ const p=String(full||"").trim().replace(/\s+/g," ").split(" ").filter(Boolean); if(!p.length) return {firstName:"",surname:""}; if(p.length===1) return {firstName:p[0],surname:""}; return {firstName:p[0],surname:p.slice(1).join(" ")}; }
+  const buildName = (f,s)=>[f,s].map(x=>String(x||"").trim()).filter(Boolean).join(" ");
+  const digits4 = ()=>String(Math.floor(Math.random()*10000)).padStart(4,"0");
+  const surnameStem = name=>{ const {surname,firstName}=splitName(name); return String(surname||firstName||"TEACHER").toUpperCase().replace(/[^A-Z]/g,"").slice(0,12)||"TEACHER"; };
+  const STU_ALPHABET="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  function randStudentCode(){ let c=""; for(let i=0;i<6;i++) c+=STU_ALPHABET[Math.floor(Math.random()*STU_ALPHABET.length)]; return c; }
+  async function uniqueStudentCode(){ for(let i=0;i<40;i++){ const c=randStudentCode(); const s=await getDoc(doc(db,"students",c)); if(!s.exists()) return c; } throw new Error("Could not generate a unique student code — try again."); }
+  async function uniqueTeacherCode(name){ const stem=surnameStem(name); for(let i=0;i<80;i++){ const c=`${stem}${digits4()}`; const s=await getDoc(doc(db,"teachers",c)); if(!s.exists()) return c; } throw new Error("Could not generate a unique teacher code — try again."); }
+  const teacherByCode = code => teachers.find(t=>t.teacherCode===code) || null;
+  const classId = (teacherCode,name)=>`${teacherCode}__${normClass(name)}`;
+
+  function teacherStats(code){
+    const list=students.filter(s=>s.teacherCode===code);
+    const active=list.filter(s=>s.active!==false);
+    const cls=[...new Set(list.map(s=>s.className).filter(Boolean))].sort();
+    return { total:list.length, active:active.length, classes:cls };
+  }
+  function teacherOptions(includeBlank,blankLabel,includeInactive){
+    const opts=teachers.filter(t=>includeInactive||t.active!==false)
+      .sort((a,b)=>String(a.teacherName||"").localeCompare(String(b.teacherName||"")))
+      .map(t=>`<option value="${esc(t.teacherCode)}">${esc(t.teacherName||"Teacher")} (${esc(t.teacherCode)})${t.active===false?" — inactive":""}</option>`).join("");
+    return (includeBlank?`<option value="">${esc(blankLabel)}</option>`:"")+opts;
+  }
+
+  // ================= LOADERS =================
+  async function loadAll(){
+    const [tSnap,sSnap,cSnap] = await Promise.all([
+      getDocs(collection(db,"teachers")),
+      getDocs(collection(db,"students")),
+      getDocs(collection(db,"classes")).catch(()=>({docs:[]})),
+    ]);
+    teachers = tSnap.docs.map(d=>({ id:d.id, teacherCode:d.id, ...d.data() }));
+    students = sSnap.docs.map(d=>{ const x=d.data(); return { id:d.id, ...x, studentCode:x.studentCode||d.id, name:x.name||buildName(x.firstName,x.surname), teacherCode:x.teacherCode||"", teacherName:x.teacherName||x.teacher||"" }; });
+    classes = cSnap.docs.map(d=>({ id:d.id, name:normClass(d.data().name), teacherCode:d.data().teacherCode||"", active:d.data().active!==false }));
+    try{ const capSnap=await getDoc(doc(db,"admin","limits")); if(capSnap.exists()){ const c=capSnap.data(); caps={ teachers:+c.teachers||0, classes:+c.classes||0, students:+c.students||0 }; } }catch{ /* rules may not include admin/limits yet */ }
+    renderEverything();
+  }
+
+  function renderEverything(){
+    populateTeacherSelects();
+    renderOverview();
+    renderTeachers();
+    renderStudents();
+    renderClasses();
+    fillCapsForm();
+    $("navTeachers").textContent=teachers.length;
+    $("navStudents").textContent=students.length;
+    $("navClasses").textContent=classes.length;
+  }
+
+  function populateTeacherSelects(){
+    const keep = id=>$(id)?$(id).value:"";
+    const kS=keep("sTeacher"),kB=keep("bTeacher"),kC=keep("cTeacher"),kBulk=keep("bulkTeacher"),kEdit=keep("editTeacher"),kSF=keep("studentTeacherFilter");
+    $("sTeacher").innerHTML=teacherOptions(true,"Choose teacher",false);
+    $("bTeacher").innerHTML=teacherOptions(true,"Choose teacher",false);
+    $("cTeacher").innerHTML=teacherOptions(true,"Choose teacher",false);
+    $("bulkTeacher").innerHTML=teacherOptions(true,"Reassign to teacher…",true);
+    $("editTeacher").innerHTML=teacherOptions(true,"No teacher (legacy)",true);
+    $("studentTeacherFilter").innerHTML=teacherOptions(true,"All teachers",true);
+    const restore=(id,v)=>{ if(v&&[...$(id).options].some(o=>o.value===v)) $(id).value=v; };
+    restore("sTeacher",kS);restore("bTeacher",kB);restore("cTeacher",kC);restore("bulkTeacher",kBulk);restore("editTeacher",kEdit);restore("studentTeacherFilter",kSF);
+    // class filter options
+    const kCF=keep("studentClassFilter");
+    const clsNames=[...new Set([...classes.map(c=>c.name),...students.map(s=>s.className)].filter(Boolean))].sort();
+    $("studentClassFilter").innerHTML='<option value="">All classes</option>'+clsNames.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join("");
+    if(kCF&&clsNames.includes(kCF)) $("studentClassFilter").value=kCF;
+  }
+
+  // ================= OVERVIEW =================
+  function capBar(count,cap){
+    if(!cap||cap<=0) return `<div class="cap"><div class="cap-label"><span>No cap set</span><span>${count}</span></div></div>`;
+    const pct=Math.min(100,Math.round(count/cap*100));
+    const cls=count>cap?"over":(pct>=80?"warn":"");
+    return `<div class="cap"><div class="cap-bar ${cls}"><i style="width:${pct}%"></i></div><div class="cap-label"><span>${count>cap?"Over cap!":pct+"% of cap"}</span><span>${count} / ${cap}</span></div></div>`;
+  }
+  function renderOverview(){
+    const tActive=teachers.filter(t=>t.active!==false).length;
+    const sActive=students.filter(s=>s.active!==false).length;
+    const cActive=classes.filter(c=>c.active!==false).length;
+    $("statCards").innerHTML=`
+      <div class="stat"><div class="k">Teachers</div><div class="v">${teachers.length}</div><div class="d">${tActive} active · ${teachers.length-tActive} inactive</div>${capBar(teachers.length,caps.teachers)}</div>
+      <div class="stat"><div class="k">Classes</div><div class="v">${classes.length}</div><div class="d">${cActive} active</div>${capBar(classes.length,caps.classes)}</div>
+      <div class="stat"><div class="k">Students</div><div class="v">${students.length}</div><div class="d">${sActive} active · ${students.length-sActive} inactive</div>${capBar(students.length,caps.students)}</div>
+      <div class="stat"><div class="k">Avg class size</div><div class="v">${cActive?Math.round(sActive/cActive):0}</div><div class="d">active students ÷ active classes</div></div>`;
+  }
+
+  // ================= TEACHERS =================
+  function renderTeachers(){
+    const term=($("teacherSearch").value||"").trim().toLowerCase();
+    const af=$("teacherActiveFilter").value;
+    let list=teachers.slice().sort((a,b)=>String(a.teacherName||"").localeCompare(String(b.teacherName||"")));
+    list=list.filter(t=>{
+      const active=t.active!==false;
+      if(af==="active"&&!active) return false;
+      if(af==="inactive"&&active) return false;
+      if(term){ const h=[t.teacherName,t.teacherCode,t.school].join(" ").toLowerCase(); if(!h.includes(term)) return false; }
+      return true;
+    });
+    $("teacherEmpty").classList.toggle("show",list.length===0);
+    $("teacherBody").innerHTML=list.map(t=>{
+      const st=teacherStats(t.teacherCode); const active=t.active!==false;
+      return `<tr>
+        <td><strong>${esc(t.teacherName||"Unnamed")}</strong></td>
+        <td><span class="code">${esc(t.teacherCode)}</span></td>
+        <td>${esc(t.school||"—")}</td>
+        <td>${st.classes.length?esc(st.classes.join(", ")):"—"}</td>
+        <td>${st.active} active / ${st.total}</td>
+        <td><span class="badge ${active?"active":"inactive"}">${active?"Active":"Inactive"}</span></td>
+        <td><div class="t-actions">
+          <button class="btn-soft btn-tiny" data-ta="copy" data-code="${esc(t.teacherCode)}">Copy</button>
+          <button class="btn-neutral btn-tiny" data-ta="students" data-code="${esc(t.teacherCode)}">Students</button>
+          <button class="${active?"btn-danger":"btn-good"} btn-tiny" data-ta="toggle" data-code="${esc(t.teacherCode)}">${active?"Disable":"Reactivate"}</button>
+          <button class="btn-ghost btn-tiny" data-ta="delete" data-code="${esc(t.teacherCode)}" style="color:var(--bad)">Delete</button>
+        </div></td></tr>`;
+    }).join("");
+  }
+
+  async function createTeacher(){
+    const name=$("tName").value.trim(); const school=$("tSchool").value.trim();
+    if(!name) throw new Error("Enter a teacher name.");
+    const code=await uniqueTeacherCode(name);
+    await setDoc(doc(db,"teachers",code),{ teacherCode:code, teacherName:name, school, active:true, createdAt:serverTimestamp(), updatedAt:serverTimestamp() });
+    return { code, name };
+  }
+
+  // ================= STUDENTS =================
+  function visibleStudents(){
+    const term=($("studentSearch").value||"").trim().toLowerCase();
+    const tf=$("studentTeacherFilter").value, cf=$("studentClassFilter").value, af=$("studentActiveFilter").value;
+    return students.filter(s=>{
+      const active=s.active!==false;
+      if(tf&&s.teacherCode!==tf) return false;
+      if(cf&&s.className!==cf) return false;
+      if(af==="active"&&!active) return false;
+      if(af==="inactive"&&active) return false;
+      if(term){ const h=[s.name,s.firstName,s.surname,s.className,s.teacherName,s.teacherCode,s.studentCode].join(" ").toLowerCase(); if(!h.includes(term)) return false; }
+      return true;
+    }).sort((a,b)=> String(a.className||"").localeCompare(String(b.className||"")) || String(a.name||"").localeCompare(String(b.name||"")));
+  }
+  function renderStudents(){
+    const vis=visibleStudents();
+    // prune selection to visible
+    const visCodes=new Set(vis.map(s=>s.studentCode||s.id));
+    [...selected].forEach(c=>{ if(!visCodes.has(c)) selected.delete(c); });
+    $("studentEmpty").classList.toggle("show",vis.length===0);
+    $("studentBody").innerHTML=vis.map(s=>{
+      const code=s.studentCode||s.id; const active=s.active!==false;
+      return `<tr>
+        <td class="check-cell"><input type="checkbox" class="rowcheck" data-code="${esc(code)}" ${selected.has(code)?"checked":""}></td>
+        <td><strong>${esc(s.name||"Unnamed")}</strong></td>
+        <td>${esc(s.className||"—")}</td>
+        <td><span class="code">${esc(code)}</span></td>
+        <td>${esc(s.teacherName||"—")}</td>
+        <td>${s.teacherCode?`<span class="code">${esc(s.teacherCode)}</span>`:`<span class="badge legacy">Legacy</span>`}</td>
+        <td><span class="badge ${active?"active":"inactive"}">${active?"Active":"Inactive"}</span></td>
+        <td><div class="t-actions">
+          <button class="btn-soft btn-tiny" data-sa="copy" data-code="${esc(code)}">Copy</button>
+          <button class="btn-neutral btn-tiny" data-sa="edit" data-code="${esc(code)}">Edit</button>
+          <button class="${active?"btn-danger":"btn-good"} btn-tiny" data-sa="toggle" data-code="${esc(code)}">${active?"Disable":"On"}</button>
+          <button class="btn-ghost btn-tiny" data-sa="delete" data-code="${esc(code)}" style="color:var(--bad)">Del</button>
+        </div></td></tr>`;
+    }).join("");
+    updateBulkUI();
+  }
+  function updateBulkUI(){
+    const n=selected.size;
+    $("selCount").textContent=`${n} selected`;
+    const vis=visibleStudents(); const visN=vis.length;
+    $("selectAll").checked=visN>0&&n>=visN&&vis.every(s=>selected.has(s.studentCode||s.id));
+    ["bulkAssignBtn","bulkClassBtn","bulkDisableBtn","bulkReactivateBtn","bulkDeleteBtn"].forEach(id=>{ $(id).disabled=n===0; });
+  }
+  const selectedStudents = ()=>students.filter(s=>selected.has(s.studentCode||s.id));
+
+  async function createStudentDoc({firstName,surname,className,teacherCode}){
+    const first=String(firstName||"").trim(), last=String(surname||"").trim();
+    const cls=normClass(className); const tc=normCode(teacherCode);
+    const teacher=teacherByCode(tc);
+    const name=buildName(first,last);
+    if(!name) throw new Error("Enter a student name.");
+    if(!cls) throw new Error("Enter a class name.");
+    if(!tc||!teacher) throw new Error("Choose a valid teacher code.");
+    const code=await uniqueStudentCode();
+    await setDoc(doc(db,"students",code),{
+      studentCode:code, firstName:first, surname:last, name, className:cls,
+      teacher:teacher.teacherName||"", teacherName:teacher.teacherName||"", teacherCode:tc,
+      school:teacher.school||"", active:true, createdAt:serverTimestamp(), updatedAt:serverTimestamp()
+    });
+    // ensure the class exists as a saved class
+    await ensureClassDoc(tc,cls);
+    return { code, name, className:cls };
+  }
+  function buildCodesText(list,heading){
+    const grouped=list.reduce((a,s)=>{ const c=s.className||"No class"; (a[c]=a[c]||[]).push(s); return a; },{});
+    const sections=Object.keys(grouped).sort().map(c=>{
+      const rows=grouped[c].slice().sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""))).map(s=>`${s.name||buildName(s.firstName,s.surname)} — ${s.studentCode||s.id}`).join("\n");
+      return `${c}\n${rows}`;
+    });
+    return `${heading||"MMT Student Codes"}\n\n${sections.join("\n\n")}`.trim();
+  }
+
+  // ================= CLASSES =================
+  async function ensureClassDoc(teacherCode,name){
+    const cls=normClass(name); const tc=normCode(teacherCode); if(!cls||!tc) return;
+    const id=classId(tc,cls);
+    if(classes.some(c=>c.id===id&&c.active)) return;
+    try{
+      await setDoc(doc(db,"classes",id),{ name:cls, teacherCode:tc, active:true, createdAt:serverTimestamp(), updatedAt:serverTimestamp() },{merge:true});
+    }catch(err){ console.warn("ensureClassDoc failed (non-fatal):",err); }
+  }
+  function classStudentCount(c){ return students.filter(s=>s.teacherCode===c.teacherCode && (s.className||"")===c.name).length; }
+  function renderClasses(){
+    const list=classes.slice().sort((a,b)=> String(a.name).localeCompare(String(b.name)));
+    $("classEmpty").classList.toggle("show",list.length===0);
+    $("classBody").innerHTML=list.map(c=>{
+      const t=teacherByCode(c.teacherCode); const n=classStudentCount(c); const active=c.active!==false;
+      return `<tr>
+        <td><strong>${esc(c.name)}</strong></td>
+        <td>${esc(t?(t.teacherName||"Teacher"):"—")}</td>
+        <td><span class="code">${esc(c.teacherCode)}</span></td>
+        <td>${n} student${n===1?"":"s"}</td>
+        <td><span class="badge ${active?"active":"inactive"}">${active?"Active":"Inactive"}</span></td>
+        <td><div class="t-actions">
+          <button class="btn-neutral btn-tiny" data-ca="rename" data-id="${esc(c.id)}">Rename</button>
+          <button class="${active?"btn-danger":"btn-good"} btn-tiny" data-ca="toggle" data-id="${esc(c.id)}">${active?"Disable":"Reactivate"}</button>
+          <button class="btn-ghost btn-tiny" data-ca="delete" data-id="${esc(c.id)}" style="color:var(--bad)">Delete</button>
+        </div></td></tr>`;
+    }).join("");
+  }
+  const classById = id => classes.find(c=>c.id===id) || null;
+
+  // ================= CAPS =================
+  function fillCapsForm(){ $("capTeachers").value=caps.teachers||""; $("capClasses").value=caps.classes||""; $("capStudents").value=caps.students||""; }
+
+  // ================= WIRING =================
+  // nav
+  document.querySelectorAll(".nav-item").forEach(btn=>{
+    btn.addEventListener("click",()=>gotoView(btn.dataset.view));
+  });
+  function gotoView(view,opts={}){
+    document.querySelectorAll(".nav-item").forEach(b=>b.classList.toggle("active",b.dataset.view===view));
+    document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id===`view-${view}`));
+    if(opts.open){ const el=$(opts.open); if(el){ el.scrollIntoView({behavior:"smooth",block:"start"}); const focusFirst=el.querySelector("input,textarea,select"); if(focusFirst) setTimeout(()=>focusFirst.focus(),250); } }
+    window.scrollTo({top:0,behavior:"smooth"});
+  }
+  document.querySelectorAll(".qa").forEach(b=>b.addEventListener("click",()=>gotoView(b.dataset.goto,{open:b.dataset.open})));
+  $("ovRefresh").addEventListener("click",()=>doRefresh($("ovRefresh")));
+  $("refreshAllBtn").addEventListener("click",()=>doRefresh($("refreshAllBtn")));
+  async function doRefresh(btn){ setLoading(btn,true); try{ await loadAll(); toast("Data refreshed","ok"); }catch(e){ toast(e.message||"Refresh failed","bad"); } finally{ setLoading(btn,false); } }
+
+  // teachers
+  $("createTeacherBtn").addEventListener("click",async()=>{
+    setLoading($("createTeacherBtn"),true);
+    try{ const t=await createTeacher(); msg($("teacherMsg"),`Created ${t.name} — teacher code ${t.code}.`,"ok"); toast(`Teacher code ${t.code} created`,"ok"); $("tName").value="";$("tSchool").value=""; await loadAll(); }
+    catch(e){ msg($("teacherMsg"),writeErr(e),"bad"); }
+    finally{ setLoading($("createTeacherBtn"),false); }
+  });
+  $("clearTeacherBtn").addEventListener("click",()=>{ $("tName").value="";$("tSchool").value=""; });
+  $("copyTeachersBtn").addEventListener("click",async()=>{
+    if(!teachers.length) return toast("No teachers to copy","warn");
+    const text="MMT Teacher Codes\n\n"+teachers.slice().sort((a,b)=>String(a.teacherName||"").localeCompare(String(b.teacherName||""))).map(t=>{ const st=teacherStats(t.teacherCode); return `${t.teacherName||"Teacher"} — ${t.teacherCode} — ${t.school||"No school"} — ${st.classes.join(", ")||"No classes"} — ${st.active} active students`; }).join("\n");
+    const okCopy=await copyText(text); toast(okCopy?"Teacher list copied":"Copy failed", okCopy?"ok":"bad");
+  });
+  ["teacherSearch","teacherActiveFilter"].forEach(id=>$(id).addEventListener("input",renderTeachers));
+  $("teacherBody").addEventListener("click",async(e)=>{
+    const b=e.target.closest("button[data-ta]"); if(!b) return;
+    const code=normCode(b.dataset.code); const t=teacherByCode(code); if(!t) return;
+    const action=b.dataset.ta;
+    try{
+      if(action==="copy"){ await copyText(`${t.teacherName||"Teacher"} — ${code}`); toast("Copied teacher code","ok"); }
+      else if(action==="students"){ gotoView("students"); $("studentTeacherFilter").value=code; renderStudents(); toast(`Filtered students for ${t.teacherName||code}`); }
+      else if(action==="toggle"){ const active=t.active!==false; await updateDoc(doc(db,"teachers",code),{active:!active,updatedAt:serverTimestamp()}); toast(`${t.teacherName||code} ${active?"disabled":"reactivated"}`,"ok"); await loadAll(); }
+      else if(action==="delete"){
+        const st=teacherStats(code);
+        const warn=st.total?`\n\nThis teacher still has ${st.total} student(s). Those students will become "Legacy" (no teacher). Consider reassigning them first.`:"";
+        if(!confirm(`Delete teacher ${t.teacherName||code} (${code})?${warn}`)) return;
+        await deleteDoc(doc(db,"teachers",code)); toast(`Deleted ${t.teacherName||code}`,"ok"); await loadAll();
+      }
+    }catch(err){ toast(writeErr(err),"bad"); }
+  });
+
+  // students single/bulk
+  $("addSingleBtn").addEventListener("click",async()=>{
+    setLoading($("addSingleBtn"),true);
+    try{ const s=await createStudentDoc({firstName:$("sFirst").value,surname:$("sLast").value,className:$("sClass").value,teacherCode:$("sTeacher").value});
+      msg($("singleMsg"),`Created ${s.name} in ${s.className} — code ${s.code}.`,"ok"); toast(`Student code ${s.code} created`,"ok");
+      $("sFirst").value="";$("sLast").value=""; await loadAll();
+    }catch(e){ msg($("singleMsg"),writeErr(e),"bad"); }
+    finally{ setLoading($("addSingleBtn"),false); }
+  });
+  $("clearSingleBtn").addEventListener("click",()=>{ ["sFirst","sLast","sClass"].forEach(id=>$(id).value=""); $("sTeacher").value=""; });
+  $("bulkAddBtn").addEventListener("click",async()=>{
+    setLoading($("bulkAddBtn"),true);
+    try{
+      const lines=$("bNames").value.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+      const cls=normClass($("bClass").value); const tc=$("bTeacher").value;
+      if(!lines.length) throw new Error("Paste at least one student.");
+      if(!cls) throw new Error("Enter a class name.");
+      if(!tc) throw new Error("Choose a teacher code.");
+      const created=[]; const failed=[];
+      for(const line of lines){ const {firstName,surname}=splitName(line); try{ const s=await createStudentDoc({firstName,surname,className:cls,teacherCode:tc}); created.push({name:s.name,studentCode:s.code,className:cls,firstName,surname}); }catch(err){ failed.push(line); } }
+      if(created.length){ await copyText(buildCodesText(created,`${cls} Student Codes`)); }
+      msg($("bulkMsg"),`Created ${created.length} of ${lines.length} student code${created.length===1?"":"s"}${failed.length?` (${failed.length} failed)`:""}. Codes copied to clipboard.`, failed.length?"warn":"ok");
+      toast(`${created.length} student codes created`,"ok");
+      $("bNames").value=""; await loadAll();
+    }catch(e){ msg($("bulkMsg"),writeErr(e),"bad"); }
+    finally{ setLoading($("bulkAddBtn"),false); }
+  });
+  $("clearBulkBtn").addEventListener("click",()=>{ $("bClass").value="";$("bTeacher").value="";$("bNames").value=""; });
+
+  ["studentSearch","studentTeacherFilter","studentClassFilter","studentActiveFilter"].forEach(id=>$(id).addEventListener("input",renderStudents));
+  $("copyVisibleBtn").addEventListener("click",async()=>{ const vis=visibleStudents(); if(!vis.length) return toast("Nothing to copy","warn"); await copyText(buildCodesText(vis)); toast("Visible codes copied","ok"); });
+
+  $("studentBody").addEventListener("change",e=>{ const c=e.target.closest("input.rowcheck"); if(!c) return; const code=normCode(c.dataset.code); if(c.checked) selected.add(code); else selected.delete(code); updateBulkUI(); });
+  $("selectAll").addEventListener("change",()=>{ const vis=visibleStudents(); if($("selectAll").checked) vis.forEach(s=>selected.add(s.studentCode||s.id)); else vis.forEach(s=>selected.delete(s.studentCode||s.id)); renderStudents(); });
+  $("studentBody").addEventListener("click",async(e)=>{
+    const b=e.target.closest("button[data-sa]"); if(!b) return;
+    const code=normCode(b.dataset.code); const s=students.find(x=>(x.studentCode||x.id)===code); if(!s) return;
+    const action=b.dataset.sa;
+    try{
+      if(action==="copy"){ await copyText(`${s.name} — ${code}`); toast("Copied student code","ok"); }
+      else if(action==="edit"){ openEdit(s); }
+      else if(action==="toggle"){ const active=s.active!==false; await updateDoc(doc(db,"students",code),{active:!active,updatedAt:serverTimestamp()}); toast(`${s.name} ${active?"disabled":"reactivated"}`,"ok"); await loadAll(); }
+      else if(action==="delete"){ if(!confirm(`Delete ${s.name||code} (${code})? Existing achievements stay, but this code will no longer validate in quizzes.`)) return; await deleteDoc(doc(db,"students",code)); selected.delete(code); toast(`Deleted ${s.name||code}`,"ok"); await loadAll(); }
+    }catch(err){ toast(writeErr(err),"bad"); }
+  });
+
+  // bulk student actions
+  $("bulkDisableBtn").addEventListener("click",()=>bulkActive(false));
+  $("bulkReactivateBtn").addEventListener("click",()=>bulkActive(true));
+  async function bulkActive(on){
+    const list=selectedStudents(); if(!list.length) return;
+    if(!confirm(`${on?"Reactivate":"Disable"} ${list.length} selected student${list.length===1?"":"s"}?`)) return;
+    setLoading($(on?"bulkReactivateBtn":"bulkDisableBtn"),true);
+    try{ await batchUpdate(list,{active:on}); toast(`${list.length} student${list.length===1?"":"s"} ${on?"reactivated":"disabled"}`,"ok"); selected.clear(); await loadAll(); }
+    catch(e){ toast(writeErr(e),"bad"); } finally{ setLoading($(on?"bulkReactivateBtn":"bulkDisableBtn"),false); }
+  }
+  $("bulkAssignBtn").addEventListener("click",async()=>{
+    const list=selectedStudents(); const tc=normCode($("bulkTeacher").value);
+    if(!list.length) return; if(!tc) return toast("Choose a teacher first","warn");
+    const t=teacherByCode(tc); if(!t) return toast("Teacher not found","bad");
+    if(!confirm(`Reassign ${list.length} student${list.length===1?"":"s"} to ${t.teacherName||tc}?`)) return;
+    setLoading($("bulkAssignBtn"),true);
+    try{ await batchUpdate(list,{teacherCode:tc,teacherName:t.teacherName||"",teacher:t.teacherName||"",school:t.school||""}); toast(`Reassigned to ${t.teacherName||tc}`,"ok"); selected.clear(); await loadAll(); }
+    catch(e){ toast(writeErr(e),"bad"); } finally{ setLoading($("bulkAssignBtn"),false); }
+  });
+  $("bulkClassBtn").addEventListener("click",async()=>{
+    const list=selectedStudents(); if(!list.length) return;
+    const name=normClass(prompt("Set class for "+list.length+" selected student(s) to:")||""); if(!name) return;
+    setLoading($("bulkClassBtn"),true);
+    try{
+      await batchUpdate(list,{className:name});
+      // ensure the class exists for each affected teacher
+      const tcs=[...new Set(list.map(s=>s.teacherCode).filter(Boolean))];
+      for(const tc of tcs) await ensureClassDoc(tc,name);
+      toast(`Moved ${list.length} to ${name}`,"ok"); selected.clear(); await loadAll();
+    }catch(e){ toast(writeErr(e),"bad"); } finally{ setLoading($("bulkClassBtn"),false); }
+  });
+  $("bulkDeleteBtn").addEventListener("click",async()=>{
+    const list=selectedStudents(); if(!list.length) return;
+    if(!confirm(`Permanently delete ${list.length} student code${list.length===1?"":"s"}? Achievements stay, but these codes will no longer validate.`)) return;
+    setLoading($("bulkDeleteBtn"),true);
+    try{ const batch=writeBatch(db); list.forEach(s=>batch.delete(doc(db,"students",s.studentCode||s.id))); await batch.commit(); toast(`Deleted ${list.length}`,"ok"); selected.clear(); await loadAll(); }
+    catch(e){ toast(writeErr(e),"bad"); } finally{ setLoading($("bulkDeleteBtn"),false); }
+  });
+  async function batchUpdate(list,fields){ const batch=writeBatch(db); list.forEach(s=>batch.update(doc(db,"students",s.studentCode||s.id),{...fields,updatedAt:serverTimestamp()})); await batch.commit(); }
+
+  // edit modal
+  function openEdit(s){
+    $("editCode").value=s.studentCode||s.id;
+    $("editFirst").value=s.firstName||splitName(s.name).firstName;
+    $("editLast").value=s.surname||splitName(s.name).surname;
+    $("editClass").value=s.className||"";
+    $("editTeacher").value=s.teacherCode||"";
+    $("editMsg").className="msg";
+    $("editBackdrop").classList.add("show"); $("editFirst").focus();
+  }
+  const closeEdit=()=>$("editBackdrop").classList.remove("show");
+  $("cancelEditBtn").addEventListener("click",closeEdit);
+  $("editBackdrop").addEventListener("click",e=>{ if(e.target===$("editBackdrop")) closeEdit(); });
+  $("editForm").addEventListener("submit",async(e)=>{
+    e.preventDefault(); setLoading($("saveEditBtn"),true);
+    try{
+      const code=normCode($("editCode").value);
+      const first=$("editFirst").value.trim(), last=$("editLast").value.trim();
+      const cls=normClass($("editClass").value); const tc=normCode($("editTeacher").value); const t=teacherByCode(tc);
+      const name=buildName(first,last);
+      if(!name) throw new Error("Enter a student name.");
+      if(!cls) throw new Error("Enter a class name.");
+      await updateDoc(doc(db,"students",code),{ firstName:first, surname:last, name, className:cls, teacherCode:tc||"", teacherName:t?.teacherName||"", teacher:t?.teacherName||"", school:t?.school||"", updatedAt:serverTimestamp() });
+      if(tc&&cls) await ensureClassDoc(tc,cls);
+      closeEdit(); toast(`Updated ${name}`,"ok"); await loadAll();
+    }catch(err){ msg($("editMsg"),writeErr(err),"bad"); }
+    finally{ setLoading($("saveEditBtn"),false); }
+  });
+
+  // classes
+  $("createClassBtn").addEventListener("click",async()=>{
+    setLoading($("createClassBtn"),true);
+    try{
+      const tc=normCode($("cTeacher").value); const name=normClass($("cName").value);
+      if(!tc) throw new Error("Choose a teacher code.");
+      if(!name) throw new Error("Enter a class name.");
+      const id=classId(tc,name);
+      const existing=classById(id);
+      await setDoc(doc(db,"classes",id),{ name, teacherCode:tc, active:true, updatedAt:serverTimestamp(), ...(existing?{}:{createdAt:serverTimestamp()}) },{merge:true});
+      msg($("classMsg"),`${existing?"Reactivated":"Created"} class ${name}.`,"ok"); toast(`Class ${name} saved`,"ok");
+      $("cName").value=""; await loadAll();
+    }catch(e){ msg($("classMsg"),writeErr(e),"bad"); }
+    finally{ setLoading($("createClassBtn"),false); }
+  });
+  $("classBody").addEventListener("click",async(e)=>{
+    const b=e.target.closest("button[data-ca]"); if(!b) return;
+    const c=classById(b.dataset.id); if(!c) return; const action=b.dataset.ca;
+    try{
+      if(action==="toggle"){ await updateDoc(doc(db,"classes",c.id),{active:c.active===false,updatedAt:serverTimestamp()}); toast(`Class ${c.name} ${c.active===false?"reactivated":"disabled"}`,"ok"); await loadAll(); }
+      else if(action==="rename"){ openRename(c); }
+      else if(action==="delete"){
+        const n=classStudentCount(c);
+        if(n>0) return toast(`${c.name} still has ${n} student(s). Reassign or move them first.`,"warn");
+        if(!confirm(`Delete empty class ${c.name}? Students are unaffected.`)) return;
+        await deleteDoc(doc(db,"classes",c.id)); toast(`Deleted ${c.name}`,"ok"); await loadAll();
+      }
+    }catch(err){ toast(writeErr(err),"bad"); }
+  });
+  function openRename(c){
+    $("renameOldId").value=c.id;
+    const n=classStudentCount(c);
+    $("renameHint").textContent=`${c.name} · ${teacherByCode(c.teacherCode)?.teacherName||c.teacherCode} · ${n} student${n===1?"":"s"} will be moved to the new name.`;
+    $("renameNew").value=c.name; $("renameMsg").className="msg";
+    $("renameBackdrop").classList.add("show"); setTimeout(()=>$("renameNew").focus(),100);
+  }
+  const closeRename=()=>$("renameBackdrop").classList.remove("show");
+  $("renameCancelBtn").addEventListener("click",closeRename);
+  $("renameBackdrop").addEventListener("click",e=>{ if(e.target===$("renameBackdrop")) closeRename(); });
+  $("renameForm").addEventListener("submit",async(e)=>{
+    e.preventDefault(); setLoading($("renameSaveBtn"),true);
+    try{
+      const old=classById($("renameOldId").value); if(!old) throw new Error("Class not found.");
+      const newName=normClass($("renameNew").value); if(!newName) throw new Error("Enter a new class name.");
+      if(newName===old.name){ closeRename(); return; }
+      const newId=classId(old.teacherCode,newName);
+      if(classes.some(c=>c.id===newId&&c.active)) throw new Error(`${old.teacherCode} already has a class called ${newName}.`);
+      const affected=students.filter(s=>s.teacherCode===old.teacherCode && (s.className||"")===old.name);
+      const batch=writeBatch(db);
+      batch.set(doc(db,"classes",newId),{ name:newName, teacherCode:old.teacherCode, active:true, createdAt:serverTimestamp(), updatedAt:serverTimestamp() },{merge:true});
+      affected.forEach(s=>batch.update(doc(db,"students",s.studentCode||s.id),{className:newName,updatedAt:serverTimestamp()}));
+      batch.delete(doc(db,"classes",old.id));
+      await batch.commit();
+      closeRename(); toast(`Renamed ${old.name} → ${newName} (${affected.length} moved)`,"ok"); await loadAll();
+    }catch(err){ msg($("renameMsg"),writeErr(err),"bad"); }
+    finally{ setLoading($("renameSaveBtn"),false); }
+  });
+
+  // caps
+  $("saveCapsBtn").addEventListener("click",async()=>{
+    setLoading($("saveCapsBtn"),true);
+    try{
+      const next={ teachers:Math.max(0,+$("capTeachers").value||0), classes:Math.max(0,+$("capClasses").value||0), students:Math.max(0,+$("capStudents").value||0) };
+      await setDoc(doc(db,"admin","limits"),{ ...next, updatedAt:serverTimestamp() },{merge:true});
+      caps=next; renderOverview(); msg($("capsMsg"),"Caps saved.","ok"); toast("Caps saved","ok");
+    }catch(e){ msg($("capsMsg"),writeErr(e)+" (If this fails, the admin/limits rule may not be deployed yet.)","bad"); }
+    finally{ setLoading($("saveCapsBtn"),false); }
+  });
+
+  // ---- error prettifier: distinguish permission (rules) errors ----
+  function writeErr(err){
+    const m=String((err&&err.message)||err||"");
+    if(/permission|insufficient|PERMISSION_DENIED/i.test(m)) return "Permission denied by Firestore rules. Make sure the admin rules are deployed and you're signed in as the admin account.";
+    return m||"Something went wrong.";
+  }
+
+  // ================= AUTH =================
+  $("loginForm").addEventListener("submit",async(e)=>{
+    e.preventDefault(); setLoading($("loginBtn"),true); $("loginMsg").className="msg";
+    try{ await signInWithEmailAndPassword(auth,$("loginEmail").value.trim(),$("loginPassword").value); }
+    catch(err){
+      const m=String(err.code||err.message||"");
+      let friendly="Sign-in failed. Check your email and password.";
+      if(/wrong-password|invalid-credential|invalid-login/i.test(m)) friendly="Incorrect email or password.";
+      else if(/user-not-found/i.test(m)) friendly="No admin account with that email. Create it in Firebase Console → Authentication.";
+      else if(/too-many-requests/i.test(m)) friendly="Too many attempts. Wait a moment and try again.";
+      else if(/network/i.test(m)) friendly="Network error. Check your connection.";
+      msg($("loginMsg"),friendly,"bad");
+    }
+    finally{ setLoading($("loginBtn"),false); }
+  });
+  $("signOutBtn").addEventListener("click",async()=>{ await signOut(auth); });
+
+  onAuthStateChanged(auth,async(user)=>{
+    if(user){
+      $("loginWrap").style.display="none";
+      $("app").style.display="grid";
+      const who=user.email||user.uid;
+      $("whoAmI").textContent=who; $("settingsWho").textContent=who;
+      try{ await loadAll(); }
+      catch(err){
+        // Signed in but not authorised by rules (not the admin uid)
+        toast(writeErr(err),"bad");
+        $("statCards").innerHTML=`<div class="stat" style="grid-column:1/-1"><div class="k">Access</div><div class="v" style="font-size:1.2rem;color:var(--bad)">Not authorised</div><div class="d">You're signed in as <b>${esc(who)}</b>, but the Firestore admin rules don't recognise this account. Confirm this is the admin UID in your rules, or deploy the admin rules. Then Refresh.</div></div>`;
+      }
+    }else{
+      $("app").style.display="none";
+      $("loginWrap").style.display="grid";
+      teachers=[];students=[];classes=[];selected.clear();
+    }
+  });
+</script>
 </body>
 </html>

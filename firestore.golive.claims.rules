@@ -1,13 +1,18 @@
 rules_version = '2';
 
 // Mills Maths Tools — PRODUCTION claim-based rules (Phase 4A go-live + classes +
-// dashboard tasks).
+// dashboard tasks + ADMIN CONSOLE 2026-07).
 //
-// Every client signs in via the secure code-exchange Cloud Functions
-// (exchangeStudentCode / exchangeTeacherCode), which mint a Firebase Auth custom
-// token carrying { role, studentCode | teacherCode, className }. These rules
-// scope all reads/writes to the signed-in owner. Identity + all teacher-set
-// collections are written server-side (Admin SDK) only. Default-deny.
+// Every STUDENT/TEACHER client signs in via the secure code-exchange Cloud
+// Functions (exchangeStudentCode / exchangeTeacherCode), which mint a Firebase
+// Auth custom token carrying { role, studentCode | teacherCode, className }.
+// These rules scope all reads/writes to the signed-in owner. Student/teacher
+// identity + all teacher-set collections are written server-side (Admin SDK) only.
+//
+// The ADMIN CONSOLE (portal/admin/) is the one exception: a single admin signs in
+// with a real Firebase Auth email+password account and manages identity directly.
+// Admin writes are allowed ONLY for the exact admin UID below — no shared secret,
+// no anonymous writes. Everyone else is still default-deny.
 // Deploy by pasting into Firebase Console → Firestore → Rules.
 
 service cloud.firestore {
@@ -20,24 +25,38 @@ service cloud.firestore {
     function myStudent() { return request.auth.token.studentCode; }
     function myTeacher() { return request.auth.token.teacherCode; }
 
-    // Students: a student reads only their own doc; a teacher reads only their
-    // own class (query must filter by teacherCode == claim). No client writes.
-    match /students/{studentCode} {
-      allow read: if (isStudent() && myStudent() == studentCode)
-                  || (isTeacher() && resource.data.teacherCode == myTeacher());
-      allow create, update, delete: if false;
+    // ---- ADMIN ----
+    // The admin console signs in with a normal Firebase Auth account (email +
+    // password). Paste that account's User UID below (Firebase Console →
+    // Authentication → Users → copy the UID). Only this UID can manage identity.
+    // (You can list several UIDs in the array if you ever add a second admin.)
+    function isAdmin() {
+      return authed() && request.auth.uid in [
+        'FQjmfFBvYrYPHljdX5pHfaYcdG82'
+      ];
     }
 
-    // Teachers: a teacher reads only their own doc. No listing. No client writes.
+    // Students: a student reads only their own doc; a teacher reads only their
+    // own class (query must filter by teacherCode == claim). The admin reads,
+    // lists and writes any student. No other client writes.
+    match /students/{studentCode} {
+      allow read: if isAdmin()
+                  || (isStudent() && myStudent() == studentCode)
+                  || (isTeacher() && resource.data.teacherCode == myTeacher());
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Teachers: a teacher reads only their own doc. The admin reads, lists and
+    // writes any teacher. No other client writes, no other listing.
     match /teachers/{teacherCode} {
-      allow get: if isTeacher() && myTeacher() == teacherCode;
-      allow list: if false;
-      allow create, update, delete: if false;
+      allow get: if isAdmin() || (isTeacher() && myTeacher() == teacherCode);
+      allow list: if isAdmin();
+      allow create, update, delete: if isAdmin();
     }
 
     // Achievements: a student reads only their own; a teacher reads only their
     // class. Create-only, and ONLY for the signed-in student's own studentCode.
-    // Never edited or deleted from the client.
+    // Never edited or deleted from the client. (Admin does not need these.)
     match /achievements/{id} {
       allow read: if (isStudent() && resource.data.studentCode == myStudent())
                   || (isTeacher() && resource.data.teacherCode == myTeacher());
@@ -84,11 +103,18 @@ service cloud.firestore {
     }
 
     // Classes: a teacher reads/lists only their own (a query MUST filter by
-    // teacherCode == claim). Written server-side by createClass / setClassActive
-    // (Admin SDK), never from the client. Students never read this collection.
+    // teacherCode == claim). The admin reads, lists and writes any class.
+    // Written server-side by createClass / setClassActive (Admin SDK) for
+    // teachers, or directly by the admin console. Students never read this.
     match /classes/{classId} {
-      allow read: if isTeacher() && resource.data.teacherCode == myTeacher();
-      allow create, update, delete: if false;
+      allow read: if isAdmin() || (isTeacher() && resource.data.teacherCode == myTeacher());
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Admin settings (capacity caps etc.): admin-only, read + write. Nobody else
+    // can see or touch it.
+    match /admin/{docId} {
+      allow read, write: if isAdmin();
     }
 
     // Everything else — including identity writes and any other collection
