@@ -280,7 +280,7 @@
           </div>
           <div class="grid-2">
             <div class="field"><label for="sTeacher">Teacher code</label><select id="sTeacher"><option value="">Choose teacher</option></select></div>
-            <div class="field"><label for="sClass">Class</label><input id="sClass" placeholder="7MAB" style="text-transform:uppercase"/></div>
+            <div class="field"><label for="sClass">Class</label><select id="sClass" disabled><option value="">Choose a teacher first</option></select></div>
           </div>
           <div class="row-actions">
             <button class="btn-primary" id="addSingleBtn"><span class="spinner"></span><span class="btn-label">Generate student code</span></button>
@@ -293,7 +293,7 @@
           <p class="hint">Paste one student per line ("Alex Smith"). Each gets a unique code, the chosen teacher and class. Codes are copied to your clipboard when done.</p>
           <div class="grid-2">
             <div class="field"><label for="bTeacher">Teacher code</label><select id="bTeacher"><option value="">Choose teacher</option></select></div>
-            <div class="field"><label for="bClass">Class</label><input id="bClass" placeholder="7MAB" style="text-transform:uppercase"/></div>
+            <div class="field"><label for="bClass">Class</label><select id="bClass" disabled><option value="">Choose a teacher first</option></select></div>
           </div>
           <div class="field"><label for="bNames">Student names</label><textarea id="bNames" placeholder="Alex Smith&#10;Mia Nguyen&#10;Noah Patel"></textarea></div>
           <div class="row-actions">
@@ -353,7 +353,10 @@
         <div id="classMsg" class="msg"></div>
       </div>
       <div class="card">
-        <div class="page-head" style="margin-bottom:12px"><div><h3>All classes</h3></div></div>
+        <div class="page-head" style="margin-bottom:12px"><div><h3>All classes</h3><p style="margin-top:2px">Every class across every teacher — from saved classes and from student records.</p></div></div>
+        <div class="table-tools">
+          <input class="grow" id="classSearch" placeholder="Search class name or teacher"/>
+        </div>
         <div class="table-wrap">
           <table>
             <thead><tr><th>Class</th><th>Teacher</th><th>Teacher code</th><th>Students</th><th>Status</th><th>Actions</th></tr></thead>
@@ -508,7 +511,12 @@
     ]);
     teachers = tSnap.docs.map(d=>({ id:d.id, teacherCode:d.id, ...d.data() }));
     students = sSnap.docs.map(d=>{ const x=d.data(); return { id:d.id, ...x, studentCode:x.studentCode||d.id, name:x.name||buildName(x.firstName,x.surname), teacherCode:x.teacherCode||"", teacherName:x.teacherName||x.teacher||"" }; });
-    classes = cSnap.docs.map(d=>({ id:d.id, name:normClass(d.data().name), teacherCode:d.data().teacherCode||"", active:d.data().active!==false }));
+    // Classes = union of SAVED class docs AND classes that exist only as a
+    // property on student records (roster-derived). Keyed by teacherCode__NAME.
+    const byId=new Map();
+    cSnap.docs.forEach(d=>{ const x=d.data(); const nm=normClass(x.name); const tc=normCode(x.teacherCode||""); if(!nm||!tc) return; byId.set(classId(tc,nm),{ id:d.id, name:nm, teacherCode:tc, active:x.active!==false, saved:true }); });
+    students.forEach(s=>{ const tc=normCode(s.teacherCode||""); const nm=normClass(s.className||""); if(!tc||!nm) return; const id=classId(tc,nm); if(!byId.has(id)) byId.set(id,{ id, name:nm, teacherCode:tc, active:true, saved:false }); });
+    classes = [...byId.values()];
     try{ const capSnap=await getDoc(doc(db,"admin","limits")); if(capSnap.exists()){ const c=capSnap.data(); caps={ teachers:+c.teachers||0, classes:+c.classes||0, students:+c.students||0 }; } }catch{ /* rules may not include admin/limits yet */ }
     renderEverything();
   }
@@ -541,6 +549,19 @@
     const clsNames=[...new Set([...classes.map(c=>c.name),...students.map(s=>s.className)].filter(Boolean))].sort();
     $("studentClassFilter").innerHTML='<option value="">All classes</option>'+clsNames.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join("");
     if(kCF&&clsNames.includes(kCF)) $("studentClassFilter").value=kCF;
+    // dependent class pickers for adding students (existing classes for the chosen teacher)
+    fillClassPicker("sClass",$("sTeacher").value,keep("sClass"));
+    fillClassPicker("bClass",$("bTeacher").value,keep("bClass"));
+  }
+  function classesForTeacher(tc){ return [...new Set(classes.filter(c=>c.teacherCode===tc && c.active!==false).map(c=>c.name))].sort(); }
+  function fillClassPicker(selId,tc,keep){
+    const sel=$(selId); if(!sel) return;
+    if(!tc){ sel.innerHTML='<option value="">Choose a teacher first</option>'; sel.disabled=true; return; }
+    const names=classesForTeacher(tc);
+    if(!names.length){ sel.innerHTML='<option value="">No classes yet — add one in Classes</option>'; sel.disabled=true; return; }
+    sel.disabled=false;
+    sel.innerHTML='<option value="">Choose class</option>'+names.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join("");
+    if(keep&&names.includes(keep)) sel.value=keep;
   }
 
   // ================= OVERVIEW =================
@@ -654,7 +675,7 @@
     const teacher=teacherByCode(tc);
     const name=buildName(first,last);
     if(!name) throw new Error("Enter a student name.");
-    if(!cls) throw new Error("Enter a class name.");
+    if(!cls) throw new Error("Choose a class (create one in the Classes tab first if the list is empty).");
     if(!tc||!teacher) throw new Error("Choose a valid teacher code.");
     const code=await uniqueStudentCode();
     await setDoc(doc(db,"students",code),{
@@ -686,14 +707,20 @@
   }
   function classStudentCount(c){ return students.filter(s=>s.teacherCode===c.teacherCode && (s.className||"")===c.name).length; }
   function renderClasses(){
-    const list=classes.slice().sort((a,b)=> String(a.name).localeCompare(String(b.name)));
+    const term=($("classSearch")?.value||"").trim().toLowerCase();
+    let list=classes.slice().sort((a,b)=>{
+      const ta=teacherByCode(a.teacherCode)?.teacherName||a.teacherCode;
+      const tb=teacherByCode(b.teacherCode)?.teacherName||b.teacherCode;
+      return String(ta).localeCompare(String(tb)) || String(a.name).localeCompare(String(b.name));
+    });
+    if(term) list=list.filter(c=>{ const t=teacherByCode(c.teacherCode); return [c.name,c.teacherCode,t?.teacherName].join(" ").toLowerCase().includes(term); });
     $("classEmpty").classList.toggle("show",list.length===0);
     $("classBody").innerHTML=list.map(c=>{
       const t=teacherByCode(c.teacherCode); const n=classStudentCount(c); const active=c.active!==false;
       return `<tr>
         <td><strong>${esc(c.name)}</strong></td>
-        <td>${esc(t?(t.teacherName||"Teacher"):"—")}</td>
-        <td><span class="code">${esc(c.teacherCode)}</span></td>
+        <td>${esc(t?(t.teacherName||"Teacher"):"— (no teacher)")}</td>
+        <td>${c.teacherCode?`<span class="code">${esc(c.teacherCode)}</span>`:"—"}</td>
         <td>${n} student${n===1?"":"s"}</td>
         <td><span class="badge ${active?"active":"inactive"}">${active?"Active":"Inactive"}</span></td>
         <td><div class="t-actions">
@@ -764,14 +791,16 @@
     }catch(e){ msg($("singleMsg"),writeErr(e),"bad"); }
     finally{ setLoading($("addSingleBtn"),false); }
   });
-  $("clearSingleBtn").addEventListener("click",()=>{ ["sFirst","sLast","sClass"].forEach(id=>$(id).value=""); $("sTeacher").value=""; });
+  $("sTeacher").addEventListener("change",()=>fillClassPicker("sClass",$("sTeacher").value,""));
+  $("bTeacher").addEventListener("change",()=>fillClassPicker("bClass",$("bTeacher").value,""));
+  $("clearSingleBtn").addEventListener("click",()=>{ ["sFirst","sLast"].forEach(id=>$(id).value=""); $("sTeacher").value=""; fillClassPicker("sClass","",""); });
   $("bulkAddBtn").addEventListener("click",async()=>{
     setLoading($("bulkAddBtn"),true);
     try{
       const lines=$("bNames").value.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
       const cls=normClass($("bClass").value); const tc=$("bTeacher").value;
       if(!lines.length) throw new Error("Paste at least one student.");
-      if(!cls) throw new Error("Enter a class name.");
+      if(!cls) throw new Error("Choose a class (create one in the Classes tab first if the list is empty).");
       if(!tc) throw new Error("Choose a teacher code.");
       const created=[]; const failed=[];
       for(const line of lines){ const {firstName,surname}=splitName(line); try{ const s=await createStudentDoc({firstName,surname,className:cls,teacherCode:tc}); created.push({name:s.name,studentCode:s.code,className:cls,firstName,surname}); }catch(err){ failed.push(line); } }
@@ -782,7 +811,7 @@
     }catch(e){ msg($("bulkMsg"),writeErr(e),"bad"); }
     finally{ setLoading($("bulkAddBtn"),false); }
   });
-  $("clearBulkBtn").addEventListener("click",()=>{ $("bClass").value="";$("bTeacher").value="";$("bNames").value=""; });
+  $("clearBulkBtn").addEventListener("click",()=>{ $("bTeacher").value="";$("bNames").value=""; fillClassPicker("bClass","",""); });
 
   ["studentSearch","studentTeacherFilter","studentClassFilter","studentActiveFilter"].forEach(id=>$(id).addEventListener("input",renderStudents));
   $("copyVisibleBtn").addEventListener("click",async()=>{ const vis=visibleStudents(); if(!vis.length) return toast("Nothing to copy","warn"); await copyText(buildCodesText(vis)); toast("Visible codes copied","ok"); });
@@ -885,11 +914,12 @@
     }catch(e){ msg($("classMsg"),writeErr(e),"bad"); }
     finally{ setLoading($("createClassBtn"),false); }
   });
+  $("classSearch").addEventListener("input",renderClasses);
   $("classBody").addEventListener("click",async(e)=>{
     const b=e.target.closest("button[data-ca]"); if(!b) return;
     const c=classById(b.dataset.id); if(!c) return; const action=b.dataset.ca;
     try{
-      if(action==="toggle"){ await updateDoc(doc(db,"classes",c.id),{active:c.active===false,updatedAt:serverTimestamp()}); toast(`Class ${c.name} ${c.active===false?"reactivated":"disabled"}`,"ok"); await loadAll(); }
+      if(action==="toggle"){ await setDoc(doc(db,"classes",c.id),{name:c.name,teacherCode:c.teacherCode,active:c.active===false,updatedAt:serverTimestamp()},{merge:true}); toast(`Class ${c.name} ${c.active===false?"reactivated":"disabled"}`,"ok"); await loadAll(); }
       else if(action==="rename"){ openRename(c); }
       else if(action==="delete"){
         const n=classStudentCount(c);
