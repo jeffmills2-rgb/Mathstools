@@ -92,7 +92,7 @@
   .row-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 
   /* stat cards */
-  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:14px;margin-bottom:18px}
   .stat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 18px}
   .stat .k{font-size:.74rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:800}
   .stat .v{font-size:2rem;font-weight:900;letter-spacing:-.03em;margin-top:2px;line-height:1}
@@ -326,7 +326,7 @@
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th class="check-cell"></th><th>Student</th><th>Class</th><th>Code</th><th>Teacher</th><th>Teacher code</th><th>Status</th><th>Actions</th></tr></thead>
+            <thead><tr><th class="check-cell"></th><th>Student</th><th>Class</th><th>Code</th><th>Teacher</th><th>Teacher code</th><th>Tasks done</th><th>Status</th><th>Actions</th></tr></thead>
             <tbody id="studentBody"></tbody>
           </table>
         </div>
@@ -359,7 +359,7 @@
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Class</th><th>Teacher</th><th>Teacher code</th><th>Students</th><th>Status</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Class</th><th>Teacher</th><th>Teacher code</th><th>Students</th><th>Tasks done</th><th>Status</th><th>Actions</th></tr></thead>
             <tbody id="classBody"></tbody>
           </table>
         </div>
@@ -466,6 +466,9 @@
   let students = [];   // {id, studentCode, name, firstName, surname, className, teacherCode, teacherName, active}
   let classes = [];    // {id, name, teacherCode, active}
   let caps = { teachers:0, classes:0, students:0 };
+  let achCount = {};        // studentCode -> tasks completed
+  let totalTasks = 0;       // all completions across the platform
+  let achAvailable = true;  // false if the achievements read rule isn't published yet
   const selected = new Set();
 
   // ---- helpers ----
@@ -488,6 +491,8 @@
   async function uniqueTeacherCode(name){ const stem=surnameStem(name); for(let i=0;i<80;i++){ const c=`${stem}${digits4()}`; const s=await getDoc(doc(db,"teachers",c)); if(!s.exists()) return c; } throw new Error("Could not generate a unique teacher code — try again."); }
   const teacherByCode = code => teachers.find(t=>t.teacherCode===code) || null;
   const classId = (teacherCode,name)=>`${teacherCode}__${normClass(name)}`;
+  const studentTasks = code => achCount[normCode(code)] || 0;
+  function classTasks(c){ return students.filter(s=>s.teacherCode===c.teacherCode && (s.className||"")===c.name).reduce((sum,s)=>sum+studentTasks(s.studentCode||s.id),0); }
 
   function teacherStats(code){
     const list=students.filter(s=>s.teacherCode===code);
@@ -504,10 +509,11 @@
 
   // ================= LOADERS =================
   async function loadAll(){
-    const [tSnap,sSnap,cSnap] = await Promise.all([
+    const [tSnap,sSnap,cSnap,aSnap] = await Promise.all([
       getDocs(collection(db,"teachers")),
       getDocs(collection(db,"students")),
       getDocs(collection(db,"classes")).catch(()=>({docs:[]})),
+      getDocs(collection(db,"achievements")).catch(()=>null),
     ]);
     teachers = tSnap.docs.map(d=>({ id:d.id, teacherCode:d.id, ...d.data() }));
     students = sSnap.docs.map(d=>{ const x=d.data(); return { id:d.id, ...x, studentCode:x.studentCode||d.id, name:x.name||buildName(x.firstName,x.surname), teacherCode:x.teacherCode||"", teacherName:x.teacherName||x.teacher||"" }; });
@@ -517,6 +523,11 @@
     cSnap.docs.forEach(d=>{ const x=d.data(); const nm=normClass(x.name); const tc=normCode(x.teacherCode||""); if(!nm||!tc) return; byId.set(classId(tc,nm),{ id:d.id, name:nm, teacherCode:tc, active:x.active!==false, saved:true }); });
     students.forEach(s=>{ const tc=normCode(s.teacherCode||""); const nm=normClass(s.className||""); if(!tc||!nm) return; const id=classId(tc,nm); if(!byId.has(id)) byId.set(id,{ id, name:nm, teacherCode:tc, active:true, saved:false }); });
     classes = [...byId.values()];
+    // Tasks completed = number of achievement records per student (each completed
+    // quiz/Adventure activity writes one). aSnap is null if the admin achievements
+    // read rule hasn't been published yet — degrade to "—" rather than error.
+    achCount={}; totalTasks=0; achAvailable = aSnap!==null;
+    if(aSnap){ aSnap.docs.forEach(d=>{ const x=d.data(); const sc=normCode(x.studentCode||x.student||x.code||""); if(sc){ achCount[sc]=(achCount[sc]||0)+1; totalTasks++; } }); }
     try{ const capSnap=await getDoc(doc(db,"admin","limits")); if(capSnap.exists()){ const c=capSnap.data(); caps={ teachers:+c.teachers||0, classes:+c.classes||0, students:+c.students||0 }; } }catch{ /* rules may not include admin/limits yet */ }
     renderEverything();
   }
@@ -579,6 +590,7 @@
       <div class="stat"><div class="k">Teachers</div><div class="v">${teachers.length}</div><div class="d">${tActive} active · ${teachers.length-tActive} inactive</div>${capBar(teachers.length,caps.teachers)}</div>
       <div class="stat"><div class="k">Classes</div><div class="v">${classes.length}</div><div class="d">${cActive} active</div>${capBar(classes.length,caps.classes)}</div>
       <div class="stat"><div class="k">Students</div><div class="v">${students.length}</div><div class="d">${sActive} active · ${students.length-sActive} inactive</div>${capBar(students.length,caps.students)}</div>
+      <div class="stat"><div class="k">Tasks completed</div><div class="v">${achAvailable?totalTasks.toLocaleString():"—"}</div><div class="d">${achAvailable?"across all students, all time":"publish the achievements read rule"}</div></div>
       <div class="stat"><div class="k">Avg class size</div><div class="v">${cActive?Math.round(sActive/cActive):0}</div><div class="d">active students ÷ active classes</div></div>`;
   }
 
@@ -650,6 +662,7 @@
         <td><span class="code">${esc(code)}</span></td>
         <td>${esc(s.teacherName||"—")}</td>
         <td>${s.teacherCode?`<span class="code">${esc(s.teacherCode)}</span>`:`<span class="badge legacy">Legacy</span>`}</td>
+        <td><strong>${achAvailable?studentTasks(code):"—"}</strong></td>
         <td><span class="badge ${active?"active":"inactive"}">${active?"Active":"Inactive"}</span></td>
         <td><div class="t-actions">
           <button class="btn-soft btn-tiny" data-sa="copy" data-code="${esc(code)}">Copy</button>
@@ -722,6 +735,7 @@
         <td>${esc(t?(t.teacherName||"Teacher"):"— (no teacher)")}</td>
         <td>${c.teacherCode?`<span class="code">${esc(c.teacherCode)}</span>`:"—"}</td>
         <td>${n} student${n===1?"":"s"}</td>
+        <td><strong>${achAvailable?classTasks(c).toLocaleString():"—"}</strong></td>
         <td><span class="badge ${active?"active":"inactive"}">${active?"Active":"Inactive"}</span></td>
         <td><div class="t-actions">
           <button class="btn-neutral btn-tiny" data-ca="rename" data-id="${esc(c.id)}">Rename</button>

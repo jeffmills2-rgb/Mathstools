@@ -58,7 +58,8 @@ service cloud.firestore {
     // class. Create-only, and ONLY for the signed-in student's own studentCode.
     // Never edited or deleted from the client. (Admin does not need these.)
     match /achievements/{id} {
-      allow read: if (isStudent() && resource.data.studentCode == myStudent())
+      allow read: if isAdmin()
+                  || (isStudent() && resource.data.studentCode == myStudent())
                   || (isTeacher() && resource.data.teacherCode == myTeacher());
       allow create: if isStudent() && request.resource.data.studentCode == myStudent();
       allow update, delete: if false;
