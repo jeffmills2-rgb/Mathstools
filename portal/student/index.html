@@ -37,7 +37,65 @@
   .loginprog.show{display:block}
   .loginprog>i{display:block;height:100%;width:38%;border-radius:999px;background:var(--mmt-blue,#3b5bdb);animation:progslide 1.05s ease-in-out infinite}
   @keyframes progslide{0%{margin-left:-40%}100%{margin-left:100%}}
+
+  /* ---- Gamified dashboard ------------------------------------------------ */
+  .hero{padding:0;overflow:hidden;margin-top:0}
+  .hero-top{display:flex;align-items:center;gap:16px;padding:20px 22px;background:linear-gradient(135deg,#1d4ed8,#4f46e5 55%,#7c3aed);color:#fff}
+  .hero-avatar{width:60px;height:60px;border-radius:16px;display:grid;place-items:center;font-weight:800;font-size:1.5rem;background:rgba(255,255,255,.22);border:2px solid rgba(255,255,255,.5);flex:0 0 auto}
+  .hero-id{flex:1;min-width:0}
+  .hero-name{font-size:1.35rem;font-weight:800;line-height:1.1}
+  .hero-meta{font-size:.82rem;opacity:.9;margin-top:2px}
+  .hero-rank{display:inline-block;margin-top:7px;font-size:.76rem;font-weight:800;background:rgba(255,255,255,.22);padding:3px 11px;border-radius:999px}
+  .hero-level{text-align:right;flex:0 0 auto}
+  .lvl-num{font-size:1.5rem;font-weight:900;line-height:1}
+  .lvl-xp{font-size:.78rem;opacity:.9;margin-top:3px}
+  .lvl-bar{height:12px;background:#e9edf5}
+  .lvl-bar>i{display:block;height:100%;background:linear-gradient(90deg,#22c55e,#16a34a);transition:width .6s ease;border-radius:0 6px 6px 0}
+  .lvl-next{padding:9px 22px 13px;font-size:.82rem;color:var(--muted);font-weight:700}
+  .chips{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:16px 0}
+  .chip{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:13px 15px;display:flex;align-items:center;gap:12px}
+  .chip .cico{font-size:1.7rem;flex:0 0 auto;line-height:1}
+  .chip .cval{font-size:1.3rem;font-weight:900;line-height:1}
+  .chip .clbl{font-size:.72rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.03em;margin-top:3px}
+  .ring{width:44px;height:44px;border-radius:50%;flex:0 0 auto;display:grid;place-items:center}
+  .ring>span{width:33px;height:33px;border-radius:50%;background:#fff;display:grid;place-items:center;font-size:.7rem;font-weight:800;color:var(--ink)}
+  .sec-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:2px}
+  .sec-head h2{margin:0}
+  .sec-sub{font-size:.8rem;color:var(--muted);font-weight:700}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+  @media(max-width:720px){.two-col{grid-template-columns:1fr}}
+  .two-col>.section{margin-top:0}
+  .chart-box{position:relative;height:200px;margin-top:8px}
+  .mastery-row{display:grid;grid-template-columns:minmax(90px,150px) 1fr 44px;gap:12px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
+  .mastery-row:last-of-type{border-bottom:0}
+  .mastery-row .mt{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mastery-row .track{height:12px;background:#eef2f7;border-radius:999px;overflow:hidden}
+  .mastery-row .track>i{display:block;height:100%;border-radius:999px}
+  .mastery-row .medal{font-size:1.1rem;text-align:right;font-weight:800;color:var(--muted)}
+  .win-chip{display:inline-flex;align-items:center;gap:8px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:8px 12px;margin:0 8px 8px 0;font-size:.85rem;font-weight:600}
+  .win-chip .wp{font-weight:900;color:var(--ok)}
+  .badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(115px,1fr));gap:12px;margin-top:10px}
+  .badge-card{border:1px solid var(--line);border-radius:14px;padding:14px 10px;text-align:center;background:#fff}
+  .badge-card.earned{background:linear-gradient(180deg,#fffbeb,#fff);border-color:#fde68a}
+  .badge-card.locked{opacity:.5}
+  .badge-ico{font-size:1.9rem;line-height:1}
+  .badge-card.locked .badge-ico{filter:grayscale(1)}
+  .badge-name{font-weight:800;font-size:.82rem;margin-top:7px}
+  .badge-desc{font-size:.71rem;color:var(--muted);margin-top:3px;line-height:1.3}
+  .nextup{background:linear-gradient(135deg,#ecfdf5,#eff6ff);border:1px solid #bfdbfe;display:flex;align-items:center;gap:14px;padding:15px 18px;margin-top:16px}
+  .nextup .nico{font-size:2rem;flex:0 0 auto}
+  .nextup .nbody{flex:1;min-width:0}
+  .nextup .nttl{font-weight:800}
+  .nextup .nsub{font-size:.85rem;color:var(--muted)}
+  .mission-empty{text-align:center;padding:16px 8px;color:var(--muted)}
+  details.allres>summary{cursor:pointer;list-style:none;padding:2px 0}
+  details.allres>summary::-webkit-details-marker{display:none}
+  details.allres>summary::before{content:"▸ ";color:var(--muted)}
+  details.allres[open]>summary::before{content:"▾ "}
+  .confetti{position:fixed;top:-14px;width:9px;height:14px;z-index:100;pointer-events:none;border-radius:2px;animation:fall linear forwards}
+  @keyframes fall{to{transform:translateY(110vh) rotate(540deg);opacity:.85}}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "c7e5713b5e4f4993907eb285797dc89b"}'></script><!-- End Cloudflare Web Analytics -->
 </head>
 <body>
@@ -73,44 +131,82 @@
 
 <!-- DASHBOARD -->
 <main id="dashView" class="wrap hidden">
-  <section class="card profile" id="profileCard">
-    <div class="avatar" id="avatar">S</div>
-    <div><div class="name" id="profileName">Student</div><div class="meta" id="profileMeta">—</div></div>
+  <!-- HERO: identity + level -->
+  <section class="card hero">
+    <div class="hero-top">
+      <div class="hero-avatar" id="avatar">S</div>
+      <div class="hero-id">
+        <div class="hero-name" id="profileName">Student</div>
+        <div class="hero-meta" id="profileMeta">—</div>
+        <div class="hero-rank" id="heroRank"></div>
+      </div>
+      <div class="hero-level">
+        <div class="lvl-num" id="lvlNum">Lv 1</div>
+        <div class="lvl-xp" id="lvlXp">0 XP</div>
+      </div>
+    </div>
+    <div class="lvl-bar"><i id="lvlBar" style="width:0%"></i></div>
+    <div class="lvl-next" id="lvlNext"></div>
   </section>
 
-  <div class="cards">
-    <div class="card stat"><div class="label">Attempts</div><div class="value" id="statAttempts">0</div></div>
-    <div class="card stat"><div class="label">Average</div><div class="value" id="statAvg">0%</div></div>
-    <div class="card stat"><div class="label">Best</div><div class="value" id="statBest">0%</div></div>
-    <div class="card stat"><div class="label">Total XP</div><div class="value" id="statXp">0</div></div>
+  <!-- QUICK CHIPS -->
+  <div class="chips" id="quickChips"></div>
+
+  <!-- MISSIONS (teacher tasks) -->
+  <section class="card section" id="missionsCard">
+    <div class="sec-head"><h2>🎯 Your missions</h2><span class="sec-sub" id="missionsSub"></span></div>
+    <ul class="tasklist" id="tasksBody"></ul>
+    <div class="mission-empty" id="missionsEmpty" style="display:none"></div>
+  </section>
+
+  <!-- RECOMMENDED NEXT -->
+  <section class="card nextup" id="nextUp" style="display:none"></section>
+
+  <!-- PROGRESS + WINS -->
+  <div class="two-col">
+    <section class="card section">
+      <div class="sec-head"><h2>📈 Your progress</h2></div>
+      <p class="hint" id="progHint">Your XP climbing over time.</p>
+      <div class="chart-box"><canvas id="xpChart"></canvas></div>
+    </section>
+    <section class="card section">
+      <div class="sec-head"><h2>🏆 Recent wins</h2></div>
+      <div id="winsBody"></div>
+    </section>
   </div>
 
-  <section class="card section" id="tasksCard" style="display:none">
-    <h2>Tasks set by your teacher</h2>
-    <p class="hint">Finish these online quizzes before their due date.</p>
-    <ul class="tasklist" id="tasksBody"></ul>
+  <!-- TOPIC MASTERY -->
+  <section class="card section">
+    <div class="sec-head"><h2>🧠 Topic mastery</h2></div>
+    <p class="hint">Get any topic to 80% to master it. Keep practising the rest!</p>
+    <div id="masteryBody"></div>
   </section>
 
+  <!-- BADGES -->
   <section class="card section">
-    <h2>Mills Maths Adventure</h2>
-    <p class="hint">Your Adventure missions and story attempts.</p>
-    <p><a class="btn primary" id="playAdventureLink" href="/game-platforms/mills-maths-adventure/" target="_blank" rel="noopener">Play Mills Maths Adventure →</a></p>
-    <div id="adventureBody"></div>
+    <div class="sec-head"><h2>🎖️ Badges</h2><span class="sec-sub" id="badgeCount"></span></div>
+    <div class="badges" id="badgesBody"></div>
   </section>
 
-  <section class="card section">
-    <h2>All results</h2>
-    <p class="hint">Every quiz and tool result linked to your code.</p>
-    <div class="filters">
-      <select id="toolFilter"><option value="">All tools</option></select>
-      <select id="topicFilter"><option value="">All topics</option></select>
-      <select id="dateFilter"><option value="">Any time</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last term (90 days)</option></select>
-      <span class="spacer" style="flex:1"></span>
-      <button class="btn" id="copyBtn" type="button">Copy summary</button>
-      <button class="btn" id="printBtn" type="button">Print</button>
+  <!-- ALL RESULTS (collapsible) -->
+  <details class="card section allres">
+    <summary><h2 style="display:inline;font-size:1.05rem">📚 All my results</h2><span class="sec-sub"> — every attempt, if you want the detail</span></summary>
+    <div style="margin-top:12px">
+      <p><a class="btn primary" id="playAdventureLink" href="/game-platforms/mills-maths-adventure/" target="_blank" rel="noopener">Play Mills Maths Adventure →</a></p>
+      <div class="filters">
+        <select id="toolFilter"><option value="">All tools</option></select>
+        <select id="topicFilter"><option value="">All topics</option></select>
+        <select id="dateFilter"><option value="">Any time</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last term (90 days)</option></select>
+        <span class="spacer" style="flex:1"></span>
+        <button class="btn" id="copyBtn" type="button">Copy summary</button>
+        <button class="btn" id="printBtn" type="button">Print</button>
+      </div>
+      <h3 style="margin:14px 0 6px;font-size:.95rem">Adventure missions</h3>
+      <div id="adventureBody"></div>
+      <h3 style="margin:16px 0 6px;font-size:.95rem">Everything else</h3>
+      <div id="resultsBody"></div>
     </div>
-    <div id="resultsBody"></div>
-  </section>
+  </details>
 </main>
 
 <div class="modal-back" id="taskModalBack"><div class="modal" id="taskModal"></div></div>
@@ -149,7 +245,7 @@ $("signoutBtn").addEventListener("click", async ()=>{ await logout(); location.r
 })();
 $("copyBtn").addEventListener("click", copySummary);
 $("printBtn").addEventListener("click", ()=> window.print());
-["toolFilter","topicFilter","dateFilter"].forEach(id=> $(id).addEventListener("change", render));
+["toolFilter","topicFilter","dateFilter"].forEach(id=> $(id).addEventListener("change", renderTable));
 
 async function doLogin(){
   const code = normaliseCode($("codeInput").value);
@@ -189,22 +285,20 @@ function showDashboard(){
   $("whoChip").classList.remove("hidden"); $("signoutBtn").classList.remove("hidden");
   const name = current.name || [current.firstName,current.surname].filter(Boolean).join(" ") || "Student";
   $("whoChip").textContent = `${name} · ${current.className||""}`;
-  $("avatar").textContent = initials(name); $("avatar").style.background = hashColour(current.studentCode||name);
+  $("avatar").textContent = initials(name);
   $("profileName").textContent = name;
-  $("profileMeta").textContent = `Class: ${current.className||"—"} · Teacher: ${current.teacherName||"—"} · ${current.school||""}`;
-  // populate filters from enabled registry + the student's own data
+  $("profileMeta").textContent = `Class ${current.className||"—"} · ${current.teacherName||"—"}`;
   const tools = getEnabledTools();
   const tf = $("toolFilter"); tools.forEach(t=>{ const o=document.createElement("option"); o.value=t.toolId; o.textContent=t.title; tf.appendChild(o); });
   const topics = [...new Set(all.map(r=>r.topic).filter(Boolean))];
   const pf = $("topicFilter"); topics.forEach(t=>{ const o=document.createElement("option"); o.value=t; o.textContent=t; pf.appendChild(o); });
-  render();
-  // Carry the student's code into the game so it signs them in automatically —
-  // otherwise the game opens signed-out and their Adventure/Farm completions
-  // never reach their teacher. The plain href stays as a fallback.
   const play=$("playAdventureLink");
-  if(play && current.studentCode){ play.href=`/game-platforms/mills-maths-adventure/?code=${encodeURIComponent(current.studentCode)}`; }
+  if(play && current.studentCode){ play.href=advUrl(); }
+  renderDashboard();
+  renderTable();
   renderTasks();
   openTasksPopup();
+  celebrate();
 }
 
 function filtered(){
@@ -213,23 +307,127 @@ function filtered(){
   return all.filter(r => (!tool || r.toolId===tool) && (!topic || r.topic===topic) && (!cutoff || r.time>=cutoff));
 }
 
-function render(){
-  const rows = filtered();
-  const s = summarise(rows);
-  $("statAttempts").textContent = s.attempts;
-  $("statAvg").textContent = s.averagePercent + "%";
-  $("statBest").textContent = s.bestPercent + "%";
-  $("statXp").textContent = s.totalXp;
+// ---- Gamified dashboard ----------------------------------------------------
+const XP_PER_LEVEL=500, WEEK_GOAL=5;
+function advUrl(){ return current && current.studentCode ? `/game-platforms/mills-maths-adventure/?code=${encodeURIComponent(current.studentCode)}` : "/game-platforms/mills-maths-adventure/"; }
+function levelInfo(xp){ xp=Math.max(0,xp||0); const level=Math.floor(xp/XP_PER_LEVEL)+1; const into=xp-(level-1)*XP_PER_LEVEL; return {level, into, toNext:XP_PER_LEVEL-into, pct:Math.round(into/XP_PER_LEVEL*100)}; }
+function rankTitle(level){ const t=[[1,"Number Novice"],[3,"Maths Explorer"],[5,"Fraction Apprentice"],[7,"Algebra Adept"],[10,"Number Ninja"],[15,"Maths Champion"],[20,"Maths Legend"]]; let r=t[0][1]; for(const x of t){ if(level>=x[0]) r=x[1]; } return r; }
+function dayKey(t){ const d=new Date(t); return d.getFullYear()+"-"+d.getMonth()+"-"+d.getDate(); }
+function currentStreak(){ const days=new Set(all.filter(r=>r.time).map(r=>dayKey(r.time))); if(!days.size) return 0; const d=new Date(); d.setHours(0,0,0,0); if(!days.has(dayKey(d.getTime()))){ d.setDate(d.getDate()-1); if(!days.has(dayKey(d.getTime()))) return 0; } let s=0; while(days.has(dayKey(d.getTime()))){ s++; d.setDate(d.getDate()-1); } return s; }
+function weekStart(){ const d=new Date(); d.setHours(0,0,0,0); const dow=(d.getDay()+6)%7; d.setDate(d.getDate()-dow); return d.getTime(); }
+function topicStats(){ const m=new Map(); all.forEach(r=>{ const t=r.topic||"General"; const e=m.get(t)||{topic:t,attempts:0,best:0,sum:0}; e.attempts++; e.best=Math.max(e.best, r.percent||0); e.sum+=r.percent||0; m.set(t,e); }); return [...m.values()].map(e=>({...e, avg:Math.round(e.sum/e.attempts), mastered:e.best>=80})); }
 
-  // Adventure section
-  const adv = all.filter(r => r.toolId==="mills-maths-adventure");
-  $("adventureBody").innerHTML = adv.length ? table(adv, true) :
-    `<div class="empty"><div class="big">No Adventure attempts yet</div>Play a mission in Mills Maths Adventure and your results will appear here.</div>`;
-
-  // All results
-  $("resultsBody").innerHTML = rows.length ? table(rows, false) :
-    `<div class="empty"><div class="big">No results to show</div>Try clearing the filters, or complete a quiz to get started.</div>`;
+function renderDashboard(){
+  const s=summarise(all); const xp=s.totalXp; const li=levelInfo(xp);
+  $("lvlNum").textContent=`Lv ${li.level}`;
+  $("lvlXp").textContent=`${xp.toLocaleString()} XP`;
+  $("heroRank").textContent=rankTitle(li.level);
+  $("lvlBar").style.width=li.pct+"%";
+  $("lvlNext").textContent=`${li.toNext} XP to Level ${li.level+1} — keep going!`;
+  const streak=currentStreak();
+  const wc=all.filter(r=>r.time>=weekStart()).length;
+  const ts=topicStats(); const mastered=ts.filter(t=>t.mastered).length;
+  const goalPct=Math.min(100,Math.round(wc/WEEK_GOAL*100));
+  $("quickChips").innerHTML=`
+    <div class="chip"><span class="cico">🔥</span><div><div class="cval">${streak}</div><div class="clbl">day streak</div></div></div>
+    <div class="chip"><span class="ring" style="background:conic-gradient(var(--mmt-blue) ${goalPct*3.6}deg,#e5e7eb 0)"><span>${wc}/${WEEK_GOAL}</span></span><div><div class="cval">${goalPct}%</div><div class="clbl">weekly goal</div></div></div>
+    <div class="chip"><span class="cico">🌟</span><div><div class="cval">${s.bestPercent}%</div><div class="clbl">best score</div></div></div>
+    <div class="chip"><span class="cico">🧠</span><div><div class="cval">${mastered}</div><div class="clbl">topics mastered</div></div></div>`;
+  renderXpChart();
+  renderWins(s);
+  renderMastery(ts);
+  renderBadges(s, streak, ts);
+  renderNextUp(ts);
 }
+function drawLine(canvasId,labels,data,color){
+  if(typeof Chart==="undefined"){ return; }
+  const ex=Chart.getChart(canvasId); if(ex) ex.destroy();
+  new Chart($(canvasId).getContext("2d"),{ type:"line",
+    data:{ labels, datasets:[{ data, borderColor:color, backgroundColor:color+"22", borderWidth:2, fill:true, tension:.35, pointRadius:0, pointHoverRadius:5 }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:{ backgroundColor:"#0f172a", padding:9, cornerRadius:8, displayColors:false } },
+      scales:{ x:{ grid:{display:false}, ticks:{ color:"#64748b", maxTicksLimit:6, font:{size:10} } }, y:{ beginAtZero:true, grid:{ color:"#eef2f7" }, border:{display:false}, ticks:{ color:"#64748b", precision:0, font:{size:10} } } } } });
+}
+function renderXpChart(){
+  const W=7*86400000, n=10;
+  const d=new Date(); d.setHours(0,0,0,0); const dow=(d.getDay()+6)%7; d.setDate(d.getDate()-dow); const thisWeek=d.getTime();
+  const start=thisWeek-(n-1)*W;
+  let running=all.filter(r=>r.time && r.time<start).reduce((a,r)=>a+(r.xpEarned||0),0);
+  const labels=[], cum=[];
+  for(let i=0;i<n;i++){ const from=start+i*W, to=from+W; running+=all.filter(r=>r.time>=from&&r.time<to).reduce((a,r)=>a+(r.xpEarned||0),0); labels.push(new Date(from).toLocaleDateString(undefined,{day:"numeric",month:"short"})); cum.push(running); }
+  $("progHint").textContent="Your total XP climbing week by week 📈";
+  drawLine("xpChart", labels, cum, "#4f46e5");
+}
+function renderWins(s){
+  const cut=Date.now()-30*86400000;
+  const wins=all.filter(r=>r.time>=cut && r.percent>=80).slice(0,5);
+  const chips = wins.length
+    ? wins.map(r=>`<span class="win-chip"><span class="wp">${r.percent}%</span> ${esc(r.topic||r.tool||"Quiz")} · ${esc(r.dateLabel)}</span>`).join("")
+    : `<p class="hint">No wins in the last month yet — aim for 80%+ and they'll show up here. You've got this! 💪</p>`;
+  $("winsBody").innerHTML=(s.bestPercent?`<p class="hint" style="margin:0 0 10px">Personal best: <strong>${s.bestPercent}%</strong> 🏅</p>`:"")+chips;
+}
+function renderMastery(ts){
+  const el=$("masteryBody");
+  if(!ts.length){ el.innerHTML=`<div class="empty"><div class="big">No topics yet</div>Finish a quiz or mission to start your mastery map.</div>`; return; }
+  const sorted=ts.slice().sort((a,b)=> (b.mastered-a.mastered) || (b.best-a.best));
+  let html=sorted.map(t=>{ const col=t.best>=80?"var(--ok)":t.best>=50?"#b45309":"var(--bad)"; return `<div class="mastery-row"><span class="mt" title="${esc(t.topic)}">${esc(t.topic)}</span><span class="track"><i style="width:${Math.max(6,t.best)}%;background:${col}"></i></span><span class="medal">${t.mastered?"🥇":t.best+"%"}</span></div>`; }).join("");
+  const attempted=new Set(all.map(r=>r.toolId));
+  const news=getEnabledTools().filter(t=>!attempted.has(t.toolId)).slice(0,3);
+  if(news.length){ html+=`<p class="hint" style="margin-top:12px">✨ Try something new: ${news.map(t=>`<a href="${esc(t.launchUrl||"#")}" target="_blank" rel="noopener">${esc(t.title)}</a>`).join(" · ")}</p>`; }
+  el.innerHTML=html;
+}
+function renderBadges(s, streak, ts){
+  const xp=s.totalXp, attempts=s.attempts, best=s.bestPercent;
+  const tools=new Set(all.map(r=>r.toolId)).size;
+  const mastered=ts.filter(t=>t.mastered).length;
+  const defs=[
+    {ico:"🎯",name:"First Steps",desc:"Complete your first activity",earned:attempts>=1},
+    {ico:"🔟",name:"Getting Going",desc:"10 activities done",earned:attempts>=10},
+    {ico:"🏅",name:"Half Century",desc:"50 activities done",earned:attempts>=50},
+    {ico:"💯",name:"Perfect!",desc:"Score 100% on anything",earned:best>=100},
+    {ico:"🔥",name:"On Fire",desc:"3-day streak",earned:streak>=3},
+    {ico:"⚡",name:"Unstoppable",desc:"7-day streak",earned:streak>=7},
+    {ico:"⭐",name:"Rising Star",desc:"Earn 1,000 XP",earned:xp>=1000},
+    {ico:"🌟",name:"XP Master",desc:"Earn 5,000 XP",earned:xp>=5000},
+    {ico:"🧠",name:"Topic Master",desc:"Master 3 topics",earned:mastered>=3},
+    {ico:"🗺️",name:"Explorer",desc:"Try 3 different tools",earned:tools>=3},
+  ];
+  const earned=defs.filter(d=>d.earned).length;
+  $("badgeCount").textContent=`${earned} of ${defs.length} earned`;
+  $("badgesBody").innerHTML=defs.map(d=>`<div class="badge-card ${d.earned?"earned":"locked"}"><div class="badge-ico">${d.ico}</div><div class="badge-name">${esc(d.name)}</div><div class="badge-desc">${d.earned?"Earned!":esc(d.desc)}</div></div>`).join("");
+}
+function renderNextUp(ts){
+  const el=$("nextUp");
+  const pending=tasks.filter(t=>!taskDone(t));
+  let ico="🎯", ttl="", sub="", href="", label="Start";
+  if(pending.length){ const t=pending[0]; ttl=`Finish your mission: ${t.title||t.toolId}`; sub="Your teacher set this for you"; href=launchFor(t); }
+  else {
+    const weak=ts.filter(t=>t.attempts>0).sort((a,b)=>a.best-b.best)[0];
+    const attempted=new Set(all.map(r=>r.toolId));
+    const news=getEnabledTools().find(t=>!attempted.has(t.toolId));
+    if(weak && weak.best<80){ ico="📈"; ttl=`Level up your ${weak.topic}`; sub=`Your best is ${weak.best}% — beat it!`; href=advUrl(); label="Practise"; }
+    else if(news){ ico="✨"; ttl=`Try ${news.title}`; sub="Something new to explore"; href=news.launchUrl||"#"; label="Try it"; }
+    else { ico="🎮"; ttl="Keep your streak alive!"; sub="Jump into the Adventure and earn XP"; href=advUrl(); label="Play"; }
+  }
+  el.style.display="flex";
+  el.innerHTML=`<span class="nico">${ico}</span><div class="nbody"><div class="nttl">${esc(ttl)}</div><div class="nsub">${esc(sub)}</div></div><a class="btn primary" href="${esc(href)}" target="_blank" rel="noopener">${esc(label)} →</a>`;
+}
+function renderTable(){
+  const rows=filtered();
+  const adv=all.filter(r=>r.toolId==="mills-maths-adventure");
+  $("adventureBody").innerHTML = adv.length ? table(adv,true) : `<div class="empty"><div class="big">No Adventure attempts yet</div>Play a mission and your results appear here.</div>`;
+  $("resultsBody").innerHTML = rows.length ? table(rows,false) : `<div class="empty"><div class="big">No results to show</div>Try clearing the filters.</div>`;
+}
+function celebrate(){
+  try{
+    const key="mmt-stu-"+(current.studentCode||"x")+"-xp";
+    const prevRaw=localStorage.getItem(key);
+    const xp=summarise(all).totalXp;
+    if(prevRaw!=null){ const prev=Number(prevRaw); if(Number.isFinite(prev) && levelInfo(xp).level>levelInfo(prev).level){ confetti(); toast(`🎉 Level up! You reached Level ${levelInfo(xp).level}`); } }
+    localStorage.setItem(key, String(xp));
+  }catch{}
+}
+function confetti(){ const cols=["#f59e0b","#22c55e","#3b82f6","#ef4444","#a855f7"]; for(let i=0;i<90;i++){ const s=document.createElement("div"); s.className="confetti"; s.style.left=Math.random()*100+"vw"; s.style.background=cols[i%cols.length]; s.style.animationDuration=(2+Math.random()*1.6)+"s"; s.style.animationDelay=(Math.random()*0.5)+"s"; document.body.appendChild(s); setTimeout(()=>s.remove(),4400); } }
+function toast(msg){ const t=document.createElement("div"); t.textContent=msg; t.style.cssText="position:fixed;left:50%;top:20px;transform:translateX(-50%);background:#0f172a;color:#fff;padding:12px 20px;border-radius:12px;font-weight:800;z-index:120;box-shadow:0 10px 30px rgba(0,0,0,.3)"; document.body.appendChild(t); setTimeout(()=>{ t.style.transition="opacity .4s"; t.style.opacity="0"; setTimeout(()=>t.remove(),400); },3000); }
 
 function table(rows, advMode){
   const head = `<table><thead><tr><th>Tool</th><th>Topic</th>${advMode?"<th>Type</th>":""}<th>Score</th><th>%</th><th>XP</th><th>Date</th></tr></thead><tbody>`;
@@ -282,9 +480,12 @@ function taskRow(t){
   </li>`;
 }
 function renderTasks(){
-  const card=$("tasksCard"), body=$("tasksBody");
-  if(!tasks.length){ card.style.display="none"; return; }
-  card.style.display=""; body.innerHTML = tasks.map(taskRow).join("");
+  const body=$("tasksBody"), empty=$("missionsEmpty"), sub=$("missionsSub");
+  if(!tasks.length){ body.innerHTML=""; sub.textContent=""; empty.style.display="block"; empty.innerHTML=`No missions set right now — jump into the Adventure to earn XP!<br><a class="btn primary" style="margin-top:10px;display:inline-block" href="${esc(advUrl())}" target="_blank" rel="noopener">Play Adventure →</a>`; return; }
+  empty.style.display="none";
+  const done=tasks.filter(taskDone).length;
+  sub.textContent=`${done}/${tasks.length} done`;
+  body.innerHTML = tasks.map(taskRow).join("");
 }
 function openTasksPopup(){
   const pending = tasks.filter(t=>!taskDone(t));
