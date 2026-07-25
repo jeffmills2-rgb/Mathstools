@@ -152,6 +152,24 @@
   .qa .qa-ico{width:38px;height:38px;border-radius:11px;background:var(--brand-soft);display:grid;place-items:center;flex:0 0 auto;font-size:1.1rem}
   .qa small{display:block;color:var(--muted);font-weight:600;font-size:.78rem;margin-top:2px}
 
+  /* analytics */
+  .an-filter{display:flex;gap:6px;flex-wrap:wrap}
+  .an-filter button{background:#eef2f7;color:var(--ink-soft);min-height:34px;padding:7px 13px;font-size:.84rem;font-weight:800}
+  .an-filter button.active{background:var(--brand);color:#fff}
+  .chart-box{position:relative;height:280px}
+  .chart-box.sm{height:210px}
+  .an-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+  .rank{display:flex;flex-direction:column;gap:9px}
+  .rank-row{display:grid;grid-template-columns:minmax(90px,150px) 1fr auto;gap:10px;align-items:center;font-size:.85rem}
+  .rank-row .lbl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700}
+  .rank-row .track{background:#eef2f7;border-radius:999px;height:13px;overflow:hidden}
+  .rank-row .track>i{display:block;height:100%;border-radius:999px;background:var(--brand)}
+  .rank-row .val{font-weight:800;color:var(--ink-soft);min-width:34px;text-align:right}
+  .an-empty{color:var(--muted);font-size:.85rem;padding:14px;text-align:center;background:#f8fafc;border:1px dashed var(--line);border-radius:var(--radius-sm)}
+  .delta{font-size:.76rem;font-weight:800;padding:2px 8px;border-radius:999px;white-space:nowrap}
+  .delta.up{color:var(--good);background:var(--good-soft)}
+  .delta.down{color:var(--bad);background:var(--bad-soft)}
+  .delta.flat{color:var(--muted);background:#eef2f7}
   @media(max-width:920px){
     .app{grid-template-columns:1fr}
     .sidebar{position:static;height:auto;flex-direction:row;flex-wrap:wrap;gap:6px}
@@ -165,6 +183,7 @@
     .grid-2,.grid-3{grid-template-columns:1fr}
   }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "c7e5713b5e4f4993907eb285797dc89b"}'></script><!-- End Cloudflare Web Analytics -->
 </head>
 <body>
@@ -200,6 +219,7 @@
     <button class="nav-item" data-view="teachers"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 2 8l10 5 10-5-10-5Z"/><path d="M6 10.5V16c0 1.5 3 3 6 3s6-1.5 6-3v-5.5"/></svg>Teachers<span class="pill" id="navTeachers">0</span></button>
     <button class="nav-item" data-view="students"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><path d="M16.5 8.2A3 3 0 0 1 19 13"/><path d="M17.5 14.5c2 .6 3.5 2.2 3.5 4.5"/></svg>Students<span class="pill" id="navStudents">0</span></button>
     <button class="nav-item" data-view="classes"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v12H4z"/><path d="M4 21h16"/><path d="M8 9h8M8 13h5"/></svg>Classes<span class="pill" id="navClasses">0</span></button>
+    <button class="nav-item" data-view="analytics"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V4"/><path d="M4 20h16"/><path d="M8 16l4-5 3 3 4-6"/></svg>Analytics</button>
     <button class="nav-item" data-view="settings"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.2.61.76 1.05 1.42 1.09H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>Settings</button>
     <div class="side-foot">
       <div class="who" id="whoAmI">—</div>
@@ -368,6 +388,48 @@
       </div>
     </section>
 
+    <!-- ANALYTICS -->
+    <section class="view" id="view-analytics">
+      <div class="page-head">
+        <div><h2>Analytics</h2><p>How much the tools are being used, by whom, and which content earns its keep. Pick a window and every widget updates.</p></div>
+        <div class="row-actions">
+          <div class="an-filter" id="anFilter">
+            <button type="button" data-win="7">7 days</button>
+            <button type="button" data-win="14">14 days</button>
+            <button type="button" data-win="28" class="active">28 days</button>
+            <button type="button" data-win="365">Year</button>
+          </div>
+          <button class="btn-soft" id="anRefresh">↻ Refresh</button>
+        </div>
+      </div>
+      <div id="anUnavailable" class="callout" style="display:none"><strong>Task history isn't readable yet.</strong> Publish the updated Firestore rules (the admin <em>achievements</em> read rule) in the Firebase Console to light up Analytics.</div>
+      <div class="stats" id="anKpis"></div>
+      <div class="card">
+        <div class="page-head" style="margin-bottom:8px"><div><h3>Tasks completed over time</h3><p style="margin-top:2px" class="hint">Every completed quiz or Adventure activity, bucketed by day (or by month for the year view).</p></div></div>
+        <div class="chart-box"><canvas id="anTasksChart"></canvas></div>
+      </div>
+      <div class="an-grid">
+        <div class="card"><h3>Top classes</h3><p class="hint">By tasks completed in the window.</p><div class="rank" id="lbClasses"></div></div>
+        <div class="card"><h3>Top students</h3><p class="hint">By tasks completed in the window.</p><div class="rank" id="lbStudents"></div></div>
+        <div class="card"><h3>Top teachers</h3><p class="hint">Whose classes are most active.</p><div class="rank" id="lbTeachers"></div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card"><h3>Most-used tools</h3><p class="hint">Which quizzes and tools get used most — and which are ignored.</p><div class="rank" id="lbTools"></div></div>
+        <div class="card"><h3>Most-practised topics</h3><p class="hint">Which maths topics get the most practice.</p><div class="rank" id="lbTopics"></div></div>
+      </div>
+      <div class="card">
+        <div class="page-head" style="margin-bottom:8px"><div><h3>Reach</h3><p style="margin-top:2px" class="hint">Distinct active students over time, activation rate, and who's gone quiet.</p></div></div>
+        <div class="grid-2">
+          <div class="chart-box sm"><canvas id="anActiveChart"></canvas></div>
+          <div id="reachSummary"></div>
+        </div>
+        <div style="margin-top:16px">
+          <h4 style="margin:0 0 8px;font-size:.95rem">Needs a nudge — no activity in the window</h4>
+          <div id="dormantBox"></div>
+        </div>
+      </div>
+    </section>
+
     <!-- SETTINGS -->
     <section class="view" id="view-settings">
       <div class="page-head">
@@ -469,6 +531,9 @@
   let achCount = {};        // studentCode -> tasks completed
   let totalTasks = 0;       // all completions across the platform
   let achAvailable = true;  // false if the achievements read rule isn't published yet
+  let achRecords = [];      // normalised achievement rows for Analytics
+  let analyticsWin = 28;    // window in days for Analytics widgets
+  const anCharts = {};      // canvasId -> Chart instance (destroy before re-render)
   const selected = new Set();
 
   // ---- helpers ----
@@ -493,6 +558,9 @@
   const classId = (teacherCode,name)=>`${teacherCode}__${normClass(name)}`;
   const studentTasks = code => achCount[normCode(code)] || 0;
   function classTasks(c){ return students.filter(s=>s.teacherCode===c.teacherCode && (s.className||"")===c.name).reduce((sum,s)=>sum+studentTasks(s.studentCode||s.id),0); }
+  // ms-since-epoch for an achievement record (mirrors the platform's resultUtils).
+  function recTime(r){ const c=r.createdAt; if(c&&typeof c.toMillis==="function"){ try{ return c.toMillis(); }catch{} } if(c&&typeof c.seconds==="number") return c.seconds*1000; const s=r.createdAtClient||r.dateISO||r.date||r.timestamp; const t=s?Date.parse(s):NaN; return Number.isFinite(t)?t:0; }
+  function hexA(h,a){ const n=parseInt(h.slice(1),16); return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`; }
 
   function teacherStats(code){
     const list=students.filter(s=>s.teacherCode===code);
@@ -526,8 +594,11 @@
     // Tasks completed = number of achievement records per student (each completed
     // quiz/Adventure activity writes one). aSnap is null if the admin achievements
     // read rule hasn't been published yet — degrade to "—" rather than error.
-    achCount={}; totalTasks=0; achAvailable = aSnap!==null;
-    if(aSnap){ aSnap.docs.forEach(d=>{ const x=d.data(); const sc=normCode(x.studentCode||x.student||x.code||""); if(sc){ achCount[sc]=(achCount[sc]||0)+1; totalTasks++; } }); }
+    achCount={}; totalTasks=0; achAvailable = aSnap!==null; achRecords=[];
+    if(aSnap){ aSnap.docs.forEach(d=>{ const x=d.data(); const sc=normCode(x.studentCode||x.student||x.code||"");
+      achRecords.push({ time:recTime(x), studentCode:sc, studentName:(x.studentName||x.name||""), className:normClass(x.className||""), teacherCode:normCode(x.teacherCode||""), teacherName:(x.teacherName||x.teacher||""), tool:(x.tool||x.toolName||x.toolId||"(unknown tool)"), topic:(x.topic||x.masteryTopic||"(untagged)"), xp:Number(x.xpEarned)||0 });
+      if(sc) achCount[sc]=(achCount[sc]||0)+1;
+    }); totalTasks=achRecords.length; }
     try{ const capSnap=await getDoc(doc(db,"admin","limits")); if(capSnap.exists()){ const c=capSnap.data(); caps={ teachers:+c.teachers||0, classes:+c.classes||0, students:+c.students||0 }; } }catch{ /* rules may not include admin/limits yet */ }
     renderEverything();
   }
@@ -539,6 +610,7 @@
     renderStudents();
     renderClasses();
     fillCapsForm();
+    if($("view-analytics").classList.contains("active")) renderAnalytics();
     $("navTeachers").textContent=teachers.length;
     $("navStudents").textContent=students.length;
     $("navClasses").textContent=classes.length;
@@ -758,6 +830,7 @@
     document.querySelectorAll(".nav-item").forEach(b=>b.classList.toggle("active",b.dataset.view===view));
     document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id===`view-${view}`));
     if(opts.open){ const el=$(opts.open); if(el){ el.scrollIntoView({behavior:"smooth",block:"start"}); const focusFirst=el.querySelector("input,textarea,select"); if(focusFirst) setTimeout(()=>focusFirst.focus(),250); } }
+    if(view==="analytics") renderAnalytics();
     window.scrollTo({top:0,behavior:"smooth"});
   }
   document.querySelectorAll(".qa").forEach(b=>b.addEventListener("click",()=>gotoView(b.dataset.goto,{open:b.dataset.open})));
@@ -989,6 +1062,75 @@
     if(/permission|insufficient|PERMISSION_DENIED/i.test(m)) return "Permission denied by Firestore rules. Make sure the admin rules are deployed and you're signed in as the admin account.";
     return m||"Something went wrong.";
   }
+
+  // ================= ANALYTICS =================
+  const winMs = ()=>analyticsWin*86400000;
+  function recsInWindow(){ const now=Date.now(); const from=now-winMs(); return achRecords.filter(r=>r.time>=from && r.time<=now+1); }
+  function recsPrevWindow(){ const now=Date.now(); const from=now-2*winMs(); const to=now-winMs(); return achRecords.filter(r=>r.time>=from && r.time<to); }
+  function topBy(recs,keyFn,labelFn,n=8){ const m=new Map(); recs.forEach(r=>{ const k=keyFn(r); if(k==null||k===""||k==="__") return; const e=m.get(k)||{count:0,rec:r}; e.count++; m.set(k,e); }); return [...m.entries()].sort((a,b)=>b[1].count-a[1].count).slice(0,n).map(([k,e])=>({label:labelFn(e.rec,k),count:e.count})); }
+  function renderRank(elId,items){ const el=$(elId); if(!items.length){ el.innerHTML='<div class="an-empty">No activity in this window.</div>'; return; } const max=items[0].count||1; el.innerHTML=items.map(it=>`<div class="rank-row"><span class="lbl" title="${esc(it.label)}">${esc(it.label)}</span><span class="track"><i style="width:${Math.max(4,Math.round(it.count/max*100))}%"></i></span><span class="val">${it.count.toLocaleString()}</span></div>`).join(""); }
+  function deltaHtml(cur,prev){ if(!prev){ return cur>0?`<span class="delta up">▲ new</span>`:`<span class="delta flat">—</span>`; } const pct=Math.round((cur-prev)/prev*100); const cls=pct>0?"up":(pct<0?"down":"flat"); const arrow=pct>0?"▲":(pct<0?"▼":"—"); return `<span class="delta ${cls}">${arrow} ${Math.abs(pct)}%</span>`; }
+  function seriesTasks(){
+    const recs=recsInWindow(); const daily=analyticsWin<=31; const buckets=new Map();
+    if(daily){ const d=new Date(); d.setHours(0,0,0,0); for(let i=analyticsWin-1;i>=0;i--){ const t=d.getTime()-i*86400000; buckets.set(t,{label:new Date(t).toLocaleDateString(undefined,{month:"short",day:"numeric"}),tasks:0,students:new Set()}); } }
+    else { const base=new Date(); base.setDate(1); base.setHours(0,0,0,0); for(let i=11;i>=0;i--){ const dt=new Date(base.getFullYear(),base.getMonth()-i,1); buckets.set(dt.getTime(),{label:dt.toLocaleDateString(undefined,{month:"short",year:"2-digit"}),tasks:0,students:new Set()}); } }
+    recs.forEach(r=>{ let k; const d=new Date(r.time); if(daily){ d.setHours(0,0,0,0); k=d.getTime(); } else { k=new Date(d.getFullYear(),d.getMonth(),1).getTime(); } const b=buckets.get(k); if(b){ b.tasks++; if(r.studentCode) b.students.add(r.studentCode); } });
+    const arr=[...buckets.values()];
+    return { labels:arr.map(b=>b.label), tasks:arr.map(b=>b.tasks), active:arr.map(b=>b.students.size) };
+  }
+  function lineChart(canvasId,labels,data,color){
+    if(anCharts[canvasId]){ anCharts[canvasId].destroy(); delete anCharts[canvasId]; }
+    if(typeof Chart==="undefined"){ return; }
+    const ctx=$(canvasId).getContext("2d");
+    anCharts[canvasId]=new Chart(ctx,{ type:"line",
+      data:{ labels, datasets:[{ data, borderColor:color, backgroundColor:hexA(color,.12), borderWidth:2, fill:true, tension:.3, pointRadius:0, pointHoverRadius:5, pointHoverBackgroundColor:color, pointHoverBorderColor:"#fff", pointHoverBorderWidth:2 }] },
+      options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:"index", intersect:false },
+        plugins:{ legend:{ display:false }, tooltip:{ backgroundColor:"#0f1b33", padding:10, cornerRadius:8, displayColors:false, titleFont:{weight:"700"} } },
+        scales:{ x:{ grid:{ display:false }, ticks:{ color:"#64748b", maxRotation:0, autoSkip:true, maxTicksLimit:8, font:{size:11} } },
+                 y:{ beginAtZero:true, grid:{ color:"#eef2f7" }, border:{ display:false }, ticks:{ color:"#64748b", precision:0, font:{size:11} } } } } });
+  }
+  function renderAnalytics(){
+    $("anUnavailable").style.display = achAvailable ? "none" : "block";
+    const clear=["anKpis","lbClasses","lbStudents","lbTeachers","lbTools","lbTopics","reachSummary","dormantBox"];
+    if(!achAvailable){ clear.forEach(id=>$(id).innerHTML=""); ["anTasksChart","anActiveChart"].forEach(c=>{ if(anCharts[c]){ anCharts[c].destroy(); delete anCharts[c]; } }); return; }
+    const recs=recsInWindow(); const prevN=recsPrevWindow().length;
+    const activeStudents=new Set(recs.map(r=>r.studentCode).filter(Boolean));
+    const activeClasses=new Set(recs.map(r=>`${r.className}__${r.teacherCode}`).filter(x=>x!=="__"));
+    const activeTeachers=new Set(recs.map(r=>r.teacherCode).filter(Boolean));
+    const totActiveStu=students.filter(s=>s.active!==false).length;
+    const totActiveCls=classes.filter(c=>c.active!==false).length;
+    const totActiveTch=teachers.filter(t=>t.active!==false).length;
+    $("anKpis").innerHTML=`
+      <div class="stat"><div class="k">Tasks (window)</div><div class="v">${recs.length.toLocaleString()}</div><div class="d">vs prev ${analyticsWin}d ${deltaHtml(recs.length,prevN)}</div></div>
+      <div class="stat"><div class="k">Active students</div><div class="v">${activeStudents.size}</div><div class="d">of ${totActiveStu} active</div></div>
+      <div class="stat"><div class="k">Active classes</div><div class="v">${activeClasses.size}</div><div class="d">of ${totActiveCls}</div></div>
+      <div class="stat"><div class="k">Active teachers</div><div class="v">${activeTeachers.size}</div><div class="d">of ${totActiveTch}</div></div>`;
+    const s=seriesTasks();
+    lineChart("anTasksChart",s.labels,s.tasks,"#2563eb");
+    lineChart("anActiveChart",s.labels,s.active,"#16a34a");
+    renderRank("lbClasses", topBy(recs,r=>`${r.className}__${r.teacherCode}`,r=>`${r.className||"—"} · ${r.teacherName||r.teacherCode||"—"}`));
+    renderRank("lbStudents", topBy(recs,r=>r.studentCode,r=>`${r.studentName||r.studentCode} · ${r.className||"—"}`));
+    renderRank("lbTeachers", topBy(recs,r=>r.teacherCode,r=>`${r.teacherName||r.teacherCode}`));
+    renderRank("lbTools", topBy(recs,r=>r.tool,r=>r.tool));
+    renderRank("lbTopics", topBy(recs,r=>r.topic,r=>r.topic));
+    const activation=totActiveStu?Math.round(activeStudents.size/totActiveStu*100):0;
+    $("reachSummary").innerHTML=`
+      <div class="k" style="font-size:.74rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:800">Activation this window</div>
+      <div style="font-size:2.2rem;font-weight:900;letter-spacing:-.03em;color:var(--brand);line-height:1.05">${activation}%</div>
+      <div style="font-size:.84rem;color:var(--muted);margin-top:2px">${activeStudents.size} of ${totActiveStu} active students completed something</div>
+      <div style="margin-top:12px;font-size:.86rem;color:var(--ink-soft);line-height:1.7">
+        <div><strong>${activeClasses.size}</strong> of ${totActiveCls} classes were active</div>
+        <div><strong>${activeTeachers.size}</strong> of ${totActiveTch} teachers had active classes</div>
+      </div>`;
+    const dormClasses=classes.filter(c=>c.active!==false && !activeClasses.has(`${c.name}__${c.teacherCode}`));
+    const dormStudents=students.filter(s=>s.active!==false && !activeStudents.has(s.studentCode||s.id));
+    $("dormantBox").innerHTML=(dormClasses.length||dormStudents.length)?`
+      <div style="font-size:.85rem;color:var(--ink-soft);margin-bottom:8px"><strong>${dormClasses.length}</strong> class${dormClasses.length===1?"":"es"} and <strong>${dormStudents.length}</strong> active student${dormStudents.length===1?"":"s"} had no completions in the last ${analyticsWin} days.</div>
+      ${dormClasses.length?`<div style="display:flex;flex-wrap:wrap;gap:6px">${dormClasses.slice(0,40).map(c=>`<span class="badge inactive" title="${esc(teacherByCode(c.teacherCode)?.teacherName||c.teacherCode)}">${esc(c.name)}</span>`).join("")}${dormClasses.length>40?`<span class="badge legacy">+${dormClasses.length-40} more</span>`:""}</div>`:`<div class="an-empty">Every class was active 🎉</div>`}`
+      :`<div class="an-empty">Everyone was active in this window 🎉</div>`;
+  }
+  $("anFilter").addEventListener("click",e=>{ const b=e.target.closest("button[data-win]"); if(!b) return; analyticsWin=+b.dataset.win; [...$("anFilter").children].forEach(x=>x.classList.toggle("active",x===b)); renderAnalytics(); });
+  $("anRefresh").addEventListener("click",()=>doRefresh($("anRefresh")));
 
   // ================= AUTH =================
   $("loginForm").addEventListener("submit",async(e)=>{
