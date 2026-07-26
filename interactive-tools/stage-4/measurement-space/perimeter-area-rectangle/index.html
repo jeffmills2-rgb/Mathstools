@@ -762,6 +762,65 @@
 
     .tools-link:hover{ background:#f3f4f6; }
 
+    /* ---- Student Quiz flyout submenu (opens to the LEFT) ---- */
+    .tools-submenu{ position:relative; }
+
+    .tools-link-parent{
+      width:100%;
+      border:none;
+      background:transparent;
+      font:inherit;
+      font-weight:700;
+      color:#111827;
+      text-align:left;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    .tools-caret{
+      font-size:13px;
+      line-height:1;
+      color:#6b7280;
+      transition:transform .15s ease;
+    }
+
+    .tools-flyout{
+      position:absolute;
+      top:-8px;
+      right:calc(100% + 10px);
+      min-width:270px;
+      background:rgba(255,255,255,.98);
+      border:1px solid #e5e7eb;
+      border-radius:18px;
+      box-shadow:0 14px 28px rgba(15,23,42,.12);
+      padding:8px;
+      display:none;
+      z-index:80;
+    }
+
+    /* invisible bridge so the cursor can travel to the flyout */
+    .tools-flyout::after{
+      content:"";
+      position:absolute;
+      top:0;
+      left:100%;
+      width:12px;
+      height:100%;
+    }
+
+    .tools-submenu:hover > .tools-flyout,
+    .tools-submenu:focus-within > .tools-flyout,
+    .tools-submenu.open > .tools-flyout{ display:block; }
+
+    .tools-submenu:hover > .tools-link-parent,
+    .tools-submenu.open > .tools-link-parent{ background:#f3f4f6; }
+
+    .tools-submenu:hover > .tools-link-parent .tools-caret,
+    .tools-submenu.open > .tools-link-parent .tools-caret{ transform:translateX(-3px); }
+
     .settings-card{
       display:flex;
       flex-direction:column;
@@ -1068,6 +1127,22 @@
         right:auto;
         left:0;
       }
+
+      /* No room for a side flyout on narrow screens — nest it inline instead. */
+      .tools-flyout{
+        position:static;
+        min-width:0;
+        border:none;
+        box-shadow:none;
+        border-radius:12px;
+        background:#f8fafc;
+        padding:4px;
+        margin:2px 0 2px 12px;
+      }
+      .tools-flyout::after{ display:none; }
+      .tools-caret{ transform:rotate(-90deg); }
+      .tools-submenu:hover > .tools-link-parent .tools-caret,
+      .tools-submenu.open > .tools-link-parent .tools-caret{ transform:rotate(-90deg) translateX(-3px); }
     }
   </style>
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "c7e5713b5e4f4993907eb285797dc89b"}'></script><!-- End Cloudflare Web Analytics -->
@@ -1090,7 +1165,16 @@
           <div class="tools-menu" id="toolsMenu">
             <button class="chip" id="toolsBtn" type="button" aria-expanded="false" aria-haspopup="true">Tools ▲</button>
             <div class="tools-dropdown" id="toolsDropdown">
-              <a class="tools-link" href="../../../../online-quizzes/stage-4/measurement-space/perimeter-area-rectangle.html">Student Quiz</a>
+              <div class="tools-submenu" id="quizSubmenu">
+                <button class="tools-link tools-link-parent" id="quizSubBtn" type="button" aria-expanded="false" aria-haspopup="true">
+                  <span>Student Quiz</span>
+                  <span class="tools-caret" aria-hidden="true">◂</span>
+                </button>
+                <div class="tools-flyout" id="quizFlyout" role="menu">
+                  <a class="tools-link" role="menuitem" href="../../../../online-quizzes/stage-4/measurement-space/perimeter-area-rectangle.html">Perimeter and Area of Rectangles</a>
+                  <a class="tools-link" role="menuitem" href="../../../../online-quizzes/stage-4/measurement-space/area-model.html">Area Model</a>
+                </div>
+              </div>
               <a class="tools-link" href="../../../../worksheet-creators/stage-4/measurement-space/perimeter-area-rectangle.html">Worksheet Creator</a>
               <a class="tools-link" href="lesson-plan.html">Lesson Plan</a>
             </div>
@@ -1222,6 +1306,8 @@
 
     const toolsMenu = document.getElementById('toolsMenu');
     const toolsBtn = document.getElementById('toolsBtn');
+    const quizSubmenu = document.getElementById('quizSubmenu');
+    const quizSubBtn = document.getElementById('quizSubBtn');
     const settingsMenu = document.getElementById('settingsMenu');
     const settingsBtn = document.getElementById('settingsBtn');
     const dimensionPanel = document.getElementById('dimensionPanel');
@@ -2205,6 +2291,7 @@ repeatVerticalBtn.disabled = !isArrow;
         settingsMenu.classList.remove('open');
         toolsBtn.setAttribute('aria-expanded', 'false');
         settingsBtn.setAttribute('aria-expanded', 'false');
+        closeQuizSubmenu();
       }
     }
 
@@ -2947,11 +3034,31 @@ resetBtn.addEventListener('click', () => {
       if (toolsBtn.disabled) return;
       const open = toolsMenu.classList.toggle('open');
       toolsBtn.setAttribute('aria-expanded', String(open));
+      if (!open) closeQuizSubmenu();
       if (open) {
         settingsMenu.classList.remove('open');
         settingsBtn.setAttribute('aria-expanded', 'false');
       }
     });
+
+    /* ---- Student Quiz flyout: hover handled by CSS, click/tap handled here ---- */
+    function closeQuizSubmenu(){
+      if (!quizSubmenu) return;
+      quizSubmenu.classList.remove('open');
+      if (quizSubBtn) quizSubBtn.setAttribute('aria-expanded', 'false');
+    }
+
+    if (quizSubBtn){
+      quizSubBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const open = quizSubmenu.classList.toggle('open');
+        quizSubBtn.setAttribute('aria-expanded', String(open));
+      });
+    }
+
+    if (quizSubmenu){
+      quizSubmenu.addEventListener('mouseleave', closeQuizSubmenu);
+    }
 
     settingsBtn.addEventListener('click', () => {
       if (settingsBtn.disabled) return;
@@ -2967,6 +3074,7 @@ resetBtn.addEventListener('click', () => {
       if (!toolsMenu.contains(e.target)){
         toolsMenu.classList.remove('open');
         toolsBtn.setAttribute('aria-expanded', 'false');
+        closeQuizSubmenu();
       }
       if (!settingsMenu.contains(e.target)){
         settingsMenu.classList.remove('open');

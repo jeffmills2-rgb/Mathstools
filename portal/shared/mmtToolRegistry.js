@@ -186,12 +186,20 @@ export const MMT_TOOLS = Object.freeze([
     notes: "Seeing a coefficient × factor as equal groups (lead-in to like terms). Added secure student-code login + achievements save (2026-07). masteryTopic 'number-groups'. (Page <title> was a copy-paste of the like-terms quiz — content is the groups quiz.)",
   },
   {
-    toolId: "perimeter-area-rectangle-quiz", title: "Rectangles: Area & Perimeter — Student Quiz", category: "Quiz",
+    toolId: "perimeter-area-rectangle-quiz", title: "Perimeter and Area of Rectangles — Student Quiz", category: "Quiz",
     enabled: true, resultCollection: "achievements", richCollection: null,
     achievementToolName: "perimeter-area-rectangle-student-quiz", topics: ["measurement-space"], stage: "Stage 4",
     launchUrl: "/online-quizzes/stage-4/measurement-space/perimeter-area-rectangle.html",
     supportsAdventureAttempts: false, supportsSkillBreakdown: false,
-    notes: "Dual area+perimeter quiz. Added secure student-code login + achievements save (2026-07). Saved score = area+perimeter combined out of 30 (2×15); area/perimeter subtotals stored in types[]. masteryTopic 'perimeter-area-rectangle'.",
+    notes: "Dual area+perimeter quiz. Added secure student-code login + achievements save (2026-07). Saved score = area+perimeter combined out of 30 (2×15); area/perimeter subtotals stored in types[]. masteryTopic 'perimeter-area-rectangle'. Title aligned to 'Perimeter and Area of Rectangles' (2026-07) to match the interactive tool's Student Quiz flyout; toolId/achievementToolName unchanged so existing records still group.",
+  },
+  {
+    toolId: "area-model-quiz", title: "Area Model — Student Quiz", category: "Quiz",
+    enabled: true, resultCollection: "achievements", richCollection: null,
+    achievementToolName: "area-model-student-quiz", topics: ["measurement-space"], stage: "Stage 4",
+    launchUrl: "/online-quizzes/stage-4/measurement-space/area-model.html",
+    supportsAdventureAttempts: false, supportsSkillBreakdown: false,
+    notes: "Area-only sibling of the perimeter-area-rectangle quiz (2026-07): same board, splits and levels, but students enter area only. Saved score = area out of 15; masteryTopic 'area-model'.",
   },
   {
     toolId: "factor-circles-quiz", title: "Products & Factors: Escape the Factor Circle Room — Student Quiz", category: "Quiz",
