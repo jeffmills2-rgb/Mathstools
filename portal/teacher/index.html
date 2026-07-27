@@ -86,8 +86,21 @@
   .task-x:hover{background:#dc2626;color:#fff;border-color:#dc2626}
   .btn.sm{padding:6px 10px;font-size:.82rem;border-radius:8px}
   /* ---- Quiz checklist (Set Dashboard Task) ------------------------------- */
-  .checklist{border:1px solid var(--line);border-radius:12px;max-height:300px;overflow:auto}
-  .grouphd{padding:9px 14px;background:#f8fafc;font-weight:700;font-size:.76rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);position:sticky;top:0}
+  .checklist{border:1px solid var(--line);border-radius:12px;max-height:360px;overflow:auto}
+  /* Top-level category header (Quizzes linked to tools / Broad topic overview):
+     a clickable disclosure toggle that stays pinned while its quizzes scroll.
+     Both categories start collapsed so the teacher sees the two task types at
+     a glance without scrolling past the whole quiz list. */
+  .cathd{width:100%;text-align:left;appearance:none;padding:12px 14px;background:#eef2ff;color:#1e3a8a;font-weight:800;font-size:.82rem;letter-spacing:.01em;border:0;border-top:2px solid #c7d2fe;display:flex;align-items:center;gap:8px;cursor:pointer;position:sticky;top:0;z-index:3}
+  .cathd:hover{background:#e0e7ff}
+  .catblock:first-child .cathd{border-top:0}
+  .cathd .sub{font-weight:600;color:#6366f1;font-size:.74rem;text-transform:none;letter-spacing:0}
+  .cathd .arrow{display:inline-block;color:#6366f1;font-size:.7rem;transition:transform .15s ease}
+  .catblock:not(.collapsed) .cathd .arrow{transform:rotate(90deg)}
+  .cathd .catcount{margin-left:auto;background:#c7d2fe;color:#1e3a8a;border-radius:999px;padding:1px 9px;font-size:.72rem;font-weight:800}
+  .catblock.collapsed .catbody{display:none}
+  /* Sub-group header within a category (topic area, or Stage). */
+  .grouphd{padding:8px 14px 8px 18px;background:#f8fafc;font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);border-top:1px solid var(--line)}
   .check{display:flex;gap:11px;align-items:center;padding:11px 14px;border-top:1px solid var(--line);cursor:pointer}
   .check:hover{background:#f8fafc}
   .check input{width:17px;height:17px;flex:0 0 auto;margin:0}
@@ -682,29 +695,73 @@ async function doAdvTask(){
   finally{ btn.disabled=false; btn.textContent= editingId?"Update task":"Set task"; }
 }
 
-// ============================ SET DASHBOARD TASK (soon) ============================
-function quizGroups(){
-  const groups={};
-  getEnabledTools().filter(t=>t.category==="Quiz").forEach(t=>{ const g=t.stage||"Other"; (groups[g]=groups[g]||[]).push(t); });
-  return groups;
+// ============================ SET DASHBOARD TASK ============================
+// Two categories on this page:
+//   1. "Quizzes linked to tools" — the focused, single-concept quizzes (no
+//      sub-topic builder). Grouped by TOPIC AREA (derived from each tool's
+//      registry `topics`, so a new quiz lands in the right area automatically).
+//   2. "Broad topic overview" — the whole-topic quizzes that have a
+//      "Choose sub-topics" builder (BUILDER_IDS). Grouped by STAGE.
+// Map a registry topic id → the topic-area heading it shows under. Anything not
+// listed falls back to "Other" so nothing is ever dropped.
+const TOPIC_AREA_NAME = {
+  integers:"Integers",
+  fdp:"Fractions, Decimals & Percentages",
+  number:"Number & Factors", "whole-numbers":"Number & Factors",
+  algebra:"Algebra",
+  "measurement-space":"Measurement & Space", pythagoras:"Measurement & Space", area:"Measurement & Space",
+};
+// Display order for the topic-area sub-groups (any area not listed is appended).
+const TOPIC_AREA_ORDER = ["Integers","Fractions, Decimals & Percentages","Number & Factors","Algebra","Measurement & Space"];
+function topicAreaFor(t){ const id=(t.topics&&t.topics[0])||""; return TOPIC_AREA_NAME[id] || "Other"; }
+// Split enabled quizzes into the two category buckets, each a {group -> tools[]}.
+function quizBuckets(){
+  const tools={}, broad={};
+  getEnabledTools().filter(t=>t.category==="Quiz").forEach(t=>{
+    if(BUILDER_IDS.has(t.toolId)){ const g=t.stage||"Other"; (broad[g]=broad[g]||[]).push(t); }
+    else { const g=topicAreaFor(t); (tools[g]=tools[g]||[]).push(t); }
+  });
+  return { tools, broad };
+}
+function dtQuizRow(t){
+  return `<div class="quizrow">
+    <label class="qcheck"><input type="checkbox" class="dtWhole" value="${esc(t.toolId)}" data-title="${esc(t.title)}" data-url="${esc(t.launchUrl||"")}"/><span class="t">${esc(t.title)}</span></label>
+    ${BUILDER_IDS.has(t.toolId)?`<button class="btn sm subsetbtn" type="button" data-cust="${esc(t.toolId)}">Choose sub-topics ↗</button>`:``}
+  </div>`;
+}
+// Total quizzes across a bucket's groups (shown as a pill on the category header).
+function dtCount(groups){ return Object.values(groups).reduce((n,arr)=>n+arr.length,0); }
+// Render a bucket's groups, honouring `order` first then any leftover groups.
+function dtGroups(groups, order){
+  const keys = (order||[]).filter(k=>groups[k]);
+  Object.keys(groups).forEach(k=>{ if(!keys.includes(k)) keys.push(k); });
+  if(!keys.length) return `<div class="quizrow"><span class="muted" style="font-size:.85rem">None yet.</span></div>`;
+  return keys.map(g=>`<div class="grouphd">${esc(g)}</div>${groups[g].map(dtQuizRow).join("")}`).join("");
 }
 function openDashTask(){
-  const groups=quizGroups();
+  const { tools, broad } = quizBuckets();
   openModal(head("📋 Set Dashboard Task")+`
     <div class="modal-body">
-      <p class="hint">Pick the quizzes to assign to <strong>one class</strong>. Quizzes with a <em>Choose sub-topics</em> button can be narrowed to specific question types. Students get a pop-up with these tasks and the due date next time they open their dashboard.</p>
+      <p class="hint">Pick the quizzes to assign to <strong>one class</strong>. Quizzes are split into <strong>tool-linked quizzes</strong> (one concept each, grouped by topic area) and <strong>broad topic overviews</strong> — whole-topic quizzes you can narrow to specific question types with <em>Choose sub-topics</em>. Students get a pop-up with these tasks and the due date next time they open their dashboard.</p>
       <div class="grid2">
         <div class="field"><label>Class</label><select id="dtClass">${classOptions()}</select></div>
         <div class="field"><label>Due date (optional)</label><input id="dtDue" type="date"/></div>
       </div>
       <div class="field"><label>Quizzes</label>
-        <div class="checklist">${Object.entries(groups).map(([g,items])=>`
-          <div class="grouphd">${esc(g)}</div>
-          ${items.map(t=>`<div class="quizrow">
-            <label class="qcheck"><input type="checkbox" class="dtWhole" value="${esc(t.toolId)}" data-title="${esc(t.title)}" data-url="${esc(t.launchUrl||"")}"/><span class="t">${esc(t.title)}</span></label>
-            ${BUILDER_IDS.has(t.toolId)?`<button class="btn sm subsetbtn" type="button" data-cust="${esc(t.toolId)}">Choose sub-topics ↗</button>`:``}
-          </div>`).join("")}
-        `).join("")}</div>
+        <div class="checklist">
+          <div class="catblock collapsed">
+            <button class="cathd" type="button" aria-expanded="false">
+              <span class="arrow">▸</span>🔧 Quizzes linked to tools <span class="sub">one concept each</span>
+              <span class="catcount">${dtCount(tools)}</span></button>
+            <div class="catbody">${dtGroups(tools, TOPIC_AREA_ORDER)}</div>
+          </div>
+          <div class="catblock collapsed">
+            <button class="cathd" type="button" aria-expanded="false">
+              <span class="arrow">▸</span>📚 Broad topic overview <span class="sub">whole-topic — narrow with “Choose sub-topics”</span>
+              <span class="catcount">${dtCount(broad)}</span></button>
+            <div class="catbody">${dtGroups(broad)}</div>
+          </div>
+        </div>
         <details style="margin-top:6px"><summary class="muted" style="cursor:pointer;font-size:.8rem">Pop-up blocked? Paste a generated quiz link instead</summary>
           <div style="display:flex;gap:8px;margin-top:8px"><input id="dtPasteLink" placeholder="Paste a generated quiz link" style="flex:1;padding:8px 10px;border:1px solid var(--line);border-radius:9px"/><button class="btn sm" id="dtPasteAdd" type="button">Add</button></div>
         </details>
@@ -719,6 +776,12 @@ function openDashTask(){
   dtSelected=[];
   $("dtBtn").addEventListener("click", doDashTask);
   $("dtPasteAdd").addEventListener("click", addPastedLink);
+  // Collapsible categories (default collapsed) — click a header to expand/close it.
+  modalEl.querySelectorAll(".cathd").forEach(h=> h.addEventListener("click", ()=>{
+    const block=h.closest(".catblock"); if(!block) return;
+    block.classList.toggle("collapsed");
+    h.setAttribute("aria-expanded", String(!block.classList.contains("collapsed")));
+  }));
   modalEl.querySelectorAll(".dtWhole").forEach(cb=> cb.addEventListener("change", ()=>toggleWhole(cb)));
   modalEl.querySelectorAll("[data-cust]").forEach(b=> b.addEventListener("click", ()=>openSubsetBuilder(b.dataset.cust)));
   renderDtSelected();
