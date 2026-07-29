@@ -1,0 +1,133 @@
+rules_version = '2';
+
+// ============================================================================
+// Mills Maths Tools — FIREBASE PROJECT: mmt-firebase-games
+// ----------------------------------------------------------------------------
+// This is the arcade/multiplayer project, NOT `mills-maths-tools`. Nothing here
+// touches the strict claim-based platform rules — no student/teacher identity,
+// no results, no typed answers live in this project. Every client signs in
+// anonymously and needs the room code to find a room.
+//
+// Reference copy of the LIVE rules. Deploy by pasting the whole file into
+// Firebase Console → project mmt-firebase-games → Firestore → Rules → Publish.
+//
+// Last reviewed: 2026-07-29 (added squareChainRooms for Number Sum Chain).
+// ============================================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Existing general game room structure
+    // (Fractional Hex, Row & Column Challenge, Shikaku, Cartesian Connect 4)
+    match /games/{gameId}/rooms/{roomCode} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Closest to 100 online multiplayer rooms
+    match /closestTo100Games/{roomCode} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Greedy Pig classroom rooms
+    match /greedyPigGames/{roomCode} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null;
+      allow delete: if request.auth != null
+        && resource.data.teacherUid == request.auth.uid;
+    }
+
+    // Coordinate / Cartesian Connect 4 online multiplayer rooms
+    match /coordinateConnect4Games/{roomCode} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Coordinate Battleships online multiplayer rooms
+    match /coordinateBattleshipsGames/{roomCode} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Taxed by the King classroom rooms
+    match /taxedByKingGames/{roomCode} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null;
+      allow delete: if request.auth != null
+        && resource.data.teacherUid == request.auth.uid;
+    }
+
+    // Ultimate Tic-Tac-Toe online multiplayer rooms
+    match /ultimateTicTacToeGames/{roomCode} {
+      allow read, write: if request.auth != null;
+    }
+
+    // ========================================================================
+    // NEW — Number Sum Chain collaboration rooms
+    // interactive-tools/stage-5/measurement-space/square-sum-chain/
+    // ------------------------------------------------------------------------
+    // squareChainRooms/{CODE}
+    //   createdAt, updatedAt   timestamps
+    //   state.pos.p{1..15}     { x, y } tile positions as fractions of the board
+    //   state.slots            array of 15 numbers (0 = an empty space)
+    //   state.wires.w{a}_{b}   { a, b } a join the students drew
+    //   state.inks.k…          { pts:[[x,y],…], col, by } one pen stroke
+    //   state.checked          has Check been pressed on this arrangement
+    // squareChainRooms/{CODE}/members/{uid}
+    //   name, colour, cx, cy, at   presence + live cursor (first name only)
+    //
+    // Tighter than the older game blocks on purpose: the document shape is
+    // pinned, codes must look like codes, listing is denied so rooms cannot be
+    // enumerated, and you may only write your OWN presence document.
+    //
+    // HOUSEKEEPING: rooms are throwaway. Add a Firestore TTL policy on
+    // `updatedAt` for squareChainRooms (Firestore → TTL) so old rooms delete
+    // themselves — 14 days is plenty for classroom use.
+    // ========================================================================
+    match /squareChainRooms/{code} {
+
+      function signedIn() { return request.auth != null; }
+      function goodCode() { return code.matches('^[A-Z2-9]{4}$'); }
+      function shape()    { return request.resource.data.keys().hasOnly(['createdAt','updatedAt','state'])
+                                   && request.resource.data.state is map; }
+
+      allow get: if signedIn();
+      allow list: if false;                       // rooms cannot be enumerated
+
+      allow create: if signedIn() && goodCode() && shape();
+      allow update: if signedIn() && goodCode() && shape();
+      allow delete: if false;                     // the TTL policy clears rooms
+
+      // Presence + live cursor. You may only write your own member document.
+      match /members/{uid} {
+        allow get, list: if signedIn();
+        allow create, update: if signedIn()
+          && request.auth.uid == uid
+          && request.resource.data.keys().hasOnly(['name','colour','cx','cy','at'])
+          && (!('name' in request.resource.data) || request.resource.data.name.size() <= 14);
+        allow delete: if signedIn() && request.auth.uid == uid;
+      }
+    }
+
+    // ========================================================================
+    // NOT IN YOUR CURRENT LIVE RULES — three games write to collections that
+    // nothing above matches, so their online mode is denied at the moment:
+    //
+    //   captureGridRooms           games/cartesian-capture.html
+    //   dotsAndBoxesGames          games/dots-and-boxes.html
+    //   mathMemoryGames            games/Maths Memory/index.html
+    //
+    // Uncomment to bring them into line with the other multiplayer rooms, or
+    // delete this comment block if those games are meant to stay offline-only.
+    //
+    // match /captureGridRooms/{roomCode} {
+    //   allow read, write: if request.auth != null;
+    // }
+    // match /dotsAndBoxesGames/{roomCode} {
+    //   allow read, write: if request.auth != null;
+    // }
+    // match /mathMemoryGames/{roomCode} {
+    //   allow read, write: if request.auth != null;
+    // }
+    // ========================================================================
+  }
+}
