@@ -158,7 +158,8 @@
     .res-list{list-style:none;margin:.7rem 0 0;padding:0;display:grid;gap:.3rem}
     .res-item a{display:flex;align-items:center;gap:.6rem;text-decoration:none;background:#fff;border:1px solid var(--line);border-radius:10px;padding:.42rem .6rem;transition:border-color .13s ease,box-shadow .13s ease,background .13s ease}
     .res-item a:hover{border-color:var(--brand-2);box-shadow:0 4px 12px rgba(29,78,216,.10);background:#fcfdff}
-    .res-ico-box{width:2.5rem;flex:0 0 2.5rem;height:1.35rem;border-radius:6px;display:grid;place-items:center;font-size:.62rem;font-weight:950;letter-spacing:.03em}
+    .res-ico-box{width:2.5rem;flex:0 0 2.5rem;height:1.5rem;border-radius:6px;display:grid;place-items:center;font-size:.62rem;font-weight:950;letter-spacing:.03em}
+    .res-ico-box svg{width:1.25rem;height:1.25rem;display:block}
     .t-pdf{background:#fee2e2;color:#b91c1c}
     .t-pptx{background:#ffedd5;color:#c2410c}
     .t-docx{background:#dbeafe;color:#1d4ed8}
@@ -281,6 +282,20 @@
 
   var TYPE_LABEL = { pdf:'PDF', pptx:'PPT', docx:'DOC', xlsx:'XLS', link:'LINK', video:'VID' };
 
+  /* Types that render a glyph instead of a text label.
+     Globe + pointer = an interactive web tool (drawn here, not a stock asset). */
+  var TYPE_ICON = {
+    link:
+      '<svg viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" ' +
+        'stroke-width="1.9" stroke-linejoin="round">' +
+        '<circle cx="13.6" cy="13.6" r="11.1"/>' +
+        '<ellipse cx="13.6" cy="13.6" rx="4.7" ry="11.1"/>' +
+        '<path d="M2.5 13.6h22.2M4.6 7.4h18M4.6 19.8h14.4M13.6 2.5v22.2"/>' +
+        '<path d="M15.1 14.6 30 21.9l-6.7 1.1 2.9 6.6-3.9 1.7-2.8-6.6-4.4 4.2z" ' +
+          'fill="currentColor" stroke="#e0e7ff" stroke-width="2.1"/>' +
+      '</svg>'
+  };
+
   function esc(s){
     return String(s == null ? '' : s)
       .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
@@ -334,7 +349,9 @@
     return '<li class="res-item">' +
       '<a href="' + esc(href) + '" target="_blank" rel="noopener"' +
          (tip ? ' title="' + esc(tip) + '"' : '') + '>' +
-        '<span class="res-ico-box t-' + esc(type) + '">' + esc(TYPE_LABEL[type] || 'FILE') + '</span>' +
+        '<span class="res-ico-box t-' + esc(type) + '"' +
+           (TYPE_ICON[type] ? ' role="img" aria-label="' + esc(TYPE_LABEL[type] || type) + '"' : '') + '>' +
+          (TYPE_ICON[type] || esc(TYPE_LABEL[type] || 'FILE')) + '</span>' +
         '<span class="res-name">' + highlight(r.title, state.q) + '</span>' +
         (r.year ? '<span class="res-year">' + esc(r.year) + '</span>' : '') +
         '<span class="res-arrow" aria-hidden="true">↗</span>' +

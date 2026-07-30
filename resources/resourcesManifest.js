@@ -97,6 +97,14 @@ window.MMT_RESOURCES = {
               tags: ["worksheet", "unit fractions", "number line", "bar model", "fraction of an amount", "comparing fractions"]
             },
             {
+              title: "Fraction of an Amount",
+              type: "pdf",
+              file: "fraction-of-an-amount.pdf",
+              note: "1-page worksheet — completing double number lines to find unit and non-unit fractions of an amount, then applying it without a number line.",
+              year: "Year 7",
+              tags: ["worksheet", "fraction of an amount", "double number line", "unit fractions", "non-unit fractions"]
+            },
+            {
               title: "Adding Fractions with Common Denominators",
               type: "pdf",
               file: "adding-fractions-with-common-denominators.pdf",
