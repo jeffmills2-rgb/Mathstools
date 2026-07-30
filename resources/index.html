@@ -272,11 +272,13 @@
 </main>
 
 <script src="resourcesManifest.js"></script>
+<script src="toolLinks.js"></script>
 <script>
 (function(){
   "use strict";
 
   var DATA    = window.MMT_RESOURCES;
+  var LINKS   = window.MMT_TOOL_LINKS || {};
   var out     = document.getElementById('stageOutput');
   var tabs    = Array.prototype.slice.call(document.querySelectorAll('.stage-tabs button'));
   var search  = document.getElementById('searchInput');
@@ -317,8 +319,19 @@
     }catch(e){ return safe; }
   }
 
+  /* An outcome's full resource list = uploaded files (from the manifest) first,
+     then the site's own tools/quizzes/games (from toolLinks.js). Tool links are
+     normalised to type:"link" so they pick up the globe icon. */
+  function allRes(o){
+    var files = o.resources || [];
+    var links = (LINKS[o.code] || []).map(function(r){
+      return { title:r.title, type:'link', url:r.url, note:r.note, kind:r.kind, tags:r.tags };
+    });
+    return files.concat(links);
+  }
+
   function resCount(topic){
-    return topic.outcomes.reduce(function(n,o){ return n + (o.resources ? o.resources.length : 0); }, 0);
+    return topic.outcomes.reduce(function(n,o){ return n + allRes(o).length; }, 0);
   }
 
   function totalResources(){
@@ -330,19 +343,21 @@
   }
 
   /* --- matching -------------------------------------------------------- */
+  function hasRes(o){ return allRes(o).length > 0; }
+
   function outcomeMatches(o, topic){
     /* Stage 3 outcomes have no `path` (K–6 has no Core/Path split), so a
        Core/Path filter can never match them — but the pills are hidden on
        Stage 3 anyway, so this only guards a stale filter. */
     if(state.path && o.path !== state.path) return false;
-    if(state.hasOnly && (!o.resources || !o.resources.length)) return false;
+    if(state.hasOnly && !hasRes(o)) return false;
     if(!state.q) return true;
     var hay = [
       topic.name, topic.slug, topic.blurb, topic.collates,
       o.code, o.statement, o.focusArea, o.path, o.pathway
     ].join(' ');
-    (o.resources||[]).forEach(function(r){
-      hay += ' ' + [r.title, r.note, r.year, (r.tags||[]).join(' '), r.type].join(' ');
+    allRes(o).forEach(function(r){
+      hay += ' ' + [r.title, r.note, r.year, r.kind, (r.tags||[]).join(' '), r.type].join(' ');
     });
     return hay.toLowerCase().indexOf(state.q.toLowerCase()) !== -1;
   }
@@ -353,7 +368,9 @@
     var href = type === 'link' ? (r.url || '#') : (basePath + '/' + encodeURIComponent(r.file || ''));
     /* note + tags stay searchable but are not rendered — the row is one line.
        The note becomes the hover tooltip. */
-    var tip = [r.note, r.year, (r.tags||[]).join(', ')].filter(Boolean).join(' · ');
+    var tip = [r.note, r.kind, r.year, (r.tags||[]).join(', ')].filter(Boolean).join(' · ');
+    /* right-hand label: a year for uploaded files, a kind for site tools */
+    var label = r.year || r.kind || '';
 
     return '<li class="res-item">' +
       '<a href="' + esc(href) + '" target="_blank" rel="noopener"' +
@@ -362,7 +379,7 @@
            (TYPE_ICON[type] ? ' role="img" aria-label="' + esc(TYPE_LABEL[type] || type) + '"' : '') + '>' +
           (TYPE_ICON[type] || esc(TYPE_LABEL[type] || 'FILE')) + '</span>' +
         '<span class="res-name">' + highlight(r.title, state.q) + '</span>' +
-        (r.year ? '<span class="res-year">' + esc(r.year) + '</span>' : '') +
+        (label ? '<span class="res-year">' + esc(label) + '</span>' : '') +
         '<span class="res-arrow" aria-hidden="true">↗</span>' +
       '</a></li>';
   }
@@ -375,10 +392,10 @@
       if(o.pathway) badges += '<span class="badge pathway">Path: ' + esc(o.pathway) + '</span>';
     }
 
-    var res = (o.resources || []);
+    var res = allRes(o);
     var body = res.length
       ? '<ul class="res-list">' + res.map(function(r){ return resourceHTML(r, basePath); }).join('') + '</ul>'
-      : '<p class="empty-note">No resources uploaded yet for this outcome.</p>';
+      : '<p class="empty-note">Nothing linked to this outcome yet.</p>';
 
     return '<div class="outcome" data-code="' + esc(o.code) + '">' +
       '<div class="outcome-head">' +
