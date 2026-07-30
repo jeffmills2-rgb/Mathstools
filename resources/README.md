@@ -3,8 +3,11 @@
 Live page: **https://www.millsmathstools.au/resources/**
 
 Teaching and revision resources organised by NSW Mathematics K–10 Syllabus (2022)
-outcome. Stage 4 (Years 7–8) and Stage 5 (Years 9–10), grouped by strand,
-collapsible by topic.
+outcome. Stage 3 (Years 5–6), Stage 4 (Years 7–8) and Stage 5 (Years 9–10),
+grouped by strand, collapsible by topic.
+
+**78 outcomes across 44 collated topics.** Focus areas that NESA splits into
+A / B / C / D are merged into a single topic (Trigonometry A–D → "Trigonometry").
 
 ---
 
@@ -71,9 +74,30 @@ resources/
   index.html               the landing page (self-contained; reads the manifest)
   resourcesManifest.js     ← THE ONLY FILE YOU EDIT
   README.md                this file
+  stage-3/<topic>/         drop Stage 3 files here
   stage-4/<topic>/         drop Stage 4 files here
   stage-5/<topic>/         drop Stage 5 files here
 ```
+
+### Stage 3 topics (10 topics · 21 outcomes — Part A/B collated)
+
+NESA splits each Stage 3 focus area into **Part A** and **Part B** — a Year 5 /
+Year 6 emphasis of the *same* outcomes. So A/B are collated into one topic, and
+Stage 3 outcomes carry **no Core/Path badge** (K–6 has no such distinction; the
+Core/Path filter pills hide themselves on this tab).
+
+| Strand | Folder | Outcomes |
+|---|---|---|
+| Number & Algebra | `represents-numbers` | MA3-RN-01, -02, -03 |
+| | `additive-relations` | MA3-AR-01 |
+| | `multiplicative-relations` | MA3-MR-01, -02 |
+| | `representing-quantity-fractions` | MA3-RQF-01, -02 |
+| Measurement & Space | `geometric-measure` | MA3-GM-01 (position), -02 (length), -03 (angles) |
+| | `two-dimensional-spatial-structure` | MA3-2DS-01, -02, -03 |
+| | `three-dimensional-spatial-structure` | MA3-3DS-01, -02 |
+| | `non-spatial-measure` | MA3-NSM-01 (mass), -02 (time) |
+| Statistics & Probability | `data` | MA3-DATA-01, -02 |
+| | `chance` | MA3-CHAN-01 |
 
 ### Stage 4 topics (15 topics · 16 outcomes)
 
@@ -130,8 +154,9 @@ Core / Path badge.
 The page supports hash deep-links, handy for putting on a Google Classroom post
 or a scope-and-sequence doc:
 
-- `/resources/#stage-5` — opens on the Stage 5 tab
-- `/resources/#MA5-TRG-C-02` — opens Stage 5, filters to that outcome and scrolls to it
+- `/resources/#stage-3` — opens on the Stage 3 tab (also `#stage-4`, `#stage-5`)
+- `/resources/#MA3-AR-01` — opens the right stage, filters to that outcome and scrolls to it
+- `/resources/#MA5-TRG-C-02` — same, any MA3/MA4/MA5 code works
 
 ---
 
@@ -178,9 +203,18 @@ already supports that — no code change needed.
 
 ## Adding a whole new topic
 
-Only needed if NESA changes the syllabus. Add an object to `stage4` or `stage5`
-in the manifest with `slug`, `name`, `strand`, `icon`, `blurb`, `outcomes[]`,
-then create the matching folder. The page picks it up automatically.
+Only needed if NESA changes the syllabus. Add an object to `stage3`, `stage4` or
+`stage5` in the manifest with `slug`, `name`, `strand`, `icon`, `blurb`,
+`outcomes[]`, then create the matching folder. The page picks it up
+automatically — topic counts, hero chips and the search index all derive from
+the manifest.
+
+Outcome shape: include `path: "Core"` or `path: "Path"` (plus `pathway` for Path
+outcomes) for Stage 4/5. **Omit `path` entirely for Stage 3** — the page then
+renders no badge, which is correct for K–6.
+
+To add a whole new *stage*, also add its key to the `STAGES` array near the top
+of the script in `index.html` and add a tab button. Everything else is derived.
 
 ---
 

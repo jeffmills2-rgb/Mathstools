@@ -103,6 +103,7 @@
     .pill{border:1px solid var(--line);background:#fff;border-radius:999px;padding:.45rem .8rem;font-size:.8rem;font-weight:900;color:#475569;cursor:pointer;transition:all .15s ease}
     .pill:hover{border-color:var(--brand-2);color:var(--brand)}
     .pill[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:#fff}
+    .pill[hidden]{display:none}
     .ctl-btn{border:1px solid var(--line);background:#fff;border-radius:999px;padding:.45rem .8rem;font-size:.8rem;font-weight:900;color:#475569;cursor:pointer;transition:all .15s ease}
     .ctl-btn:hover{border-color:var(--brand);color:var(--brand)}
     .result-count{margin-left:auto;color:var(--muted);font-size:.8rem;font-weight:800;white-space:nowrap}
@@ -220,17 +221,19 @@
   <section class="card hero">
     <span class="eyebrow">📚 Resource library</span>
     <h1>Resources by Stage</h1>
-    <p>Every Stage 4 and Stage 5 outcome from the NSW Mathematics K–10 Syllabus (2022), grouped by strand. Open a topic to find the PDFs, slide decks and worksheets attached to each outcome.</p>
+    <p>Every Stage 3, Stage 4 and Stage 5 outcome from the NSW Mathematics K–10 Syllabus (2022), grouped by strand. Open a topic to find the PDFs, slide decks and worksheets attached to each outcome.</p>
     <div class="hero-meta">
+      <span class="chip" id="s3Chip">🎯 Stage 3</span>
       <span class="chip" id="s4Chip">🎯 Stage 4</span>
       <span class="chip" id="s5Chip">🎯 Stage 5</span>
-      <span class="chip">🧩 Stage 5 focus areas collated (A/B/C/D → one topic)</span>
+      <span class="chip">🧩 Focus areas collated (A/B/C/D → one topic)</span>
       <span class="chip" id="totalResChip">📎 0 resources</span>
     </div>
   </section>
 
   <section class="card controls" aria-label="Filter resources">
     <div class="stage-tabs" role="tablist" aria-label="Choose stage">
+      <button role="tab" id="tab-stage3" aria-selected="false" data-stage="stage3">Stage 3 · Years 5–6</button>
       <button role="tab" id="tab-stage4" aria-selected="true" data-stage="stage4">Stage 4 · Years 7–8</button>
       <button role="tab" id="tab-stage5" aria-selected="false" data-stage="stage5">Stage 5 · Years 9–10</button>
     </div>
@@ -258,8 +261,10 @@
     <strong>About this page.</strong>
     Outcome codes and statements are taken verbatim from the
     <a href="https://curriculum.nsw.edu.au/learning-areas/mathematics/mathematics-k-10-2022" target="_blank" rel="noopener">NSW Mathematics K–10 Syllabus (2022)</a>,
-    © NSW Education Standards Authority. Stage 5 focus areas that split across A / B / C / D are collated into a single topic here — each outcome keeps its own
-    <span class="badge core">Core</span> or <span class="badge path">Path</span> badge, with NESA's pathway note (Stn = Standard, Adv = Advanced, Ext = Extension).
+    © NSW Education Standards Authority. Focus areas that split across A / B / C / D are collated into a single topic here.
+    Stage 4 and Stage 5 outcomes keep their own <span class="badge core">Core</span> or <span class="badge path">Path</span> badge,
+    with NESA's pathway note (Stn = Standard, Adv = Advanced, Ext = Extension).
+    Stage 3 carries no badge — Part A and Part B are a Year 5 / Year 6 emphasis of the <em>same</em> outcomes, and K–6 has no Core/Path distinction.
     <br><br>
     <strong>Adding resources:</strong> drop the file into <code>resources/&lt;stage&gt;/&lt;topic&gt;/</code> and add one line to <code>resources/resourcesManifest.js</code>. Nothing else needs editing.
   </section>
@@ -278,6 +283,7 @@
   var pills   = Array.prototype.slice.call(document.querySelectorAll('#pathFilter .pill'));
   var countEl = document.getElementById('resultCount');
 
+  var STAGES = ['stage3','stage4','stage5'];
   var state = { stage:'stage4', q:'', path:null, hasOnly:false };
 
   var TYPE_LABEL = { pdf:'PDF', pptx:'PPT', docx:'DOC', xlsx:'XLS', link:'LINK', video:'VID' };
@@ -317,7 +323,7 @@
 
   function totalResources(){
     var n = 0;
-    ['stage4','stage5'].forEach(function(s){
+    STAGES.forEach(function(s){
       (DATA[s]||[]).forEach(function(t){ n += resCount(t); });
     });
     return n;
@@ -325,6 +331,9 @@
 
   /* --- matching -------------------------------------------------------- */
   function outcomeMatches(o, topic){
+    /* Stage 3 outcomes have no `path` (K–6 has no Core/Path split), so a
+       Core/Path filter can never match them — but the pills are hidden on
+       Stage 3 anyway, so this only guards a stale filter. */
     if(state.path && o.path !== state.path) return false;
     if(state.hasOnly && (!o.resources || !o.resources.length)) return false;
     if(!state.q) return true;
@@ -359,8 +368,12 @@
   }
 
   function outcomeHTML(o, topic, basePath){
-    var badges = '<span class="badge ' + (o.path === 'Core' ? 'core' : 'path') + '">' + esc(o.path) + '</span>';
-    if(o.pathway) badges += '<span class="badge pathway">Path: ' + esc(o.pathway) + '</span>';
+    /* No `path` => Stage 3 (K–6 has no Core/Path distinction) => no badge. */
+    var badges = '';
+    if(o.path){
+      badges = '<span class="badge ' + (o.path === 'Core' ? 'core' : 'path') + '">' + esc(o.path) + '</span>';
+      if(o.pathway) badges += '<span class="badge pathway">Path: ' + esc(o.pathway) + '</span>';
+    }
 
     var res = (o.resources || []);
     var body = res.length
@@ -378,6 +391,7 @@
   }
 
   function topicHTML(topic, stage, visibleOutcomes, forceOpen){
+    /* stage3 -> "stage-3/<slug>", stage4 -> "stage-4/<slug>", etc. */
     var basePath = stage.replace('stage','stage-') + '/' + topic.slug;
     var n = resCount(topic);
     var codes = topic.outcomes.map(function(o){ return o.code; }).join(' · ');
@@ -440,12 +454,31 @@
     countEl.textContent = shownTopics + ' topic' + (shownTopics === 1 ? '' : 's') + ' · ' + shownOutcomes + ' outcome' + (shownOutcomes === 1 ? '' : 's');
   }
 
+  /* Core/Path is a Stage 4–5 concept only — hide those pills on Stage 3 and
+     clear any filter that would otherwise hide every outcome. */
+  function syncPathPills(){
+    var isS3 = state.stage === 'stage3';
+    pills.forEach(function(p){
+      if(!p.dataset.path) return;
+      p.hidden = isS3;
+      if(isS3) p.setAttribute('aria-pressed', 'false');
+    });
+    if(isS3) state.path = null;
+  }
+
+  function selectStage(stage, opts){
+    state.stage = stage;
+    tabs.forEach(function(b){ b.setAttribute('aria-selected', String(b.dataset.stage === stage)); });
+    syncPathPills();
+    if(!opts || opts.hash !== false){
+      history.replaceState(null, '', '#' + stage.replace('stage', 'stage-'));
+    }
+  }
+
   /* --- events ---------------------------------------------------------- */
   tabs.forEach(function(btn){
     btn.addEventListener('click', function(){
-      tabs.forEach(function(b){ b.setAttribute('aria-selected', String(b === btn)); });
-      state.stage = btn.dataset.stage;
-      history.replaceState(null, '', '#' + (state.stage === 'stage5' ? 'stage-5' : 'stage-4'));
+      selectStage(btn.dataset.stage);
       render();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
@@ -480,16 +513,18 @@
     out.querySelectorAll('details.topic').forEach(function(d){ d.open = false; });
   });
 
-  /* deep link: #stage-5 or #MA5-TRG-C-01 */
+  /* deep link: #stage-3 / #stage-4 / #stage-5, or an outcome code like #MA3-AR-01 */
   function applyHash(){
     var h = (location.hash || '').replace('#','');
     if(!h) return;
-    if(/^stage-?5$/i.test(h)){ tabs[1].click(); return; }
-    if(/^stage-?4$/i.test(h)){ tabs[0].click(); return; }
-    if(/^MA[45]-/i.test(h)){
+
+    var m = h.match(/^stage-?([345])$/i);
+    if(m){ selectStage('stage' + m[1]); render(); return; }
+
+    m = h.match(/^MA([345])-/i);
+    if(m){
       var code = h.toUpperCase();
-      state.stage = code.indexOf('MA5') === 0 ? 'stage5' : 'stage4';
-      tabs.forEach(function(b){ b.setAttribute('aria-selected', String(b.dataset.stage === state.stage)); });
+      selectStage('stage' + m[1], { hash:false });
       state.q = code;
       search.value = code;
       render();
@@ -503,10 +538,12 @@
     var oc = ts.reduce(function(n,t){ return n + t.outcomes.length; }, 0);
     return ts.length + ' topics · ' + oc + ' outcomes';
   }
+  document.getElementById('s3Chip').textContent = '🎯 Stage 3 · ' + stageSummary('stage3');
   document.getElementById('s4Chip').textContent = '🎯 Stage 4 · ' + stageSummary('stage4');
   document.getElementById('s5Chip').textContent = '🎯 Stage 5 · ' + stageSummary('stage5');
   var tot = totalResources();
   document.getElementById('totalResChip').textContent = '📎 ' + tot + ' resource' + (tot === 1 ? '' : 's');
+  syncPathPills();
   render();
   applyHash();
 })();

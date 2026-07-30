@@ -56,6 +56,284 @@ window.MMT_RESOURCES = {
   ],
 
   /* ==========================================================================
+     STAGE 3  (Years 5–6) — 21 outcomes across 20 focus areas
+     ---------------------------------------------------------------------------
+     NESA splits each Stage 3 focus area into Part A and Part B (a Year 5 /
+     Year 6 emphasis) — but BOTH parts carry the SAME outcomes. So the A/B pair
+     is collated into one topic here, exactly as with Stage 5.
+     K–6 has no Core / Path distinction, so Stage 3 outcomes carry no `path`
+     field and the page renders no badge for them.
+     ========================================================================== */
+  stage3: [
+
+    /* ---------- Number and Algebra ---------- */
+    {
+      slug: "represents-numbers",
+      name: "Represents Numbers",
+      strand: "number-algebra",
+      icon: "123",
+      collates: "Represents numbers A, B",
+      blurb: "Place value to millions and billions, decimals to 3 places, integers on a number line, and benchmark percentages.",
+      outcomes: [
+        {
+          code: "MA3-RN-01",
+          focusArea: "Represents numbers A & B",
+          statement: "applies an understanding of place value and the role of zero to represent the properties of numbers",
+          resources: []
+        },
+        {
+          code: "MA3-RN-02",
+          focusArea: "Represents numbers A & B",
+          statement: "compares and orders decimals up to 3 decimal places",
+          resources: []
+        },
+        {
+          code: "MA3-RN-03",
+          focusArea: "Represents numbers A & B",
+          statement: "determines percentages of quantities, and finds equivalent fractions and decimals for benchmark percentage values",
+          resources: []
+        }
+      ]
+    },
+    {
+      slug: "additive-relations",
+      name: "Additive Relations",
+      strand: "number-algebra",
+      icon: "+−",
+      collates: "Additive relations A, B",
+      blurb: "Choosing efficient strategies for addition and subtraction, including with decimals.",
+      outcomes: [
+        {
+          code: "MA3-AR-01",
+          focusArea: "Additive relations A & B",
+          statement: "selects and applies appropriate strategies to solve addition and subtraction problems",
+          resources: [
+            {
+              title: "Addition Practice — Spot the Mistake",
+              type: "pdf",
+              file: "addition-practice-spot-the-mistake.pdf",
+              note: "2-page worksheet — find and explain errors in column addition, complete a partitioning strategy and name it, then a Year 7 challenge page (angles, algebra, perimeter).",
+              year: "Year 6",
+              tags: ["worksheet", "error analysis", "column addition", "partitioning", "strategy", "transition to Year 7", "extension"]
+            },
+            {
+              title: "Addition Challenge and Extension",
+              type: "pdf",
+              file: "addition-challenge-extension.pdf",
+              note: "2-page challenge set — missing values, magic squares, an Open Middle digit task, balancing equivalent expressions, and an always/sometimes/never reasoning prompt on odd numbers.",
+              year: "Year 6",
+              tags: ["challenge", "extension", "magic squares", "open middle", "reasoning", "always sometimes never", "equivalence", "problem solving"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      slug: "multiplicative-relations",
+      name: "Multiplicative Relations",
+      strand: "number-algebra",
+      icon: "×÷",
+      collates: "Multiplicative relations A, B",
+      blurb: "Multiplication and division strategies, factors and multiples, number sentences and the order of operations.",
+      outcomes: [
+        {
+          code: "MA3-MR-01",
+          focusArea: "Multiplicative relations A & B",
+          statement: "selects and applies appropriate strategies to solve multiplication and division problems",
+          resources: [
+            {
+              title: "Dot Circle Factors",
+              type: "pdf",
+              file: "dot-circle-factors.pdf",
+              note: "2-page worksheet — build dot arrangements in a circle, record the factor groups (\"2 groups of 3\"), then list the factors. Worked example on page 1, blank grid on page 2.",
+              year: "Year 5",
+              tags: ["worksheet", "factors", "multiples", "factor pairs", "arrays", "visual", "dot arrangements"]
+            },
+            {
+              title: "Who Am I? — Non-Familiar Factors",
+              type: "pdf",
+              file: "who-am-i-non-familiar-factors.pdf",
+              note: "2-page deduction puzzle — narrow down a number from clues about factor count, multiples, square numbers and factor sums. Page 2 is a harder version.",
+              year: "Year 6",
+              tags: ["puzzle", "factors", "multiples", "square numbers", "divisibility", "reasoning", "extension", "who am I"]
+            }
+          ]
+        },
+        {
+          code: "MA3-MR-02",
+          focusArea: "Multiplicative relations A & B",
+          statement: "constructs and completes number sentences involving multiplicative relations, applying the order of operations to calculations",
+          resources: []
+        }
+      ]
+    },
+    {
+      slug: "representing-quantity-fractions",
+      name: "Representing Quantity Fractions",
+      strand: "number-algebra",
+      icon: "½",
+      collates: "Representing quantity fractions A, B",
+      blurb: "Comparing and ordering fractions with related denominators, and finding fractions of measures and quantities.",
+      outcomes: [
+        {
+          code: "MA3-RQF-01",
+          focusArea: "Representing quantity fractions A & B",
+          statement: "compares and orders fractions with denominators of 2, 3, 4, 5, 6, 8 and 10",
+          resources: []
+        },
+        {
+          code: "MA3-RQF-02",
+          focusArea: "Representing quantity fractions A & B",
+          statement: "determines ½, ¼, ⅕ and 1/10 of measures and quantities",
+          resources: []
+        }
+      ]
+    },
+
+    /* ---------- Measurement and Space ---------- */
+    {
+      slug: "geometric-measure",
+      name: "Geometric Measure",
+      strand: "measurement-space",
+      icon: "📐",
+      collates: "Geometric measure A, B",
+      blurb: "Points on the coordinate plane, length and perimeter, and measuring and constructing angles.",
+      outcomes: [
+        {
+          code: "MA3-GM-01",
+          focusArea: "Geometric measure A & B — Position",
+          statement: "locates and describes points on a coordinate plane",
+          resources: []
+        },
+        {
+          code: "MA3-GM-02",
+          focusArea: "Geometric measure A & B — Length",
+          statement: "selects and uses the appropriate unit and device to measure lengths and distances including perimeters",
+          resources: []
+        },
+        {
+          code: "MA3-GM-03",
+          focusArea: "Geometric measure A & B — Angles",
+          statement: "measures and constructs angles, and identifies the relationships between angles on a straight line and angles at a point",
+          resources: []
+        }
+      ]
+    },
+    {
+      slug: "two-dimensional-spatial-structure",
+      name: "Two-Dimensional Spatial Structure",
+      strand: "measurement-space",
+      icon: "▦",
+      collates: "Two-dimensional spatial structure A, B",
+      blurb: "Classifying 2D shapes, area of rectangles, and rearranging shapes to find the area of parallelograms and triangles.",
+      outcomes: [
+        {
+          code: "MA3-2DS-01",
+          focusArea: "2D spatial structure A & B — 2D shapes",
+          statement: "investigates and classifies two-dimensional shapes, including triangles and quadrilaterals based on their properties",
+          resources: []
+        },
+        {
+          code: "MA3-2DS-02",
+          focusArea: "2D spatial structure A & B — Area",
+          statement: "selects and uses the appropriate unit to calculate areas, including areas of rectangles",
+          resources: []
+        },
+        {
+          code: "MA3-2DS-03",
+          focusArea: "2D spatial structure A & B — Area",
+          statement: "combines, splits and rearranges shapes to determine the area of parallelograms and triangles",
+          resources: []
+        }
+      ]
+    },
+    {
+      slug: "three-dimensional-spatial-structure",
+      name: "Three-Dimensional Spatial Structure",
+      strand: "measurement-space",
+      icon: "🧊",
+      collates: "Three-dimensional spatial structure A, B",
+      blurb: "Prisms and pyramids, nets and connections to 2D representations, and volume and capacity.",
+      outcomes: [
+        {
+          code: "MA3-3DS-01",
+          focusArea: "3D spatial structure A & B — 3D objects",
+          statement: "visualises, sketches and constructs three-dimensional objects, including prisms and pyramids, making connections to two-dimensional representations",
+          resources: []
+        },
+        {
+          code: "MA3-3DS-02",
+          focusArea: "3D spatial structure A & B — Volume",
+          statement: "selects and uses the appropriate unit to estimate, measure and calculate volumes and capacities",
+          resources: []
+        }
+      ]
+    },
+    {
+      slug: "non-spatial-measure",
+      name: "Non-Spatial Measure",
+      strand: "measurement-space",
+      icon: "⚖",
+      collates: "Non-spatial measure A, B",
+      blurb: "Measuring mass, and duration using 12- and 24-hour time.",
+      outcomes: [
+        {
+          code: "MA3-NSM-01",
+          focusArea: "Non-spatial measure A & B — Mass",
+          statement: "selects and uses the appropriate unit and device to measure the masses of objects",
+          resources: []
+        },
+        {
+          code: "MA3-NSM-02",
+          focusArea: "Non-spatial measure A & B — Time",
+          statement: "measures and compares duration, using 12- and 24-hour time and am and pm notation",
+          resources: []
+        }
+      ]
+    },
+
+    /* ---------- Statistics and Probability ---------- */
+    {
+      slug: "data",
+      name: "Data",
+      strand: "statistics-probability",
+      icon: "📊",
+      collates: "Data A, B",
+      blurb: "Constructing graphs with many-to-one scales, and interpreting timelines, line graphs and media displays.",
+      outcomes: [
+        {
+          code: "MA3-DATA-01",
+          focusArea: "Data A & B",
+          statement: "constructs graphs using many-to-one scales",
+          resources: []
+        },
+        {
+          code: "MA3-DATA-02",
+          focusArea: "Data A & B",
+          statement: "interprets data displays, including timelines and line graphs",
+          resources: []
+        }
+      ]
+    },
+    {
+      slug: "chance",
+      name: "Chance",
+      strand: "statistics-probability",
+      icon: "🎲",
+      collates: "Chance A, B",
+      blurb: "Running chance experiments, and quantifying probability with fractions, decimals and percentages.",
+      outcomes: [
+        {
+          code: "MA3-CHAN-01",
+          focusArea: "Chance A & B",
+          statement: "conducts chance experiments and quantifies the probability",
+          resources: []
+        }
+      ]
+    }
+  ],
+
+  /* ==========================================================================
      STAGE 4  (Years 7–8) — 16 outcomes across 16 focus areas
      ========================================================================== */
   stage4: [
@@ -113,9 +391,9 @@ window.MMT_RESOURCES = {
               tags: ["worksheet", "adding fractions", "subtracting fractions", "common denominators", "fraction bar", "improper fractions", "mixed numerals"]
             },
             {
-              title: "Percent and Decimal of an Amount",
+              title: "Percentage and Decimal of an Amount",
               type: "pdf",
-              file: "percent-and-decimal-of-an-amount.pdf",
+              file: "percentage-and-decimal-of-an-amount.pdf",
               note: "2-page worksheet — using a number line to find a percentage or decimal of an amount, then comparing equivalent forms.",
               year: "Year 7",
               tags: ["worksheet", "number line", "percentage of an amount", "decimal of an amount"]
