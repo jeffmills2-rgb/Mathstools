@@ -3,32 +3,74 @@ rules_version = '2';
 // ============================================================================
 // Mills Maths Tools — FIREBASE PROJECT: mmt-firebase-games
 // ----------------------------------------------------------------------------
-// This is the arcade/multiplayer project, NOT `mills-maths-tools`. Nothing here
-// touches the strict claim-based platform rules — no student/teacher identity,
-// no results, no typed answers live in this project. Every client signs in
-// anonymously and needs the room code to find a room.
+// The arcade / multiplayer project. NOT `mills-maths-tools` — nothing here
+// touches the strict claim-based platform rules. No student or teacher
+// identity, no results and no typed answers live in this project. Every client
+// signs in anonymously and needs the room code to reach a room.
 //
 // Reference copy of the LIVE rules. Deploy by pasting the whole file into
-// Firebase Console → project mmt-firebase-games → Firestore → Rules → Publish.
+// Firebase Console -> project mmt-firebase-games -> Firestore -> Rules -> Publish.
 //
-// Last reviewed: 2026-07-29 (added squareChainRooms for Number Sum Chain).
+// Last reviewed: 2026-07-29 — full audit of every page in the site that talks
+// to this project. Every game below was traced from its firebaseConfig through
+// to the exact doc() path it reads and writes.
+//
+// AUDIT — pages on mmt-firebase-games and the path each one uses
+// ----------------------------------------------------------------------------
+//   games/fractional-hex.html          games/fraction-hex-path/rooms/{code}      OK
+//   games/row-column-challenge.html    games/rows-columns-challenge/rooms/{code} OK
+//   games/shikaku.html                 games/shikaku/rooms/{code}                OK
+//   games/cartesian-connect-4.html     games/cartesianConnect4/rooms/{code}      OK
+//   games/closest-to-100.html          closestTo100Games/{code}                  OK
+//   games/greedy-pig.html              greedyPigGames/{code}                     OK
+//   games/battleships.html             coordinateBattleshipsGames/{code}         OK
+//   games/taxed-by-the-king.html       taxedByKingGames/{code}                   OK
+//   games/ultimate-tic-tac-toe.html    ultimateTicTacToeGames/{code}             OK
+//   games/Maths Memory/index.html      mathMemoryGames/{code}                    ADDED BELOW
+//   interactive-tools/stage-5/measurement-space/square-sum-chain/
+//                                      squareChainRooms/{code} (+ members)       ADDED BELOW
+//
+// No page in this project uses a query or a list, and none writes to a
+// subcollection other than the two above. Rooms are read one doc at a time by
+// code.
+//
+// CHANGED IN THIS REVISION
+// ----------------------------------------------------------------------------
+//   + mathMemoryGames   — Maths Memory's online mode was being denied. Nothing
+//                         in the previous ruleset matched its collection.
+//   + squareChainRooms  — new, for Number Sum Chain.
+//   - coordinateConnect4Games — REMOVED. Nothing in the site writes to it:
+//                         Cartesian Connect 4 actually uses the
+//                         games/cartesianConnect4/rooms/{code} structure, which
+//                         the first block already covers. It was a permissive
+//                         read/write rule on a collection nobody uses. If you
+//                         want it back it is one block, same shape as the
+//                         others.
+//
+// NOT IN THIS PROJECT — see the note at the bottom of the file
+//   games/cartesian-capture.html and games/dots-and-boxes.html still point at
+//   an OLDER Firebase project (`coordinate-connect-4`). Their rules belong
+//   there, not here.
 // ============================================================================
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Existing general game room structure
-    // (Fractional Hex, Row & Column Challenge, Shikaku, Cartesian Connect 4)
+    // ---- General game room structure -------------------------------------
+    // Fractional Hex          games/fraction-hex-path/rooms/{code}
+    // Row & Column Challenge  games/rows-columns-challenge/rooms/{code}
+    // Shikaku                 games/shikaku/rooms/{code}
+    // Cartesian Connect 4     games/cartesianConnect4/rooms/{code}
     match /games/{gameId}/rooms/{roomCode} {
       allow read, write: if request.auth != null;
     }
 
-    // Closest to 100 online multiplayer rooms
+    // ---- Closest to 100 online multiplayer rooms -------------------------
     match /closestTo100Games/{roomCode} {
       allow read, write: if request.auth != null;
     }
 
-    // Greedy Pig classroom rooms
+    // ---- Greedy Pig classroom rooms --------------------------------------
     match /greedyPigGames/{roomCode} {
       allow read: if request.auth != null;
       allow create: if request.auth != null;
@@ -37,17 +79,12 @@ service cloud.firestore {
         && resource.data.teacherUid == request.auth.uid;
     }
 
-    // Coordinate / Cartesian Connect 4 online multiplayer rooms
-    match /coordinateConnect4Games/{roomCode} {
-      allow read, write: if request.auth != null;
-    }
-
-    // Coordinate Battleships online multiplayer rooms
+    // ---- Coordinate Battleships online multiplayer rooms -----------------
     match /coordinateBattleshipsGames/{roomCode} {
       allow read, write: if request.auth != null;
     }
 
-    // Taxed by the King classroom rooms
+    // ---- Taxed by the King classroom rooms -------------------------------
     match /taxedByKingGames/{roomCode} {
       allow read: if request.auth != null;
       allow create: if request.auth != null;
@@ -56,33 +93,40 @@ service cloud.firestore {
         && resource.data.teacherUid == request.auth.uid;
     }
 
-    // Ultimate Tic-Tac-Toe online multiplayer rooms
+    // ---- Ultimate Tic-Tac-Toe online multiplayer rooms -------------------
     match /ultimateTicTacToeGames/{roomCode} {
       allow read, write: if request.auth != null;
     }
 
-    // ========================================================================
-    // NEW — Number Sum Chain collaboration rooms
+    // ---- Maths Memory online rooms  (NEW — was missing) ------------------
+    // games/Maths Memory/index.html. Uses getDoc, setDoc, updateDoc,
+    // runTransaction and onSnapshot, so it needs read + write.
+    match /mathMemoryGames/{roomCode} {
+      allow read, write: if request.auth != null;
+    }
+
+    // ======================================================================
+    // Number Sum Chain collaboration rooms  (NEW)
     // interactive-tools/stage-5/measurement-space/square-sum-chain/
-    // ------------------------------------------------------------------------
+    // ----------------------------------------------------------------------
     // squareChainRooms/{CODE}
     //   createdAt, updatedAt   timestamps
     //   state.pos.p{1..15}     { x, y } tile positions as fractions of the board
     //   state.slots            array of 15 numbers (0 = an empty space)
     //   state.wires.w{a}_{b}   { a, b } a join the students drew
-    //   state.inks.k…          { pts:[[x,y],…], col, by } one pen stroke
+    //   state.inks.k...        { pts:[[x,y],...], col, by } one pen stroke
     //   state.checked          has Check been pressed on this arrangement
     // squareChainRooms/{CODE}/members/{uid}
     //   name, colour, cx, cy, at   presence + live cursor (first name only)
     //
-    // Tighter than the older game blocks on purpose: the document shape is
+    // Deliberately tighter than the older game blocks: the document shape is
     // pinned, codes must look like codes, listing is denied so rooms cannot be
     // enumerated, and you may only write your OWN presence document.
     //
     // HOUSEKEEPING: rooms are throwaway. Add a Firestore TTL policy on
-    // `updatedAt` for squareChainRooms (Firestore → TTL) so old rooms delete
+    // `updatedAt` for squareChainRooms (Firestore -> TTL) so old rooms delete
     // themselves — 14 days is plenty for classroom use.
-    // ========================================================================
+    // ======================================================================
     match /squareChainRooms/{code} {
 
       function signedIn() { return request.auth != null; }
@@ -108,26 +152,34 @@ service cloud.firestore {
       }
     }
 
-    // ========================================================================
-    // NOT IN YOUR CURRENT LIVE RULES — three games write to collections that
-    // nothing above matches, so their online mode is denied at the moment:
-    //
-    //   captureGridRooms           games/cartesian-capture.html
-    //   dotsAndBoxesGames          games/dots-and-boxes.html
-    //   mathMemoryGames            games/Maths Memory/index.html
-    //
-    // Uncomment to bring them into line with the other multiplayer rooms, or
-    // delete this comment block if those games are meant to stay offline-only.
-    //
-    // match /captureGridRooms/{roomCode} {
-    //   allow read, write: if request.auth != null;
-    // }
-    // match /dotsAndBoxesGames/{roomCode} {
-    //   allow read, write: if request.auth != null;
-    // }
-    // match /mathMemoryGames/{roomCode} {
-    //   allow read, write: if request.auth != null;
-    // }
-    // ========================================================================
+    // ======================================================================
+    // Everything else in this project is denied by default.
+    // ======================================================================
   }
 }
+
+// ============================================================================
+// SEPARATE PROJECT — `coordinate-connect-4`
+// ----------------------------------------------------------------------------
+// Two games were never migrated off the old project and still point at it:
+//
+//   games/cartesian-capture.html   ->  captureGridRooms/{code}
+//                                      (also captureGridRooms/currentRoom)
+//   games/dots-and-boxes.html      ->  dotsAndBoxesGames/{code}
+//
+// Their rules belong in THAT project's console, not this file. If its rules
+// are missing these blocks, both games' online modes are being denied:
+//
+//   match /captureGridRooms/{roomCode} {
+//     allow read, write: if request.auth != null;
+//   }
+//   match /dotsAndBoxesGames/{roomCode} {
+//     allow read, write: if request.auth != null;
+//   }
+//
+// Longer term these two are the last things holding the fourth Firebase
+// project open — shikaku.html already contains a guard that refuses to run
+// against `coordinate-connect-4`, so a migration was clearly started. Pointing
+// both files at the mmt-firebase-games config (and adding the two blocks above
+// to this file) would let that project be closed.
+// ============================================================================
