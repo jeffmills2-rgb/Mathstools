@@ -100,6 +100,11 @@
   .swatches{ display:inline-flex; gap:5px; align-items:center; }
   .sw{ width:22px; height:22px; border-radius:50%; border:2px solid white; box-shadow:0 0 0 1.5px var(--border); cursor:pointer; padding:0; }
   .sw[aria-pressed="true"]{ box-shadow:0 0 0 2.5px var(--blue); transform:scale(1.12); }
+  .sizePick{ appearance:none; border:1px solid var(--border); background:white; color:var(--ink);
+    padding:8px 11px; border-radius:12px; font-weight:850; font-size:14px; cursor:pointer;
+    box-shadow:0 2px 6px rgba(15,23,42,.06); }
+  .toolOpts{ display:inline-flex; gap:8px; align-items:center; }
+  .toolOpts[hidden]{ display:none; }
   .myPen{ display:none; align-items:center; gap:7px; font-size:.8rem; font-weight:850; color:var(--muted); }
   .myPen .chip{ width:20px; height:20px; border-radius:50%; border:2px solid white; box-shadow:0 0 0 1.5px var(--border); }
 
@@ -111,12 +116,20 @@
       linear-gradient(90deg,#f1f5f9 1px,transparent 1px) 0 0/28px 28px, #ffffff;
     touch-action:none; overflow:hidden; border-radius:20px; }
   .board.modeDraw{ cursor:crosshair; }
+  .board.modeMark{ cursor:crosshair; }
   .board.modeErase{ cursor:cell; }
   .board.modeConnect{ cursor:pointer; }
   #wires{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
   #wires .wire{ stroke:var(--wire); stroke-width:7; stroke-linecap:round; fill:none; opacity:.85; }
-  #wires .inkPath{ stroke:var(--pen); stroke-width:3.2; stroke-linecap:round; stroke-linejoin:round; fill:none; }
-  #wires .hit{ stroke:transparent; stroke-width:20; fill:none; pointer-events:none; }
+  /* NOTE: colour + width are set per-stroke as presentation attributes, so this
+     rule must NOT set `stroke` — a CSS declaration beats a presentation attribute
+     and every stroke would come out the same colour. */
+  #wires .inkPath{ stroke-linecap:round; stroke-linejoin:round; fill:none; }
+  #wires .inkPath.hl{ stroke-linecap:round; stroke-linejoin:round; opacity:.38; }
+  /* Join hits are <line>; ink hits are <path> and carry their own stroke-width
+     attribute (so a fat highlighter is easy to rub out) — don't set it here. */
+  #wires .hit{ stroke:transparent; fill:none; pointer-events:none; }
+  #wires line.hit{ stroke-width:20; }
   .board.modeErase #wires .hit{ pointer-events:stroke; cursor:cell; }
   #wires .rubber{ stroke:var(--purple); stroke-width:4; stroke-dasharray:8 7; stroke-linecap:round; fill:none; opacity:.75; }
 
@@ -266,16 +279,43 @@
         <button type="button" data-mode="move"    aria-pressed="true">Move</button>
         <button type="button" data-mode="connect" aria-pressed="false">Join</button>
         <button type="button" data-mode="draw"    aria-pressed="false">Pen</button>
+        <button type="button" data-mode="mark"    aria-pressed="false">Highlighter</button>
         <button type="button" data-mode="erase"   aria-pressed="false">Rub out</button>
       </div>
-      <div class="swatches" id="swatches" role="group" aria-label="Pen colour">
-        <button class="sw" type="button" data-col="#0f172a" style="background:#0f172a" aria-pressed="true" title="Black"></button>
-        <button class="sw" type="button" data-col="#dc2626" style="background:#dc2626" aria-pressed="false" title="Red"></button>
-        <button class="sw" type="button" data-col="#16a34a" style="background:#16a34a" aria-pressed="false" title="Green"></button>
-        <button class="sw" type="button" data-col="#7c3aed" style="background:#7c3aed" aria-pressed="false" title="Purple"></button>
+
+      <div class="toolOpts" id="penOpts">
+        <div class="swatches" id="swatches" role="group" aria-label="Pen colour">
+          <button class="sw" type="button" data-col="#0f172a" style="background:#0f172a" aria-pressed="true" title="Black"></button>
+          <button class="sw" type="button" data-col="#dc2626" style="background:#dc2626" aria-pressed="false" title="Red"></button>
+          <button class="sw" type="button" data-col="#16a34a" style="background:#16a34a" aria-pressed="false" title="Green"></button>
+          <button class="sw" type="button" data-col="#7c3aed" style="background:#7c3aed" aria-pressed="false" title="Purple"></button>
+        </div>
+        <select class="sizePick" id="penSize" aria-label="Pen thickness">
+          <option value="2">Pen: fine</option>
+          <option value="3.2" selected>Pen: medium</option>
+          <option value="6">Pen: thick</option>
+          <option value="10">Pen: extra thick</option>
+        </select>
       </div>
+
+      <div class="toolOpts" id="markOpts" hidden>
+        <div class="swatches" id="hlSwatches" role="group" aria-label="Highlighter colour">
+          <button class="sw" type="button" data-col="#facc15" style="background:#facc15" aria-pressed="true" title="Yellow"></button>
+          <button class="sw" type="button" data-col="#4ade80" style="background:#4ade80" aria-pressed="false" title="Green"></button>
+          <button class="sw" type="button" data-col="#38bdf8" style="background:#38bdf8" aria-pressed="false" title="Blue"></button>
+          <button class="sw" type="button" data-col="#f472b6" style="background:#f472b6" aria-pressed="false" title="Pink"></button>
+        </div>
+        <select class="sizePick" id="hlSize" aria-label="Highlighter width">
+          <option value="12">Highlighter: thin</option>
+          <option value="20" selected>Highlighter: medium</option>
+          <option value="30">Highlighter: wide</option>
+          <option value="44">Highlighter: extra wide</option>
+        </select>
+      </div>
+
       <span class="myPen" id="myPen">Your pen <span class="chip" id="myPenChip"></span></span>
       <span class="spacer"></span>
+      <button class="tbtn ghostish" id="btnUndo" type="button" title="Undo (Ctrl+Z)" disabled>Undo</button>
       <button class="tbtn ghostish" id="btnTidy" type="button">Tidy tiles</button>
       <button class="tbtn ghostish" id="btnClearBoard" type="button">Clear workspace</button>
       <button class="tbtn ghostish" id="btnClearChain" type="button">Empty the spaces</button>
@@ -362,8 +402,41 @@
   var checked = false;                   // has Check been pressed on this arrangement?
   var localNote = '';                    // transient message (not shared)
 
-  var mode = 'move', penCol = '#0f172a';
+  var mode = 'move', penCol = '#0f172a', penW = 3.2;
+  var hlCol = '#facc15', hlW = 20;
   var selected = null;
+
+  /* ---- undo -------------------------------------------------------------
+     Snapshots are cheap: slots is primitives, and pos / wires / inks entries
+     are never mutated in place (they are replaced), so a shallow copy of each
+     map is a safe point-in-time record. ---------------------------------- */
+  var undoStack = [], UNDO_MAX = 60;
+  function snapshot(){
+    var p = {}; Object.keys(pos).forEach(function(k){ p[k] = pos[k]; });
+    var w = {}; Object.keys(wires).forEach(function(k){ w[k] = wires[k]; });
+    var k2 = {}; Object.keys(inks).forEach(function(k){ k2[k] = inks[k]; });
+    return { slots: slots.slice(), pos:p, wires:w, inks:k2, checked:checked };
+  }
+  function snap(){
+    undoStack.push(snapshot());
+    if(undoStack.length > UNDO_MAX) undoStack.shift();
+    syncUndoBtn();
+  }
+  function syncUndoBtn(){
+    var b = document.getElementById('btnUndo');
+    if(b) b.disabled = undoStack.length === 0;
+  }
+  function undo(){
+    if(!undoStack.length) return;
+    var s = undoStack.pop();
+    slots = s.slots.slice();
+    pos = {};   Object.keys(s.pos).forEach(function(k){ pos[k] = s.pos[k]; });
+    wires = {}; Object.keys(s.wires).forEach(function(k){ wires[k] = s.wires[k]; });
+    inks = {};  Object.keys(s.inks).forEach(function(k){ inks[k] = s.inks[k]; });
+    checked = s.checked; localNote = ''; selected = null;
+    syncUndoBtn(); renderAll();
+    pushAll();                       // in a room, everyone sees the undo
+  }
 
   var board   = document.getElementById('board');
   var svg     = document.getElementById('wires');
@@ -448,15 +521,25 @@
   function renderWires(){
     while(svg.firstChild) svg.removeChild(svg.firstChild);
     var W = BW(), H = BH();
-    Object.keys(inks).forEach(function(id){
-      var ip = inks[id]; if(!ip || !ip.pts || ip.pts.length < 2) return;
-      var d = pathD(ip.pts);
-      var hit = document.createElementNS(SVGNS,'path');
-      hit.setAttribute('d', d); hit.setAttribute('class','hit'); hit.dataset.ink = id;
-      svg.appendChild(hit);
-      var p = document.createElementNS(SVGNS,'path');
-      p.setAttribute('d', d); p.setAttribute('class','inkPath'); p.setAttribute('stroke', ip.col || '#0f172a');
-      svg.appendChild(p);
+    // Highlighter first so pen ink always sits on top of it.
+    [true,false].forEach(function(wantHl){
+      Object.keys(inks).forEach(function(id){
+        var ip = inks[id]; if(!ip || !ip.pts || ip.pts.length < 2) return;
+        if(!!ip.hl !== wantHl) return;
+        var d = pathD(ip.pts);
+        var w = +ip.w > 0 ? +ip.w : (ip.hl ? 20 : 3.2);
+        var hit = document.createElementNS(SVGNS,'path');
+        hit.setAttribute('d', d); hit.setAttribute('class','hit');
+        hit.setAttribute('stroke-width', Math.max(20, w + 8));
+        hit.dataset.ink = id;
+        svg.appendChild(hit);
+        var p = document.createElementNS(SVGNS,'path');
+        p.setAttribute('d', d);
+        p.setAttribute('class', 'inkPath' + (ip.hl ? ' hl' : ''));
+        p.setAttribute('stroke', ip.col || '#0f172a');
+        p.setAttribute('stroke-width', w);
+        svg.appendChild(p);
+      });
     });
     Object.keys(wires).forEach(function(k){
       var w = wires[k]; if(!w) return;
@@ -553,6 +636,7 @@
 
   /* ================= moving numbers ================= */
   function toSlot(v, i){
+    snap();
     var occupant = slots[i], from = slots.indexOf(v), ups = {};
     if(from !== -1) slots[from] = null;
     slots[i] = v;
@@ -566,6 +650,7 @@
   }
 
   function toBoard(v, fx, fy){
+    snap();
     var from = slots.indexOf(v);
     if(from !== -1) slots[from] = null;
     pos[v] = clampFrac({x:fx, y:fy});
@@ -581,7 +666,7 @@
   }
 
   /* ================= pointer handling ================= */
-  var drag = null, draw = null, rubber = null, erasing = false;
+  var drag = null, draw = null, rubber = null, erasing = false, eraseSnapped = false;
 
   function frac(e){
     var r = board.getBoundingClientRect();
@@ -589,18 +674,21 @@
   }
 
   board.addEventListener('pointerdown', function(e){
-    if(mode === 'draw'){
+    if(mode === 'draw' || mode === 'mark'){
       e.preventDefault();
+      var isHl = (mode === 'mark');
       var p = frac(e);
-      draw = { pts:[[p.x,p.y]], col: myPenColour(), el:null };
+      draw = { pts:[[p.x,p.y]], col: isHl ? hlCol : myPenColour(), w: isHl ? hlW : penW, hl:isHl, el:null };
       var path = document.createElementNS(SVGNS,'path');
-      path.setAttribute('class','inkPath'); path.setAttribute('stroke', draw.col);
+      path.setAttribute('class','inkPath' + (isHl ? ' hl' : ''));
+      path.setAttribute('stroke', draw.col);
+      path.setAttribute('stroke-width', draw.w);
       path.setAttribute('d', pathD(draw.pts));
       svg.appendChild(path); draw.el = path;
       try{ board.setPointerCapture(e.pointerId); }catch(err){}
       return;
     }
-    if(mode === 'erase'){ erasing = true; eraseAt(e); return; }
+    if(mode === 'erase'){ erasing = true; eraseSnapped = false; eraseAt(e); return; }
     if(!e.target.closest('.tok') && selected !== null){ selected = null; renderAll(); }
   }, {passive:false});
 
@@ -620,8 +708,10 @@
   function endDraw(){
     if(draw){
       if(draw.pts.length > 1){
+        snap();
         var id = rid();
-        inks[id] = { pts: draw.pts.map(function(p){ return [ +p[0].toFixed(4), +p[1].toFixed(4) ]; }), col: draw.col, by: room.name || '' };
+        inks[id] = { pts: draw.pts.map(function(p){ return [ +p[0].toFixed(4), +p[1].toFixed(4) ]; }),
+                     col: draw.col, w: draw.w, hl: !!draw.hl, by: room.name || '' };
         capInks();
         pushField('state.inks.' + id, inks[id]);
       }
@@ -641,13 +731,15 @@
   function eraseAt(e){
     var el = document.elementFromPoint(e.clientX, e.clientY);
     if(!el || !el.classList || !el.classList.contains('hit')) return;
+    if(!el.dataset.wire && !el.dataset.ink) return;
+    if(!eraseSnapped){ snap(); eraseSnapped = true; }   // one undo step per rub-out stroke
     if(el.dataset.wire){ delete wires[el.dataset.wire]; pushDelete('state.wires.' + el.dataset.wire); renderWires(); }
     else if(el.dataset.ink){ delete inks[el.dataset.ink]; pushDelete('state.inks.' + el.dataset.ink); renderWires(); }
   }
 
   /* --- tokens --- */
   document.addEventListener('pointerdown', function(e){
-    if(mode === 'draw' || mode === 'erase') return;
+    if(mode === 'draw' || mode === 'mark' || mode === 'erase') return;
     var t = e.target.closest ? e.target.closest('.tok') : null;
     if(!t || t.classList.contains('lifted')) return;
     e.preventDefault();
@@ -751,6 +843,7 @@
 
   function toggleWire(a,b){
     var k = wkey(a,b);
+    snap();
     if(wires[k]){ delete wires[k]; pushDelete('state.wires.' + k); }
     else { wires[k] = {a:a,b:b}; pushField('state.wires.' + k, wires[k]); }
   }
@@ -775,6 +868,16 @@
     }
   });
   document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && selected !== null){ selected = null; renderAll(); } });
+
+  // Ctrl+Z / Cmd+Z — ignored while typing in the room boxes.
+  document.addEventListener('keydown', function(e){
+    if(!(e.ctrlKey || e.metaKey) || e.altKey) return;
+    if(String(e.key).toLowerCase() !== 'z') return;
+    var t = e.target;
+    if(t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+    e.preventDefault();
+    undo();
+  });
 
   /* ================= checking ================= */
   function check(){
@@ -807,7 +910,10 @@
     Array.prototype.forEach.call(document.querySelectorAll('#segMode button'), function(b){
       b.setAttribute('aria-pressed', String(b.dataset.mode === m));
     });
-    document.getElementById('swatches').style.opacity = (m === 'draw' && !room.code) ? '1' : '.45';
+    document.getElementById('penOpts').hidden  = (m === 'mark');
+    document.getElementById('markOpts').hidden = (m !== 'mark');
+    document.getElementById('penOpts').style.opacity  = (m === 'draw') ? '1' : '.45';
+    document.getElementById('markOpts').style.opacity = (m === 'mark') ? '1' : '.45';
     selected = null; renderAll();
   }
   document.getElementById('segMode').addEventListener('click', function(e){
@@ -819,21 +925,39 @@
     Array.prototype.forEach.call(this.querySelectorAll('.sw'), function(x){ x.setAttribute('aria-pressed', String(x === b)); });
     if(mode !== 'draw') setMode('draw');
   });
+  document.getElementById('hlSwatches').addEventListener('click', function(e){
+    var b = e.target.closest('.sw'); if(!b) return;
+    hlCol = b.dataset.col;
+    Array.prototype.forEach.call(this.querySelectorAll('.sw'), function(x){ x.setAttribute('aria-pressed', String(x === b)); });
+    if(mode !== 'mark') setMode('mark');
+  });
+  document.getElementById('penSize').addEventListener('change', function(){
+    penW = parseFloat(this.value) || 3.2;
+    if(mode !== 'draw') setMode('draw');
+  });
+  document.getElementById('hlSize').addEventListener('change', function(){
+    hlW = parseFloat(this.value) || 20;
+    if(mode !== 'mark') setMode('mark');
+  });
   function myPenColour(){ return room.code ? (room.colour || penCol) : penCol; }
 
   document.getElementById('btnCheck').addEventListener('click', check);
   document.getElementById('btnCheck2').addEventListener('click', check);
-  document.getElementById('btnReset').addEventListener('click', function(){ newGame(true); });
+  document.getElementById('btnReset').addEventListener('click', function(){ snap(); newGame(true); });
+  document.getElementById('btnUndo').addEventListener('click', undo);
   document.getElementById('btnTidy').addEventListener('click', function(){
+    snap();
     layoutGrid(false); renderAll();
     var ups = {}; for(var v=1;v<=N;v++) ups['state.pos.p'+v] = pos[v];
     pushFields(ups);
   });
   document.getElementById('btnClearBoard').addEventListener('click', function(){
+    snap();
     wires = {}; inks = {}; renderWires();
     pushFields({ 'state.wires':{}, 'state.inks':{} });
   });
   document.getElementById('btnClearChain').addEventListener('click', function(){
+    snap();
     var placed = [];
     for(var i=0;i<N;i++) if(slots[i] !== null) placed.push(slots[i]);
     slots = new Array(N).fill(null);
