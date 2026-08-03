@@ -655,7 +655,16 @@ window.MMT_RESOURCES = {
           path: "Core",
           focusArea: "Algebraic techniques A",
           statement: "simplifies algebraic fractions with numerical denominators and expands algebraic expressions",
-          resources: []
+          resources: [
+            {
+              title: "Simplifying Algebraic Fractions",
+              type: "pdf",
+              file: "simplifying-algebraic-fractions.pdf",
+              note: "2-page faded worked example — Demonstration / Faded / Your turn columns, then practice. Q1 numerical denominators (15a/6), Q2 extends to cancelling common variable factors (12ab/18b).",
+              year: "Year 9",
+              tags: ["worksheet", "algebraic fractions", "simplifying", "cancelling", "faded worked examples", "scaffolded", "worked example"]
+            }
+          ]
         },
         {
           code: "MA5-ALG-P-01",
