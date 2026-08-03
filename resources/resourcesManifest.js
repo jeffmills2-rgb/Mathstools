@@ -383,6 +383,14 @@ window.MMT_RESOURCES = {
               tags: ["worksheet", "fraction of an amount", "double number line", "unit fractions", "non-unit fractions"]
             },
             {
+              title: "Comparing Fractions",
+              type: "pdf",
+              file: "comparing-fractions.pdf",
+              note: "1-page faded worked example — Demonstration / Faded / Your turn. Uses a double number line to find equivalent fractions, then practice without the diagram.",
+              year: "Year 7",
+              tags: ["worksheet", "equivalent fractions", "comparing fractions", "double number line", "faded worked examples", "scaffolded", "worked example"]
+            },
+            {
               title: "Adding Fractions with Common Denominators",
               type: "pdf",
               file: "adding-fractions-with-common-denominators.pdf",
