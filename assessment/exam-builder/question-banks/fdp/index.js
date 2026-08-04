@@ -1054,7 +1054,14 @@ function multiPartPercentageQuestion() {
     level: "mixed",
     type: "multi-part-percentage",
     marks: 3,
-    prompt: `A jacket is priced at ${money(price)}. It is on sale with ${pct}% off.`,
+    prompt: (() => {
+      const item = choice(["jacket", "pair of boots", "backpack", "bicycle", "guitar", "winter coat"]);
+      return choice([
+        `A ${item} is priced at ${money(price)}. It is on sale with ${pct}% off.`,
+        `A ${item} costs ${money(price)}. The store takes ${pct}% off the price.`,
+        `A ${item} marked ${money(price)} is discounted by ${pct}%.`
+      ]);
+    })(),
     subparts: [
       { label: "(a)", prompt: `How much is the discount?`, marks: 1, answer: money(discount), working: [`${pct}% of ${money(price)} = ${money(discount)}.`] },
       { label: "(b)", prompt: `What is the sale price?`, marks: 1, answer: money(sale), working: [`${money(price)} − ${money(discount)} = ${money(sale)}.`] },

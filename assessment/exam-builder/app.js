@@ -4,6 +4,16 @@ import {
 } from "./question-banks/angles/index.js";
 
 import {
+  generateRepresentsNumbersQuestions,
+  getRepresentsNumbersQuestionTypes
+} from "./question-banks/stage-3/represents-numbers/index.js";
+
+import {
+  generateAdditiveRelationsQuestions,
+  getAdditiveRelationsQuestionTypes
+} from "./question-banks/stage-3/additive-relations/index.js";
+
+import {
   generateIntegerQuestions,
   getIntegerQuestionTypes
 } from "./question-banks/integers/index.js";
@@ -177,10 +187,23 @@ let draggedQuestionId = null;
 let activeModal = null;
 let activeTopicId = null;
 let activeTopicStage = "stage4";
-let stage4DraftTopics = null;
-let stage5DraftTopics = null;
-let stage4Status = "";
-let stage5Status = "";
+/* Working copies of each stage's selection while the topic modal is open,
+   keyed by stage id. Was one `let` per stage. */
+const stageDraftTopics = {};
+/* Per-stage status message shown in the topic modal, keyed by stage id. */
+const stageStatus = {};
+
+function setStageStatus(stageId, message) {
+  stageStatus[getStage(stageId).id] = message;
+}
+
+function getStageStatus(stageId) {
+  return stageStatus[getStage(stageId).id] || "";
+}
+
+function anyStageStatus() {
+  return STAGES.map(stage => getStageStatus(stage.id)).find(Boolean) || "";
+}
 let controlsStatus = "";
 let showWorkedSolutions = false;
 let wizardActive = false;
@@ -368,6 +391,25 @@ const TOPICS = {
 };
 
 
+/*
+  Stage 3 (Years 5–6). Empty until the banks land — the registry entry exists
+  so the plumbing is exercised now rather than discovered later. Scope and
+  syllabus mapping: docs/stage-3-syllabus-reference.md.
+*/
+const STAGE3_TOPICS = {
+  representsNumbers: {
+    label: "Represents Numbers",
+    generate: generateRepresentsNumbersQuestions,
+    getTypes: getRepresentsNumbersQuestionTypes
+  },
+
+  additiveRelations: {
+    label: "Additive Relations",
+    generate: generateAdditiveRelationsQuestions,
+    getTypes: getAdditiveRelationsQuestionTypes
+  }
+};
+
 const STAGE5_TOPICS = {
   trigonometryA: {
     label: "Trigonometry A",
@@ -442,10 +484,61 @@ const STAGE5_TOPICS = {
   }
 };
 
-const ALL_TOPICS = {
-  ...TOPICS,
-  ...STAGE5_TOPICS
-};
+/*
+  ══════════════════════════════════════════════════════════════════════
+  STAGE REGISTRY
+  ----------------------------------------------------------------------
+  Stages used to be hardcoded in pairs: two topic maps, two draftConfig keys,
+  two loops in buildExam, two headings in the picker, two counts in every
+  summary. Adding a third meant finding and duplicating every one of those.
+
+  A stage is now data. Adding one — Stage 3 here, Stage 2 or 6 later — is a
+  single entry: a label, the topic map, and the draftConfig key its selections
+  live under. `selectionKey` keeps the ORIGINAL key names so drafts saved by
+  earlier versions still load.
+  ══════════════════════════════════════════════════════════════════════
+*/
+const STAGES = [
+  { id: "stage3", label: "Stage 3", selectionKey: "selectedStage3Topics", topics: STAGE3_TOPICS },
+  { id: "stage4", label: "Stage 4", selectionKey: "selectedTopics", topics: TOPICS },
+  { id: "stage5", label: "Stage 5", selectionKey: "selectedStage5Topics", topics: STAGE5_TOPICS }
+];
+
+const STAGE_BY_ID = Object.fromEntries(STAGES.map(stage => [stage.id, stage]));
+const DEFAULT_STAGE_ID = "stage4";
+
+/* Modal id for a stage's standalone topic picker: stage3 → "stage-3". */
+function stageModalId(stageId) {
+  return `stage-${String(getStage(stageId).id).replace("stage", "")}`;
+}
+
+function getStage(stageId = DEFAULT_STAGE_ID) {
+  return STAGE_BY_ID[stageId] || STAGE_BY_ID[DEFAULT_STAGE_ID];
+}
+
+/* Selections for one stage, out of a config object. */
+function selectedTopicsForStage(config, stageId) {
+  return config?.[getStage(stageId).selectionKey] || {};
+}
+
+/*
+  Every selected topic across every stage, in stage order. One place that knows
+  how to walk the selection, so callers never enumerate stages themselves.
+*/
+function eachSelectedTopic(config) {
+  return STAGES.flatMap(stage =>
+    Object.entries(selectedTopicsForStage(config, stage.id))
+      .map(([topicId, topicConfig]) => ({
+        stage,
+        topicId,
+        topicConfig,
+        topic: stage.topics[topicId]
+      }))
+      .filter(entry => entry.topic)
+  );
+}
+
+const ALL_TOPICS = Object.assign({}, ...STAGES.map(stage => stage.topics));
 
 const draftConfig = {
   school: "",
@@ -458,8 +551,9 @@ const draftConfig = {
   answersFormat: getDefaultAnswersFormatForTemplate("worksheet"),
   multipleChoiceCount: 0,
   instructions: [],
-  selectedTopics: {},
-  selectedStage5Topics: {}
+  topicPageBreaks: false,
+  // One selection bucket per stage, keyed by the stage's selectionKey.
+  ...Object.fromEntries(STAGES.map(stage => [stage.selectionKey, {}]))
 };
 
 
@@ -472,6 +566,132 @@ function getAllowedTypeSet(topicConfig = {}) {
 function isQuestionAllowedBySelectedTypes(question, allowedSet) {
   if (!allowedSet || !allowedSet.size) return true;
   return allowedSet.has(String(question?.type || ""));
+}
+
+/*
+  ══════════════════════════════════════════════════════════════════════
+  SPREAD REPEATED QUESTION TYPES
+  ----------------------------------------------------------------------
+  A bank returns questions in whatever order its generator happens to emit
+  them, so asking for 30 questions from a bank with ~10 types produced runs of
+  the same task: "Solve: x + 5 = 1" twenty times in a row, or the same
+  double-number-line prompt four questions apart with only its numbers
+  changed. Adjacent near-identical items read as a printing error, and they
+  waste the interleaving effect that makes mixed practice worth setting.
+
+  This reorders a topic's questions so the same type is never adjacent where
+  that is possible. It is a pure rearrangement — no question is added, dropped
+  or altered, and the relative order WITHIN a type is preserved, so any
+  progression a bank builds into its own sequence survives.
+
+  Two cases, because they need different constructions:
+
+    • No type holds a majority (biggest <= rest + 1). Repeatedly taking the
+      largest remaining group that is not the one just placed separates every
+      type completely.
+
+    • One type dominates — 16 "solve for x" among 20, say. Repeats are then
+      unavoidable, and the greedy above is actively bad: it alternates until
+      the minority runs out and dumps the entire remainder in one block. So
+      the dominant type is split into evenly sized chunks with a minority
+      question between each, which gives the shortest run that arithmetic
+      allows: ceil(dominant / (others + 1)).
+  ══════════════════════════════════════════════════════════════════════
+*/
+function spreadQuestionTypes(questions) {
+  const list = Array.isArray(questions) ? questions : [];
+  if (list.length < 3) return list;
+
+  // Preserve insertion order of both the groups and their contents.
+  const groups = new Map();
+  for (const question of list) {
+    const key = String(question?.type || "untyped");
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(question);
+  }
+
+  if (groups.size < 2) return list;
+
+  const largestType = [...groups.entries()]
+    .reduce((best, entry) => (entry[1].length > best[1].length ? entry : best))[0];
+  const largest = groups.get(largestType);
+  const otherCount = list.length - largest.length;
+
+  if (largest.length > otherCount + 1) {
+    return spreadAroundDominantType(groups, largestType, otherCount);
+  }
+
+  const spread = [];
+  let previousType = null;
+
+  while (spread.length < list.length) {
+    let chosen = null;
+    let chosenSize = 0;
+
+    for (const [type, bucket] of groups) {
+      if (!bucket.length || type === previousType) continue;
+      if (bucket.length > chosenSize) {
+        chosen = type;
+        chosenSize = bucket.length;
+      }
+    }
+
+    if (!chosen) break;
+
+    spread.push(groups.get(chosen).shift());
+    previousType = chosen;
+  }
+
+  return spread;
+}
+
+/*
+  Splits the dominant group into (otherCount + 1) chunks of as near-equal size
+  as possible and lays one minority question between consecutive chunks. The
+  minority questions are dealt largest-group-first so no two of the same
+  minority type end up in neighbouring gaps.
+*/
+function spreadAroundDominantType(groups, dominantType, otherCount) {
+  const dominant = groups.get(dominantType);
+  const gaps = otherCount + 1;
+
+  const others = [...groups.entries()]
+    .filter(([type]) => type !== dominantType)
+    .sort((a, b) => b[1].length - a[1].length)
+    .map(([, bucket]) => bucket);
+
+  // Round-robin across the minority groups, biggest first.
+  const fillers = [];
+  while (fillers.length < otherCount) {
+    let placedThisPass = false;
+
+    for (const bucket of others) {
+      if (!bucket.length) continue;
+      fillers.push(bucket.shift());
+      placedThisPass = true;
+      if (fillers.length >= otherCount) break;
+    }
+
+    if (!placedThisPass) break;
+  }
+
+  const spread = [];
+  let remainingChunks = gaps;
+  let remaining = dominant.length;
+
+  for (let chunk = 0; chunk < gaps; chunk++) {
+    // Ceiling division spreads the odd items over the earliest chunks.
+    const size = Math.ceil(remaining / remainingChunks);
+    for (let i = 0; i < size; i++) spread.push(dominant.shift());
+
+    remaining -= size;
+    remainingChunks -= 1;
+
+    if (fillers.length) spread.push(fillers.shift());
+  }
+
+  // Anything left over (shouldn't happen, but never drop a question).
+  return spread.concat(fillers, dominant);
 }
 
 function generateTopicQuestionsStrict(topic, topicConfig = {}, topicLabel = "topic") {
@@ -528,17 +748,58 @@ function generateTopicQuestionsStrict(topic, topicConfig = {}, topicLabel = "top
     );
   }
 
-  return questions;
+  // Order and interleave within the topic. Done per topic, so topic grouping
+  // (and the topic bands the renderer draws from it) is untouched.
+  return orderQuestionsForPractice(questions);
+}
+
+/*
+  ══════════════════════════════════════════════════════════════════════
+  DIFFICULTY RAMP
+  ----------------------------------------------------------------------
+  A topic's questions arrived in generator order, so a three-mark multi-part
+  word problem could open the set and a one-step recall question could close
+  it. A set that starts easy and builds is more usable as a lesson sequence.
+
+  The banks carry no difficulty rating — `level` is "mixed" on every question
+  in every bank, so it tells us nothing. `marks` is the one honest signal
+  available: it already encodes how many steps the author expected, from
+  one-mark recall up to five-mark multi-part problems.
+
+  So questions are banded by marks ascending, and the existing type-spreading
+  runs INSIDE each band. That keeps the variety that stops identical questions
+  clustering, while still moving from single-step to multi-step work.
+  ══════════════════════════════════════════════════════════════════════
+*/
+function orderQuestionsForPractice(questions) {
+  const list = Array.isArray(questions) ? questions : [];
+  if (list.length < 3) return list;
+
+  const bands = new Map();
+
+  for (const question of list) {
+    const marks = Number(question?.marks);
+    const band = Number.isFinite(marks) ? marks : 1;
+    if (!bands.has(band)) bands.set(band, []);
+    bands.get(band).push(question);
+  }
+
+  // A single band means marks tell us nothing here — spread and leave it.
+  if (bands.size < 2) return spreadQuestionTypes(list);
+
+  return [...bands.keys()]
+    .sort((a, b) => a - b)
+    .flatMap(band => spreadQuestionTypes(bands.get(band)));
 }
 
 function buildExam(config) {
   const questions = [];
   const requestedMultipleChoiceCount = Number(config.multipleChoiceCount || 0);
 
-  const selectedForMultipleChoice = {
-    ...(config.selectedTopics || {}),
-    ...(config.selectedStage5Topics || {})
-  };
+  const selectedForMultipleChoice = Object.assign(
+    {},
+    ...STAGES.map(stage => selectedTopicsForStage(config, stage.id))
+  );
 
   const multipleChoiceQuestions = buildBalancedMultipleChoiceQuestions({
     topics: ALL_TOPICS,
@@ -548,24 +809,12 @@ function buildExam(config) {
 
   questions.push(...multipleChoiceQuestions);
 
-  for (const [topicId, topicConfig] of Object.entries(config.selectedTopics || {})) {
-    const topic = TOPICS[topicId];
-
-    if (!topic) continue;
-
-    const topicQuestions = generateTopicQuestionsStrict(topic, topicConfig, `Stage 4 ${topic.label || topicId}`);
-
-    questions.push(...topicQuestions);
-  }
-
-  for (const [topicId, topicConfig] of Object.entries(config.selectedStage5Topics || {})) {
-    const topic = STAGE5_TOPICS[topicId];
-
-    if (!topic) continue;
-
-    const topicQuestions = generateTopicQuestionsStrict(topic, topicConfig, `Stage 5 ${topic.label || topicId}`);
-
-    questions.push(...topicQuestions);
+  for (const { stage, topicId, topicConfig, topic } of eachSelectedTopic(config)) {
+    questions.push(...generateTopicQuestionsStrict(
+      topic,
+      topicConfig,
+      `${stage.label} ${topic.label || topicId}`
+    ));
   }
 
   const finalQuestions = ensureQuestionIds(applyAnswerSpaceRules(questions));
@@ -573,7 +822,7 @@ function buildExam(config) {
   currentExam = createExam({
     school: config.school || DEFAULT_SCHOOL,
     title: config.examTitle || "",
-    subtitle: config.examSubtitle || buildSubtitleFromSelectedTopics(config.selectedTopics, config.selectedStage5Topics),
+    subtitle: config.examSubtitle || buildSubtitleFromSelectedTopics(config),
     timeAllowed: config.timeAllowed || "",
 
     calculator: config.calculator
@@ -583,6 +832,7 @@ function buildExam(config) {
     language: config.language || "en",
     template: config.template || "worksheet",
     answersFormat: config.answersFormat || getDefaultAnswersFormatForTemplate(config.template),
+    topicPageBreaks: config.topicPageBreaks === true,
 
     sectionTitle: "Section I",
     sectionSubtitle: "Answer all questions. Show working where appropriate.",
@@ -633,31 +883,23 @@ function renderAll() {
 }
 
 function renderControlDashboard() {
-  const selectedStage4TopicCount = Object.keys(draftConfig.selectedTopics || {}).length;
-  const selectedStage5TopicCount = Object.keys(draftConfig.selectedStage5Topics || {}).length;
-  const selectedTopicCount = selectedStage4TopicCount + selectedStage5TopicCount;
+  const stageCounts = STAGES.map(stage => ({
+    stage,
+    topics: Object.keys(selectedTopicsForStage(draftConfig, stage.id)).length,
+    questions: Object.values(selectedTopicsForStage(draftConfig, stage.id))
+      .reduce((sum, topicConfig) => sum + Number(topicConfig.count || 0), 0)
+  }));
 
-  const selectedStage4QuestionTotal = Object.values(draftConfig.selectedTopics || {})
-    .reduce((sum, topicConfig) => sum + Number(topicConfig.count || 0), 0);
-  const selectedStage5QuestionTotal = Object.values(draftConfig.selectedStage5Topics || {})
-    .reduce((sum, topicConfig) => sum + Number(topicConfig.count || 0), 0);
-  const selectedQuestionTotal = selectedStage4QuestionTotal + selectedStage5QuestionTotal;
+  const selectedTopicCount = stageCounts.reduce((sum, entry) => sum + entry.topics, 0);
+  const selectedQuestionTotal = stageCounts.reduce((sum, entry) => sum + entry.questions, 0);
 
   const hasExam = Boolean(currentExam);
   const mcCount = Number(draftConfig.multipleChoiceCount || 0);
   const readyToGenerate = selectedTopicCount > 0 && (selectedQuestionTotal > 0 || mcCount > 0);
   const workedToggleText = showWorkedSolutions ? "Hide solutions" : "Show solutions";
 
-  const selectedStage4TopicLabels = Object.keys(draftConfig.selectedTopics || {})
-    .map(topicId => TOPICS[topicId]?.label)
-    .filter(Boolean);
-  const selectedStage5TopicLabels = Object.keys(draftConfig.selectedStage5Topics || {})
-    .map(topicId => STAGE5_TOPICS[topicId]?.label)
-    .filter(Boolean);
-  const selectedTopicLabels = [
-    ...selectedStage4TopicLabels.map(label => `Stage 4: ${label}`),
-    ...selectedStage5TopicLabels.map(label => `Stage 5: ${label}`)
-  ];
+  const selectedTopicLabels = eachSelectedTopic(draftConfig)
+    .map(({ stage, topic }) => `${stage.label}: ${topic.label}`);
 
   const paperSummary = hasExam ? getExamEditorSummary(currentExam) : null;
   const paperNeedsRegeneration = hasExam && (
@@ -670,11 +912,15 @@ function renderControlDashboard() {
   const generatedSummary = hasExam
     ? ` · generated ${paperSummary.questionCount} questions${isRevisionPackageTemplate() ? "" : ` · ${paperSummary.totalMarks} marks`}`
     : "";
-  const setupLine = `${getTemplateLabel(draftConfig.template)} · ${selectedStage4TopicCount} Stage 4 · ${selectedStage5TopicCount} Stage 5 · ${selectedQuestionTotal} extended · ${mcCount} MC${generatedSummary}`;
+  const stageSummary = stageCounts
+    .filter(entry => entry.topics > 0)
+    .map(entry => `${entry.topics} ${entry.stage.label}`)
+    .join(" · ") || "no topics";
+  const setupLine = `${getTemplateLabel(draftConfig.template)} · ${stageSummary} · ${selectedQuestionTotal} extended · ${mcCount} MC${generatedSummary}`;
 
   const topicDescription = selectedTopicCount
     ? selectedTopicLabels.slice(0, 3).join(", ") + (selectedTopicLabels.length > 3 ? ` + ${selectedTopicLabels.length - 3} more` : "")
-    : "Select Stage 4 or Stage 5 topics and question types.";
+    : "Select topics and question types.";
 
   controlsRoot.innerHTML = `
     <section class="builder-dashboard workflow-dashboard" aria-label="Topic question generator controls">
@@ -705,8 +951,7 @@ function renderControlDashboard() {
       })}
 
       ${renderWorkflowSummary({
-        selectedStage4TopicLabels,
-        selectedStage5TopicLabels,
+        stageCounts,
         selectedQuestionTotal,
         mcCount,
         hasExam,
@@ -891,8 +1136,11 @@ function openWizard(step = "details") {
   activeModal = `wizard-${step}`;
 
   if (step === "topics") {
-    stage4DraftTopics = cloneSelectedTopics(draftConfig.selectedTopics);
-    stage5DraftTopics = cloneSelectedTopics(draftConfig.selectedStage5Topics);
+    // Seed a working copy for EVERY stage, or a stage's cards open blank and
+    // its previous selection is lost the moment the step is committed.
+    for (const stage of STAGES) {
+      stageDraftTopics[stage.id] = cloneSelectedTopics(draftConfig[stage.selectionKey]);
+    }
   }
 
   renderControlDashboard();
@@ -902,8 +1150,7 @@ function closeWizard() {
   wizardActive = false;
   activeModal = null;
   activeTopicId = null;
-  stage4DraftTopics = null;
-  stage5DraftTopics = null;
+  for (const stage of STAGES) stageDraftTopics[stage.id] = null;
   renderControlDashboard();
 }
 
@@ -942,6 +1189,12 @@ function renderWizardDetailsModal() {
             <span>Calculator permitted</span>
           </label>
 
+          <label class="builder-inline-check">
+            <input type="checkbox" name="topicPageBreaks" ${draftConfig.topicPageBreaks ? "checked" : ""}>
+            <span>Start each topic on a new page</span>
+          </label>
+          <p class="builder-help-text">Hand out one topic at a time. Off by default, which packs the questions as tightly as possible.</p>
+
           <label class="builder-full-field">
             <span>Instructions</span>
             <textarea name="instructions" rows="5">${escapeHtml((draftConfig.instructions || []).join("\n"))}</textarea>
@@ -958,12 +1211,8 @@ function renderWizardDetailsModal() {
 }
 
 function renderWizardTopicsModal() {
-  const stage4Total = Object.values(getStage4WorkingTopics())
-    .reduce((sum, c) => sum + Number(c.count || 0), 0);
-  const stage5Total = Object.values(getStage5WorkingTopics())
-    .reduce((sum, c) => sum + Number(c.count || 0), 0);
-  const total = stage4Total + stage5Total;
-  const selectedCount = Object.keys(getStage4WorkingTopics()).length + Object.keys(getStage5WorkingTopics()).length;
+  const total = getWorkingQuestionTotal();
+  const selectedCount = getWorkingTopicCount();
 
   return `
     <div class="builder-modal-backdrop" role="presentation">
@@ -971,14 +1220,14 @@ function renderWizardTopicsModal() {
         <div class="builder-modal-header">
           <div>
             <h2 id="wizard-topics-title">Choose topics</h2>
-            <p>Tap a topic to pick its question types and how many. Mix Stage 4 and Stage 5 freely.</p>
+            <p>Tap a topic to pick its question types and how many. Mix stages freely.</p>
           </div>
           <button type="button" class="builder-modal-close" data-control-action="close-modal" aria-label="Close">×</button>
         </div>
 
         ${renderWizardStepper("topics")}
 
-        ${stage4Status || stage5Status ? `<p class="stage4-status">${escapeHtml(stage4Status || stage5Status)}</p>` : ""}
+        ${anyStageStatus() ? `<p class="stage4-status">${escapeHtml(anyStageStatus())}</p>` : ""}
 
         <div class="wizard-topic-summary">
           <span><strong>${selectedCount}</strong> topic${selectedCount === 1 ? "" : "s"}</span>
@@ -986,15 +1235,12 @@ function renderWizardTopicsModal() {
           <span><strong>${Number(draftConfig.multipleChoiceCount || 0)}</strong> multiple choice</span>
         </div>
 
-        <h3 class="wizard-stage-heading">Stage 4</h3>
-        <div class="stage-topic-card-grid" aria-label="Stage 4 topics">
-          ${Object.entries(TOPICS).map(([topicId, topic]) => renderTopicCard(topicId, topic, "stage4")).join("")}
-        </div>
-
-        <h3 class="wizard-stage-heading">Stage 5</h3>
-        <div class="stage-topic-card-grid" aria-label="Stage 5 topics">
-          ${Object.entries(STAGE5_TOPICS).map(([topicId, topic]) => renderTopicCard(topicId, topic, "stage5")).join("")}
-        </div>
+        ${STAGES.filter(stage => Object.keys(stage.topics).length).map(stage => `
+          <h3 class="wizard-stage-heading">${escapeHtml(stage.label)}</h3>
+          <div class="stage-topic-card-grid" aria-label="${escapeHtml(stage.label)} topics">
+            ${Object.entries(stage.topics).map(([topicId, topic]) => renderTopicCard(topicId, topic, stage.id)).join("")}
+          </div>
+        `).join("")}
 
         <div class="builder-modal-actions wizard-actions">
           <button type="button" class="builder-cancel" data-control-action="wizard-back-details">← Back</button>
@@ -1006,12 +1252,14 @@ function renderWizardTopicsModal() {
 }
 
 function renderWizardReviewModal() {
-  const stage4Labels = Object.keys(draftConfig.selectedTopics || {}).map(id => TOPICS[id]?.label).filter(Boolean);
-  const stage5Labels = Object.keys(draftConfig.selectedStage5Topics || {}).map(id => STAGE5_TOPICS[id]?.label).filter(Boolean);
-  const extendedTotal = Object.values(draftConfig.selectedTopics || {}).reduce((s, c) => s + Number(c.count || 0), 0)
-    + Object.values(draftConfig.selectedStage5Topics || {}).reduce((s, c) => s + Number(c.count || 0), 0);
+  const selected = eachSelectedTopic(draftConfig);
+  const labelsByStage = STAGES.map(stage => ({
+    stage,
+    labels: selected.filter(entry => entry.stage.id === stage.id).map(entry => entry.topic.label)
+  }));
+  const extendedTotal = selected.reduce((sum, entry) => sum + Number(entry.topicConfig.count || 0), 0);
   const mcCount = Number(draftConfig.multipleChoiceCount || 0);
-  const ready = (stage4Labels.length + stage5Labels.length) > 0 && (extendedTotal > 0 || mcCount > 0);
+  const ready = selected.length > 0 && (extendedTotal > 0 || mcCount > 0);
 
   return `
     <div class="builder-modal-backdrop" role="presentation">
@@ -1029,8 +1277,9 @@ function renderWizardReviewModal() {
         <div class="wizard-review-grid">
           <div><strong>Style</strong><span>${escapeHtml(getTemplateLabel(draftConfig.template))}</span></div>
           <div><strong>Title</strong><span>${escapeHtml(draftConfig.examTitle || "Untitled")}</span></div>
-          <div><strong>Stage 4</strong><span>${stage4Labels.length ? escapeHtml(stage4Labels.join(", ")) : "—"}</span></div>
-          <div><strong>Stage 5</strong><span>${stage5Labels.length ? escapeHtml(stage5Labels.join(", ")) : "—"}</span></div>
+          ${labelsByStage.map(({ stage, labels }) =>
+            `<div><strong>${escapeHtml(stage.label)}</strong><span>${labels.length ? escapeHtml(labels.join(", ")) : "—"}</span></div>`
+          ).join("")}
           <div><strong>Questions</strong><span>${extendedTotal} extended · ${mcCount} multiple choice</span></div>
           <div><strong>Answers</strong><span>${escapeHtml((ANSWERS_FORMAT_OPTIONS.find(o => o.id === draftConfig.answersFormat) || {}).label || "Textbook style")}</span></div>
         </div>
@@ -1051,20 +1300,22 @@ function getExamDetailsStatus() {
 }
 
 function renderWorkflowSummary({
-  selectedStage4TopicLabels = [],
-  selectedStage5TopicLabels = [],
+  stageCounts = [],
   selectedQuestionTotal,
   mcCount,
   hasExam,
   paperSummary
 }) {
-  const stage4Text = selectedStage4TopicLabels.length
-    ? `Stage 4: ${selectedStage4TopicLabels.join(" · ")}`
-    : "No Stage 4 topics selected";
+  // One line per stage that has something selected; a stage with nothing
+  // chosen is simply absent rather than reported as empty.
+  const stageLines = STAGES.map(stage => {
+    const labels = Object.keys(selectedTopicsForStage(draftConfig, stage.id))
+      .map(topicId => stage.topics[topicId]?.label)
+      .filter(Boolean);
+    return labels.length ? `${stage.label}: ${labels.join(" · ")}` : "";
+  }).filter(Boolean);
 
-  const stage5Text = selectedStage5TopicLabels.length
-    ? `Stage 5: ${selectedStage5TopicLabels.join(" · ")}`
-    : "No Stage 5 topics selected";
+  const topicsText = stageLines.length ? stageLines : ["No topics selected"];
 
   return `
     <div class="workflow-paper-summary" aria-label="Current setup summary">
@@ -1075,7 +1326,7 @@ function renderWorkflowSummary({
 
       <div>
         <strong>Topics</strong>
-        <span>${escapeHtml(stage4Text)}<br>${escapeHtml(stage5Text)}</span>
+        <span>${topicsText.map(line => escapeHtml(line)).join("<br>")}</span>
       </div>
 
       <div>
@@ -1092,8 +1343,8 @@ function renderActiveModal() {
   if (activeModal === "wizard-review") return renderWizardReviewModal();
   if (activeModal === "topic-config") return renderTopicConfigureModal();
   if (activeModal === "exam-details") return renderExamDetailsModal();
-  if (activeModal === "stage-4") return renderStage4TopicsModal();
-  if (activeModal === "stage-5") return renderStage5TopicsModal();
+  const stageMatch = STAGES.find(stage => stageModalId(stage.id) === activeModal);
+  if (stageMatch) return renderStageTopicsModal(stageMatch.id);
   return "";
 }
 
@@ -1150,6 +1401,12 @@ function renderExamDetailsModal() {
             <input type="checkbox" name="calculator" ${draftConfig.calculator ? "checked" : ""}>
             <span>Calculator permitted</span>
           </label>
+
+          <label class="builder-inline-check">
+            <input type="checkbox" name="topicPageBreaks" ${draftConfig.topicPageBreaks ? "checked" : ""}>
+            <span>Start each topic on a new page</span>
+          </label>
+          <p class="builder-help-text">Hand out one topic at a time. Off by default, which packs the questions as tightly as possible.</p>
 
           <label class="builder-full-field">
             <span>Multiple choice questions</span>
@@ -1208,20 +1465,33 @@ function isRevisionPackageTemplate(template = draftConfig.template) {
 }
 
 
-function getStage4WorkingTopics() {
-  return stage4DraftTopics || {};
+/* Seed a stage's working copy from the committed selection on first edit. */
+function ensureWorkingTopics(stageId) {
+  const stage = getStage(stageId);
+  if (!stageDraftTopics[stage.id]) {
+    stageDraftTopics[stage.id] = cloneSelectedTopics(draftConfig[stage.selectionKey]);
+  }
+  return stageDraftTopics[stage.id];
 }
 
-function getStage5WorkingTopics() {
-  return stage5DraftTopics || {};
+function getWorkingTopicsForStage(stageId = DEFAULT_STAGE_ID) {
+  return stageDraftTopics[stageId] || {};
 }
 
-function getWorkingTopicsForStage(stage = "stage4") {
-  return stage === "stage5" ? getStage5WorkingTopics() : getStage4WorkingTopics();
+function getTopicRegistryForStage(stageId = DEFAULT_STAGE_ID) {
+  return getStage(stageId).topics;
 }
 
-function getTopicRegistryForStage(stage = "stage4") {
-  return stage === "stage5" ? STAGE5_TOPICS : TOPICS;
+/* Total selected questions across every stage's working copy. */
+function getWorkingQuestionTotal() {
+  return STAGES.reduce((total, stage) =>
+    total + Object.values(getWorkingTopicsForStage(stage.id))
+      .reduce((sum, topicConfig) => sum + Number(topicConfig.count || 0), 0), 0);
+}
+
+function getWorkingTopicCount() {
+  return STAGES.reduce((total, stage) =>
+    total + Object.keys(getWorkingTopicsForStage(stage.id)).length, 0);
 }
 
 function cloneSelectedTopics(selectedTopics = {}) {
@@ -1274,8 +1544,9 @@ function getTopicSummary(topicId, config) {
   return `${questionCount} question${questionCount === 1 ? "" : "s"} · ${typeCount} type${typeCount === 1 ? "" : "s"} selected`;
 }
 
-function renderStage4Summary() {
-  const workingTopics = getStage4WorkingTopics();
+/* Selection summary for one stage's standalone picker. */
+function renderStageSummary(stageId) {
+  const workingTopics = getWorkingTopicsForStage(stageId);
   const selectedTopicIds = Object.keys(workingTopics);
   const totalQuestions = Object.values(workingTopics)
     .reduce((sum, topicConfig) => sum + Number(topicConfig.count || 0), 0);
@@ -1299,70 +1570,21 @@ function renderStage4Summary() {
 }
 
 
-function renderStage5Summary() {
-  const workingTopics = getStage5WorkingTopics();
-  const selectedTopicIds = Object.keys(workingTopics);
-  const totalQuestions = Object.values(workingTopics)
-    .reduce((sum, topicConfig) => sum + Number(topicConfig.count || 0), 0);
-
-  return `
-    <div class="stage4-selection-summary">
-      <div>
-        <strong>${selectedTopicIds.length}</strong>
-        <span>topic${selectedTopicIds.length === 1 ? "" : "s"} selected</span>
-      </div>
-      <div>
-        <strong>${totalQuestions}</strong>
-        <span>extended question${totalQuestions === 1 ? "" : "s"}</span>
-      </div>
-      <div>
-        <strong>${draftConfig.multipleChoiceCount || 0}</strong>
-        <span>multiple choice</span>
-      </div>
-    </div>
-  `;
-}
-
-
-function renderStage4TopicsModal() {
-  return `
-    <div class="builder-modal-backdrop" role="presentation">
-      <section class="builder-modal builder-modal-wide stage4-modal" role="dialog" aria-modal="true" aria-labelledby="stage-4-title">
-        <div class="builder-modal-header">
-          <div>
-            <h2 id="stage-4-title">Select Topics (Stage 4)</h2>
-            <p>Choose a topic card, configure its question types, then submit your Stage 4 selection.</p>
-          </div>
-          <button type="button" class="builder-modal-close" data-control-action="cancel-stage-4" aria-label="Close">×</button>
-        </div>
-
-        ${renderStage4Summary()}
-
-        ${stage4Status ? `<p class="stage4-status">${escapeHtml(stage4Status)}</p>` : ""}
-
-        <div class="stage-topic-card-grid" aria-label="Stage 4 topics">
-          ${Object.entries(TOPICS).map(([topicId, topic]) => renderTopicCard(topicId, topic, "stage4")).join("")}
-        </div>
-
-        <div class="builder-modal-actions">
-          <button type="button" class="builder-submit" data-control-action="submit-stage-4">Submit Stage 4 topics</button>
-          <button type="button" class="builder-cancel" data-control-action="cancel-stage-4">Cancel</button>
-        </div>
-      </section>
-    </div>
-  `;
-}
-
+/*
+  Standalone topic picker for one stage — the non-wizard path. One renderer for
+  every stage, built from the registry; there were previously two near-identical
+  copies and a third stage would have needed a third.
+*/
 function renderTopicConfigureModal() {
   const topicId = activeTopicId;
-  const stage = activeTopicStage || "stage4";
+  const stage = activeTopicStage || DEFAULT_STAGE_ID;
   const topicRegistry = getTopicRegistryForStage(stage);
   const topic = topicRegistry[topicId];
 
   if (!topic) {
-    activeModal = stage === "stage5" ? "stage-5" : "stage-4";
+    activeModal = wizardActive ? "wizard-topics" : stageModalId(stage);
     activeTopicId = null;
-    return stage === "stage5" ? renderStage5TopicsModal() : renderStage4TopicsModal();
+    return renderActiveModal();
   }
 
   const workingTopics = getWorkingTopicsForStage(stage);
@@ -1378,7 +1600,7 @@ function renderTopicConfigureModal() {
           <div class="builder-modal-header">
             <div>
               <h2 id="topic-config-title">${escapeHtml(topic.label)}</h2>
-              <p>Select the question types you want included for this ${stage === "stage5" ? "Stage 5" : "Stage 4"} topic.</p>
+              <p>Select the question types you want included for this ${escapeHtml(getStage(stage).label)} topic.</p>
             </div>
             <button type="button" class="builder-modal-close" data-control-action="cancel-topic-config" aria-label="Close">×</button>
           </div>
@@ -1423,34 +1645,38 @@ function renderTopicConfigureModal() {
   `;
 }
 
-function renderStage5TopicsModal() {
+function renderStageTopicsModal(stageId) {
+  const stage = getStage(stageId);
+  const status = getStageStatus(stage.id);
+
   return `
     <div class="builder-modal-backdrop" role="presentation">
-      <section class="builder-modal builder-modal-wide stage4-modal" role="dialog" aria-modal="true" aria-labelledby="stage-5-title">
+      <section class="builder-modal builder-modal-wide stage4-modal" role="dialog" aria-modal="true" aria-labelledby="stage-topics-title">
         <div class="builder-modal-header">
           <div>
-            <h2 id="stage-5-title">Select Topics (Stage 5)</h2>
-            <p>Choose a Stage 5 topic card, configure its question types, then submit your Stage 5 selection.</p>
+            <h2 id="stage-topics-title">Select Topics (${escapeHtml(stage.label)})</h2>
+            <p>Choose a topic card, configure its question types, then submit your ${escapeHtml(stage.label)} selection.</p>
           </div>
-          <button type="button" class="builder-modal-close" data-control-action="cancel-stage-5" aria-label="Close">×</button>
+          <button type="button" class="builder-modal-close" data-control-action="cancel-stage" data-stage="${escapeHtml(stage.id)}" aria-label="Close">×</button>
         </div>
 
-        ${renderStage5Summary()}
+        ${renderStageSummary(stage.id)}
 
-        ${stage5Status ? `<p class="stage4-status">${escapeHtml(stage5Status)}</p>` : ""}
+        ${status ? `<p class="stage4-status">${escapeHtml(status)}</p>` : ""}
 
-        <div class="stage-topic-card-grid" aria-label="Stage 5 topics">
-          ${Object.entries(STAGE5_TOPICS).map(([topicId, topic]) => renderTopicCard(topicId, topic, "stage5")).join("")}
+        <div class="stage-topic-card-grid" aria-label="${escapeHtml(stage.label)} topics">
+          ${Object.entries(stage.topics).map(([topicId, topic]) => renderTopicCard(topicId, topic, stage.id)).join("")}
         </div>
 
         <div class="builder-modal-actions">
-          <button type="button" class="builder-submit" data-control-action="submit-stage-5">Submit Stage 5 topics</button>
-          <button type="button" class="builder-cancel" data-control-action="cancel-stage-5">Cancel</button>
+          <button type="button" class="builder-submit" data-control-action="submit-stage" data-stage="${escapeHtml(stage.id)}">Submit ${escapeHtml(stage.label)} topics</button>
+          <button type="button" class="builder-cancel" data-control-action="cancel-stage" data-stage="${escapeHtml(stage.id)}">Cancel</button>
         </div>
       </section>
     </div>
   `;
 }
+
 
 function renderTopicCard(topicId, topic, stage = "stage4") {
   const workingTopics = getWorkingTopicsForStage(stage);
@@ -1529,6 +1755,7 @@ function submitWizardDetails(form) {
   draftConfig.examSubtitle = String(formData.get("examSubtitle") || "").trim();
   draftConfig.timeAllowed = String(formData.get("timeAllowed") || "").trim();
   draftConfig.calculator = formData.has("calculator");
+  draftConfig.topicPageBreaks = formData.has("topicPageBreaks");
   draftConfig.language = String(formData.get("language") || "en");
   draftConfig.answersFormat = String(formData.get("answersFormat") || getDefaultAnswersFormatForTemplate(draftConfig.template));
   draftConfig.multipleChoiceCount = Number(formData.get("multipleChoiceCount") || 0);
@@ -1540,15 +1767,20 @@ function submitWizardDetails(form) {
   openWizard("topics");
 }
 
+/*
+  Commit every stage's working copy when the wizard leaves the topics step.
+
+  This listed the stages by hand, so a Stage 3 selection was made, shown as
+  selected on its card — which reads the working copy — and then silently
+  dropped here, leaving the review step with nothing to generate.
+*/
 function applyWizardTopicSelections() {
-  draftConfig.selectedTopics = cloneSelectedTopics(stage4DraftTopics || {});
-  draftConfig.selectedStage5Topics = cloneSelectedTopics(stage5DraftTopics || {});
+  for (const stage of STAGES) {
+    draftConfig[stage.selectionKey] = cloneSelectedTopics(stageDraftTopics[stage.id] || {});
+  }
 
   if (!draftConfig.examSubtitle?.trim()) {
-    draftConfig.examSubtitle = buildSubtitleFromSelectedTopics(
-      draftConfig.selectedTopics,
-      draftConfig.selectedStage5Topics
-    );
+    draftConfig.examSubtitle = buildSubtitleFromSelectedTopics(draftConfig);
   }
 }
 
@@ -1560,6 +1792,7 @@ function submitExamDetails(form) {
   draftConfig.examSubtitle = String(formData.get("examSubtitle") || "").trim();
   draftConfig.timeAllowed = String(formData.get("timeAllowed") || "").trim();
   draftConfig.calculator = formData.has("calculator");
+  draftConfig.topicPageBreaks = formData.has("topicPageBreaks");
   draftConfig.language = String(formData.get("language") || "en");
   draftConfig.template = String(formData.get("template") || "worksheet");
   draftConfig.multipleChoiceCount = Number(formData.get("multipleChoiceCount") || 0);
@@ -1576,7 +1809,7 @@ function submitExamDetails(form) {
   if (currentExam) {
     currentExam.school = draftConfig.school;
     currentExam.title = draftConfig.examTitle;
-    currentExam.subtitle = draftConfig.examSubtitle || buildSubtitleFromSelectedTopics(draftConfig.selectedTopics, draftConfig.selectedStage5Topics);
+    currentExam.subtitle = draftConfig.examSubtitle || buildSubtitleFromSelectedTopics(draftConfig);
     currentExam.timeAllowed = draftConfig.timeAllowed;
     currentExam.calculator = draftConfig.calculator
       ? "Calculator permitted"
@@ -1606,39 +1839,25 @@ function submitTopicConfig(form) {
   const count = clamp(Number(formData.get("topicCount") || DEFAULT_TOPIC_COUNTS[topicId] || 6), 0, 80);
 
   if (!selectedTypeIds.length) {
-    if (stage === "stage5") {
-      stage5Status = "Select at least one question type, or press Cancel to leave this topic unselected.";
-    } else {
-      stage4Status = "Select at least one question type, or press Cancel to leave this topic unselected.";
-    }
+    setStageStatus(stage, "Select at least one question type, or press Cancel to leave this topic unselected.");
     renderControlDashboard();
     return;
   }
 
-  if (stage === "stage5") {
-    if (!stage5DraftTopics) {
-      stage5DraftTopics = cloneSelectedTopics(draftConfig.selectedStage5Topics);
-    }
+  // Write into the stage the topic actually belongs to. This used to be a
+  // two-way branch on stage5, which silently filed every Stage 3 topic under
+  // Stage 4 — where the id does not exist, so it was dropped on commit and the
+  // card stayed "Not selected".
+  {
+    const working = ensureWorkingTopics(stage);
 
-    stage5DraftTopics[topicId] = {
+    working[topicId] = {
       count,
       allowedTypes: selectedTypeIds
     };
 
-    activeModal = wizardActive ? "wizard-topics" : "stage-5";
-    stage5Status = `${topic.label} saved.`;
-  } else {
-    if (!stage4DraftTopics) {
-      stage4DraftTopics = cloneSelectedTopics(draftConfig.selectedTopics);
-    }
-
-    stage4DraftTopics[topicId] = {
-      count,
-      allowedTypes: selectedTypeIds
-    };
-
-    activeModal = wizardActive ? "wizard-topics" : "stage-4";
-    stage4Status = `${topic.label} saved.`;
+    activeModal = wizardActive ? "wizard-topics" : stageModalId(stage);
+    setStageStatus(stage, `${topic.label} saved.`);
   }
 
   activeTopicId = null;
@@ -1646,79 +1865,61 @@ function submitTopicConfig(form) {
   renderControlDashboard();
 }
 
-function submitStage4Topics() {
-  const selectedTopics = cloneSelectedTopics(stage4DraftTopics || {});
-  draftConfig.selectedTopics = selectedTopics;
+/*
+  Commit or discard a stage's topic selection. One pair of functions for every
+  stage — the per-stage copies differed only in which variable they touched.
+*/
+function submitStageTopics(stageId) {
+  const stage = getStage(stageId);
+  const selectedTopics = cloneSelectedTopics(stageDraftTopics[stage.id] || {});
+  draftConfig[stage.selectionKey] = selectedTopics;
 
   if (!draftConfig.examSubtitle?.trim()) {
-    draftConfig.examSubtitle = buildSubtitleFromSelectedTopics(selectedTopics, draftConfig.selectedStage5Topics);
+    draftConfig.examSubtitle = buildSubtitleFromSelectedTopics(draftConfig);
   }
+
+  const count = Object.keys(selectedTopics).length;
 
   activeModal = null;
   activeTopicId = null;
-  stage4DraftTopics = null;
-  stage4Status = "";
-  controlsStatus = `${Object.keys(selectedTopics).length} Stage 4 topic${Object.keys(selectedTopics).length === 1 ? "" : "s"} selected.${currentExam ? " Click Regenerate before printing/exporting to apply these topic changes." : ""}`;
+  activeTopicStage = stage.id;
+  stageDraftTopics[stage.id] = null;
+  setStageStatus(stage.id, "");
+  controlsStatus = `${count} ${stage.label} topic${count === 1 ? "" : "s"} selected.${currentExam ? " Click Regenerate before printing/exporting to apply these topic changes." : ""}`;
+
   if (currentExam) {
     editorStatus = "Topic selections changed. The displayed document still shows the previous generated questions until you click Regenerate.";
   }
+
   renderControlDashboard();
 }
 
-function cancelStage4Topics() {
-  activeModal = null;
-  activeTopicId = null;
-  stage4DraftTopics = null;
-  stage4Status = "";
-  controlsStatus = "Stage 4 topic selection cancelled.";
-  renderControlDashboard();
-}
-
-function submitStage5Topics() {
-  const selectedTopics = cloneSelectedTopics(stage5DraftTopics || {});
-  draftConfig.selectedStage5Topics = selectedTopics;
-
-  if (!draftConfig.examSubtitle?.trim()) {
-    draftConfig.examSubtitle = buildSubtitleFromSelectedTopics(draftConfig.selectedTopics, selectedTopics);
-  }
+function cancelStageTopics(stageId) {
+  const stage = getStage(stageId);
 
   activeModal = null;
   activeTopicId = null;
-  activeTopicStage = "stage5";
-  stage5DraftTopics = null;
-  stage5Status = "";
-  controlsStatus = `${Object.keys(selectedTopics).length} Stage 5 topic${Object.keys(selectedTopics).length === 1 ? "" : "s"} selected.${currentExam ? " Click Regenerate before printing/exporting to apply these topic changes." : ""}`;
-  if (currentExam) {
-    editorStatus = "Topic selections changed. The displayed document still shows the previous generated questions until you click Regenerate.";
-  }
-  renderControlDashboard();
-}
-
-function cancelStage5Topics() {
-  activeModal = null;
-  activeTopicId = null;
-  activeTopicStage = "stage5";
-  stage5DraftTopics = null;
-  stage5Status = "";
-  controlsStatus = "Stage 5 topic selection cancelled.";
+  activeTopicStage = stage.id;
+  stageDraftTopics[stage.id] = null;
+  setStageStatus(stage.id, "");
+  controlsStatus = `${stage.label} topic selection cancelled.`;
   renderControlDashboard();
 }
 
 function validateBeforeGenerate() {
-  const stage4TopicCount = Object.keys(draftConfig.selectedTopics || {}).length;
-  const stage5TopicCount = Object.keys(draftConfig.selectedStage5Topics || {}).length;
-  const hasTopics = stage4TopicCount + stage5TopicCount > 0;
+  const selected = eachSelectedTopic(draftConfig);
+  const hasTopics = selected.length > 0;
 
-  const stage4ExtendedCount = Object.values(draftConfig.selectedTopics || {})
-    .reduce((sum, topicConfig) => sum + Number(topicConfig.count || 0), 0);
-  const stage5ExtendedCount = Object.values(draftConfig.selectedStage5Topics || {})
-    .reduce((sum, topicConfig) => sum + Number(topicConfig.count || 0), 0);
-  const extendedCount = stage4ExtendedCount + stage5ExtendedCount;
+  // Count across every stage. This summed Stage 4 and Stage 5 by hand, so a
+  // paper built only from Stage 3 counted as zero questions and the Generate
+  // button silently bounced back to the review step.
+  const extendedCount = selected
+    .reduce((sum, { topicConfig }) => sum + Number(topicConfig.count || 0), 0);
 
   const mcCount = Number(draftConfig.multipleChoiceCount || 0);
 
   if (!hasTopics) {
-    return "Open Choose Topics and select at least one Stage 4 or Stage 5 topic before generating.";
+    return "Open Choose Topics and select at least one topic before generating.";
   }
 
   if (extendedCount <= 0 && mcCount <= 0) {
@@ -1789,7 +1990,7 @@ controlsRoot.addEventListener("click", event => {
   if (action === "wizard-generate") {
     const warning = validateBeforeGenerate();
     if (warning) {
-      stage4Status = warning;
+      setStageStatus("stage4", warning);
       activeModal = "wizard-review";
       renderControlDashboard();
       return;
@@ -1813,22 +2014,13 @@ controlsRoot.addEventListener("click", event => {
     return;
   }
 
-  if (action === "open-stage-4") {
-    stage4DraftTopics = cloneSelectedTopics(draftConfig.selectedTopics);
-    stage4Status = "";
+  if (action === "open-stage") {
+    const stage = getStage(button.dataset.stage);
+    stageDraftTopics[stage.id] = cloneSelectedTopics(draftConfig[stage.selectionKey]);
+    setStageStatus(stage.id, "");
     activeTopicId = null;
-    activeTopicStage = "stage4";
-    activeModal = "stage-4";
-    renderControlDashboard();
-    return;
-  }
-
-  if (action === "open-stage-5") {
-    stage5DraftTopics = cloneSelectedTopics(draftConfig.selectedStage5Topics);
-    stage5Status = "";
-    activeTopicId = null;
-    activeTopicStage = "stage5";
-    activeModal = "stage-5";
+    activeTopicStage = stage.id;
+    activeModal = stageModalId(stage.id);
     renderControlDashboard();
     return;
   }
@@ -1844,40 +2036,21 @@ controlsRoot.addEventListener("click", event => {
     return;
   }
 
-  if (action === "cancel-stage-4") {
-    cancelStage4Topics();
+  if (action === "cancel-stage") {
+    cancelStageTopics(button.dataset.stage);
     return;
   }
 
-  if (action === "submit-stage-4") {
-    submitStage4Topics();
-    return;
-  }
-
-  if (action === "cancel-stage-5") {
-    cancelStage5Topics();
-    return;
-  }
-
-  if (action === "submit-stage-5") {
-    submitStage5Topics();
+  if (action === "submit-stage") {
+    submitStageTopics(button.dataset.stage);
     return;
   }
 
   if (action === "open-topic-config") {
-    const stage = button.dataset.topicStage || "stage4";
+    const stage = button.dataset.topicStage || DEFAULT_STAGE_ID;
 
-    if (stage === "stage5") {
-      if (!stage5DraftTopics) {
-        stage5DraftTopics = cloneSelectedTopics(draftConfig.selectedStage5Topics);
-      }
-      stage5Status = "";
-    } else {
-      if (!stage4DraftTopics) {
-        stage4DraftTopics = cloneSelectedTopics(draftConfig.selectedTopics);
-      }
-      stage4Status = "";
-    }
+    ensureWorkingTopics(stage);
+    setStageStatus(stage, "");
 
     activeTopicId = button.dataset.topicId;
     activeTopicStage = stage;
@@ -1888,32 +2061,17 @@ controlsRoot.addEventListener("click", event => {
 
   if (action === "cancel-topic-config") {
     activeTopicId = null;
-    activeModal = wizardActive
-      ? "wizard-topics"
-      : (activeTopicStage === "stage5" ? "stage-5" : "stage-4");
+    activeModal = wizardActive ? "wizard-topics" : stageModalId(activeTopicStage);
     renderControlDashboard();
     return;
   }
 
   if (action === "clear-topic-selection") {
     const topicId = button.dataset.topicId;
-    const stage = button.dataset.topicStage || "stage4";
+    const stage = button.dataset.topicStage || DEFAULT_STAGE_ID;
 
-    if (stage === "stage5") {
-      if (!stage5DraftTopics) {
-        stage5DraftTopics = cloneSelectedTopics(draftConfig.selectedStage5Topics);
-      }
-
-      delete stage5DraftTopics[topicId];
-      stage5Status = "Topic cleared.";
-    } else {
-      if (!stage4DraftTopics) {
-        stage4DraftTopics = cloneSelectedTopics(draftConfig.selectedTopics);
-      }
-
-      delete stage4DraftTopics[topicId];
-      stage4Status = "Topic cleared.";
-    }
+    delete ensureWorkingTopics(stage)[topicId];
+    setStageStatus(stage, "Topic cleared.");
 
     renderControlDashboard();
     return;
@@ -2012,7 +2170,7 @@ controlsRoot.addEventListener("submit", event => {
   }
 
   if (formType === "stage-4-topics") {
-    submitStage4Topics();
+    submitStageTopics("stage4");
     return;
   }
 
@@ -2230,18 +2388,16 @@ function findQuestionNumber(questionId) {
   return index >= 0 ? `Q${index + 1}` : "the question";
 }
 
-function buildSubtitleFromSelectedTopics(selectedTopics = {}, selectedStage5Topics = {}) {
-  const stage4Labels = Object.keys(selectedTopics || {})
-    .map(topicId => TOPICS[topicId]?.label)
+function buildSubtitleFromSelectedTopics(config = {}) {
+  const labels = eachSelectedTopic(config)
+    .map(({ topic }) => topic.label)
     .filter(Boolean);
 
-  const stage5Labels = Object.keys(selectedStage5Topics || {})
-    .map(topicId => STAGE5_TOPICS[topicId]?.label)
-    .filter(Boolean);
-
-  const labels = [...stage4Labels, ...stage5Labels];
-
-  return labels.length ? labels.join(" and ") : "Mathematics";
+  // Joined with " and ", topic names that themselves contain commas and "and"
+  // produced an unreadable chain: "Integers and Fractions, Decimals and
+  // Percentages and Angle Relationships and Equations". A middot separates the
+  // topics unambiguously whatever they are called.
+  return labels.length ? labels.join("  ·  ") : "Mathematics";
 }
 
 function escapeHtml(value) {

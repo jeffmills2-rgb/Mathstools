@@ -11,6 +11,10 @@
 */
 
 .exam-document.template-worksheet {
+  /* Prompt text starts after the number column plus the heading gap. */
+  --content-indent: calc(var(--question-number-width, 6mm) + 1.8mm);
+  /* Single-column page — diagrams can be larger. See fitDiagramSvg(). */
+  --diagram-text-mm: 3.4;
   background: #ffffff;
   font-family: var(--exam-font, "Times New Roman", Times, serif);
   color: var(--exam-ink, #111827);
@@ -133,139 +137,287 @@
   font-weight: 700;
 }
 
-/* ── Questions ───────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════
+   COMPACT TWO-COLUMN WORKSHEET
+   ----------------------------------------------------------------------
+   The single-column layout gave every question a full-width ruled block —
+   165mm wide and up to 72mm tall, whatever the answer actually was. That put
+   3.9 questions on a page where the textbook template fits 18.4 of the same
+   questions, so one paper ran to 61 pages instead of 13, and a single
+   three-part percentage question could occupy a whole sheet.
+
+   This layout keeps the textbook's density and adds writing space sized to
+   the SHAPE of the answer: an inline box for a final answer, ruled lines for
+   real working. See resolveAnswerSpace() in utils/answer-space-rules.js.
+   ══════════════════════════════════════════════════════════════════════ */
 
 .template-worksheet .question-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6mm;
+  display: block;            /* override .question-list flex from hsc template */
+  /* row-gap, NOT `gap` — the shorthand sets column-gap as well, so declaring it
+     after column-gap silently zeroes the gutter. */
+  row-gap: 0;
+  column-count: 2;
+  column-gap: 13mm;
+  column-rule: 1px solid #e3e6ea;
+  column-fill: balance;
 }
 
 .template-worksheet .exam-question {
-  padding-bottom: 1mm;
-  font-size: 15.5px;
-  line-height: 1.28;
+  break-inside: avoid;
+  page-break-inside: avoid;
+  -webkit-column-break-inside: avoid;
+  display: inline-block;     /* most reliable break-inside inside columns */
+  width: 100%;
+  margin: 0 0 3.4mm;
+  padding: 0;
+  font-size: 10.5pt;
+  line-height: 1.3;
+  box-sizing: border-box;
+}
+
+.template-worksheet .exam-question.has-diagram {
+  margin-bottom: 5mm;
 }
 
 .template-worksheet .question-heading {
-  grid-template-columns: 10mm 1fr;
-  gap: 4mm;
-  font-size: 15.5px;
-  line-height: 1.28;
+  grid-template-columns: var(--question-number-width, 6mm) 1fr;
+  gap: 1.8mm;
+  font-size: 10.5pt;
+  line-height: 1.3;
+}
+
+.template-worksheet .question-number {
+  font-weight: 800;
+  color: #0f5496;
+  white-space: nowrap;
+  padding-right: 1mm;
+}
+
+.template-worksheet .question-number::after {
+  content: ".";
 }
 
 .template-worksheet .question-prompt,
-.template-worksheet .question-number,
+.template-worksheet .question-text,
 .template-worksheet .choice-list,
 .template-worksheet .question-table,
-.template-worksheet .question-matching,
-.template-worksheet .student-diagram-space {
-  font-size: 15.5px;
-  line-height: 1.28;
+.template-worksheet .question-matching {
+  font-size: 10.5pt;
+  line-height: 1.3;
 }
 
 .template-worksheet .question-marks {
   display: none !important;
 }
 
-.template-worksheet .choice-list {
-  margin: 3mm 0 0 12mm;
-  gap: 2mm 8mm;
+/* ── Topic bands ─────────────────────────────────── */
+
+.template-worksheet .topic-band {
+  display: inline-block;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 3.5mm 0 2.2mm;
+  padding-bottom: 0.8mm;
+  border-bottom: 1px solid #c8ccd2;
 }
+
+.template-worksheet .question-list > .topic-band:first-child,
+.template-worksheet .question-list > .topic-band-group:first-child .topic-band {
+  margin-top: 0;
+}
+
+/* The band and its first question are one box in the column flow, so a column
+   break can never land between a heading and the questions it introduces.
+   inline-block/width:100% for the same reason .exam-question uses them: it is
+   what makes Chrome honour break-inside inside a multi-column container. */
+.template-worksheet .topic-band-group {
+  display: inline-block;
+  width: 100%;
+  box-sizing: border-box;
+  break-inside: avoid;
+  page-break-inside: avoid;
+  -webkit-column-break-inside: avoid;
+}
+
+.template-worksheet .topic-band-label {
+  font-size: 8.6pt;
+  letter-spacing: 0.08em;
+  color: #0f5496;
+}
+
+/* ── Multiple choice — inline A B C D ────────────── */
+
+.template-worksheet .choice-list {
+  list-style: none;
+  counter-reset: mc-opt;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 9px;
+  padding: 1mm 0 0 var(--content-indent, 6mm);
+  margin: 0;
+}
+
+.template-worksheet .choice-list li {
+  counter-increment: mc-opt;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+  white-space: nowrap;
+  font-size: 10pt;
+}
+
+.template-worksheet .choice-list li::before {
+  content: counter(mc-opt, upper-alpha) ")";
+  font-weight: 700;
+  color: #0f5496;
+  min-width: 15px;
+  font-size: 9.5pt;
+  flex-shrink: 0;
+}
+
+/* ── Subparts ────────────────────────────────────── */
+
+.template-worksheet .question-subparts {
+  margin: 1.4mm 0 0;
+  padding-left: var(--content-indent, 6mm);
+  font-size: 10.5pt;
+  line-height: 1.3;
+}
+
+.template-worksheet .question-subpart {
+  margin: 0 0 1.6mm;
+}
+
+.template-worksheet .subpart-heading {
+  grid-template-columns: 4.6mm 1fr auto;
+  gap: 1.2mm;
+}
+
+/* ── Diagrams ────────────────────────────────────── */
 
 .template-worksheet .question-diagram {
-  margin-top: 3mm;
-  margin-bottom: 2mm;
-  max-width: 112mm;
-  min-height: 42mm;
+  margin: 1.6mm 0 1.4mm var(--content-indent, 6mm);
+  max-width: calc(100% - var(--content-indent, 6mm));
+  min-height: 0;
+  display: flex;
+  justify-content: flex-start;
 }
 
-/* ── Ruled answer spaces ─────────────────────────── */
+.template-worksheet .question-diagram svg {
+  display: block;
+  height: auto;
+  max-width: 100%;
+  max-height: 44mm;
+}
 
-.template-worksheet .answer-space {
-  margin: 3.5mm 0 0 0;
-  border: 1.4px solid var(--exam-border, #111827);
-  border-radius: 0;
-  background-color: #fff;
+/* Captions align with the diagram they describe, not centred in the column —
+   a centred caption under a left-aligned diagram reads as belonging to neither. */
+.template-worksheet .question-diagram-caption,
+.template-worksheet .question-diagram-note {
+  margin-left: var(--content-indent, 6mm);
+  text-align: left;
+  font-size: 9pt;
+}
+
+.template-worksheet .question-diagram[data-aspect="wide"] svg { max-height: 40mm; }
+.template-worksheet .question-diagram[data-aspect="landscape"] svg { max-height: 54mm; }
+.template-worksheet .question-diagram[data-aspect="square"] svg { max-height: 50mm; }
+.template-worksheet .question-diagram[data-aspect="tall"] svg { max-height: 58mm; }
+
+/* ── Tables ──────────────────────────────────────── */
+
+.template-worksheet .question-table-wrap {
+  margin: 1.5mm 0 1.5mm var(--content-indent, 6mm);
+  max-width: calc(100% - var(--content-indent, 6mm));
+}
+
+.template-worksheet .question-table {
+  font-size: 8.4pt;
+}
+
+.template-worksheet .question-table th,
+.template-worksheet .question-table td {
+  padding: 0.8mm;
+  height: auto;
+  min-height: 7mm;
+  line-height: 1.15;
+}
+
+.template-worksheet .question-table th[scope="col"] {
+  font-size: 6.9pt;
+  letter-spacing: -0.01em;
+  padding: 0.8mm 0.4mm;
+  overflow-wrap: normal;
+  word-break: keep-all;
+  hyphens: none;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   ANSWER SPACE
+   ----------------------------------------------------------------------
+   A short answer is a box carried on the prompt's last line. Inline, because
+   a block-level box can be pushed alone to the top of the next column, and
+   because a box that follows the text reads as "write it here" rather than as
+   an empty region between two questions.
+
+   The box is a tall inline object on a text line — exactly the situation the
+   universal fraction rule exists for — so the line it sits on is given the
+   same extra leading rather than being allowed to crowd the line above.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.template-worksheet .answer-box {
+  display: inline-block;
+  width: 22mm;
+  max-width: 100%;
+  height: 6.4mm;
+  margin: 0 0 0 2.5mm;
+  vertical-align: -1.9mm;
+  border: 1px solid rgba(17, 24, 39, 0.55);
+  background: #fff;
+}
+
+.template-worksheet .question-prompt:has(.answer-box),
+.template-worksheet .subpart-prompt:has(.answer-box) {
+  line-height: 1.95;
+}
+
+/* A displayed expression carrying the answer box only needs the extra leading
+   on its own line, not on the sentence that introduces it. */
+.template-worksheet .question-prompt:has(.math-expression .answer-box),
+.template-worksheet .subpart-prompt:has(.math-expression .answer-box) {
+  line-height: 1.3;
+}
+
+.template-worksheet .math-expression:has(.answer-box) {
+  line-height: 1.95;
+}
+
+/* Ruled working space, one rule per expected step. No border box: the rules
+   alone are enough to show where to write, and a border around every question
+   turns the page into a grid of cells. */
+.template-worksheet .answer-lines {
+  margin: 1.6mm 0 0 var(--content-indent, 6mm);
+  max-width: calc(100% - var(--content-indent, 6mm));
   background-image: repeating-linear-gradient(
     to bottom,
     transparent 0,
-    transparent calc(8mm - 1px),
-    rgba(17, 24, 39, 0.18) calc(8mm - 1px),
-    rgba(17, 24, 39, 0.18) 8mm
+    transparent calc(7mm - 1px),
+    rgba(17, 24, 39, 0.42) calc(7mm - 1px),
+    rgba(17, 24, 39, 0.42) 7mm
   );
-  background-size: 100% 8mm;
-  background-position: 0 8mm;
+  background-size: 100% 7mm;
 }
 
-.template-worksheet .answer-space-small {
-  height: 24mm;
-}
+.template-worksheet .answer-lines[data-lines="1"] { height: 7mm; }
+.template-worksheet .answer-lines[data-lines="2"] { height: 14mm; }
+.template-worksheet .answer-lines[data-lines="3"] { height: 21mm; }
+.template-worksheet .answer-lines[data-lines="4"] { height: 28mm; }
 
-.template-worksheet .answer-space-medium {
-  height: 48mm;
-}
-
-.template-worksheet .answer-space-large {
-  height: 72mm;
-}
-
-/* ── Diagram + answer side-by-side layout ────────── */
-
-.template-worksheet .exam-question.has-diagram-answer-layout {
-  display: grid;
-  grid-template-columns: minmax(58mm, 1fr) minmax(40mm, 52mm);
-  column-gap: 5mm;
-  row-gap: 3mm;
-  align-items: center;
-  break-inside: avoid;
-  page-break-inside: avoid;
-}
-
-.template-worksheet .exam-question.has-diagram-answer-layout .question-editor-controls,
-.template-worksheet .exam-question.has-diagram-answer-layout .question-heading,
-.template-worksheet .exam-question.has-diagram-answer-layout .question-table-wrap,
-.template-worksheet .exam-question.has-diagram-answer-layout .question-matching,
-.template-worksheet .exam-question.has-diagram-answer-layout .choice-list,
-.template-worksheet .exam-question.has-diagram-answer-layout .student-diagram-space {
-  grid-column: 1 / -1;
-}
-
-.template-worksheet .exam-question.has-diagram-answer-layout .question-diagram {
-  grid-column: 1;
-  width: 100%;
-  max-width: 100%;
-  min-height: 34mm;
-  margin: 1mm 0 0;
-  box-sizing: border-box;
-}
-
-.template-worksheet .exam-question.has-diagram-answer-layout .question-diagram svg {
-  max-height: 54mm;
-}
-
-.template-worksheet .exam-question.has-diagram-answer-layout .answer-space {
-  grid-column: 2;
-  width: 100%;
-  max-width: 52mm;
-  margin: 1mm 0 0;
-  min-height: 30mm;
-  box-sizing: border-box;
-}
-
-.template-worksheet .exam-question.has-diagram-answer-layout .answer-space-small {
-  height: 24mm;
-  min-height: 24mm;
-}
-
-.template-worksheet .exam-question.has-diagram-answer-layout .answer-space-medium {
-  height: 38mm;
-  min-height: 38mm;
-}
-
-.template-worksheet .exam-question.has-diagram-answer-layout .answer-space-large {
-  height: 54mm;
-  min-height: 54mm;
+/* The old full-width ruled block and the side-by-side diagram/answer grid are
+   both retired in this template. The grid overflowed the page edge even in a
+   single column, and cannot work in two. */
+.template-worksheet .answer-space {
+  display: none !important;
 }
 
 /* ── Responsive ──────────────────────────────────── */
@@ -279,15 +431,9 @@
     grid-template-columns: 1fr;
   }
 
-  .template-worksheet .exam-question.has-diagram-answer-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .template-worksheet .exam-question.has-diagram-answer-layout .question-diagram,
-  .template-worksheet .exam-question.has-diagram-answer-layout .answer-space {
-    grid-column: 1;
-    margin-left: 0;
-    max-width: 100%;
+  .template-worksheet .question-list {
+    column-count: 1;
+    column-rule: none;
   }
 }
 
@@ -335,17 +481,56 @@
     page-break-inside: avoid;
   }
 
+  /* Balance the columns on EVERY page, not just the last.
+
+     column-fill:auto fills the left column to the full page height before
+     starting the right, so whenever a tall unbreakable question would not fit
+     in the remaining right column it moved to the next page — leaving pages
+     that ended with a full left column and a half-empty right one, which reads
+     as though the page stopped early. Balancing keeps both columns finishing
+     at roughly the same depth, so a page always looks complete. */
+  .template-worksheet .question-list {
+    display: block !important;
+    row-gap: 0 !important;          /* never the `gap` shorthand — it resets column-gap */
+    column-count: 2 !important;
+    column-gap: 13mm !important;
+    column-fill: balance !important;
+  }
+
+  .template-worksheet .question-list-mc {
+    column-fill: balance !important;
+  }
+
   .template-worksheet .exam-question,
   .template-worksheet .question-heading,
   .template-worksheet .question-number,
   .template-worksheet .question-prompt,
   .template-worksheet .question-text,
-  .template-worksheet .choice-list,
-  .template-worksheet .question-table,
-  .template-worksheet .question-matching,
-  .template-worksheet .student-diagram-space {
-    font-size: 15.5px !important;
-    line-height: 1.28 !important;
+  .template-worksheet .question-matching {
+    font-size: 10.5pt !important;
+    line-height: 1.3 !important;
+  }
+
+  /* A prompt carrying an answer box keeps its extra leading — the print rule
+     above would otherwise clamp it and the box would crowd the line above. */
+  .template-worksheet .question-prompt:has(.answer-box),
+  .template-worksheet .subpart-prompt:has(.answer-box) {
+    line-height: 1.95 !important;
+  }
+
+  .template-worksheet .question-prompt:has(.math-expression .answer-box),
+  .template-worksheet .subpart-prompt:has(.math-expression .answer-box) {
+    line-height: 1.3 !important;
+  }
+
+  .template-worksheet .math-expression:has(.answer-box) {
+    line-height: 1.95 !important;
+  }
+
+  .template-worksheet .answer-box,
+  .template-worksheet .answer-lines {
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 
   .template-worksheet .question-marks,

@@ -34,6 +34,26 @@ function randInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+/*
+  Wording variants for the standard "find x" stem.
+
+  Fifty-five consecutive questions phrased identically read as a printing
+  error and stop carrying any information — the student sees the diagram and
+  skips the words. These all ask exactly the same thing; only the phrasing
+  moves, so the mathematical demand is unchanged.
+*/
+const FIND_X_PROMPTS = [
+  "Find the value of x. Give a reason for your answer.",
+  "Find x, giving a reason for your answer.",
+  "Work out the value of x and justify your answer.",
+  "What is the value of x? State the angle property you used.",
+  "Calculate x. Name the angle relationship that justifies it."
+];
+
+function findXPrompt() {
+  return choice(FIND_X_PROMPTS);
+}
+
 function choice(items) {
   return items[randInt(0, items.length - 1)];
 }
@@ -238,7 +258,7 @@ function straightLineQuestion() {
     level: "mixed",
     type: "straight-line",
     marks: 2,
-    prompt: "Find the value of x. Give a reason for your answer.",
+    prompt: findXPrompt(),
     diagram: {
       engine: "angle-engine",
       config: {
@@ -271,7 +291,7 @@ function rightAngleQuestion() {
     level: "mixed",
     type: "right-angle",
     marks: 2,
-    prompt: "Find the value of x. Give a reason for your answer.",
+    prompt: findXPrompt(),
     diagram: {
       engine: "angle-engine",
       config: {
@@ -303,7 +323,7 @@ function aroundPointQuestion() {
     level: "mixed",
     type: "around-point",
     marks: 2,
-    prompt: "Find the value of x. Give a reason for your answer.",
+    prompt: findXPrompt(),
     diagram: {
       engine: "angle-engine",
       config: {
@@ -334,7 +354,7 @@ function verticallyOppositeQuestion() {
     level: "mixed",
     type: "vertically-opposite",
     marks: 2,
-    prompt: "Find the value of x. Give a reason for your answer.",
+    prompt: findXPrompt(),
     diagram: {
       engine: "angle-engine",
       config: {
@@ -369,7 +389,7 @@ function parallelLinesQuestion() {
     level: "mixed",
     type: "parallel-lines",
     marks: 2,
-    prompt: "Find the value of x. Give a reason for your answer.",
+    prompt: findXPrompt(),
     diagram: {
       engine: "angle-engine",
       config: {
@@ -498,7 +518,7 @@ function equationsApplicationQuestion() {
   question.id = randomId();
   question.type = "equations-application";
   question.marks = 2;
-  question.prompt = "Find the value of x. Give a reason for your answer.";
+  question.prompt = findXPrompt();
   replaceMissingAngleLabel(question, made.label);
   question.answer = `x = ${made.x}°`;
   question.working = [

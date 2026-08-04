@@ -70,9 +70,52 @@ window.MMT_INTEGER_ENGINE = (() => {
     return svg;
   }
 
+  /*
+    Decide which axis labels can be drawn without colliding.
+
+    Requested labels are just values, so two of them can land a few units apart
+    on the axis and print on top of each other — "27" and "30" overlapped into
+    an unreadable smudge on a −30..30 line. Rather than shrink every label, the
+    crowded one is dropped.
+
+    Priority matters: zero and the two end values are what a student reads the
+    scale from, so they are placed first and never dropped in favour of an
+    interior label.
+  */
+  function resolveAxisLabels(values, x, min, max) {
+    // .int-label is 24 user units. Both constants are expressed against that so
+    // they stay right if the label size changes.
+    const LABEL_FONT_UNITS = 24;
+    const LABEL_CHAR_UNITS = LABEL_FONT_UNITS * 0.58;   // digit advance width
+    // Labels that merely fail to overlap still read as one number: "27" and
+    // "30" ended up about 1mm apart on the printed page. Require a clear gap of
+    // most of a character height between them.
+    const MIN_GAP_UNITS = LABEL_FONT_UNITS * 0.85;
+
+    const halfWidth = v => (fmt(v).length * LABEL_CHAR_UNITS) / 2;
+    const unique = [...new Set(values.map(Number))].filter(Number.isFinite);
+
+    const byPriority = [
+      ...unique.filter(v => v === 0),
+      ...unique.filter(v => v === min || v === max),
+      ...unique.filter(v => v !== 0 && v !== min && v !== max)
+    ];
+
+    const kept = [];
+
+    byPriority.forEach(v => {
+      const collides = kept.some(other =>
+        Math.abs(x(v) - x(other)) < halfWidth(v) + halfWidth(other) + MIN_GAP_UNITS
+      );
+      if (!collides) kept.push(v);
+    });
+
+    return new Set(kept);
+  }
+
   function drawAxis(svg, { min, max, step, labels, left, right, y, labelY }) {
     const x = value => left + ((value - min) / (max - min)) * (right - left);
-    const labelSet = new Set(labels.map(Number));
+    const labelSet = resolveAxisLabels(labels, x, min, max);
 
     svg.appendChild(el("line", { x1: left, y1: y, x2: right, y2: y, class: "int-baseline" }));
 
@@ -189,7 +232,13 @@ window.MMT_INTEGER_ENGINE = (() => {
     const unit = config.unit || "°C";
     const showValue = config.showValue !== false;
 
-    const svg = makeSvg("0 0 300 460", "thermometer");
+    // viewBox trimmed to what is actually drawn. The scale labels end at
+    // x=120 (anchored end, ~35px wide) and the value text runs to about x=262,
+    // so a 0..300 box carried roughly 100px of empty margin — about a third of
+    // the width. Trimming it also moves the thermometer from the "square"
+    // aspect band into "tall", which is what it really is, so it stops being
+    // given a square diagram's width budget on the page.
+    const svg = makeSvg("78 12 196 446", "thermometer");
 
     const top = 30, bottom = 380, cx = 150;
     const tubeW = 40, bulbR = 34;

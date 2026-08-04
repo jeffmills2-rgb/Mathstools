@@ -23,6 +23,11 @@
   --exam-page: #ffffff;
   --exam-font: "Times New Roman", Times, serif;
   --exam-math-font: "Cambria Math", "STIX Two Math", "STIXGeneral", "Times New Roman", serif;
+
+  /* Stacked-fraction metrics — see the UNIVERSAL FRACTION RULE below.
+     Change these two numbers to retune fractions everywhere at once. */
+  --frac-scale: 0.74;        /* numerator/denominator size, relative to the text */
+  --frac-leading: 1.72;      /* leading given to any line that contains a fraction */
 }
 
 body {
@@ -33,6 +38,8 @@ body {
 }
 
 .exam-document {
+  /* Single-column page — diagrams can be larger. See fitDiagramSvg(). */
+  --diagram-text-mm: 3.4;
   width: 210mm;
   min-height: 297mm;
   margin: 16px auto;
@@ -264,9 +271,44 @@ body {
   justify-content: center;
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+   UNIVERSAL DIAGRAM RULE — applies to every template.
+   ----------------------------------------------------------------------
+   fitDiagramSvg() (renderers/question-renderer.js) strips the meaningless
+   height="100%" and publishes the diagram's real aspect-ratio plus a
+   data-aspect band on the wrapper. That lets a diagram be sized by the ONE
+   dimension that actually constrains it:
+
+     wide / landscape  → constrained by COLUMN WIDTH. Fill it. A double number
+                         line printed at half-width has 5pt tick labels.
+     square / tall     → constrained by HEIGHT. Cap the height and let
+                         width:auto pull the width in with it, so the shape
+                         stays true and the box stays tight.
+
+   A template only needs to restate the caps if its column differs.
+   ══════════════════════════════════════════════════════════════════════ */
+
 .question-diagram svg {
   max-width: 100%;
   height: auto;
+}
+
+.question-diagram[data-aspect="landscape"] svg {
+  max-height: 70mm;
+}
+
+.question-diagram[data-aspect="square"] svg,
+.question-diagram[data-aspect="tall"] svg {
+  max-height: 66mm;
+}
+
+/* A question that ENDS in a diagram needs more space after it than one that
+   ends in text. With a single flat margin the next question's number sits
+   right under the previous drawing and reads as a label for it. Text sets its
+   own optical space through descenders and leading; a diagram's edge does not. */
+.exam-question.has-diagram,
+.exam-question.has-diagram-answer-layout {
+  padding-bottom: 5mm;
 }
 
 .diagram-placeholder {
@@ -336,26 +378,82 @@ body {
   font-family: var(--exam-math-font);
 }
 
-/* Stacked fraction notation used by FDP question prompts. */
+/* ══════════════════════════════════════════════════════════════════════
+   UNIVERSAL FRACTION RULE — applies to every template.
+   ----------------------------------------------------------------------
+   A stacked fraction is an atomic inline box roughly TWO text lines tall.
+   Rendered at full size inside a 1.2–1.35 line-height paragraph it inflates
+   that one line box, so the fraction visually spills into the line above and
+   below, the question number stops lining up with the first line of text, and
+   in ruled templates it crosses the printed answer line.
+
+   The rule is: a fraction must never be taller than the leading of the line
+   it sits on. Two halves make that true:
+
+     1. Shrink the numerator/denominator to --frac-scale, so the whole
+        fraction box is ~1.6em rather than ~2.2em.
+     2. Give any line that CONTAINS a fraction extra leading
+        (--frac-leading) via :has(), so the taller box is absorbed by the
+        line rather than overflowing it. Lines without fractions keep their
+        normal tight leading, so nothing else in the paper gets looser.
+
+   Templates must NOT override .math-frac font-size; retune the two
+   variables in :root instead.
+   ══════════════════════════════════════════════════════════════════════ */
+
 .math-frac {
   display: inline-flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  vertical-align: middle;
+  vertical-align: middle;      /* centres the bar on the maths axis */
   font-family: var(--exam-math-font);
-  line-height: 1;
-  margin: 0 0.08em;
+  font-size: calc(1em * var(--frac-scale, 0.74));
+  line-height: 1.05;
+  margin: 0 0.12em;
   min-width: 1.1em;
+  white-space: nowrap;         /* a fraction never breaks across two lines */
 }
 
 .math-frac span:first-child {
-  border-bottom: 1.5px solid currentColor;
-  padding: 0 0.18em 0.08em;
+  border-bottom: 1.2px solid currentColor;
+  padding: 0 0.2em 0.06em;
 }
 
 .math-frac span:last-child {
-  padding-top: 0.08em;
+  padding-top: 0.06em;
+}
+
+/* Give the tall box room. Only lines that actually hold a fraction are
+   loosened, so paragraph rhythm elsewhere is untouched.
+
+   The document-level prefix and !important are deliberate: every template has
+   its own `@media print { line-height: 1.25 !important }` block, and without
+   them the print stylesheet (i.e. the exported PDF — the thing that matters)
+   would clamp the leading straight back and reintroduce the spill. */
+.exam-document .question-prompt:has(.math-frac),
+.exam-document .question-text:has(.math-frac),
+.exam-document .question-heading:has(.math-frac),
+.exam-document .prompt-indented-line:has(.math-frac),
+.exam-document .choice-list li:has(.math-frac),
+.exam-document .question-table th:has(.math-frac),
+.exam-document .question-table td:has(.math-frac),
+.exam-document .compact-question-prompt:has(.math-frac),
+.exam-document .compact-answer-cell:has(.math-frac),
+.worked-solution-document .worked-question-prompt:has(.math-frac),
+.worked-solution-document .worked-steps li:has(.math-frac),
+.worked-solution-document .worked-final-answer:has(.math-frac),
+.answers-document li:has(.math-frac),
+.answers-document td:has(.math-frac) {
+  line-height: var(--frac-leading, 1.72) !important;
+}
+
+/* Number the question against the FIRST LINE OF TEXT, not the top of a row
+   that a fraction has made tall. With align-items:start the number floats up
+   to the top of an inflated row and stops reading as "Q7." next to its text. */
+.exam-document .question-heading,
+.worked-solution-document .worked-question-heading {
+  align-items: baseline;
 }
 
 /* Multiple choice answer sheet — compact enough to keep 10 choices on one page */
@@ -1291,9 +1389,51 @@ body.print-solutions-only .worked-cover {
 .question-table th,
 .worked-question-table th,
 .worked-answer-table th {
-  width: 18mm;
   font-weight: 700;
   background: #f8fafc;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   UNIVERSAL TABLE RULE — applies to every template.
+   ----------------------------------------------------------------------
+   th used to carry a flat width:18mm. Under table-layout:fixed that is a
+   per-column floor, so a 5-column place-value table demanded 90mm inside an
+   84mm textbook column: the table pushed through the column rule into the
+   gutter and the last header ("Thousandths") was clipped mid-word.
+
+   Only a ROW header is a label column that deserves a fixed width. Column
+   headers must share whatever width the container actually has, and their
+   text must wrap rather than clip.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.question-table-wrap {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.question-table {
+  max-width: 100%;
+}
+
+/* Label column in a table that has no header row. Under table-layout:fixed
+   only the first row sets the columns, so this correctly does nothing to a
+   table whose first row is a header row. */
+.question-table th[scope="row"],
+.worked-question-table th[scope="row"],
+.worked-answer-table th[scope="row"] {
+  width: 18mm;
+}
+
+/* Header text wraps instead of overflowing its cell. */
+.question-table th,
+.question-table td,
+.worked-question-table th,
+.worked-question-table td,
+.worked-answer-table th,
+.worked-answer-table td {
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: auto;
 }
 
 .worked-answer-table-wrap {
@@ -1326,10 +1466,164 @@ body.print-solutions-only .worked-cover {
     page-break-before: auto !important;
   }
 }
+/* One value of a comma-separated list: sign, digits and trailing comma stay
+   together, so a line never begins with a stray minus sign or a comma.
+   See protectValueLists() in renderers/question-renderer.js. */
+.value-item {
+  white-space: nowrap;
+}
+
+/* A short relation stays on one line — see protectRelations(). */
+.math-relation {
+  white-space: nowrap;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   DISPLAYED EXPRESSIONS
+   ----------------------------------------------------------------------
+   An expression that ends a prompt is set on its own line, the way a printed
+   text displays an equation after a colon. Prose can wrap anywhere because
+   the reader reassembles it from meaning; an expression cannot, because its
+   meaning is its arrangement — "−24" at a line end with "+ (−29) ___ −9"
+   beneath it reads as two different statements.
+
+   Giving it the full column almost always removes the break entirely. If one
+   is genuinely too long it may still wrap, but only at a space, which in
+   these prompts is always beside an operator.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.math-expression {
+  display: block;
+  margin-top: 0.3em;
+  overflow-wrap: normal;
+  word-break: keep-all;
+}
+
+/* A short expression inside a sentence moves to the next line whole rather
+   than tearing — see protectEmbeddedExpressions(). */
+.math-inline {
+  white-space: nowrap;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SUBPARTS — (a) (b) (c) belong to their stem.
+   With no indent they sit at the same left edge as the question number and
+   read as three separate questions. The list is indented under the stem and
+   the labels get their own narrow column, so the group reads as one item.
+   Styling is here rather than inline so templates can override it.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.question-subparts {
+  list-style: none;
+  margin: 2.5mm 0 0;
+  padding: 0 0 0 8mm;
+}
+
+.question-subpart {
+  margin: 0 0 2.5mm;
+}
+
+.question-subpart:last-child {
+  margin-bottom: 0;
+}
+
+.subpart-heading {
+  display: grid;
+  grid-template-columns: 6mm 1fr auto;
+  gap: 1.5mm;
+  align-items: baseline;
+}
+
+.subpart-label {
+  font-weight: 700;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   TOPIC BANDS — marks where a multi-topic paper changes subject.
+   Emitted by renderQuestionsWithTopicBands() only when the paper actually
+   holds more than one topic. Quiet by design: this is a signpost, not a
+   section heading, and it must not compete with the question numbers.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.topic-band {
+  break-inside: avoid;
+  page-break-inside: avoid;
+  break-after: avoid;          /* never strand a band at the foot of a page */
+  page-break-after: avoid;
+  margin: 7mm 0 4mm;
+  padding-bottom: 1.2mm;
+  border-bottom: 1.2px solid var(--exam-soft-border);
+}
+
+.question-list > .topic-band:first-child,
+.question-list > .topic-band-group:first-child .topic-band {
+  margin-top: 0;
+}
+
+/* A band and its first question travel together — see
+   renderQuestionsWithTopicBands(). Without this the pair can be split by a
+   column or page break, leaving a heading with nothing under it. */
+.topic-band-group {
+  break-inside: avoid;
+  page-break-inside: avoid;
+  -webkit-column-break-inside: avoid;
+}
+
+.topic-band-label {
+  font-family: var(--exam-font);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--exam-muted);
+}
+
+/* ── Running footer ───────────────────────────────────────────────────
+   Screen-hidden; in print Chrome repeats a fixed element on every sheet, so
+   this names the paper on each page. Page NUMBERS are not something CSS can
+   generate in Chrome — the browser's own "Headers and footers" print option
+   supplies those. */
+
+.print-running-footer {
+  display: none;
+}
+
+@media print {
+  .print-running-footer {
+    display: block;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 4mm;
+    text-align: center;
+    font-family: var(--exam-font);
+    font-size: 8px;
+    letter-spacing: 0.06em;
+    color: rgba(75, 85, 99, 0.75);
+  }
+}
+
+/* Teacher option — one topic per page, so the paper can be handed out a topic
+   at a time. The first band is skipped: it is already at the top of a page. */
+@media print {
+  .has-topic-page-breaks .topic-band {
+    break-before: page;
+    page-break-before: always;
+  }
+
+  .has-topic-page-breaks .question-list > .topic-band:first-child {
+    break-before: auto;
+    page-break-before: auto;
+  }
+}
+
 /* Prompt paragraph indentation for generated multi-line questions */
+/* Continuation lines of a multi-line prompt. A deep hang made the second
+   sentence look like a subpart; a small one is enough to show it belongs to
+   the line above. */
 .prompt-indented-line {
   display: block;
-  margin-left: 1.25em;
+  margin-left: 0.6em;
   text-indent: 0;
 }
 

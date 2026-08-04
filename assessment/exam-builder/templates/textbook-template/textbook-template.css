@@ -11,6 +11,11 @@
 */
 
 .exam-document.template-textbook {
+  /* Prompt text starts after the number column plus the heading gap. */
+  --content-indent: calc(var(--question-number-width, 6mm) + 1.8mm);
+  /* Diagram label text target — see fitDiagramSvg(). A dense two-column
+     exercise page wants compact diagrams. */
+  --diagram-text-mm: 2.7;
   background: #ffffff;
   font-family: var(--exam-font, "Times New Roman", Times, serif);
   color: var(--exam-ink, #111827);
@@ -102,13 +107,22 @@
 
 /* ── Question list — two true CSS columns ─────────── */
 
+/* The gutter does the separating, not the rule. At 7mm the two columns read as
+   one block of text with a hairline through it, and the eye tracks across the
+   gap mid-sentence. A gutter wider than the space between words — closer to an
+   indent — makes the column boundary unambiguous without the reader having to
+   look for it. */
 .template-textbook .question-list {
   display: block;            /* override .question-list flex from hsc template */
+  /* row-gap, NOT the `gap` shorthand. `gap` sets column-gap too, so declaring
+     it after column-gap silently reset the gutter to zero — which is why the
+     two columns printed hard up against the divider with about 1mm of air,
+     and why changing column-gap appeared to do nothing. */
+  row-gap: 0;                /* neutralise inherited flex gap */
   column-count: 2;
-  column-gap: 7mm;
-  column-rule: 1px solid #e8eaed;
+  column-gap: 13mm;
+  column-rule: 1px solid #e3e6ea;
   column-fill: balance;
-  gap: 0;                    /* neutralise inherited flex gap */
 }
 
 /* Each question collapses tightly and stays intact within a column. */
@@ -125,19 +139,70 @@
   box-sizing: border-box;
 }
 
-/* Diagram questions stay inside their column (do NOT span both columns). */
+/* Diagram questions stay inside their column (do NOT span both columns), and
+   carry extra trailing space so the NEXT question's number does not read as a
+   caption for the drawing above it. This template zeroes padding on
+   .exam-question, so the space has to come from the margin. */
 .template-textbook .exam-question.has-diagram,
 .template-textbook .exam-question.has-diagram-answer-layout {
   column-span: none;
   display: inline-block;
   width: 100%;
+  margin-bottom: 4.6mm;
 }
 
-/* ── Question number + prompt (collapsed) ─────────── */
+/* ── Topic bands in a two-column flow ─────────────────────────────────
+   .question-list is a CSS multi-column container, so a band is just another
+   block in the flow: it appears at the top of whichever column the topic
+   change lands in, which is the correct reading position. It must be
+   inline-block/width:100% for the same reason the questions are — that is
+   what makes Chrome honour break-inside inside columns. */
+
+.template-textbook .topic-band {
+  display: inline-block;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 3.5mm 0 2.2mm;
+  padding-bottom: 0.8mm;
+  border-bottom: 1px solid #c8ccd2;
+}
+
+.template-textbook .question-list > .topic-band:first-child,
+.template-textbook .question-list > .topic-band-group:first-child .topic-band {
+  margin-top: 0;
+}
+
+/* The band and its first question are one box in the column flow, so a column
+   break can never land between a heading and the questions it introduces.
+   inline-block/width:100% for the same reason .exam-question uses them: it is
+   what makes Chrome honour break-inside inside a multi-column container. */
+.template-textbook .topic-band-group {
+  display: inline-block;
+  width: 100%;
+  box-sizing: border-box;
+  break-inside: avoid;
+  page-break-inside: avoid;
+  -webkit-column-break-inside: avoid;
+}
+
+.template-textbook .topic-band-label {
+  font-size: 8.6pt;
+  letter-spacing: 0.08em;
+  color: #0f5496;
+}
+
+
+/* Everything that sits UNDER a prompt — diagram, caption, table, subparts,
+   answer rules — lines up with the prompt text, not with the question number.
+   --question-number-width is set per document from the paper's largest question
+   number (see getDocumentMetrics), so the alignment is exact whether the paper
+   runs to Q9 or Q240. */
+
+/* ── Question number + prompt ─────────────────────── */
 
 .template-textbook .question-heading {
   display: grid;
-  grid-template-columns: minmax(6mm, auto) 1fr;  /* number column grows to fit 2–3 digit numbers (e.g. "Q146.") */
+  grid-template-columns: var(--question-number-width, 6mm) 1fr;
   gap: 1.8mm;
   align-items: start;
   font-size: 10.3pt;
@@ -169,6 +234,24 @@
   display: none !important;
 }
 
+/* Subparts sit under the stem, aligned with the prompt text rather than with
+   the question number, so (a) (b) (c) cannot be mistaken for new questions. */
+.template-textbook .question-subparts {
+  margin: 1.4mm 0 0;
+  padding-left: var(--content-indent, 6mm);
+  font-size: 10.3pt;
+  line-height: 1.25;
+}
+
+.template-textbook .question-subpart {
+  margin: 0 0 1.2mm;
+}
+
+.template-textbook .subpart-heading {
+  grid-template-columns: 4.6mm 1fr auto;
+  gap: 1.2mm;
+}
+
 /* ── Multiple-choice options — inline A B C D ─────── */
 
 .template-textbook .choice-list {
@@ -178,7 +261,7 @@
   flex-direction: row;
   flex-wrap: wrap;
   gap: 0 9px;
-  padding: 1mm 0 0 6mm;
+  padding: 1mm 0 0 var(--content-indent, 6mm);
   margin: 0;
 }
 
@@ -200,47 +283,107 @@
   flex-shrink: 0;
 }
 
-/* ── Diagrams — small, scaled to fit the column ───── */
+/* ── Diagrams — sized to the COLUMN, not to a fixed 50mm ────────────────
+   A textbook column is ~84mm of usable width. The old 50mm cap shrank every
+   diagram to about 55% of it, which is unnoticeable on a circle but made wide
+   diagrams (double number lines, number lines, fraction bars) print smaller
+   than the sentence that referred to them, with unreadable tick labels.
 
+   Now the wrapper fills the column and each aspect band gets its own height
+   budget. data-aspect is set by fitDiagramSvg() in question-renderer.js from
+   the diagram's own viewBox. */
+
+/* The 6mm indent aligns diagrams with the prompt text, so it has to come OUT
+   of the available width. max-width:100% plus a 6mm margin overruns the column
+   by exactly that margin, which in the right-hand column runs off the page. */
 .template-textbook .question-diagram {
-  margin: 1.2mm 0 1mm 6mm;
-  max-width: 50mm;
+  margin: 1.6mm 0 1.4mm var(--content-indent, 6mm);
+  max-width: calc(100% - var(--content-indent, 6mm));
   min-height: 0;
 }
 
 .template-textbook .exam-question.has-diagram .question-diagram,
 .template-textbook .exam-question.has-diagram-answer-layout .question-diagram {
-  max-width: 52mm;
+  max-width: calc(100% - var(--content-indent, 6mm));
 }
 
+/* Printed size is set inline by fitDiagramSvg() from the diagram's own ink at a
+   fixed scale, so label text is the same size in every question. The rules here
+   are only the bounds it works within: never wider than the column, and a
+   generous per-band height ceiling that should not normally bind. If a ceiling
+   does bind, the aspect-ratio pulls the width in with it, so the drawing stays
+   undistorted — it just prints smaller than the target scale. */
+
 .template-textbook .question-diagram svg {
-  max-width: 100%;
-  max-height: 42mm;
+  display: block;
   height: auto;
-  width: auto;
+  max-width: 100%;
+  max-height: 44mm;          /* fallback for any diagram without a viewBox */
+}
+
+.template-textbook .question-diagram[data-aspect="wide"] svg {
+  max-height: 40mm;
+}
+
+.template-textbook .question-diagram[data-aspect="landscape"] svg {
+  max-height: 54mm;          /* must clear a full-width protractor (~49mm) */
+}
+
+.template-textbook .question-diagram[data-aspect="square"] svg {
+  max-height: 50mm;
+}
+
+.template-textbook .question-diagram[data-aspect="tall"] svg {
+  max-height: 58mm;
+}
+
+/* Diagrams sit under their prompt, left-aligned with the text. */
+.template-textbook .question-diagram {
+  display: flex;
+  justify-content: flex-start;
 }
 
 /* Captions / notes stay small */
 .template-textbook .question-diagram-caption,
 .template-textbook .question-diagram-note {
-  margin-left: 6mm;
+  margin-left: var(--content-indent, 6mm);
   text-align: left;
   font-size: 9pt;
 }
 
-/* ── Tables — compact ─────────────────────────────── */
+/* ── Tables — compact, and never wider than the column ────────────────
+   The column is ~84mm and a place-value table can be 5 columns, so cells get
+   ~16mm each. The type has to come down and the padding in with it, or a word
+   like "Thousandths" cannot fit even when wrapped. */
 
 .template-textbook .question-table-wrap {
-  margin: 1.5mm 0 1.5mm 6mm;
+  margin: 1.5mm 0 1.5mm var(--content-indent, 6mm);
+  max-width: calc(100% - var(--content-indent, 6mm));
 }
 
 .template-textbook .question-table {
-  font-size: 9.6pt;
+  font-size: 8.4pt;
 }
 
 .template-textbook .question-table th,
 .template-textbook .question-table td {
-  padding: 1mm 2mm;
+  padding: 0.8mm 0.8mm;
+  height: auto;
+  min-height: 7mm;
+  line-height: 1.15;
+}
+
+/* A place-value header can be a single long word ("Thousandths") in a ~16mm
+   cell. Allowing it to break gives "Thousandth / s", which reads as a typo, so
+   the header type is sized to fit the cell whole instead of being broken.
+   Values stay at full size — they are what the student reads. */
+.template-textbook .question-table th[scope="col"] {
+  font-size: 6.9pt;
+  letter-spacing: -0.01em;
+  padding: 0.8mm 0.4mm;
+  overflow-wrap: normal;
+  word-break: keep-all;
+  hyphens: none;
 }
 
 /* ── No answer spaces at all ──────────────────────── */
@@ -296,14 +439,27 @@
     break-inside: auto !important;
   }
 
-  /* Keep the two columns and tight spacing in print. column-fill:auto fills the
-     left column fully before the right (true textbook flow, least white space). */
+  /* Balance the columns on EVERY page, not just the last.
+
+     column-fill:auto fills the left column to the full page height before
+     starting the right, so whenever a tall unbreakable question would not fit
+     in the remaining right column it moved to the next page — leaving pages
+     that ended with a full left column and a half-empty right one, which reads
+     as though the page stopped early. Balancing keeps both columns finishing
+     at roughly the same depth, so a page always looks complete. */
   .template-textbook .question-list {
     display: block !important;
+    row-gap: 0 !important;          /* never the `gap` shorthand — it resets column-gap */
     column-count: 2 !important;
-    column-gap: 7mm !important;
-    column-fill: auto !important;
-    gap: 0 !important;
+    column-gap: 13mm !important;
+    column-fill: balance !important;
+  }
+
+  /* The multiple choice section is short and always ends on its own page, so
+     filling the left column first left ten questions on the left and two on the
+     right with 40% of the page blank. Balancing splits it evenly instead. */
+  .template-textbook .question-list-mc {
+    column-fill: balance !important;
   }
 
   .template-textbook .exam-question {
@@ -315,6 +471,11 @@
     line-height: 1.25 !important;
   }
 
+  .template-textbook .exam-question.has-diagram,
+  .template-textbook .exam-question.has-diagram-answer-layout {
+    margin-bottom: 4.6mm !important;
+  }
+
   .template-textbook .question-heading,
   .template-textbook .question-number,
   .template-textbook .question-prompt,
@@ -323,9 +484,18 @@
     line-height: 1.25 !important;
   }
 
+  /* Print keeps the same per-aspect budgets as the screen preview, so what
+     the teacher sees is what the PDF exports. */
   .template-textbook .question-diagram svg {
-    max-height: 42mm !important;
+    height: auto !important;
+    max-width: 100%;
+    max-height: 44mm;
   }
+
+  .template-textbook .question-diagram[data-aspect="wide"] svg { max-height: 40mm; }
+  .template-textbook .question-diagram[data-aspect="landscape"] svg { max-height: 54mm; }
+  .template-textbook .question-diagram[data-aspect="square"] svg { max-height: 50mm; }
+  .template-textbook .question-diagram[data-aspect="tall"] svg { max-height: 58mm; }
 
   .template-textbook .question-marks,
   .template-textbook .answer-space,

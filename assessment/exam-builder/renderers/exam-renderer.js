@@ -41,6 +41,35 @@ function getExamTemplate(exam, renderOptions = {}) {
   return renderOptions.template || exam.template || exam.options?.template || "hsc-style";
 }
 
+/*
+  Optional teacher setting: start each topic on a new page. Off by default,
+  because the dense flow is what makes the exercise templates economical; on
+  when the paper is going out as one handout per topic.
+*/
+function getDocumentModifiers(exam, renderOptions = {}) {
+  const topicPageBreaks = renderOptions.topicPageBreaks ?? exam.topicPageBreaks ?? exam.options?.topicPageBreaks;
+  return topicPageBreaks === true ? " has-topic-page-breaks" : "";
+}
+
+/*
+  Width of the question-number column, and therefore the indent everything
+  under a prompt should line up with.
+
+  The column was auto-sized per question, so "Q9." and "Q199." produced
+  different prompt indents — and diagrams, tables and answer rules used a flat
+  6mm that matched neither. On a 240-question paper the ruled lines sat 4mm to
+  the left of the text they belonged to, giving every question a ragged left
+  edge. Sizing it once from the paper's largest number makes the alignment
+  exact without wasting the column on a short paper.
+*/
+function getDocumentMetrics(exam) {
+  const count = (exam.questions || []).length;
+  const digits = String(Math.max(1, count)).length;
+  const numberWidth = digits >= 4 ? "11mm" : digits === 3 ? "8.5mm" : "6mm";
+
+  return `--question-number-width: ${numberWidth};`;
+}
+
 function getTemplateClass(template = "hsc-style") {
   if (template === "class-test") return " template-class-test";
   if (template === "revision-package") return " template-revision-package";
@@ -50,7 +79,96 @@ function getTemplateClass(template = "hsc-style") {
 }
 
 function localizeQuestions(questions, language = "en") {
-  return (questions || []).map(question => localizeQuestionForLanguage(question, language));
+  return suppressRepeatedCaptions(
+    (questions || []).map(question => localizeQuestionForLanguage(question, language))
+  );
+}
+
+/*
+  Show each diagram caption once per topic.
+
+  "Each arrow shows one jump." appeared six times, "Temperature at dawn." four,
+  "Percentages line up with amounts." three. A caption that repeats on every
+  instance stops being read after the first, and it costs a line of vertical
+  space each time. The first occurrence within a topic keeps it; later ones drop
+  it, and it returns when the topic changes.
+
+  Returns new objects — the exam's own question data is not touched.
+*/
+function suppressRepeatedCaptions(questions) {
+  const seen = new Set();
+
+  return (questions || []).map(question => {
+    const caption = question?.diagram?.caption;
+    if (!caption) return question;
+
+    const key = `${question.topic || ""}::${caption}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      return question;
+    }
+
+    return {
+      ...question,
+      diagram: { ...question.diagram, caption: "" }
+    };
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   TOPIC BANDS
+   ----------------------------------------------------------------------
+   A multi-topic paper used to run straight from the last fraction question
+   into the first integer question with nothing marking the change, so the
+   student carried the wrong frame of reference into the new topic and had to
+   work out from the question itself that the subject had moved on.
+
+   Every question already carries a human-readable `topic`, so a band can be
+   emitted wherever that value changes. A single-topic paper produces no bands
+   at all — the header already names the topic, and a lone band would be noise.
+   ══════════════════════════════════════════════════════════════════════ */
+
+function renderTopicBand(topic) {
+  return `
+    <div class="topic-band" role="separator" aria-label="Topic: ${escapeHtml(topic)}">
+      <span class="topic-band-label">${escapeHtml(topic)}</span>
+    </div>
+  `;
+}
+
+/*
+  Renders a question list, inserting a band at each topic change.
+  `renderOne(question, number, indexWithinList)` returns the question's HTML.
+
+  A band and the first question under it are emitted as ONE unbreakable unit.
+  Left on its own, a band is just another block in the column flow, and a
+  column break can land between it and its questions — which is exactly what
+  happened on page 1 of the worksheet: the left column ended with an
+  "EQUATIONS" heading and nothing beneath it, while the equations questions
+  began unlabelled at the top of the right column. `break-after: avoid` is not
+  reliable inside a multi-column flow in Chrome; making the pair a single
+  break-inside:avoid box is.
+*/
+function renderQuestionsWithTopicBands(questions, startNumber, renderOne) {
+  const list = questions || [];
+  const topics = new Set(list.map(q => q.topic).filter(Boolean));
+  const showBands = topics.size > 1;
+
+  let currentTopic = null;
+
+  return list
+    .map((question, index) => {
+      const rendered = renderOne(question, startNumber + index, index);
+
+      if (!showBands || !question.topic || question.topic === currentTopic) {
+        return rendered;
+      }
+
+      currentTopic = question.topic;
+
+      return `<div class="topic-band-group">${renderTopicBand(question.topic)}${rendered}</div>`;
+    })
+    .join("");
 }
 
 function uiText(text, language = "en") {
@@ -71,6 +189,30 @@ function localizeSectionInstruction(instruction, language = "en") {
   }
 
   return renderBilingualHtml(instruction, language);
+}
+
+/*
+  A running footer, repeated on every printed page.
+
+  Fourteen pages of questions with nothing identifying them is a problem the
+  moment the stack is dropped or a page is photocopied on its own. CSS cannot
+  produce page numbers in Chrome — that is what the browser's own "Headers and
+  footers" print option is for — but it can repeat a fixed element, which at
+  least names the paper on every sheet.
+*/
+function renderRunningFooter(exam) {
+  // Unfilled fields carry a bracketed placeholder so the builder shows where
+  // the value goes. A placeholder is useful on screen and noise on paper, so
+  // the footer only names fields the teacher actually filled in.
+  const isPlaceholder = value => /^\s*\[.*\]\s*$/.test(String(value || ""));
+
+  const parts = [exam.school, exam.title]
+    .filter(value => value && !isPlaceholder(value))
+    .map(escapeHtml);
+
+  if (!parts.length) return "";
+
+  return `<div class="print-running-footer" aria-hidden="true">${parts.join(" · ")}</div>`;
 }
 
 function renderCover(exam, language = "en") {
@@ -127,11 +269,12 @@ function renderQuestionSection({
       </header>
 
       <div class="question-list">
-        ${questions.map((question, index) => renderQuestion(question, startNumber + index, {
-          ...options,
-          canMoveUp: index > 0,
-          canMoveDown: index < questions.length - 1
-        })).join("")}
+        ${renderQuestionsWithTopicBands(questions, startNumber, (question, number, index) =>
+          renderQuestion(question, number, {
+            ...options,
+            canMoveUp: index > 0,
+            canMoveDown: index < questions.length - 1
+          }))}
       </div>
     </section>
   `;
@@ -336,11 +479,12 @@ function renderClassTestQuestionList(questions, startNumber = 1, options = {}) {
 
   return `
     <div class="question-list class-test-question-list">
-      ${questions.map((question, index) => renderQuestion(question, startNumber + index, {
-        ...options,
-        canMoveUp: index > 0,
-        canMoveDown: index < questions.length - 1
-      })).join("")}
+      ${renderQuestionsWithTopicBands(questions, startNumber, (question, number, index) =>
+        renderQuestion(question, number, {
+          ...options,
+          canMoveUp: index > 0,
+          canMoveDown: index < questions.length - 1
+        }))}
     </div>
   `;
 }
@@ -351,14 +495,14 @@ function renderClassTestExtendedQuestions(questions, startNumber = 1, options = 
 
   return `
     <div class="question-list class-test-question-list">
-      ${questions.map((question, index) => `
+      ${renderQuestionsWithTopicBands(questions, startNumber, (question, number, index) => `
         ${index > 0 ? '<hr class="question-separator">' : ""}
-        ${renderQuestion(question, startNumber + index, {
+        ${renderQuestion(question, number, {
           ...options,
           canMoveUp: index > 0,
           canMoveDown: index < questions.length - 1
         })}
-      `).join("")}
+      `)}
     </div>
   `;
 }
@@ -407,11 +551,12 @@ function renderClassTestExam(exam, renderOptions = {}) {
   const language = getExamLanguage(exam, renderOptions);
 
   return `
-    <main class="exam-document${getTemplateClass("class-test")}${renderOptions.editMode ? " is-edit-mode" : ""}">
+    <main class="exam-document${getTemplateClass("class-test")}${getDocumentModifiers(exam, renderOptions)}${renderOptions.editMode ? " is-edit-mode" : ""}" style="${getDocumentMetrics(exam)}">
       <section class="exam-section class-test-page">
         ${renderClassTestHeader(exam, language)}
         ${renderClassTestQuestions(exam, { ...renderOptions, language })}
       </section>
+      ${renderRunningFooter(exam)}
     </main>
   `;
 }
@@ -477,11 +622,12 @@ function renderRevisionPackageExam(exam, renderOptions = {}) {
   const language = getExamLanguage(exam, renderOptions);
 
   return `
-    <main class="exam-document${getTemplateClass("revision-package")}${renderOptions.editMode ? " is-edit-mode" : ""}">
+    <main class="exam-document${getTemplateClass("revision-package")}${getDocumentModifiers(exam, renderOptions)}${renderOptions.editMode ? " is-edit-mode" : ""}" style="${getDocumentMetrics(exam)}">
       <section class="exam-section revision-package-page">
         ${renderRevisionPackageHeader(exam, language)}
         ${renderRevisionPackageQuestions(exam, { ...renderOptions, language })}
       </section>
+      ${renderRunningFooter(exam)}
     </main>
   `;
 }
@@ -534,7 +680,10 @@ function renderWorksheetQuestions(exam, renderOptions = {}) {
   const sharedOptions = {
     ...exam.options,
     ...renderOptions,
-    showMarks: false
+    showMarks: false,
+    // Answer space sized to the shape of the answer rather than drawn as a
+    // full-width ruled block. See resolveAnswerSpace().
+    answerStyle: "compact"
   };
 
   const mcSection = multipleChoiceQuestions.length
@@ -545,12 +694,13 @@ function renderWorksheetQuestions(exam, renderOptions = {}) {
           "Circle the alternative A, B, C or D that best answers each question.",
           language
         )}
-        <div class="question-list">
-          ${multipleChoiceQuestions.map((q, i) => renderQuestion(q, i + 1, {
-            ...sharedOptions,
-            canMoveUp: i > 0,
-            canMoveDown: i < multipleChoiceQuestions.length - 1
-          })).join("")}
+        <div class="question-list question-list-mc">
+          ${renderQuestionsWithTopicBands(multipleChoiceQuestions, 1, (q, n, i) =>
+            renderQuestion(q, n, {
+              ...sharedOptions,
+              canMoveUp: i > 0,
+              canMoveDown: i < multipleChoiceQuestions.length - 1
+            }))}
         </div>
       </section>
     `
@@ -566,11 +716,12 @@ function renderWorksheetQuestions(exam, renderOptions = {}) {
           language
         )}
         <div class="question-list">
-          ${extendedResponseQuestions.map((q, i) => renderQuestion(q, extendedStart + i, {
-            ...sharedOptions,
-            canMoveUp: i > 0,
-            canMoveDown: i < extendedResponseQuestions.length - 1
-          })).join("")}
+          ${renderQuestionsWithTopicBands(extendedResponseQuestions, extendedStart, (q, n, i) =>
+            renderQuestion(q, n, {
+              ...sharedOptions,
+              canMoveUp: i > 0,
+              canMoveDown: i < extendedResponseQuestions.length - 1
+            }))}
         </div>
       </section>
     `
@@ -583,11 +734,12 @@ function renderWorksheetExam(exam, renderOptions = {}) {
   const language = getExamLanguage(exam, renderOptions);
 
   return `
-    <main class="exam-document${getTemplateClass("worksheet")}${renderOptions.editMode ? " is-edit-mode" : ""}">
+    <main class="exam-document${getTemplateClass("worksheet")}${getDocumentModifiers(exam, renderOptions)}${renderOptions.editMode ? " is-edit-mode" : ""}" style="${getDocumentMetrics(exam)}">
       <section class="exam-section worksheet-page">
         ${renderWorksheetHeader(exam, language)}
         ${renderWorksheetQuestions(exam, { ...renderOptions, language })}
       </section>
+      ${renderRunningFooter(exam)}
     </main>
   `;
 }
@@ -638,12 +790,13 @@ function renderTextbookQuestions(exam, renderOptions = {}) {
           "Select the alternative A, B, C or D that best answers each question.",
           language
         )}
-        <div class="question-list">
-          ${multipleChoiceQuestions.map((q, i) => renderQuestion(q, i + 1, {
-            ...sharedOptions,
-            canMoveUp: i > 0,
-            canMoveDown: i < multipleChoiceQuestions.length - 1
-          })).join("")}
+        <div class="question-list question-list-mc">
+          ${renderQuestionsWithTopicBands(multipleChoiceQuestions, 1, (q, n, i) =>
+            renderQuestion(q, n, {
+              ...sharedOptions,
+              canMoveUp: i > 0,
+              canMoveDown: i < multipleChoiceQuestions.length - 1
+            }))}
         </div>
       </section>
     `
@@ -659,11 +812,12 @@ function renderTextbookQuestions(exam, renderOptions = {}) {
           language
         )}
         <div class="question-list">
-          ${extendedResponseQuestions.map((q, i) => renderQuestion(q, extendedStart + i, {
-            ...sharedOptions,
-            canMoveUp: i > 0,
-            canMoveDown: i < extendedResponseQuestions.length - 1
-          })).join("")}
+          ${renderQuestionsWithTopicBands(extendedResponseQuestions, extendedStart, (q, n, i) =>
+            renderQuestion(q, n, {
+              ...sharedOptions,
+              canMoveUp: i > 0,
+              canMoveDown: i < extendedResponseQuestions.length - 1
+            }))}
         </div>
       </section>
     `
@@ -676,11 +830,12 @@ function renderTextbookExam(exam, renderOptions = {}) {
   const language = getExamLanguage(exam, renderOptions);
 
   return `
-    <main class="exam-document${getTemplateClass("textbook-template")}${renderOptions.editMode ? " is-edit-mode" : ""}">
+    <main class="exam-document${getTemplateClass("textbook-template")}${getDocumentModifiers(exam, renderOptions)}${renderOptions.editMode ? " is-edit-mode" : ""}" style="${getDocumentMetrics(exam)}">
       <section class="exam-section textbook-page">
         ${renderTextbookHeader(exam, language)}
         ${renderTextbookQuestions(exam, { ...renderOptions, language })}
       </section>
+      ${renderRunningFooter(exam)}
     </main>
   `;
 }
@@ -709,7 +864,7 @@ export function renderExam(target, exam, renderOptions = {}) {
     container.innerHTML = renderTextbookExam(exam, { ...renderOptions, language, template });
   } else {
     container.innerHTML = `
-      <main class="exam-document${getTemplateClass(template)}${renderOptions.editMode ? " is-edit-mode" : ""}">
+      <main class="exam-document${getTemplateClass(template)}${getDocumentModifiers(exam, renderOptions)}${renderOptions.editMode ? " is-edit-mode" : ""}" style="${getDocumentMetrics(exam)}">
         ${renderCover(exam, language)}
         ${renderQuestions(exam, { ...renderOptions, language, template })}
         ${renderMultipleChoiceAnswerSheet(exam, language)}

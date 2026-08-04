@@ -447,6 +447,34 @@ function wordProblemQuestion() {
 
 // ── Solve and represent simple inequalities ───────────────
 
+/*
+  A blank number line for the student to mark their solution on.
+
+  "Solve and show the solution on a number line" used to rely on a ruled answer
+  space, so in templates that hide answer spaces (textbook, exercise sets) the
+  question printed with nothing to draw on and could not be answered. Shipping
+  the axis as a DIAGRAM makes the question self-contained in every template.
+
+  The range is chosen to contain the solution with room either side, snapped to
+  a round span so the ticks land on sensible values.
+*/
+function blankSolutionNumberLine(solution) {
+  const span = Math.max(10, Math.ceil((Math.abs(solution) + 4) / 5) * 5);
+  const step = span > 20 ? 5 : span > 10 ? 2 : 1;
+
+  return {
+    engine: "equation-engine",
+    caption: "Mark your solution on the number line.",
+    config: {
+      diagramType: "inequality-number-line",
+      blank: true,
+      min: -span,
+      max: span,
+      step
+    }
+  };
+}
+
 function simpleInequalitiesQuestion() {
   const v = pickVar();
   const form = choice(["one-step-add", "one-step-mult", "two-step"]);
@@ -464,6 +492,7 @@ function simpleInequalitiesQuestion() {
       type: "simple-inequalities",
       marks: 2,
       prompt: `Solve and show the solution on a number line: ${v} + ${b} ${op} ${fmt(rhsWithB)}`,
+      diagram: blankSolutionNumberLine(rhs),
       answer: `${v} ${op} ${fmt(rhs)}`,
       working: [
         `${v} + ${b} ${op} ${fmt(rhsWithB)}`,
@@ -487,6 +516,7 @@ function simpleInequalitiesQuestion() {
       type: "simple-inequalities",
       marks: 2,
       prompt: `Solve and show the solution on a number line: ${a}${v} ${op} ${fmt(rhs)}`,
+      diagram: blankSolutionNumberLine(x),
       answer: `${v} ${op} ${fmt(x)}`,
       working: [
         `${a}${v} ${op} ${fmt(rhs)}`,

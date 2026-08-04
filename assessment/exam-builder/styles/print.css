@@ -21,6 +21,20 @@
     print-color-adjust: exact;
   }
 
+  /* screen.css stamps an "A4 preview" label on every .exam-section to show the
+     page boundary while building. It is a screen affordance only — without this
+     it prints into the exported PDF, bottom-right of the last page. */
+  .exam-cover::after,
+  .exam-section::after {
+    content: none !important;
+    display: none !important;
+  }
+
+  /* The grey tint behind diagrams is also a preview affordance. */
+  .question-diagram {
+    background: transparent !important;
+  }
+
   html,
   body {
     width: 210mm;

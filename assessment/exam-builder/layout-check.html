@@ -1,0 +1,547 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Layout check — fraction fit &amp; diagram width</title>
+
+<link rel="stylesheet" href="./styles/screen.css" />
+<link rel="stylesheet" href="./styles/print.css" />
+<link rel="stylesheet" href="./templates/hsc-style/hsc-template.css" />
+<link rel="stylesheet" href="./templates/class-test/class-test-template.css" />
+<link rel="stylesheet" href="./templates/revision-package/revision-package-template.css" />
+<link rel="stylesheet" href="./templates/worksheet/worksheet-template.css" />
+<link rel="stylesheet" href="./templates/textbook-template/textbook-template.css" />
+
+<style>
+  body { background:#f3f4f6; margin:0; padding:24px; font-family:Arial, Helvetica, sans-serif; }
+  .check-shell { max-width:1180px; margin:0 auto; display:grid; grid-template-columns:1fr 380px; gap:20px; align-items:start; }
+  .paper { background:#fff; width:210mm; box-shadow:0 2px 14px rgba(0,0,0,.14); }
+  .panel { background:#fff; border:1px solid #d1d5db; border-radius:10px; padding:16px 18px; position:sticky; top:24px; font-size:13px; }
+  .panel h2 { margin:0 0 4px; font-size:15px; }
+  .panel p.lede { margin:0 0 12px; color:#4b5563; font-size:12px; line-height:1.45; }
+  .result { display:flex; gap:8px; align-items:flex-start; padding:7px 0; border-top:1px solid #eef0f3; line-height:1.4; }
+  .badge { flex:0 0 auto; font-weight:700; font-size:11px; padding:2px 7px; border-radius:20px; color:#fff; }
+  .pass { background:#15803d; } .fail { background:#b91c1c; }
+  .metric { color:#6b7280; font-size:11px; }
+  .summary { margin-top:14px; padding:10px 12px; border-radius:8px; font-weight:700; font-size:13px; }
+  .summary.ok { background:#dcfce7; color:#14532d; } .summary.bad { background:#fee2e2; color:#7f1d1d; }
+  .tpl-switch { display:flex; gap:6px; margin:0 0 12px; }
+  .tpl-switch button { flex:1; padding:6px 8px; font-size:12px; font-weight:700; cursor:pointer;
+    border:1px solid #d1d5db; background:#fff; border-radius:6px; }
+  .tpl-switch button[aria-pressed="true"] { background:#0f5496; color:#fff; border-color:#0f5496; }
+  @media print { .panel { display:none } body { padding:0; background:#fff } .paper { box-shadow:none; width:auto } .check-shell { display:block } }
+</style>
+</head>
+<body>
+
+<div class="check-shell">
+  <div class="paper" id="paper"></div>
+
+  <aside class="panel">
+    <h2>Layout check</h2>
+    <p class="lede">
+      Renders real questions through the real renderer and measures the boxes.
+      Covers the two rules: a stacked fraction must fit inside the leading of its
+      own line, and a wide diagram must fill its column.
+    </p>
+    <div class="tpl-switch">
+      <button type="button" data-template="textbook-template">Textbook</button>
+      <button type="button" data-template="worksheet">Worksheet</button>
+    </div>
+    <div id="results"></div>
+    <div id="summary" class="summary"></div>
+  </aside>
+</div>
+
+<script src="./engines/fdp/fdp-engine.js"></script>
+<script src="./engines/integers/integer-engine.js"></script>
+<script src="./engines/angles/angle-engine.js"></script>
+
+<script type="module">
+import { renderExam } from "./renderers/exam-renderer.js";
+
+/* Deliberately fraction-heavy and diagram-heavy: these are the exact shapes
+   that failed in the exported PDF. */
+const FDP = "Fractions, Decimals and Percentages";
+
+const QUESTIONS = [
+  { topic:FDP, type:"equivalent", kind:"short-response",
+    prompt:"Write [[frac:3:8]] as an equivalent fraction with denominator 48." },
+  { topic:FDP, type:"rounding", kind:"short-response", prompt:"Round 8.249 to 2 decimal places." },
+  { topic:FDP, type:"equivalent-bars", kind:"short-response",
+    prompt:"The bars show two equivalent fractions. Complete: [[frac:1:2]] = □/4",
+    diagram:{ engine:"fdp-engine", config:{ diagramType:"equivalent-bars", fracs:[{n:1,d:2},{n:2,d:4}] } } },
+  { topic:FDP, type:"improper", kind:"short-response", marks:2, prompt:"Convert 5[[frac:1:5]] to an improper fraction, showing your working." },
+  { topic:FDP, type:"double-number-line", kind:"short-response",
+    prompt:"Use the double number line to find 20% of 120.",
+    diagram:{ engine:"fdp-engine", config:{ diagramType:"double-number-line", topMax:100, bottomMax:120, ticks:4 },
+              caption:"Percentages line up with amounts." } },
+  { topic:FDP, type:"place-value", kind:"short-response",
+    prompt:"In the decimal 5.440, what is the value of the digit 4 in the hundredths column?",
+    table:{ headerRow:true, caption:"Place value table",
+            rows:[["Ones","•","Tenths","Hundredths","Thousandths"],["5","•","4","4","0"]] } },
+  { topic:FDP, type:"fraction-circle", kind:"short-response",
+    prompt:"What fraction of the circle is shaded?",
+    diagram:{ engine:"fdp-engine", config:{ diagramType:"fraction-circle", numerator:1, denominator:3 } } },
+  { topic:FDP, type:"mc", kind:"multiple-choice",
+    prompt:"Which of these is equal to [[frac:2:4]]?",
+    choices:["[[frac:1:2]]","[[frac:2:3]]","[[frac:3:4]]","[[frac:1:4]]"] },
+  { topic:FDP, type:"mark-line", kind:"short-response",
+    prompt:"Mark [[frac:5:6]] on the number line below.",
+    diagram:{ engine:"fdp-engine", config:{ diagramType:"number-line-fraction", denominator:6 } } },
+
+  { topic:"Integers", type:"ordering", kind:"short-response",
+    prompt:"Place these integers in descending order: 39, −78, −6, −68, 7" },
+  { topic:"Integers", type:"thermometer", kind:"short-response",
+    prompt:"The thermometer shows the temperature at dawn. By midday it rises by 4°C. What is the temperature at midday?",
+    diagram:{ engine:"integer-engine", config:{ diagramType:"thermometer", min:-20, max:40, step:10, value:-15, showValue:true },
+              caption:"Temperature at dawn." } },
+  { topic:"Integers", type:"ordering", kind:"short-response",
+    prompt:"Place these integers in ascending order: −76, −44, −54, −66, 7" },
+  { topic:"Integers", type:"insert", kind:"short-response",
+    prompt:"Insert <, > or = to make the statement true: −24 + (−29) ___ −9" },
+  { topic:"Integers", type:"order-ops", kind:"short-response",
+    prompt:"Use order of operations to calculate: (−9) ÷ 3 − 4" },
+  { topic:"Integers", type:"true-false", kind:"short-response",
+    prompt:"True or false? 9 − (−1) = 7 (Give the correct value if it is false.)" },
+  { topic:"Integers", type:"thermometer", kind:"short-response",
+    prompt:"The thermometer shows this morning's temperature. It falls by 9°C during the day. What is the new temperature?",
+    diagram:{ engine:"integer-engine", config:{ diagramType:"thermometer", min:-20, max:40, step:10, value:5, showValue:true },
+              caption:"Temperature at dawn." } },
+  { topic:"Integers", type:"multi-part", kind:"short-response", marks:3,
+    prompt:"Over three days the minimum temperature in a town was recorded.",
+    subparts:[
+      { label:"(a)", prompt:"Monday's minimum was −8°C. On Tuesday it was 6°C colder. What was Tuesday's minimum?" },
+      { label:"(b)", prompt:"On Wednesday it was 8°C warmer than Tuesday. What was Wednesday's minimum?" }
+    ] },
+
+  { topic:"Angle Relationships", type:"angle-pair", kind:"short-response",
+    prompt:"Find x, giving a reason for your answer.",
+    diagram:{ engine:"angle-engine", config:{ diagramType:"angles-on-line", knownAngle:75 } } },
+  { topic:"Angle Relationships", type:"angle-pair", kind:"short-response",
+    prompt:"Work out the value of x and justify your answer.",
+    diagram:{ engine:"angle-engine", config:{ diagramType:"parallel-lines", knownAngle:36 } } },
+  { topic:"Angle Relationships", type:"protractor", kind:"short-response",
+    prompt:"Read the size of the angle shown on the protractor.",
+    diagram:{ engine:"angle-engine", config:{ diagramType:"protractor", angle:60 } } }
+];
+
+/* Rendered through renderExam, not by hand, so the check exercises the real
+   pipeline including topic bands, answer spaces and diagram hydration. */
+function render(template) {
+  renderExam(
+    document.getElementById("paper"),
+    {
+      school: "Mills High School",
+      title: "Layout check",
+      subtitle: "Mixed topics",
+      questions: QUESTIONS.map((q, i) => ({
+        id: `check-${i}`, level: "mixed", marks: 1, space: "medium", ...q
+      })),
+      options: {}
+    },
+    { template }
+  );
+}
+
+let CURRENT_TEMPLATE = "textbook-template";
+render(CURRENT_TEMPLATE);
+
+/* ── Measurements ──────────────────────────────────────────────────────── */
+
+function runChecks() {
+const results = [];
+const add = (label, ok, metric) => results.push({ label, ok, metric });
+const OVERLAP_TOLERANCE = 1.0;   // px — sub-pixel rounding only
+
+// 1. Every fraction fits inside the line box it sits on.
+let worstOverflow = 0, fracCount = 0;
+document.querySelectorAll(".question-prompt, .choice-list li").forEach(host => {
+  host.querySelectorAll(".math-frac").forEach(frac => {
+    fracCount++;
+    const style = getComputedStyle(host);
+    const leading = parseFloat(style.lineHeight);
+    const fracHeight = frac.getBoundingClientRect().height;
+    worstOverflow = Math.max(worstOverflow, fracHeight - leading);
+  });
+});
+add("Fractions fit within their line's leading",
+    worstOverflow <= OVERLAP_TOLERANCE,
+    `${fracCount} fractions · worst overflow ${worstOverflow.toFixed(1)}px`);
+
+// 2. No fraction overlaps a NEIGHBOURING question.
+//    Compare against question ELEMENTS and skip the fraction's own — comparing
+//    cached DOMRects cannot do this, because every getBoundingClientRect() call
+//    returns a fresh object and an identity test never matches.
+const questionEls = [...document.querySelectorAll(".exam-question")];
+let worstCollision = 0;
+document.querySelectorAll(".math-frac").forEach(frac => {
+  const f = frac.getBoundingClientRect();
+  const ownEl = frac.closest(".exam-question");
+  const own = ownEl.getBoundingClientRect();
+  questionEls.forEach(el => {
+    if (el === ownEl) return;
+    const b = el.getBoundingClientRect();
+    if (Math.abs(b.left - own.left) > 4) return;               // same column only
+    const overlap = Math.min(f.bottom, b.bottom) - Math.max(f.top, b.top);
+    if (overlap > 0) worstCollision = Math.max(worstCollision, overlap);
+  });
+});
+add("No fraction bleeds into a neighbouring question",
+    worstCollision <= OVERLAP_TOLERANCE,
+    `worst intrusion ${worstCollision.toFixed(1)}px`);
+
+// 3. The question number sits on the first line of its prompt.
+//    Measured as vertical overlap between the number's box and the prompt's
+//    FIRST LINE BOX. Comparing baselines directly does not work here: the
+//    number and the prompt are different sizes, so their box edges differ even
+//    when correctly aligned. The first line box comes from a Range — an
+//    absolutely positioned probe does not join the line box and measures the
+//    padding-box origin instead, which is what produced the earlier false fail.
+let worstNumberDrift = 0;
+document.querySelectorAll(".question-heading").forEach(head => {
+  const num = head.querySelector(".question-number");
+  const prompt = head.querySelector(".question-prompt");
+  if (!num || !prompt) return;
+
+  const range = document.createRange();
+  range.selectNodeContents(prompt);
+  const firstLine = range.getClientRects()[0];
+  if (!firstLine) return;
+
+  const n = num.getBoundingClientRect();
+  const overlap = Math.min(n.bottom, firstLine.bottom) - Math.max(n.top, firstLine.top);
+  const share = overlap / Math.min(n.height, firstLine.height);
+  worstNumberDrift = Math.max(worstNumberDrift, 1 - Math.max(0, share));
+});
+add("Question number sits on the first text line",
+    worstNumberDrift <= 0.4,
+    `worst miss ${(worstNumberDrift * 100).toFixed(0)}% off the first line`);
+
+// 4. Wide diagrams fill their column.
+const column = document.querySelectorAll(".exam-question")[0].getBoundingClientRect().width;
+let narrowest = 1, wideCount = 0;
+document.querySelectorAll('.question-diagram[data-aspect="wide"] svg, .question-diagram[data-aspect="landscape"] svg')
+  .forEach(svg => { wideCount++; narrowest = Math.min(narrowest, svg.getBoundingClientRect().width / column); });
+add("Wide diagrams use at least 80% of the column",
+    wideCount > 0 && narrowest >= 0.8,
+    `${wideCount} wide diagrams · narrowest ${(narrowest * 100).toFixed(0)}% of column`);
+
+// 5. Every diagram got an aspect band (i.e. fitDiagramSvg ran on it).
+const diagrams = document.querySelectorAll(".question-diagram");
+const banded = document.querySelectorAll(".question-diagram[data-aspect]");
+add("Every diagram was measured and banded",
+    diagrams.length > 0 && banded.length === diagrams.length,
+    `${banded.length}/${diagrams.length} diagrams`);
+
+// 6. Nothing overflows the column into the gutter.
+const columnBox = document.querySelector(".exam-question").getBoundingClientRect();
+let worstSpill = 0;
+document.querySelectorAll(".exam-question").forEach(q => {
+  const qb = q.getBoundingClientRect();
+  q.querySelectorAll("svg, table, .question-diagram, .question-table-wrap").forEach(child => {
+    worstSpill = Math.max(worstSpill, child.getBoundingClientRect().right - qb.right);
+  });
+});
+add("No diagram or table spills past its column",
+    worstSpill <= OVERLAP_TOLERANCE,
+    `worst spill ${worstSpill.toFixed(1)}px`);
+
+// 7. Place-value table headers are fully visible, and not broken mid-word.
+let clippedHeaders = 0, wrappedHeaders = 0, headerCount = 0;
+document.querySelectorAll(".question-table th").forEach(th => {
+  headerCount++;
+  if (th.scrollWidth > th.clientWidth + 1) clippedHeaders++;
+  // A single-word header rendering over two lines means it was broken mid-word.
+  const words = th.textContent.trim().split(/\s+/).length;
+  const lines = th.getClientRects().length ? Math.round(th.scrollHeight / parseFloat(getComputedStyle(th).lineHeight)) : 1;
+  if (words === 1 && lines > 1) wrappedHeaders++;
+});
+add("No table header is clipped or broken mid-word",
+    headerCount > 0 && clippedHeaders === 0 && wrappedHeaders === 0,
+    `${headerCount} header cells · ${clippedHeaders} clipped · ${wrappedHeaders} broken`);
+
+// 7b. THE test2.pdf regression: a diagram must not overrun its own question box,
+//     which in the right-hand column means running off the page.
+let worstDiagramSpill = 0;
+document.querySelectorAll(".exam-question").forEach(q => {
+  const qb = q.getBoundingClientRect();
+  q.querySelectorAll(".question-diagram").forEach(d => {
+    const db = d.getBoundingClientRect();
+    worstDiagramSpill = Math.max(worstDiagramSpill, db.right - qb.right, qb.left - db.left);
+  });
+});
+add("Diagrams stay inside their question box",
+    worstDiagramSpill <= OVERLAP_TOLERANCE,
+    `worst overrun ${worstDiagramSpill.toFixed(1)}px`);
+
+// 7c. Diagrams should not be letterboxed — the drawing should fill the box it
+//     is given, or the empty part prints as a gap.
+let worstLetterbox = 0;
+document.querySelectorAll(".question-diagram svg").forEach(svg => {
+  const box = svg.getBoundingClientRect();
+  const vb = (svg.getAttribute("viewBox") || "").trim().split(/[\s,]+/).map(Number);
+  if (vb.length !== 4 || !vb[2] || !vb[3]) return;
+  const drawnWidth = Math.min(box.width, box.height * (vb[2] / vb[3]));
+  const drawnHeight = Math.min(box.height, box.width * (vb[3] / vb[2]));
+  worstLetterbox = Math.max(worstLetterbox,
+    (box.width - drawnWidth) + (box.height - drawnHeight));
+});
+add("Diagrams fill their box rather than letterboxing",
+    worstLetterbox <= 2,
+    `worst dead space ${worstLetterbox.toFixed(1)}px`);
+
+// 8. A question ending in a diagram is spaced further from the next one.
+const gapAfter = cls => {
+  const nodes = [...document.querySelectorAll(".exam-question")];
+  let worst = Infinity;
+  nodes.forEach((q, i) => {
+    const next = nodes[i + 1];
+    if (!next || q.classList.contains(cls) !== true) return;
+    if (Math.abs(next.getBoundingClientRect().left - q.getBoundingClientRect().left) > 4) return; // column break
+    worst = Math.min(worst, next.getBoundingClientRect().top - q.getBoundingClientRect().bottom);
+  });
+  return worst;
+};
+const diagramGap = gapAfter("has-diagram");
+add("Diagram questions get extra trailing space",
+    Number.isFinite(diagramGap) && diagramGap > 8,
+    `smallest gap after a diagram ${Number.isFinite(diagramGap) ? diagramGap.toFixed(1) + "px" : "n/a"}`);
+
+// 9. Value lists never break at a sign or leave a value stranded.
+let brokenLists = 0, listCount = 0;
+document.querySelectorAll(".question-prompt").forEach(prompt => {
+  const items = [...prompt.querySelectorAll(".value-item")];
+  if (items.length < 3) return;
+  listCount++;
+  const lastTop = items[items.length - 1].getBoundingClientRect().top;
+  const penultimateTop = items[items.length - 2].getBoundingClientRect().top;
+  // The final value must share a line with the one before it.
+  if (Math.abs(lastTop - penultimateTop) > 2) brokenLists++;
+  // No value may itself be split across two lines.
+  items.forEach(item => {
+    if (item.getClientRects().length > 1) brokenLists++;
+  });
+});
+add("Value lists never orphan their last value",
+    listCount > 0 && brokenLists === 0,
+    `${listCount} lists · ${brokenLists} broken`);
+
+// 10. Topic bands appear once per topic change and span the column.
+const bands = [...document.querySelectorAll(".topic-band")];
+const bandLabels = bands.map(b => b.textContent.trim());
+add("A band marks each topic change",
+    bandLabels.length === 3 && bandLabels[0].startsWith("Fractions") && bandLabels[1] === "Integers" && bandLabels[2] === "Angle Relationships",
+    bandLabels.join(" | ") || "none");
+add("Topic bands span their full column",
+    bands.length > 0 && bands.every(b => b.getBoundingClientRect().width >= columnBox.width - 1),
+    `narrowest ${bands.length ? Math.min(...bands.map(b => b.getBoundingClientRect().width)).toFixed(0) : 0}px vs column ${columnBox.width.toFixed(0)}px`);
+
+// 11. THE test3 regression: every diagram from one engine must use the same
+//     scale, or its labels print at different sizes question to question.
+const scaleByEngine = new Map();
+document.querySelectorAll('.question-diagram[data-scale="fixed"]').forEach(node => {
+  const svg = node.querySelector("svg");
+  const vb = (svg.getAttribute("viewBox") || "").trim().split(/[\s,]+/).map(Number);
+  if (vb.length !== 4 || !vb[2]) return;
+  const scale = svg.getBoundingClientRect().width / vb[2];
+  if (!scaleByEngine.has(node.dataset.engine)) scaleByEngine.set(node.dataset.engine, []);
+  scaleByEngine.get(node.dataset.engine).push(scale);
+});
+let worstScaleSpread = 0;
+scaleByEngine.forEach(scales => {
+  if (scales.length < 2) return;
+  worstScaleSpread = Math.max(worstScaleSpread, Math.max(...scales) / Math.min(...scales));
+});
+add("Diagrams from one engine share a scale",
+    scaleByEngine.size > 0 && worstScaleSpread <= 1.02,
+    `${scaleByEngine.size} engines · worst variation ${((worstScaleSpread - 1) * 100).toFixed(0)}%`);
+
+// 12. Relations and subparts.
+const relations = document.querySelectorAll(".math-relation");
+let brokenRelations = 0;
+relations.forEach(rel => { if (rel.getClientRects().length > 1) brokenRelations++; });
+add("Short relations never split across lines",
+    relations.length > 0 && brokenRelations === 0,
+    `${relations.length} relations · ${brokenRelations} split`);
+
+const subLabels = [...document.querySelectorAll(".subpart-label")];
+const numbers = [...document.querySelectorAll(".question-number")];
+const indented = subLabels.length > 0 && numbers.length > 0 &&
+  subLabels.every(l => l.getBoundingClientRect().left > numbers[0].getBoundingClientRect().left + 4);
+add("Subpart labels are indented past the question number",
+    indented,
+    subLabels.length ? `${subLabels.length} subparts` : "no subparts in this sample");
+
+// 12b. THE bug that hid for three rounds: `gap: 0` after `column-gap` silently
+//      reset the gutter, so the columns printed hard against the divider and
+//      changing column-gap appeared to do nothing. Measure the real gutter.
+const list = document.querySelector(".question-list");
+if (list) {
+  const gutter = parseFloat(getComputedStyle(list).columnGap);
+  const mmPerPx = 25.4 / 96;
+  add("Columns have a real gutter",
+      Number.isFinite(gutter) && gutter * mmPerPx >= 8,
+      `${(gutter * mmPerPx).toFixed(1)}mm computed column-gap`);
+}
+
+// 12c. Everything under a prompt lines up with the prompt text.
+let worstIndentDrift = 0, indentSamples = 0;
+document.querySelectorAll(".exam-question").forEach(q => {
+  const prompt = q.querySelector(".question-prompt");
+  if (!prompt) return;
+  const promptLeft = prompt.getBoundingClientRect().left;
+  q.querySelectorAll(".question-diagram, .question-table-wrap, .answer-lines, .question-diagram-caption").forEach(el => {
+    indentSamples++;
+    worstIndentDrift = Math.max(worstIndentDrift, Math.abs(el.getBoundingClientRect().left - promptLeft));
+  });
+});
+add("Diagrams, tables and rules align with the prompt text",
+    indentSamples > 0 && worstIndentDrift <= 2,
+    `${indentSamples} elements · worst drift ${worstIndentDrift.toFixed(1)}px`);
+
+// 12d. A topic heading must never be stranded from the questions it introduces
+//       by a column break — the page-1 failure where the left column ended with
+//       "EQUATIONS" and nothing under it.
+const bandGroups = [...document.querySelectorAll(".topic-band-group")];
+const looseBands = [...document.querySelectorAll(".topic-band")].filter(b => !b.closest(".topic-band-group"));
+add("Every topic heading is bound to its first question",
+    bandGroups.length > 0 && looseBands.length === 0,
+    `${bandGroups.length} bound · ${looseBands.length} loose`);
+
+let strandedBands = 0;
+bandGroups.forEach(group => {
+  const band = group.querySelector(".topic-band");
+  const question = group.querySelector(".exam-question");
+  if (!band || !question) return;
+  // Same column means the same left edge; a break would move the question over.
+  if (Math.abs(band.getBoundingClientRect().left - question.getBoundingClientRect().left) > 2) strandedBands++;
+});
+add("No heading is separated from its questions by a column break",
+    strandedBands === 0, `${strandedBands} stranded`);
+
+// 12e. THE spill from the screenshot: an expression must never be torn across
+//       a line break. Measured, not assumed — a displayed expression should
+//       occupy exactly one line box, and an inline one exactly one client rect.
+const displayed = [...document.querySelectorAll(".math-expression")];
+let splitDisplayed = 0;
+displayed.forEach(expression => {
+  const range = document.createRange();
+  range.selectNodeContents(expression);
+  if (range.getClientRects().length > 1) splitDisplayed++;
+});
+add("Displayed expressions sit on one line",
+    displayed.length > 0 && splitDisplayed === 0,
+    `${displayed.length} displayed · ${splitDisplayed} split`);
+
+const inlineExpressions = [...document.querySelectorAll(".math-inline")];
+const splitInline = inlineExpressions.filter(e => e.getClientRects().length > 1).length;
+add("Embedded expressions are never torn",
+    splitInline === 0,
+    `${inlineExpressions.length} embedded · ${splitInline} torn`);
+
+// A displayed expression must actually start its own line.
+let notOnOwnLine = 0;
+displayed.forEach(expression => {
+  const host = expression.closest(".question-prompt, .subpart-prompt");
+  if (!host) return;
+  if (Math.abs(expression.getBoundingClientRect().left - host.getBoundingClientRect().left) > 2) notOnOwnLine++;
+});
+add("Displayed expressions start their own line",
+    notOnOwnLine === 0, `${notOnOwnLine} sharing a line with prose`);
+
+// 13. Captions appear once per topic, not once per question.
+const captionCounts = new Map();
+document.querySelectorAll(".question-diagram-caption").forEach(c => {
+  const text = c.textContent.trim();
+  if (!text) return;
+  captionCounts.set(text, (captionCounts.get(text) || 0) + 1);
+});
+const repeated = [...captionCounts.values()].filter(n => n > 1).length;
+add("No diagram caption repeats within a topic",
+    repeated === 0,
+    `${captionCounts.size} distinct captions · ${repeated} repeated`);
+
+/* ── Report ───────────────────────────────────────────────────────────── */
+
+document.getElementById("results").innerHTML = results.map(r => `
+  <div class="result">
+    <span class="badge ${r.ok ? "pass" : "fail"}">${r.ok ? "PASS" : "FAIL"}</span>
+    <span>${r.label}<br><span class="metric">${r.metric}</span></span>
+  </div>
+`).join("");
+
+// 14. Worksheet only: answer spaces must be present, contained and not crowding.
+if (CURRENT_TEMPLATE === "worksheet") {
+  const boxes = [...document.querySelectorAll(".answer-box")];
+  const lineSets = [...document.querySelectorAll(".answer-lines")];
+
+  add("Every answerable question has somewhere to write",
+      boxes.length + lineSets.length > 0,
+      `${boxes.length} boxes · ${lineSets.length} ruled sets`);
+
+  // The box is a tall inline object; it must not overflow the line it sits on.
+  let worstBoxOverflow = 0;
+  boxes.forEach(box => {
+    const host = box.closest(".question-prompt, .subpart-prompt");
+    if (!host) return;
+    const leading = parseFloat(getComputedStyle(host).lineHeight);
+    worstBoxOverflow = Math.max(worstBoxOverflow, box.getBoundingClientRect().height - leading);
+  });
+  add("Answer boxes fit within their line's leading",
+      worstBoxOverflow <= OVERLAP_TOLERANCE,
+      `worst overflow ${worstBoxOverflow.toFixed(1)}px`);
+
+  // A box that ends up alone on its own line has orphaned from its prompt.
+  let orphanedBoxes = 0;
+  boxes.forEach(box => {
+    const host = box.closest(".question-prompt, .subpart-prompt");
+    if (!host) return;
+    const range = document.createRange();
+    range.selectNodeContents(host);
+    const lastLine = [...range.getClientRects()].pop();
+    if (lastLine && Math.abs(lastLine.top - box.getBoundingClientRect().top) > lastLine.height) orphanedBoxes++;
+  });
+  add("No answer box is orphaned from its question",
+      orphanedBoxes === 0, `${orphanedBoxes} orphaned`);
+
+  // Nothing may overrun the column, the failure mode of the old full-width block.
+  let worstAnswerSpill = 0;
+  document.querySelectorAll(".exam-question").forEach(q => {
+    const qb = q.getBoundingClientRect();
+    q.querySelectorAll(".answer-box, .answer-lines").forEach(el => {
+      worstAnswerSpill = Math.max(worstAnswerSpill, el.getBoundingClientRect().right - qb.right);
+    });
+  });
+  add("Answer spaces stay inside their column",
+      worstAnswerSpill <= OVERLAP_TOLERANCE,
+      `worst overrun ${worstAnswerSpill.toFixed(1)}px`);
+
+  add("Full-width ruled blocks are gone",
+      document.querySelectorAll(".answer-space").length === 0);
+}
+
+const failed = results.filter(r => !r.ok).length;
+const summary = document.getElementById("summary");
+summary.className = "summary " + (failed ? "bad" : "ok");
+summary.textContent = failed
+  ? `${failed} of ${results.length} checks failed`
+  : `All ${results.length} checks passed`;
+}
+
+document.querySelectorAll(".tpl-switch button").forEach(button => {
+  button.setAttribute("aria-pressed", String(button.dataset.template === CURRENT_TEMPLATE));
+  button.addEventListener("click", () => {
+    CURRENT_TEMPLATE = button.dataset.template;
+    document.querySelectorAll(".tpl-switch button").forEach(b =>
+      b.setAttribute("aria-pressed", String(b.dataset.template === CURRENT_TEMPLATE)));
+    render(CURRENT_TEMPLATE);
+    requestAnimationFrame(runChecks);
+  });
+});
+
+runChecks();
+</script>
+
+</body>
+</html>

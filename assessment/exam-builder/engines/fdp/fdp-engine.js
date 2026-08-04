@@ -43,6 +43,12 @@ window.MMT_FDP_ENGINE = (() => {
       .fdp-fill{fill:#bfdbfe;stroke:#111827;stroke-width:1.2}
       .fdp-empty{fill:#ffffff;stroke:#111827;stroke-width:1.2}
       .fdp-accent{fill:#d1fae5;stroke:#111827;stroke-width:1.2}
+      /* Area model: the caption promises the overlap is DARKER, so it has to
+         actually be darker than either single-shaded direction — the old pale
+         blue and pale green read as the same weight in print. */
+      .fdp-col{fill:#dbeafe;stroke:#111827;stroke-width:1.2}
+      .fdp-row{fill:#dcfce7;stroke:#111827;stroke-width:1.2}
+      .fdp-product{fill:#4f95d4;stroke:#111827;stroke-width:1.2}
       .fdp-muted{fill:#f3f4f6;stroke:#111827;stroke-width:1.2}
       .fdp-text{font-family:"Cambria Math","Times New Roman",serif;font-size:20px;font-weight:700;fill:#111827;text-anchor:middle;dominant-baseline:middle}
       .fdp-small{font-size:15px;font-weight:700}
@@ -227,7 +233,10 @@ window.MMT_FDP_ENGINE = (() => {
     const numerator = Number.isFinite(rawNum) ? Math.max(0, Math.min(denominator, rawNum)) : 1;
     const showLabel = config.showLabel === true;
 
-    const s = svg("0 0 280 280");
+    // The circle spans x 40..240 and y 30..230; the optional label sits at
+    // y=262. Size the box to whichever of those is actually present rather
+    // than always reserving room for the label.
+    const s = svg(showLabel ? "26 22 228 258" : "26 22 228 216");
     const cx = 140, cy = 130, r = 100;
     const sweep = 360 / denominator;
 
@@ -276,7 +285,9 @@ window.MMT_FDP_ENGINE = (() => {
     const mark = Number.isFinite(config.markNumerator) ? config.markNumerator : null;
     const showMark = config.showMark === true;
 
-    const s = svg("0 0 640 150");
+    // Line sits at y=70 with ticks to y±18 and labels centred on y=112, so the
+    // drawing lives in y 45..125 — the top third of the old box was empty.
+    const s = svg("34 38 580 96");
     const left = 50, right = 590, y = 70;
     const x = i => left + (i / totalTicks) * (right - left);
 
@@ -297,8 +308,12 @@ window.MMT_FDP_ENGINE = (() => {
       ? config.fracs.slice(0, 4)
       : [{ n: 1, d: 2 }, { n: 2, d: 4 }];
 
-    const s = svg(`0 0 560 ${40 + fracs.length * 70}`);
+    // Bars run x 60..480; the optional label extends to about x=530. Height is
+    // the last bar's bottom edge plus a small margin, instead of a fixed pad
+    // that left a blank strip under the final bar.
     const x = 60, w = 420, h = 46;
+    const barsBottom = 30 + (fracs.length - 1) * 70 + h;
+    const s = svg(`40 14 ${config.showLabel === true ? 500 : 455} ${barsBottom}`);
 
     fracs.forEach((f, idx) => {
       const d = Math.max(1, Math.min(24, Number(f.d) || 2));
@@ -324,11 +339,16 @@ window.MMT_FDP_ENGINE = (() => {
     const x0 = 40, y0 = 30, side = 280;
     const cw = side / d1, ch = side / d2;
 
-    // Base grid cells with overlap shading.
+    // Base grid cells. Each of the three states gets its own weight so the
+    // product region is unmistakable: the two factors are pale, their overlap
+    // is solid.
     for (let c = 0; c < d1; c++) {
       for (let r = 0; r < d2; r++) {
         const inCol = c < n1, inRow = r < n2;
-        const cls = inCol && inRow ? "fdp-fill" : (inCol || inRow ? "fdp-accent" : "fdp-empty");
+        const cls = inCol && inRow ? "fdp-product"
+          : inCol ? "fdp-col"
+          : inRow ? "fdp-row"
+          : "fdp-empty";
         rect(s, x0 + c * cw, y0 + r * ch, cw, ch, cls);
       }
     }
@@ -336,8 +356,10 @@ window.MMT_FDP_ENGINE = (() => {
     for (let c = 0; c <= d1; c++) line(s, x0 + c * cw, y0, x0 + c * cw, y0 + side, "fdp-thin");
     for (let r = 0; r <= d2; r++) line(s, x0, y0 + r * ch, x0 + side, y0 + r * ch, "fdp-thin");
 
-    text(s, `${n1}/${d1}`, x0 + (n1 * cw) / 2, y0 - 12, "fdp-text fdp-small");
-    text(s, `${n2}/${d2}`, x0 - 22, y0 + (n2 * ch) / 2, "fdp-text fdp-small");
+    // Edge labels at full label size, not the small tick size — they name the
+    // two fractions being multiplied and are part of reading the model.
+    text(s, `${n1}/${d1}`, x0 + (n1 * cw) / 2, y0 - 16, "fdp-text fdp-label");
+    text(s, `${n2}/${d2}`, x0 - 24, y0 + (n2 * ch) / 2, "fdp-text fdp-label");
     return s;
   }
 
@@ -350,7 +372,11 @@ window.MMT_FDP_ENGINE = (() => {
     const markTop = config.markTop;
     const markBottom = config.markBottom;
 
-    const s = svg("0 0 620 200");
+    // Drawing occupies y 42..174 and x 2..576. The old 0 0 620 200 box carried
+    // a dead band above the top scale and to the right of the last label, which
+    // on the page became wasted column height on the diagram teachers most
+    // often want wide and legible.
+    const s = svg("0 34 590 150");
     const left = 70, right = 560, yTop = 70, yBot = 140;
     const x = frac => left + frac * (right - left);
 

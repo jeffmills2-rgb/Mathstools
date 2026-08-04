@@ -3,6 +3,35 @@
 > Hand this file to Claude at the start of any chat to get up to speed without
 > re-uploading everything. Keep it short, current, high-signal. If a fact here
 > stops being true, fix it here first.
+>
+> **NEW (2026-08-04, session — being pushed): REVISION GENERATOR overhaul +
+> Stage 3.** Big session on `assessment/exam-builder/` (the "Revision Generator"
+> on the homepage). Three strands:
+>
+> 1. **Print/layout rules, all universal across the five templates.** Stacked
+>    fractions no longer spill into the line above (`--frac-scale` /
+>    `--frac-leading` in `hsc-template.css`); diagrams are sized at a CONSTANT
+>    SCALE from their own ink so a label is the same physical size in every
+>    question (`fitDiagramSvg()`); tables, diagrams and answer rules all align
+>    with the prompt text via `--content-indent`; topic bands can never be
+>    stranded from their questions; an expression that ends a prompt is set on
+>    its own line and is never split; thousands separators are non-breaking.
+>    `styles/print.css` now suppresses the "A4 preview" watermark.
+> 2. **The worksheet template was rebuilt.** Answer space is a KIND, not a
+>    t-shirt size — see `utils/answer-space-rules.js` `resolveAnswerSpace()`:
+>    a short answer gets a small inline box, working gets ruled lines sized by
+>    marks, and a question answered on its diagram gets nothing. Same paper went
+>    from 61 pages to 20. Two columns, like the textbook template.
+> 3. **STAGE 3 (Years 5–6) added.** Stages are now DATA (`STAGES` registry in
+>    `app.js`) rather than hardcoded pairs, so a new stage is one entry. Two
+>    banks built so far — see `assessment/exam-builder/docs/stage-3-syllabus-reference.md`,
+>    which is the source of truth for scope, outcome mapping and the calibration
+>    conventions every further Stage 3 bank should follow.
+>
+> New `assessment/exam-builder/tools/` harnesses (plain `node`, no deps except
+> `picker.mjs` which needs jsdom and skips without it), plus `layout-check.html`
+> which renders real questions in the browser and measures the boxes.
+>
 > Last reviewed: 2026-07-08. **All LIVE** — the Adventure now has **14 Stage 4
 > topics** (deployed 2026-07-08, commit `aad2142`): the Phase 3A–3G expansion
 > (Ratios & Rates, Length, Equations, Probability, Indices, Linear) PLUS Angle
@@ -180,6 +209,18 @@ portal/                            THE PLATFORM
           adventureManifest.js (Stage-4 topics/NPCs for the Set-task form)
 online-quizzes/ , interactive-tools/ , worksheet-creators/ , flip-cards/ , games/
 assessment/exam-builder/
+assessment/exam-builder/           THE REVISION GENERATOR (homepage calls it that)
+  app.js                           UI + the STAGES registry (stage3/4/5) + generation
+  question-banks/<topic>/          Stage 4 · stage-5/<topic>/ · stage-3/<topic>/
+  engines/<name>/                  18 SVG diagram engines, one file each
+  renderers/                       question-renderer (one question) + exam-renderer (the paper)
+  templates/<name>/                hsc-style (base) · class-test · revision-package ·
+                                   worksheet · textbook-template
+  utils/answer-space-rules.js      what answer space a question gets, and why
+  docs/stage-3-syllabus-reference.md  Stage 3 scope, outcomes, calibration rules
+  tools/verify.mjs                 all banks: schema, diagrams, token leaks
+  tools/stages.mjs · stage3*.mjs · picker.mjs   targeted harnesses (see the header block)
+  layout-check.html                renders real questions in-browser and measures them
 game-platforms/mills-maths-adventure/   the BUILT Adventure (index.html + assets/)
 dashboards/                        OLD dashboards → now redirect stubs to /portal/*
 firestore.golive.claims.rules      the live security rules (reference copy)
@@ -259,6 +300,20 @@ portal/PLACEMENT.md , portal/README.md   migration + structure notes
   **function first**, then push the website.
 
 ## 8. Open / future items
+- **Revision Generator — Stage 3**: 2 of 8 topics built (Represents Numbers,
+  Additive Relations). Remaining, in the order they should be done:
+  **Fractions** and **2D Space and Area** (no new engines needed), then
+  **Multiplicative Relations** (wants an array/area model engine),
+  **Geometric Measure** (grid map), **3D Space and Volume** (nets) and
+  **Mass and Time** (analog clock). Data and Chance are deliberately deferred.
+  Scope, outcome mapping and the calibration conventions are in
+  `assessment/exam-builder/docs/stage-3-syllabus-reference.md` — read it before
+  writing a bank, and add the new conventions it records to any new one.
+- Revision Generator — smaller follow-ups: right-align the worksheet answer
+  boxes into a consistent column for faster marking (trade-off: short prompts
+  wrap awkwardly around them); page numbers need Chrome's own print
+  header/footer since CSS cannot generate them; the protractor and thermometer
+  diagrams still carry more whitespace than they need.
 - Adventure: **interactive plot-a-point input mode** (student taps the
   Cartesian grid — flagged during the Linear Relationships build); **Stage 5
   depth** (still just 2 sample skills); **Area extension** as a further Stage 4

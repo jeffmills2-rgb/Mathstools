@@ -49,6 +49,85 @@ export function applyAnswerSpaceRules(questions = []) {
   });
 }
 
+/*
+  ══════════════════════════════════════════════════════════════════════
+  ANSWER SPACE AS A KIND, NOT A SIZE
+  ----------------------------------------------------------------------
+  `space` is a t-shirt size the bank picks — none/small/medium/large — and
+  templates drew it as a full-column ruled rectangle. That conflates two
+  different things: how much WORKING the author expected, and what the answer
+  actually looks like. So "Calculate: 2 − (−32)" was given 48mm × 165mm of
+  ruled paper for a three-character answer, and a worksheet ran to 61 pages
+  where the same questions fit on 13.
+
+  What matters for layout is the SHAPE of the response:
+
+    none   the student answers on the diagram or in a blank in the prompt
+    box    a short final answer — a number, a fraction, an inequality
+    lines  genuine working, sized by the marks the author assigned
+
+  All three are derived from data the question already carries, so no bank
+  needs editing. Marks are the honest signal for working: they already encode
+  how many steps the author expected.
+  ══════════════════════════════════════════════════════════════════════
+*/
+
+const MAX_LINES = 4;
+
+/*
+  A one-mark question is a single step, but a single step does not always give
+  a short answer. On the first Stage 3 worksheet these all got a 22mm box:
+
+    "Write 51 821 724 in words."           → sixty-plus characters
+    "Write these numbers in ascending order: …"  → a five-value list
+    "Explain your answer."                 → a sentence
+
+  So marks decide whether WORKING is expected; the answer itself decides
+  whether a box can hold it. The question already carries its own `answer`,
+  which is the best available estimate of what the student will write.
+*/
+/*
+  The box is 22mm wide (.answer-box). At the worksheet's 10.5pt maths font a
+  digit runs about 1.9mm, so roughly 12 characters fit. Measured across every
+  bank, the median one-mark answer is 5 characters and the 75th percentile is
+  7, so this promotes about an eighth of them — the ones that genuinely would
+  not have fitted, such as "4.04, 4.1, 4.4, 4.9".
+*/
+const LONG_ANSWER_CHARS = 12;
+const EXPLANATION_CUE = /\b(explain|justify|why|give a reason|describe|convince|in your own words)\b/i;
+
+function needsRoomToWrite(question) {
+  if (EXPLANATION_CUE.test(String(question.prompt || ""))) return true;
+
+  // Fraction tokens render far shorter than they read, so discount them.
+  const answer = String(question.answer ?? "").replace(/\[\[[^\]]*\]\]/g, "x");
+  return answer.length > LONG_ANSWER_CHARS;
+}
+
+export function resolveAnswerSpace(question) {
+  if (!question || typeof question !== "object") return { kind: "none", lines: 0 };
+
+  if (shouldSuppressAnswerSpace(question)) return { kind: "none", lines: 0 };
+
+  // Explicit "no space" from the bank is still respected.
+  if (String(question.space || "").toLowerCase() === "none") return { kind: "none", lines: 0 };
+
+  // A question with subparts holds no answer itself — each part carries its own.
+  if (Array.isArray(question.subparts) && question.subparts.length) {
+    return { kind: "parts", lines: 0 };
+  }
+
+  const marks = Number(question.marks);
+
+  // One mark is a single step: the response is a final answer, not working —
+  // unless that answer is too long to fit on one short line.
+  if (!Number.isFinite(marks) || marks <= 1) {
+    return needsRoomToWrite(question) ? { kind: "lines", lines: 2 } : { kind: "box", lines: 0 };
+  }
+
+  return { kind: "lines", lines: Math.min(MAX_LINES, Math.max(2, Math.round(marks))) };
+}
+
 export function shouldSuppressAnswerSpace(question) {
   if (!question || typeof question !== "object") return false;
 

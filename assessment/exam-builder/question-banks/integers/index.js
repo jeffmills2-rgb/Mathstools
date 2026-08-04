@@ -737,7 +737,11 @@ function thermometerReadQuestion() {
     level: "mixed",
     type: "thermometer-read",
     marks: 2,
-    prompt: `The thermometer shows the temperature at dawn. By midday it ${dir} by ${change}°C. What is the temperature at midday?`,
+    prompt: choice([
+      `The thermometer shows the temperature at dawn. By midday it ${dir} by ${change}°C. What is the temperature at midday?`,
+      `The thermometer shows this morning's temperature. It ${dir} by ${change}°C during the day. What is the new temperature?`,
+      `A weather station recorded the temperature shown. It then ${dir} by ${change}°C. What temperature did it reach?`
+    ]),
     diagram: {
       engine: "integer-engine",
       caption: "Temperature at dawn.",

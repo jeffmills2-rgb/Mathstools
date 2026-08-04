@@ -127,6 +127,11 @@ window.MMT_EQUATION_ENGINE = (() => {
       text(svg, fmt(v), xi, y + 30, { size: 16, family: "Arial, sans-serif" });
     }
 
+    // A blank axis for the STUDENT to mark. "Solve and show the solution on a
+    // number line" previously printed no line at all in templates that hide
+    // answer spaces, which made the question impossible to answer as printed.
+    if (config.blank === true) return svg;
+
     // Solution ray.
     const xv = x(value);
     const xEnd = goRight ? right - 4 : left + 4;
