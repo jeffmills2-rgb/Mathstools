@@ -112,6 +112,26 @@
   .qcheck .t{font-weight:600}
   .subsetbtn{white-space:nowrap;flex:0 0 auto}
 
+  /* ---- Printable student login cards ------------------------------------
+     8 cards per A4 page (2 across x 4 down). The sheet lives in #printSheet at
+     body level so the print stylesheet can hide everything else and print it
+     alone — no pop-up window, so nothing can be blocked. On screen the same
+     markup is previewed inside the modal, shrunk with `zoom` (screen only, so
+     the printed millimetres are untouched). */
+  #printSheet{display:none}
+  .pc-page{width:190mm;display:grid;grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(4,64mm);gap:4mm;break-after:page;page-break-after:always}
+  .pc-page:last-child{break-after:auto;page-break-after:auto}
+  .pc-card{border:1px solid #cbd5e1;border-radius:4mm;padding:5mm;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3mm;text-align:center;overflow:hidden;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .pc-card .pc-name{font-size:15pt;font-weight:800;line-height:1.15;color:#0f172a;word-break:break-word}
+  .pc-card .pc-code{font-family:ui-monospace,Menlo,monospace;font-size:26pt;font-weight:800;letter-spacing:.14em;color:#0f172a;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:3mm;padding:2.5mm 5mm;line-height:1}
+  .pc-prev{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:14px;max-height:430px;overflow:auto}
+  @media screen{ .pc-prev .pc-sheet{zoom:.62} .pc-prev .pc-page{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.14);padding:10mm;width:210mm;grid-template-rows:repeat(4,64mm);margin:0 auto 8mm} }
+  @media print{
+    @page{size:A4;margin:10mm}
+    body>*:not(#printSheet){display:none!important}
+    #printSheet{display:block!important}
+  }
+
   /* ---- Analytics dashboard ---------------------------------------------- */
   .modal.analytics{max-width:min(1120px,96vw)}
   .chart-box{position:relative;height:230px;margin-top:6px}
@@ -201,6 +221,8 @@
       <div class="ic">🗺️</div><h3>Set Adventure Task</h3><p>Send students to a place in the Adventure.</p></button></div>
     <div class="tilewrap"><button class="tile" type="button" id="tileDashTask">
       <div class="ic">📋</div><h3>Set Dashboard Task</h3><p>Assign online quizzes with a due date.</p></button></div>
+    <div class="tilewrap"><button class="tile" type="button" id="tilePrintCards">
+      <div class="ic">🖨️</div><h3>Print Student Cards</h3><p>A4 sheets of login cards to cut up and hand out.</p></button></div>
   </div>
 
   <div class="sectionlabel">See how they're going</div>
@@ -218,6 +240,10 @@
 </main>
 
 <div class="modal-back" id="modalBack"><div class="modal" id="modal"></div></div>
+
+<!-- Printable student login cards. Filled by openPrintCards(); hidden on screen,
+     and the only thing visible to the printer (see @media print above). -->
+<div id="printSheet" aria-hidden="true"></div>
 
 <script type="module">
 import { initPortal, loginTeacher, logout, normaliseCode, getDb, createStudent, createClass, setClassActive, createAdventureTask, setAdventureTaskActive, updateAdventureTask, createDashboardTask, updateDashboardTask, setDashboardTaskActive } from "../shared/codeExchangeClient.js";
@@ -282,7 +308,7 @@ async function refreshData(btn){
   if(btn){ btn.textContent="✓ Updated"; btn.disabled=false; setTimeout(()=>{ btn.textContent=orig||"↻ Refresh"; }, 1400); }
 }
 function openModal(html, wide){ modalEl.className="modal"+(wide?" wide":""); modalEl.innerHTML=html; back.classList.add("show"); }
-function closeModal(){ back.classList.remove("show"); currentRefresh=null; if(dtPoll){ clearInterval(dtPoll); dtPoll=null; } for(const k in tCharts){ try{ tCharts[k].destroy(); }catch{} delete tCharts[k]; } }
+function closeModal(){ back.classList.remove("show"); currentRefresh=null; const ps=$("printSheet"); if(ps) ps.innerHTML=""; if(dtPoll){ clearInterval(dtPoll); dtPoll=null; } for(const k in tCharts){ try{ tCharts[k].destroy(); }catch{} delete tCharts[k]; } }
 function head(title){ return `<div class="modal-head"><h2>${title}</h2><button class="x" type="button" data-close>✕</button></div>`; }
 function foot(right){ return `<div class="modal-foot"><button class="btn" type="button" data-close>Close</button>${right||""}</div>`; }
 back.addEventListener("click", e=>{ if(e.target===back) closeModal(); });
@@ -311,6 +337,7 @@ $("tileAddStudent").addEventListener("click", openAddStudent);
 $("tileAddClass").addEventListener("click", openAddClass);
 $("tileAdvTask").addEventListener("click", ()=>openAdvTask());
 $("tileDashTask").addEventListener("click", openDashTask);
+$("tilePrintCards").addEventListener("click", openPrintCards);
 $("tileStudents").addEventListener("click", openStudents);
 $("tileResults").addEventListener("click", openResults);
 $("tileTasks").addEventListener("click", openTasks);
@@ -886,6 +913,65 @@ async function removeDashTask(id, className){
   if(!confirm("Remove this dashboard task? Students will no longer see it.")) return;
   try{ await setDashboardTaskActive(id, false); taskBadge=Math.max(0,taskBadge-1); refreshStats(); loadDashTasks(className||""); }
   catch(err){ alert((err&&err.message)||"Could not remove the task."); }
+}
+
+// ========================= PRINT STUDENT LOGIN CARDS =========================
+// A4 sheets of name + login code, 8 to a page, for cutting up and handing out.
+// Built into #printSheet at body level and printed with the page's own print
+// stylesheet — no pop-up window, so a blocker can never get in the way.
+const PC_PER_PAGE = 8;
+
+// The roster, class-filtered, in the order the cards should print.
+function pcStudents(cls){
+  return students
+    .map(s=>({ code:s.studentCode||s.id||"", name:s.name||s.studentName||"", className:s.className||"" }))
+    .filter(s=> s.code && (!cls || s.className===cls))
+    .sort((a,b)=> (a.className||"").localeCompare(b.className||"") || (a.name||"").localeCompare(b.name||""));
+}
+// One <div class="pc-page"> per 8 students.
+function pcSheetHtml(list){
+  let out = "";
+  for(let i=0; i<list.length; i+=PC_PER_PAGE){
+    out += `<div class="pc-page">` + list.slice(i, i+PC_PER_PAGE).map(s=>`
+      <div class="pc-card">
+        <div class="pc-name">${esc(s.name||"Student")}</div>
+        <div class="pc-code">${esc(s.code)}</div>
+      </div>`).join("") + `</div>`;
+  }
+  return `<div class="pc-sheet">${out}</div>`;
+}
+
+function openPrintCards(){
+  openModal(head("🖨️ Print Student Cards")+`
+    <div class="modal-body">
+      <p class="hint">Prints your students' names and login codes as cards, <strong>8 to an A4 page</strong>, ready to cut up and hand out. Pick a class or print the whole roster, then use your browser's print dialog (choose <em>A4</em> and turn <em>background graphics</em> on if the boxes look faint).</p>
+      <div class="field" style="max-width:320px">
+        <label for="pcCls">Class</label>
+        <select id="pcCls"><option value="">All students</option>${classes.map(c=>`<option>${esc(c)}</option>`).join("")}</select>
+      </div>
+      <div class="muted" id="pcCount" style="margin:14px 0 10px;font-size:.86rem"></div>
+      <div class="pc-prev" id="pcPrev"></div>
+    </div>${foot(`<button class="btn primary" type="button" id="pcPrint">🖨️ Print</button>`)}`, true);
+
+  const draw=()=>{
+    const list = pcStudents($("pcCls").value);
+    const pages = Math.ceil(list.length / PC_PER_PAGE);
+    if(!list.length){
+      $("pcCount").textContent = "";
+      $("pcPrev").innerHTML = `<div class="empty"><div class="big">No students to print</div>Add students to this class first.</div>`;
+      $("pcPrint").disabled = true;
+      $("printSheet").innerHTML = "";
+      return;
+    }
+    $("pcCount").innerHTML = `<strong>${list.length}</strong> card${list.length===1?"":"s"} on <strong>${pages}</strong> A4 page${pages===1?"":"s"}.`;
+    const html = pcSheetHtml(list);
+    $("pcPrev").innerHTML = html;
+    $("printSheet").innerHTML = html;   // what actually goes to the printer
+    $("pcPrint").disabled = false;
+  };
+  $("pcCls").addEventListener("change", draw);
+  $("pcPrint").addEventListener("click", ()=>{ if($("printSheet").innerHTML.trim()) window.print(); });
+  draw();
 }
 
 // ============================ STUDENTS & CLASSES ============================
