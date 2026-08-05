@@ -99,8 +99,10 @@ const EXPLANATION_CUE = /\b(explain|justify|why|give a reason|describe|convince|
 function needsRoomToWrite(question) {
   if (EXPLANATION_CUE.test(String(question.prompt || ""))) return true;
 
-  // Fraction tokens render far shorter than they read, so discount them.
-  const answer = String(question.answer ?? "").replace(/\[\[[^\]]*\]\]/g, "x");
+  // A fraction token is short as text but renders as a stacked fraction about
+  // three characters wide, so it is counted at its printed width. Four of them
+  // in a list will not fit a 22mm box even though the token text is brief.
+  const answer = String(question.answer ?? "").replace(/\[\[[^\]]*\]\]/g, "xxx");
   return answer.length > LONG_ANSWER_CHARS;
 }
 

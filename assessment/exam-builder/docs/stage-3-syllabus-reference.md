@@ -231,9 +231,9 @@ same shape as Stage 4, where "Integers" is one topic with 17 types.
 | Represents Numbers | ✅ built — 15 question types, `question-banks/stage-3/represents-numbers/` |
 | Additive Relations | ✅ built — 22 question types, `question-banks/stage-3/additive-relations/`, including 7 open number line strategies |
 | Multiplicative Relations | not started — needs the array engine |
-| Fractions | not started |
+| Fractions | ✅ built — 17 question types, `question-banks/stage-3/fractions/` |
 | Geometric Measure | not started — needs the grid-map engine |
-| 2D Space and Area | not started |
+| 2D Space and Area | ✅ built — 16 question types, `question-banks/stage-3/two-d-space-area/` |
 | 3D Space and Volume | not started — needs the nets engine |
 | Mass and Time | not started — needs the clock engine |
 
@@ -270,6 +270,19 @@ Stage 3 banks unless there is a reason to depart.
 - **Fixed-form question types need generated variety.** A type built from a
   short list of hard-coded forms repeats verbatim as soon as a paper asks for
   more than a handful; generate the parameters instead.
+- **A stacked fraction prints about three characters wide**, so a list of them
+  needs ruled lines even though the token text is short. `resolveAnswerSpace`
+  counts fraction tokens at their printed width for this reason.
+- **An ordering question must not be born already ordered** — reshuffle until
+  the displayed order differs from the answer.
+- **Watch singular/plural in generated word problems** ("1 sandwiches").
+- **A shape diagram must carry its dimensions.** The area engine draws every
+  rectangle at the same fixed proportions, so an unlabelled figure beside a
+  prompt stating "9 m by 7 m" silently contradicts it. Pass `lengthLabel` /
+  `widthLabel` / `baseLabel` / `heightLabel` and set `notToScale: true`, then
+  let the prompt just ask for the area.
+- **Units belong in the answer** wherever the outcome mentions choosing them —
+  MA3-2DS-03 does, so every area answer carries cm², m², hectares or km².
 - **Multi-part questions** carry a summary `answer` for the key and empty
   top-level `working`; the parts hold their own working. Matches Stage 4.
 - **Place-value tables cap at 7 columns.** One column per digit, and a wider

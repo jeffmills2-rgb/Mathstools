@@ -14,6 +14,16 @@ import {
 } from "./question-banks/stage-3/additive-relations/index.js";
 
 import {
+  generateStage3FractionsQuestions,
+  getStage3FractionsQuestionTypes
+} from "./question-banks/stage-3/fractions/index.js";
+
+import {
+  generateStage3TwoDQuestions,
+  getStage3TwoDQuestionTypes
+} from "./question-banks/stage-3/two-d-space-area/index.js";
+
+import {
   generateIntegerQuestions,
   getIntegerQuestionTypes
 } from "./question-banks/integers/index.js";
@@ -407,6 +417,18 @@ const STAGE3_TOPICS = {
     label: "Additive Relations",
     generate: generateAdditiveRelationsQuestions,
     getTypes: getAdditiveRelationsQuestionTypes
+  },
+
+  stage3Fractions: {
+    label: "Fractions",
+    generate: generateStage3FractionsQuestions,
+    getTypes: getStage3FractionsQuestionTypes
+  },
+
+  stage3TwoDSpaceArea: {
+    label: "2D Space and Area",
+    generate: generateStage3TwoDQuestions,
+    getTypes: getStage3TwoDQuestionTypes
   }
 };
 

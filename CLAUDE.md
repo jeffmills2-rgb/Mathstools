@@ -23,7 +23,7 @@
 >    marks, and a question answered on its diagram gets nothing. Same paper went
 >    from 61 pages to 20. Two columns, like the textbook template.
 > 3. **STAGE 3 (Years 5–6) added.** Stages are now DATA (`STAGES` registry in
->    `app.js`) rather than hardcoded pairs, so a new stage is one entry. Two
+>    `app.js`) rather than hardcoded pairs, so a new stage is one entry. Four
 >    banks built so far — see `assessment/exam-builder/docs/stage-3-syllabus-reference.md`,
 >    which is the source of truth for scope, outcome mapping and the calibration
 >    conventions every further Stage 3 bank should follow.
@@ -300,9 +300,9 @@ portal/PLACEMENT.md , portal/README.md   migration + structure notes
   **function first**, then push the website.
 
 ## 8. Open / future items
-- **Revision Generator — Stage 3**: 2 of 8 topics built (Represents Numbers,
-  Additive Relations). Remaining, in the order they should be done:
-  **Fractions** and **2D Space and Area** (no new engines needed), then
+- **Revision Generator — Stage 3**: 4 of 8 topics built (Represents Numbers,
+  Additive Relations, Fractions, 2D Space and Area). Every remaining topic
+  needs a new diagram engine first:
   **Multiplicative Relations** (wants an array/area model engine),
   **Geometric Measure** (grid map), **3D Space and Volume** (nets) and
   **Mass and Time** (analog clock). Data and Chance are deliberately deferred.
