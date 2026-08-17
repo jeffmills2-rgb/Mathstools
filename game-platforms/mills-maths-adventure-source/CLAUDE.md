@@ -1,9 +1,16 @@
 # Mills Maths Adventure — source project brief
 
-> This folder is the **game source** (and the Cloud Functions). It is NOT the
-> website. The website lives in the separate `mathstools-main 2` folder (a clone
-> of github.com/jeffmills2-rgb/mathstools) and is what deploys to
-> millsmathstools.au. See that folder's `CLAUDE.md` for the full picture.
+> This folder is the **game source** (and the Cloud Functions). As of
+> **2026-08-17** it lives INSIDE the website repo at
+> `game-platforms/mills-maths-adventure-source/` (repo
+> `github.com/jeffmills2-rgb/mathstools`, cloned locally at
+> `~/Documents/GitHub/Mills Maths Tools/`, deployed to millsmathstools.au via
+> Netlify on push to `main`). There is no separate `mathstools-main 2` / `Mills
+> Maths Adventure` folder any more. The BUILT/deployed game is the sibling
+> `game-platforms/mills-maths-adventure/`. **Deploy:** `npm run build` here →
+> copy `dist/.` into `../mills-maths-adventure/` → `git add`, commit, push
+> (Netlify auto-deploys). Older references below to a separate website folder
+> are superseded by this. See the repo-root `CLAUDE.md` for the whole-site view.
 > Last reviewed: 2026-07-22 (newest work in the DONE 2026-07-22 section below). **All LIVE** (deployed 2026-07-08, commit `aad2142`):
 > W3–W6, the Phase 3A–3G question-bank expansion (6 topics) + Linear teacher UI
 > fixes, and the NEW topics Angle Relationships (3G), Properties of Geometrical

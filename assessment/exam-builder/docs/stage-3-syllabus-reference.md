@@ -198,7 +198,7 @@ worked examples, fill-the-gaps and do-it-yourself.
 | Non-spatial measure A/B — time | analog clock face |
 | Multiplicative relations A — products and factors | array / area model for multiplication |
 | Three-dimensional spatial structure A | nets of prisms and pyramids |
-| Geometric measure A — position | grid map (distinct from the number plane) |
+| Geometric measure A — position | grid map (distinct from the number plane) — the bank ships without it; the point-vs-area distinction is currently asked in prose |
 | Data A/B (deferred) | column graph, dot plot |
 | Chance A/B (deferred) | spinner, chance experiment |
 
@@ -230,9 +230,9 @@ same shape as Stage 4, where "Integers" is one topic with 17 types.
 |---|---|
 | Represents Numbers | ✅ built — 15 question types, `question-banks/stage-3/represents-numbers/` |
 | Additive Relations | ✅ built — 22 question types, `question-banks/stage-3/additive-relations/`, including 7 open number line strategies |
-| Multiplicative Relations | not started — needs the array engine |
+| Multiplicative Relations | ✅ built — 21 question types, `question-banks/stage-3/multiplicative-relations/`, on the new `array-area` engine |
 | Fractions | ✅ built — 17 question types, `question-banks/stage-3/fractions/` |
-| Geometric Measure | not started — needs the grid-map engine |
+| Geometric Measure | ✅ built — 18 question types, `question-banks/stage-3/geometric-measure/`, using the existing linear, angle and length engines |
 | 2D Space and Area | ✅ built — 16 question types, `question-banks/stage-3/two-d-space-area/` |
 | 3D Space and Volume | not started — needs the nets engine |
 | Mass and Time | not started — needs the clock engine |
@@ -290,7 +290,31 @@ Stage 3 banks unless there is a reason to depart.
 - **Distractor-free wording.** Prompts avoid the "A student wrote… this is
   incorrect" framing used in Stage 4 error-spotting; at Stage 3 it invites the
   misconception to be remembered.
+- **A misconception the syllabus states outright gets its own question type.**
+  Geometric measure names two: a grid reference gives an *area* while a
+  coordinate gives a *point*, and *the lines are numbered, not the spaces*.
+  Both are content in their own right, so both are asked directly rather than
+  assumed inside a plotting question.
+- **The number plane is drawn one square larger than the largest coordinate in
+  play.** A point sitting on the frame collides with the axis numbering and is
+  hard to read, so a plane with `xMax: 6` only ever carries points up to 5.
+- **A question answered ON the diagram gets no answer space** — `space: "none"`.
+  "Plot the point A (3, 4)" is finished on the grid, and a ruled line beneath it
+  is wasted paper. Same rule as the worksheet rebuild.
+- **Angles a student must measure are multiples of 5°.** That is the finest
+  reading a classroom protractor supports, and every drawn angle is at least
+  25° so its arc can be labelled.
+- **Stage boundaries are enforced, not assumed.** The angle engine can draw
+  vertically opposite and parallel-line diagrams; those relationships are Stage
+  4, so the Stage 3 bank never calls them and its harness asserts as much. The
+  same goes for language — no "alternate", "co-interior" or "corresponding".
+- **A perimeter answer is a length, an area answer is squared.** Worth checking
+  explicitly in the harness, since the two live in adjacent topics.
 
-A bank-level test harness lives outside the repo in the session workspace; the
-checks it makes — answer correctness per type, decimal-place and percentage
-bounds, answer-space resolution — are worth reproducing for each new bank.
+Every bank gets its own harness in `tools/` (`node tools/stage3-<topic>.mjs`,
+plain Node, no dependencies). A harness re-derives every answer *independently
+of the bank* — reading the dimensions off the diagram rather than the prompt
+where it can, so the figure and the answer are checked against each other — and
+then asserts the scope boundary and the answer-space resolution. Run
+`tools/verify.mjs` afterwards for the schema, diagram-render and token-leak
+sweep across every bank.

@@ -4,6 +4,34 @@
 > re-uploading everything. Keep it short, current, high-signal. If a fact here
 > stops being true, fix it here first.
 >
+> **NEW (2026-08-17): SINGLE-REPO CONSOLIDATION.** The game SOURCE is no longer a
+> separate folder — it now lives IN this repo at
+> `game-platforms/mills-maths-adventure-source/` (the Vite project), with its
+> BUILT/deployed copy in the sibling `game-platforms/mills-maths-adventure/`.
+> There is now ONE folder for everything: the local clone at
+> `~/Documents/GitHub/Mills Maths Tools/` (GitHub repo `jeffmills2-rgb/mathstools`,
+> Netlify-deployed on push to `main`). **Deploy an Adventure change:** edit in
+> `game-platforms/mills-maths-adventure-source/` → `npm run build` → copy `dist/.`
+> into `../mills-maths-adventure/` → `git add -A && git commit && git push`.
+> §2 "TWO folders", §3 deploy paths and §5's `mathstools-main 2` heading below
+> describe the OLD layout — this block supersedes them.
+>
+> **NEW (2026-08-17, session — being pushed): STAGE 3 MULTIPLICATIVE RELATIONS
+> + GEOMETRIC MEASURE.** Two more Stage 3 banks, taking the stage to **6 of 8**
+> topics. **Geometric Measure** (18 types) reuses the linear, angle and length
+> engines. **Multiplicative Relations** (21 types) needed the one genuinely new
+> engine, `engines/array-area/array-area-engine.js`, which draws four things:
+> an array, an area model (build it, read it), a factor-rectangle set, and a
+> hundred chart with multiples shaded. Twelve of its twenty-one types carry a
+> figure, because "use partitioning and place value to multiply" is a claim
+> about a picture. Division reuses the SAME rectangle with the quotient
+> missing, so the inverse is visible rather than asserted.
+> Every Stage 3 bank now has its own harness in `assessment/exam-builder/tools/`
+> (`node tools/stage3-<topic>.mjs`) that re-derives every answer independently
+> of the bank — the new `stage3-multiplicative.mjs` caught a live defect, where
+> `a − b × c` could evaluate negative (Stage 3 has no integers yet); the bank
+> now builds the product first and places the start number above it.
+>
 > **NEW (2026-08-04, session — being pushed): REVISION GENERATOR overhaul +
 > Stage 3.** Big session on `assessment/exam-builder/` (the "Revision Generator"
 > on the homepage). Three strands:
@@ -23,10 +51,15 @@
 >    marks, and a question answered on its diagram gets nothing. Same paper went
 >    from 61 pages to 20. Two columns, like the textbook template.
 > 3. **STAGE 3 (Years 5–6) added.** Stages are now DATA (`STAGES` registry in
->    `app.js`) rather than hardcoded pairs, so a new stage is one entry. Four
->    banks built so far — see `assessment/exam-builder/docs/stage-3-syllabus-reference.md`,
->    which is the source of truth for scope, outcome mapping and the calibration
->    conventions every further Stage 3 bank should follow.
+>    `app.js`) rather than hardcoded pairs, so a new stage is one entry. **Five**
+>    banks built so far — Represents Numbers, Additive Relations, Fractions,
+>    2D Space and Area, and **Geometric Measure** (18 types: coordinate plane in
+>    one and four quadrants, metric length, perimeter, protractor reading, and
+>    angles on a straight line / at a point — reusing the linear, angle and
+>    length engines, no new engine needed). See
+>    `assessment/exam-builder/docs/stage-3-syllabus-reference.md`, which is the
+>    source of truth for scope, outcome mapping and the calibration conventions
+>    every further Stage 3 bank should follow.
 >
 > New `assessment/exam-builder/tools/` harnesses (plain `node`, no deps except
 > `picker.mjs` which needs jsdom and skips without it), plus `layout-check.html`
@@ -300,12 +333,13 @@ portal/PLACEMENT.md , portal/README.md   migration + structure notes
   **function first**, then push the website.
 
 ## 8. Open / future items
-- **Revision Generator — Stage 3**: 4 of 8 topics built (Represents Numbers,
-  Additive Relations, Fractions, 2D Space and Area). Every remaining topic
-  needs a new diagram engine first:
-  **Multiplicative Relations** (wants an array/area model engine),
-  **Geometric Measure** (grid map), **3D Space and Volume** (nets) and
-  **Mass and Time** (analog clock). Data and Chance are deliberately deferred.
+- **Revision Generator — Stage 3**: 6 of 8 topics built (Represents Numbers,
+  Additive Relations, Multiplicative Relations, Fractions, 2D Space and Area,
+  Geometric Measure). Each remaining topic needs a new diagram engine first:
+  **3D Space and Volume** (nets) and **Mass and Time** (analog clock). Data and
+  Chance are deliberately deferred. Geometric Measure shipped WITHOUT its
+  optional grid-map engine — the syllabus's grid-reference-vs-coordinate
+  distinction is asked in prose for now; a grid-map engine would improve it.
   Scope, outcome mapping and the calibration conventions are in
   `assessment/exam-builder/docs/stage-3-syllabus-reference.md` — read it before
   writing a bank, and add the new conventions it records to any new one.

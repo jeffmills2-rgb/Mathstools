@@ -24,6 +24,16 @@ import {
 } from "./question-banks/stage-3/two-d-space-area/index.js";
 
 import {
+  generateStage3GeometricMeasureQuestions,
+  getStage3GeometricMeasureQuestionTypes
+} from "./question-banks/stage-3/geometric-measure/index.js";
+
+import {
+  generateMultiplicativeRelationsQuestions,
+  getMultiplicativeRelationsQuestionTypes
+} from "./question-banks/stage-3/multiplicative-relations/index.js";
+
+import {
   generateIntegerQuestions,
   getIntegerQuestionTypes
 } from "./question-banks/integers/index.js";
@@ -419,6 +429,12 @@ const STAGE3_TOPICS = {
     getTypes: getAdditiveRelationsQuestionTypes
   },
 
+  stage3MultiplicativeRelations: {
+    label: "Multiplicative Relations",
+    generate: generateMultiplicativeRelationsQuestions,
+    getTypes: getMultiplicativeRelationsQuestionTypes
+  },
+
   stage3Fractions: {
     label: "Fractions",
     generate: generateStage3FractionsQuestions,
@@ -429,6 +445,12 @@ const STAGE3_TOPICS = {
     label: "2D Space and Area",
     generate: generateStage3TwoDQuestions,
     getTypes: getStage3TwoDQuestionTypes
+  },
+
+  stage3GeometricMeasure: {
+    label: "Geometric Measure",
+    generate: generateStage3GeometricMeasureQuestions,
+    getTypes: getStage3GeometricMeasureQuestionTypes
   }
 };
 
