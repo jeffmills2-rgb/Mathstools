@@ -1,0 +1,54 @@
+/* ===========================================================================
+   BILINGUAL (EALD) STYLES — the translated line sits over the English original,
+   and the language picker chips. Only active when language ≠ English.
+   =========================================================================== */
+
+/* Bilingual text block: translated (RTL) on top, English underneath. */
+.bi { display: inline-flex; flex-direction: column; vertical-align: middle; }
+.bi-block { align-items: stretch; }
+.bi-tr { line-height: 1.2; }
+.bi-en { font-size: 0.72em; opacity: 0.62; font-weight: 400; line-height: 1.15; }
+
+/* Auto-layer (BilingualLayer): the matched element shows the translation as its
+   own text; the English original is drawn underneath via this pseudo-element. */
+[data-bi-en]::after {
+  content: attr(data-bi-en);
+  display: block;
+  direction: ltr;
+  text-align: inherit;
+  font-size: 0.72em;
+  font-weight: 400;
+  opacity: 0.6;
+  line-height: 1.15;
+}
+
+/* Language selector chips (character-select screen + ⚙ Options menu). */
+.lang-selector { display: inline-flex; gap: 8px; flex-wrap: wrap; }
+.lang-chip {
+  padding: 6px 16px; border-radius: 999px; border: 2px solid #ccd3dd;
+  background: #fff; color: #22314f; font-size: 15px; font-weight: 700;
+  cursor: pointer; transition: background .12s ease, border-color .12s ease, color .12s ease;
+}
+.lang-chip:hover { border-color: #7aa7ff; }
+.lang-chip.active { background: #2a6df4; border-color: #2a6df4; color: #fff; }
+
+.lang-selector.compact { gap: 5px; }
+.lang-selector.compact .lang-chip { padding: 3px 10px; font-size: 13px; }
+
+/* Language dropdown (character-select screen + ⚙ Options menu). */
+.lang-select {
+  padding: 7px 14px; border-radius: 10px; border: 2px solid #ccd3dd;
+  background: #fff; color: #22314f; font-size: 15px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+  transition: border-color .12s ease;
+}
+.lang-select:hover { border-color: #7aa7ff; }
+.lang-select:focus { outline: none; border-color: #2a6df4; }
+.lang-select.compact { padding: 4px 8px; font-size: 13px; border-radius: 8px; }
+
+/* Language row on the character-select / welcome screen. */
+.creator-lang {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  flex-wrap: wrap; margin: 0 0 16px;
+}
+.creator-lang-label { font-weight: 800; color: #45506a; }

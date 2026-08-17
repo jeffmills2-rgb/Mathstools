@@ -1,0 +1,82 @@
+rules_version = '2';
+
+// Mills Maths Tools — Phase 3C compatibility rules (DRAFT, not auto-deployed).
+// Replaces the unsafe open rules. Default-deny; identity is read-by-code only;
+// result records are create-only + validated and can never be edited/deleted
+// from the client. Reads of results stay broad (documented risk) so the existing
+// dashboards keep working until the Phase 3D custom-claims model lands.
+//
+// SOURCE OF TRUTH: src/cloud/firestoreRulesDraft.js (system checks verify it).
+// Deploy manually via the Firebase console/CLI AFTER review — never from code.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function authed() { return request.auth != null; }
+    function pct(v)   { return v is number && v >= 0 && v <= 100; }
+    function nonneg(v){ return v is number && v >= 0; }
+
+    // -------- Identity: read a single doc BY CODE; no listing; no client writes.
+    // get → quizzes/Adventure/Student Dashboard log in by exact code.
+    // list denied → stops enumeration of all student/teacher PII.
+    // writes denied → Admin Console identity writes move to console/Functions
+    //   (Phase 3D). This intentionally locks down anonymous admin writes.
+    match /students/{studentCode} {
+      allow get: if authed();
+      allow list: if false;
+      allow create, update, delete: if false;
+    }
+    match /teachers/{teacherCode} {
+      allow get: if authed();
+      allow list: if false;
+      allow create, update, delete: if false;
+    }
+
+    // -------- Compact platform results: CREATE-ONLY + validated; never edited.
+    // Reads kept (dashboards query by code) — a documented broad-read risk.
+    match /achievements/{id} {
+      allow read: if authed();
+      allow create: if authed()
+        && request.resource.data.studentCode is string
+        && request.resource.data.teacherCode is string
+        && request.resource.data.tool is string
+        && request.resource.data.score is number
+        && request.resource.data.total is number
+        && pct(request.resource.data.percent)
+        && request.resource.data.score >= 0
+        && request.resource.data.total >= 0
+        && request.resource.data.score <= request.resource.data.total + 1;
+      allow update, delete: if false;
+    }
+
+    // -------- Rich Adventure attempts: CREATE-ONLY + validated; doc id = attemptId.
+    match /adventureAttempts/{id} {
+      allow read: if authed();
+      allow create: if authed()
+        && request.resource.data.attemptId == id
+        && request.resource.data.studentCode is string
+        && request.resource.data.teacherCode is string
+        && request.resource.data.missionKind is string
+        && request.resource.data.source == 'mills-maths-adventure'
+        && nonneg(request.resource.data.questionCount)
+        && nonneg(request.resource.data.correctCount)
+        && pct(request.resource.data.percent)
+        && request.resource.data.createdAtClient is string;
+      allow update, delete: if false;
+    }
+
+    // -------- TEMPORARY COMPATIBILITY EXCEPTION (commented; DO NOT enable for a
+    // public deployment). The Teacher Dashboard + Admin Console currently need to
+    // LIST students/teachers. Until a teacher-owned mirror or custom claims exist
+    // (Phase 3D), you may temporarily re-allow listing for signed-in clients.
+    // This re-exposes PII enumeration and is NOT production-safe.
+    //
+    // match /students/{studentCode} { allow list: if authed(); }
+    // match /teachers/{teacherCode} { allow list: if authed(); }
+
+    // -------- Default: deny everything else.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

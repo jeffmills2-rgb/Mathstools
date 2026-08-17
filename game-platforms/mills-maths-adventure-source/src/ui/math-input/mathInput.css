@@ -1,0 +1,102 @@
+/* Styles for the reusable MathAnswerInput component. */
+
+.math-input {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.math-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.math-tool {
+  min-width: 40px;
+  height: 38px;
+  padding: 0 10px;
+  border: 2px solid #d7e3fc;
+  border-radius: 10px;
+  background: #f4f8ff;
+  color: #1f2937;
+  font-family: var(--font);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.math-tool:hover {
+  background: #e7f0ff;
+  border-color: var(--brand);
+}
+.math-clear {
+  margin-left: auto;
+  color: var(--bad);
+  font-size: 0.85rem;
+}
+
+/* Stacked boxes glyph for the fraction button. */
+.tool-frac {
+  display: inline-flex;
+  flex-direction: column;
+  line-height: 0.7;
+  font-size: 0.7rem;
+}
+.tool-frac span:first-child {
+  border-bottom: 2px solid currentColor;
+  padding-bottom: 1px;
+}
+
+/* The nth-root button needs a little extra room for its three parts. */
+.math-tool-wide {
+  min-width: 56px;
+}
+/* Lay out the index n, radical sign and box so they sit side by side
+   (index raised like a superscript) instead of overlapping. */
+.tool-nthroot {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  line-height: 1;
+}
+.nthroot-index {
+  font-size: 0.6rem;
+  align-self: flex-start;
+  transform: translateY(-1px);
+}
+.nthroot-radical {
+  font-size: 1.15rem;
+}
+.nthroot-box {
+  font-size: 0.8rem;
+}
+
+/* The MathLive editor element. */
+.math-input math-field {
+  display: block;
+  width: 100%;
+  font-size: 1.4rem;
+  padding: 10px 12px;
+  border: 2px solid #d7e3fc;
+  border-radius: 12px;
+  background: #fff;
+  --hue: 217; /* MathLive accent */
+}
+.math-input math-field:focus-within {
+  border-color: var(--brand);
+  outline: none;
+}
+.math-input math-field[read-only],
+.math-input math-field:read-only {
+  background: #f3f4f6;
+}
+
+.math-loading {
+  padding: 14px;
+  color: #6b7280;
+  font-style: italic;
+}

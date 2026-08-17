@@ -1,0 +1,172 @@
+import React, { useEffect, useState } from "react";
+
+import { useCratePacking } from "../game/cratePackingStore.js";
+import { useSession, playerState } from "../game/sessionStore.js";
+import { CRATE_ROUNDS_PER_SET } from "../data/farm/cratePackingChallenge.js";
+
+/**
+ * CRATE PACKING — 2D panel (F6, v5). The instruction card shows ONCE at the
+ * start; during play only a slim header strip remains so the fruit is never
+ * covered.
+ *
+ * Feedback pacing (teacher feedback): the partition/remainder animation
+ * always plays out IN FULL first. A correct (HCF) round then auto-advances.
+ * A WRONG round (spill OR a smaller common factor) waits 1s after the
+ * animation, SHAKES the camera, and shows a small reason card with a Next
+ * button — no auto-advance, the student reads the why.
+ * Keyboard: Enter starts (intro) / advances (feedback); Esc quits.
+ */
+
+const STAGGER_MS = 50; // must match STAGGER in CratePackingChallenge.jsx
+const TRAVEL_MS = 900; // approx flight time of the last fruit
+const VERDICT_DELAY_MS = 1000; // beat between animation end and the verdict
+
+function animationMs(round) {
+  return Math.max(round.n1, round.n2) * STAGGER_MS + TRAVEL_MS;
+}
+
+export default function CratePackingPanel() {
+  const status = useCratePacking((s) => s.status);
+  const roundIndex = useCratePacking((s) => s.roundIndex);
+  const score = useCratePacking((s) => s.score);
+  const bestScore = useCratePacking((s) => s.bestScore);
+  const regionId = useSession((s) => s.currentRegionId);
+  const last = useCratePacking((s) => s.lastResult());
+  const lastFeedback = useCratePacking.getState().lastFeedback();
+  const [showVerdict, setShowVerdict] = useState(false);
+
+  // Leaving the farm ends the challenge.
+  useEffect(() => {
+    if (status !== "idle" && regionId !== "farm-parts-whole") {
+      useCratePacking.getState().exit();
+    }
+  }, [status, regionId]);
+
+  // Enter = start (intro) / skip (feedback). Esc = quit.
+  useEffect(() => {
+    if (status === "idle") return undefined;
+    function onKey(e) {
+      const st = useCratePacking.getState();
+      if (e.key === "Escape") {
+        st.exit();
+        return;
+      }
+      if (e.key !== "Enter") return;
+      if (st.status === "intro") st.beginRounds();
+      else if (st.status === "feedback") st.next();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [status]);
+
+  // Feedback pacing: animation first, always. Then HCF → auto-next;
+  // wrong (spill or non-HCF common factor) → 1s beat, camera shake, and the
+  // reason card (manual Next).
+  useEffect(() => {
+    if (status !== "feedback") {
+      setShowVerdict(false);
+      return undefined;
+    }
+    const st = useCratePacking.getState();
+    const lastR = st.lastResult();
+    if (!lastR) return undefined;
+    const animMs = animationMs(lastR.round);
+    if (lastR.grade.result === "hcf") {
+      const t = setTimeout(() => st.next(), animMs + 1500);
+      return () => clearTimeout(t);
+    }
+    const t = setTimeout(() => {
+      playerState.camShake = { start: Date.now(), dur: 550 };
+      setShowVerdict(true);
+    }, animMs + VERDICT_DELAY_MS);
+    return () => clearTimeout(t);
+  }, [status, roundIndex]);
+
+  if (status === "idle") return null;
+
+  return (
+    <div className="farm-challenge-panel">
+      {status === "intro" && (
+        <div className="farm-challenge-card">
+          <div className="farm-challenge-head">
+            <span>📦 Crate Packing</span>
+          </div>
+          <div className="farm-challenge-line big">
+            For each pile of apples and pears, tap the <span className="fc-value">biggest group size</span> that
+            leaves no fruit over in either pile.
+          </div>
+          <div className="farm-challenge-line">Both piles must use the same group size.</div>
+          <div className="farm-challenge-buttons">
+            <button
+              className="primary-button"
+              onClick={(e) => {
+                e.currentTarget.blur();
+                useCratePacking.getState().beginRounds();
+              }}
+            >
+              Start! (Enter)
+            </button>
+            <button className="link-button" onClick={() => useCratePacking.getState().exit()}>
+              Quit
+            </button>
+          </div>
+        </div>
+      )}
+
+      {(status === "choosing" || status === "feedback") && !showVerdict && (
+        /* Slim strip only — the world stays visible; results play in-world. */
+        <div className="farm-challenge-card mini">
+          <div className="farm-challenge-head">
+            <span>📦 Round {Math.min(roundIndex + 1, CRATE_ROUNDS_PER_SET)}/{CRATE_ROUNDS_PER_SET} · {score} pts</span>
+            <button className="link-button" onClick={() => useCratePacking.getState().exit()}>
+              Quit
+            </button>
+          </div>
+        </div>
+      )}
+
+      {status === "feedback" && showVerdict && last && (
+        /* The reason card — appears AFTER the reveal + a 1s beat, with the
+           camera shake. Manual Next so the why gets read. */
+        <div className="farm-challenge-card">
+          <div className={`farm-challenge-verdict ${last.grade.result === "common" ? "warm" : "bad"}`}>
+            {last.grade.result === "common"
+              ? `It splits… but a bigger size works! +${last.grade.points} pts`
+              : "Leftovers! That size doesn't fit. +0 pts"}
+          </div>
+          <div className="farm-challenge-prompt">{lastFeedback}</div>
+          <div className="farm-challenge-buttons">
+            <button
+              className="primary-button"
+              onClick={(e) => {
+                e.currentTarget.blur();
+                useCratePacking.getState().next();
+              }}
+            >
+              {roundIndex + 1 < CRATE_ROUNDS_PER_SET ? "Next round (Enter)" : "Finish (Enter)"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {status === "done" && (
+        <div className="farm-challenge-card">
+          <div className="farm-challenge-head">
+            <span>📦 Crate Packing — complete!</span>
+          </div>
+          <div className="farm-challenge-prompt">
+            You scored {score} points. Best so far: {Math.max(bestScore, score)} points.
+          </div>
+          <div className="farm-challenge-buttons">
+            <button className="primary-button" onClick={() => useCratePacking.getState().start()}>
+              Play again
+            </button>
+            <button className="link-button" onClick={() => useCratePacking.getState().exit()}>
+              Back to the farm
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

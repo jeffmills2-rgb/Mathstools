@@ -1,0 +1,12 @@
+node_modules
+dist
+dist-ssr
+*.local
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+
+# Large backups, snapshots, and scratch — kept local, never pushed
+*.tgz
+_to_delete/
+_models-original/

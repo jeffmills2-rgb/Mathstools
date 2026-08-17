@@ -1,0 +1,250 @@
+/* =======================================================================
+ * DIAGRAM RENDERER STYLES (Phase 2E)
+ * A light "card" that holds a roughly-to-scale SVG figure with clear,
+ * readable dimension labels. Sized to sit comfortably above the answer input
+ * in the encounter modal on a laptop screen.
+ * ======================================================================= */
+
+.diagram-card {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 8px auto 14px;
+  padding: 10px;
+  width: 100%;
+  max-width: 320px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-sizing: border-box;
+}
+
+.diagram-svg {
+  width: 100%;
+  max-width: 280px;
+  height: auto;
+  display: block;
+}
+
+/* The filled shape outline. */
+.diagram-shape {
+  fill: #dbeafe;
+  stroke: #1d4ed8;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+/* Dashed lines showing a removed corner (composite shapes). */
+.diagram-cut {
+  fill: none;
+  stroke: #94a3b8;
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+}
+
+/* Right-angle marker (triangles). */
+.diagram-right-angle {
+  fill: none;
+  stroke: #1d4ed8;
+  stroke-width: 1.5;
+}
+
+/* Dimension labels — dark text so they read on the pale card. */
+.diagram-dim {
+  fill: #0f172a;
+  font-family: var(--font, system-ui, sans-serif);
+  font-size: 13px;
+  font-weight: 700;
+}
+.diagram-dim-sm {
+  font-size: 11px;
+  font-weight: 600;
+  fill: #334155;
+}
+
+.diagram-unknown {
+  color: #b45309;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* Wider figures (number lines) may use the full card width. */
+.diagram-card:has(.diagram-svg-wide) { max-width: 360px; }
+.diagram-svg-wide { max-width: 340px; }
+
+/* ---- Integer number line ---- */
+.nl-baseline { stroke: #111827; stroke-width: 3; stroke-linecap: round; }
+.nl-tick { stroke: #111827; stroke-width: 2.5; stroke-linecap: round; }
+.nl-tick-minor { stroke: rgba(17, 24, 39, 0.4); stroke-width: 1.5; stroke-linecap: round; }
+.nl-label { fill: #0f172a; font-family: var(--font, system-ui, sans-serif); font-size: 15px; font-weight: 700; }
+.nl-start { fill: #111827; }
+.nl-jump-arc { fill: none; stroke: #2563eb; stroke-width: 2.5; }
+.nl-jump-arrow { fill: #2563eb; stroke: none; }
+.nl-jump-label { fill: #2563eb; font-family: var(--font, system-ui, sans-serif); font-size: 15px; font-weight: 800; }
+.nl-jump.neg .nl-jump-arc { stroke: #dc2626; }
+.nl-jump.neg .nl-jump-arrow { fill: #dc2626; }
+.nl-jump.neg .nl-jump-label { fill: #dc2626; }
+
+/* ---- Thermometer ---- */
+.therm-glass { fill: #ffffff; stroke: #111827; stroke-width: 3; }
+.therm-merc { fill: #dc2626; }
+.therm-merc.cold { fill: #2563eb; }
+.therm-tick { stroke: #111827; stroke-width: 2; stroke-linecap: round; }
+.therm-tick-minor { stroke: rgba(17, 24, 39, 0.45); stroke-width: 1.4; stroke-linecap: round; }
+.therm-zero { stroke: #111827; stroke-width: 3; stroke-linecap: round; }
+.therm-label { fill: #111827; font-family: var(--font, system-ui, sans-serif); font-size: 14px; font-weight: 700; }
+.therm-value { fill: #111827; font-family: var(--font, system-ui, sans-serif); font-size: 16px; font-weight: 800; }
+
+/* ---- Fraction circle ---- */
+.fc-shaded { fill: #2563eb; stroke: #1e3a8a; stroke-width: 1.5; }
+.fc-empty { fill: #ffffff; stroke: #1e3a8a; stroke-width: 1.5; }
+.diagram-card:has(.fc-shaded) { max-width: 220px; }
+
+/* ---- Shared FDP diagram styles (bars, sets, number lines, area, double line) */
+.fd-shaded { fill: #2563eb; stroke: #1e3a8a; stroke-width: 1.5; }
+.fd-empty { fill: #ffffff; stroke: #1e3a8a; stroke-width: 1.5; }
+.fd-line { stroke: #111827; stroke-width: 2.5; stroke-linecap: round; }
+.fd-tick { stroke: #111827; stroke-width: 2; stroke-linecap: round; }
+.fd-tick-minor { stroke: rgba(17, 24, 39, 0.4); stroke-width: 1.4; stroke-linecap: round; }
+.fd-label { fill: #0f172a; font-family: var(--font, system-ui, sans-serif); font-size: 15px; font-weight: 700; }
+.fd-label-sm { fill: #334155; font-family: var(--font, system-ui, sans-serif); font-size: 13px; font-weight: 700; }
+.fd-axis { fill: #475569; font-family: var(--font, system-ui, sans-serif); font-size: 12px; font-weight: 700; }
+.fd-mark { fill: #16a34a; }
+.fd-mark-dot { fill: #16a34a; }
+.fd-mark-line { stroke: #16a34a; stroke-width: 2; stroke-dasharray: 4 3; }
+.fd-mark-q { fill: #16a34a; font-family: var(--font, system-ui, sans-serif); font-size: 18px; font-weight: 800; }
+
+/* Fraction multiplication area model: column tint, row tint, darker overlap. */
+.fma-col { fill: rgba(37, 99, 235, 0.28); stroke: #cbd5e1; stroke-width: 1; }
+.fma-row { fill: rgba(220, 38, 38, 0.22); stroke: #cbd5e1; stroke-width: 1; }
+.fma-overlap { fill: #1d4ed8; stroke: #cbd5e1; stroke-width: 1; }
+
+/* ---- Algebra diagrams (tiles, area model, perimeter, function machine) ---- */
+.alg-tile-x { fill: #2563eb; stroke: #1e3a8a; stroke-width: 1.5; }
+.alg-tile-one { fill: #fbbf24; stroke: #b45309; stroke-width: 1.5; }
+.alg-tile-label { fill: #ffffff; font-family: var(--font, system-ui, sans-serif); font-size: 16px; font-weight: 800; }
+
+.am-cell { fill: #eff6ff; stroke: #1d4ed8; stroke-width: 1.5; }
+.am-dim { fill: #0f172a; font-family: var(--font, system-ui, sans-serif); font-size: 16px; font-weight: 800; }
+
+.perim-shape { fill: #dbeafe; stroke: #1d4ed8; stroke-width: 2; stroke-linejoin: round; }
+.perim-label { fill: #0f172a; font-family: var(--font, system-ui, sans-serif); font-size: 15px; font-weight: 700; }
+
+.fm-io { fill: #dbeafe; stroke: #1d4ed8; stroke-width: 2; }
+.fm-op { fill: #fee2e2; stroke: #b91c1c; stroke-width: 2; }
+.fm-label { fill: #0f172a; font-family: var(--font, system-ui, sans-serif); font-size: 15px; font-weight: 800; }
+.fm-arrow { stroke: #475569; stroke-width: 2; }
+.fm-arrow-head { fill: #475569; }
+
+/* ---- Length diagrams (Phase 3B) ---- */
+.ln-shape { fill: #eff6ff; stroke: #1d3557; stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+.ln-mark { stroke: #1d3557; stroke-width: 2; stroke-linecap: round; fill: none; }
+.ln-dash { stroke: #64748b; stroke-width: 1.8; stroke-dasharray: 6 5; fill: none; }
+.ln-dot { fill: #1d3557; }
+.ln-accent { stroke: #e63946; stroke-width: 3.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.ln-accent-fill { fill: rgba(42, 157, 143, 0.20); stroke: #2a9d8f; stroke-width: 3; stroke-linejoin: round; }
+.ln-accent-label { fill: #e63946; font-family: var(--font, system-ui, sans-serif); font-size: 16px; font-weight: 800; }
+
+/* ---- Cartesian plane + tile patterns (Phase 3F) ---- */
+.cp-grid { stroke: rgba(29, 53, 87, 0.14); stroke-width: 1; }
+.cp-halfgrid { stroke: rgba(29, 53, 87, 0.07); stroke-width: 1; stroke-dasharray: 2 3; }
+.cp-axis { stroke: #1d3557; stroke-width: 2.2; stroke-linecap: round; }
+.cp-axis-head { fill: #1d3557; }
+.cp-tick { fill: #475569; font-family: var(--font, system-ui, sans-serif); font-size: 10.5px; font-weight: 700; }
+.cp-line-a { stroke: #2a9d8f; stroke-width: 3; stroke-linecap: round; }
+.cp-line-a-head { fill: #2a9d8f; }
+.cp-line-b { stroke: #e76f51; stroke-width: 3; stroke-linecap: round; }
+.cp-line-b-head { fill: #e76f51; }
+.cp-line-c { stroke: #6d597a; stroke-width: 3; stroke-linecap: round; }
+.cp-line-c-head { fill: #6d597a; }
+.cp-line-label { fill: #0f172a; font-family: var(--font, system-ui, sans-serif); font-size: 12.5px; font-weight: 800; paint-order: stroke; stroke: #ffffff; stroke-width: 3px; stroke-linejoin: round; }
+/* Colour each line's label to match its line (teacher fix). The white halo
+   above keeps the coloured text legible where it floats above the grid. */
+.cp-line-a-label { fill: #2a9d8f; }
+.cp-line-b-label { fill: #e76f51; }
+.cp-line-c-label { fill: #6d597a; }
+.cp-point { fill: #1d3557; }
+.cp-point-accent { fill: #e63946; }
+.cp-point-label { fill: #0f172a; font-family: var(--font, system-ui, sans-serif); font-size: 12.5px; font-weight: 800; }
+.cp-intersection { fill: #fff; stroke: #e63946; stroke-width: 3; }
+.tp-base { fill: #1d3557; stroke: #14213d; stroke-width: 1; }
+.tp-step { fill: #a8dadc; stroke: #457b9d; stroke-width: 1; }
+
+/* ---- Values tables (Phase 3G) ---- */
+.vt-cell { fill: #fff; stroke: #1d3557; stroke-width: 1.6; }
+.vt-cell.vt-label { fill: #eff6ff; }
+.vt-label-text { fill: #1d3557; font-family: "Cambria Math", "STIX Two Math", "Times New Roman", serif; font-size: 16px; font-weight: 700; font-style: italic; }
+.vt-value { fill: #0f172a; font-family: "Cambria Math", "STIX Two Math", "Times New Roman", serif; font-size: 15px; font-weight: 600; }
+
+/* ---- Angles (Phase 3G) ---- */
+.ang-ray { stroke: #1d3557; stroke-width: 2.6; stroke-linecap: round; fill: none; }
+.ang-ray-accent { stroke: #e63946; }
+.ang-parallel { stroke: #457b9d; stroke-width: 2.6; stroke-linecap: round; fill: none; }
+.ang-arc { stroke: #2a9d8f; stroke-width: 2.4; fill: none; stroke-linecap: round; }
+.ang-arc-parallel { stroke: #457b9d; }
+.ang-arc-accent { stroke: #e63946; stroke-width: 3; }
+.ang-mark { stroke: #1d3557; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.ang-tick { stroke: #2a9d8f; stroke-width: 2; stroke-linecap: round; }
+.ang-chevron { stroke: #457b9d; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.ang-arrow { fill: #1d3557; }
+.ang-vertex, .ang-point-dot { fill: #1d3557; }
+.ang-label { fill: #0f172a; font-family: "Cambria Math", "STIX Two Math", "Times New Roman", serif; font-size: 16px; font-weight: 700; paint-order: stroke; stroke: #fff; stroke-width: 3px; stroke-linejoin: round; }
+.ang-label-missing { fill: #e63946; }
+.ang-point { fill: #8a1c91; font-family: "Cambria Math", "STIX Two Math", "Times New Roman", serif; font-size: 15px; font-weight: 800; paint-order: stroke; stroke: #fff; stroke-width: 3px; stroke-linejoin: round; }
+.ang-caption { fill: #334155; font-family: var(--font, system-ui, sans-serif); font-size: 12.5px; font-weight: 700; }
+/* Protractor */
+.prot-body { fill: rgba(233, 242, 247, 0.72); stroke: #1d3557; stroke-width: 2; }
+.prot-guide { fill: none; stroke: #94a3b8; stroke-width: 1; opacity: 0.7; }
+.prot-base { stroke: #1d3557; stroke-width: 1.6; stroke-linecap: round; }
+.prot-tick-minor { stroke: #64748b; stroke-width: 0.7; stroke-linecap: round; }
+.prot-tick-mid { stroke: #334155; stroke-width: 1; stroke-linecap: round; }
+.prot-tick-major { stroke: #1d3557; stroke-width: 1.6; stroke-linecap: round; }
+.prot-num { fill: #1d3557; font-family: "Cambria Math", "Times New Roman", serif; font-size: 11px; font-weight: 700; paint-order: stroke; stroke: rgba(255,255,255,0.95); stroke-width: 3.5px; stroke-linejoin: round; }
+.prot-num-outer { fill: #64748b; }
+.prot-arm { stroke: #e63946; stroke-width: 2.8; stroke-linecap: round; }
+.prot-armdot { fill: #e63946; }
+.prot-measure { stroke: #2a9d8f; stroke-width: 3.2; fill: none; stroke-linecap: round; }
+.prot-origin { fill: #fff; stroke: #1d3557; stroke-width: 2; }
+
+/* ---- Properties of geometrical figures (Phase 3H) ---- */
+.gm-shape { fill: #eff6ff; stroke: #1d3557; stroke-width: 2.6; stroke-linejoin: round; }
+.gm-shape-open { fill: none; }
+.gm-shape-edge { stroke: #1d3557; stroke-width: 2.6; stroke-linejoin: round; fill: none; }
+.gm-tick { stroke: #1d3557; stroke-width: 2.2; stroke-linecap: round; }
+.gm-chevron { stroke: #457b9d; stroke-width: 2.2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.gm-arc { stroke: #2a9d8f; stroke-width: 2.2; fill: none; stroke-linecap: round; }
+.gm-arc-ext { stroke: #e63946; }
+.gm-mark { stroke: #1d3557; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.gm-diagonal { stroke: #6d597a; stroke-width: 2; stroke-dasharray: 1 0; fill: none; }
+.gm-parallel { stroke: #1d3557; stroke-width: 2.4; stroke-linecap: round; }
+.gm-ray { stroke: #1d3557; stroke-width: 2.4; stroke-linecap: round; }
+.gm-arrow { fill: #1d3557; }
+.gm-vertex { fill: #8a1c91; font-family: "Cambria Math", "STIX Two Math", "Times New Roman", serif; font-size: 15px; font-weight: 800; paint-order: stroke; stroke: #fff; stroke-width: 3px; stroke-linejoin: round; }
+.gm-side-label { fill: #0f172a; font-family: "Cambria Math", "STIX Two Math", "Times New Roman", serif; font-size: 14px; font-weight: 700; paint-order: stroke; stroke: #fff; stroke-width: 3px; stroke-linejoin: round; }
+.gm-angle-label { fill: #0f172a; font-family: "Cambria Math", "STIX Two Math", "Times New Roman", serif; font-size: 14px; font-weight: 700; paint-order: stroke; stroke: #fff; stroke-width: 3px; stroke-linejoin: round; }
+.gm-angle-missing { fill: #e63946; }
+.gm-caption { fill: #334155; font-family: var(--font, system-ui, sans-serif); font-size: 12px; font-weight: 700; }
+
+/* ---- Data charts (Phase 3I) ---- */
+.ch-title { fill: #0f172a; font-family: var(--font, system-ui, sans-serif); font-size: 14px; font-weight: 800; }
+.ch-source { fill: #64748b; font-family: var(--font, system-ui, sans-serif); font-size: 9.5px; font-style: italic; }
+.ch-axis { stroke: #1d3557; stroke-width: 1.8; fill: none; }
+.ch-grid { stroke: #e2e8f0; stroke-width: 1; }
+.ch-tick { fill: #475569; font-family: var(--font, system-ui, sans-serif); font-size: 10px; font-weight: 600; }
+.ch-cat { fill: #334155; font-family: var(--font, system-ui, sans-serif); font-size: 10.5px; font-weight: 700; }
+.ch-axis-label { fill: #1d3557; font-family: var(--font, system-ui, sans-serif); font-size: 11px; font-weight: 700; }
+.ch-bar { stroke: #ffffff; stroke-width: 1; }
+.ch-bar-faint { opacity: 0.55; }
+.ch-line { fill: none; stroke: #e63946; stroke-width: 2.4; stroke-linejoin: round; stroke-linecap: round; }
+.ch-dot { fill: #e63946; }
+.ch-broken { fill: none; stroke: #1d3557; stroke-width: 1.4; }
+.ch-sector { stroke: #ffffff; stroke-width: 1.5; }
+.ch-sector-label { fill: #ffffff; font-family: var(--font, system-ui, sans-serif); font-size: 11px; font-weight: 800; paint-order: stroke; stroke: rgba(0,0,0,0.25); stroke-width: 2px; }
+.ch-swatch { stroke: #ffffff; stroke-width: 1; }
+.ch-legend { fill: #334155; font-family: var(--font, system-ui, sans-serif); font-size: 11px; font-weight: 600; }
+.ch-key { fill: #334155; font-family: var(--font, system-ui, sans-serif); font-size: 11px; font-weight: 700; }
+.ch-icon { fill: #2a9d8f; }
+.ch-dot-plot { fill: #2a9d8f; stroke: #ffffff; stroke-width: 0.8; }
+.ch-sl-head { fill: #1d3557; font-family: var(--font, system-ui, sans-serif); font-size: 12px; font-weight: 800; }
+.ch-sl-stem { fill: #1d3557; font-family: "Cambria Math", "Times New Roman", serif; font-size: 15px; font-weight: 800; }
+.ch-sl-leaf { fill: #0f172a; font-family: "Cambria Math", "Times New Roman", serif; font-size: 15px; font-weight: 600; letter-spacing: 1px; }

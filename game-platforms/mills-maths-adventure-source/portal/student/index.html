@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>MMT Student Platform</title>
+<link rel="stylesheet" href="../shared/portalStyles.css"/>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">Mills Maths Tools</div>
+  <div class="sub">Student Platform</div>
+  <div class="spacer"></div>
+  <div class="who hidden" id="whoChip"></div>
+  <button class="btn ghost hidden" id="signoutBtn" type="button">Sign out</button>
+</header>
+
+<!-- LOGIN -->
+<main id="loginView" class="wrap">
+  <section class="card login">
+    <h1>Student sign in</h1>
+    <p class="lead">Enter your student code to see your results and progress.</p>
+    <div class="secure"><span>🔒</span><span><strong>Secure sign-in.</strong> Your code is checked by our server and you are signed in with a secure token. We never read your record before you sign in.</span></div>
+    <div class="field"><label for="codeInput">Student code</label><input id="codeInput" placeholder="e.g. 8F6AYH" autocomplete="off"/></div>
+    <div class="field hidden" id="pinField"><label for="pinInput">PIN (if your teacher set one)</label><input id="pinInput" placeholder="••••" autocomplete="off"/></div>
+    <button class="btn primary" id="loginBtn" type="button" style="width:100%">Sign in</button>
+    <div class="msg" id="loginMsg"></div>
+  </section>
+</main>
+
+<!-- DASHBOARD -->
+<main id="dashView" class="wrap hidden">
+  <section class="card profile" id="profileCard">
+    <div class="avatar" id="avatar">S</div>
+    <div><div class="name" id="profileName">Student</div><div class="meta" id="profileMeta">—</div></div>
+  </section>
+
+  <div class="cards">
+    <div class="card stat"><div class="label">Attempts</div><div class="value" id="statAttempts">0</div></div>
+    <div class="card stat"><div class="label">Average</div><div class="value" id="statAvg">0%</div></div>
+    <div class="card stat"><div class="label">Best</div><div class="value" id="statBest">0%</div></div>
+    <div class="card stat"><div class="label">Total XP</div><div class="value" id="statXp">0</div></div>
+  </div>
+
+  <section class="card section">
+    <h2>Mills Maths Adventure</h2>
+    <p class="hint">Your Adventure missions and story attempts.</p>
+    <div id="adventureBody"></div>
+  </section>
+
+  <section class="card section">
+    <h2>All results</h2>
+    <p class="hint">Every quiz and tool result linked to your code.</p>
+    <div class="filters">
+      <select id="toolFilter"><option value="">All tools</option></select>
+      <select id="topicFilter"><option value="">All topics</option></select>
+      <select id="dateFilter"><option value="">Any time</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last term (90 days)</option></select>
+      <span class="spacer" style="flex:1"></span>
+      <button class="btn" id="copyBtn" type="button">Copy summary</button>
+      <button class="btn" id="printBtn" type="button">Print</button>
+    </div>
+    <div id="resultsBody"></div>
+  </section>
+</main>
+
+<script type="module">
+import { initPortal, loginStudent, logout, getProfile, getRole, normaliseCode } from "../shared/codeExchangeClient.js";
+import { COLLECTIONS } from "../shared/firebaseConfig.js";
+import { getDb } from "../shared/codeExchangeClient.js";
+import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { getEnabledTools } from "../shared/mmtToolRegistry.js";
+import { normaliseAchievement, summarise, formatDate } from "../shared/resultUtils.js";
+
+const $ = (id) => document.getElementById(id);
+let all = [], current = null;
+
+initPortal();
+
+function showMsg(t, type="info"){ const m=$("loginMsg"); m.textContent=t; m.className=`msg show ${type}`; }
+function hashColour(s){ let h=0; for(const c of String(s)) h=(h*31+c.charCodeAt(0))>>>0; return `linear-gradient(135deg,hsl(${h%360} 70% 45%),hsl(${(h+60)%360} 70% 45%))`; }
+function initials(n){ const p=String(n||"S").trim().split(/\s+/); return (p[0]?.[0]||"S")+(p[1]?.[0]||""); }
+function pctClass(p){ return p>=70?"hi":p>=50?"mid":"lo"; }
+
+$("codeInput").addEventListener("input", e=>{ e.target.value = normaliseCode(e.target.value); });
+$("codeInput").addEventListener("keydown", e=>{ if(e.key==="Enter") $("loginBtn").click(); });
+$("loginBtn").addEventListener("click", doLogin);
+$("signoutBtn").addEventListener("click", async ()=>{ await logout(); location.reload(); });
+$("copyBtn").addEventListener("click", copySummary);
+$("printBtn").addEventListener("click", ()=> window.print());
+["toolFilter","topicFilter","dateFilter"].forEach(id=> $(id).addEventListener("change", render));
+
+async function doLogin(){
+  const code = normaliseCode($("codeInput").value);
+  if(!code){ showMsg("Enter your student code first.","bad"); return; }
+  $("loginBtn").disabled=true; $("loginBtn").textContent="Signing in...";
+  const res = await loginStudent(code, $("pinInput").value);
+  $("loginBtn").disabled=false; $("loginBtn").textContent="Sign in";
+  if(!res.ok){
+    if(/pin/i.test(res.error||"")){ $("pinField").classList.remove("hidden"); }
+    showMsg(res.error || "Could not sign in.","bad"); return;
+  }
+  current = res.profile;
+  await loadResults();
+  showDashboard();
+}
+
+async function loadResults(){
+  const db = getDb();
+  const q = query(collection(db, COLLECTIONS.achievements), where("studentCode","==", current.studentCode));
+  const snap = await getDocs(q);
+  all = snap.docs.map(d => normaliseAchievement({ id:d.id, ...d.data() })).sort((a,b)=> b.time - a.time);
+}
+
+function showDashboard(){
+  $("loginView").classList.add("hidden");
+  $("dashView").classList.remove("hidden");
+  $("whoChip").classList.remove("hidden"); $("signoutBtn").classList.remove("hidden");
+  const name = current.name || [current.firstName,current.surname].filter(Boolean).join(" ") || "Student";
+  $("whoChip").textContent = `${name} · ${current.className||""}`;
+  $("avatar").textContent = initials(name); $("avatar").style.background = hashColour(current.studentCode||name);
+  $("profileName").textContent = name;
+  $("profileMeta").textContent = `Class: ${current.className||"—"} · Teacher: ${current.teacherName||"—"} · ${current.school||""}`;
+  // populate filters from enabled registry + the student's own data
+  const tools = getEnabledTools();
+  const tf = $("toolFilter"); tools.forEach(t=>{ const o=document.createElement("option"); o.value=t.toolId; o.textContent=t.title; tf.appendChild(o); });
+  const topics = [...new Set(all.map(r=>r.topic).filter(Boolean))];
+  const pf = $("topicFilter"); topics.forEach(t=>{ const o=document.createElement("option"); o.value=t; o.textContent=t; pf.appendChild(o); });
+  render();
+}
+
+function filtered(){
+  const tool=$("toolFilter").value, topic=$("topicFilter").value, days=Number($("dateFilter").value||0);
+  const cutoff = days ? Date.now() - days*86400000 : 0;
+  return all.filter(r => (!tool || r.toolId===tool) && (!topic || r.topic===topic) && (!cutoff || r.time>=cutoff));
+}
+
+function render(){
+  const rows = filtered();
+  const s = summarise(rows);
+  $("statAttempts").textContent = s.attempts;
+  $("statAvg").textContent = s.averagePercent + "%";
+  $("statBest").textContent = s.bestPercent + "%";
+  $("statXp").textContent = s.totalXp;
+
+  // Adventure section
+  const adv = all.filter(r => r.toolId==="mills-maths-adventure");
+  $("adventureBody").innerHTML = adv.length ? table(adv, true) :
+    `<div class="empty"><div class="big">No Adventure attempts yet</div>Play a mission in Mills Maths Adventure and your results will appear here.</div>`;
+
+  // All results
+  $("resultsBody").innerHTML = rows.length ? table(rows, false) :
+    `<div class="empty"><div class="big">No results to show</div>Try clearing the filters, or complete a quiz to get started.</div>`;
+}
+
+function table(rows, advMode){
+  const head = `<table><thead><tr><th>Tool</th><th>Topic</th>${advMode?"<th>Type</th>":""}<th>Score</th><th>%</th><th>XP</th><th>Date</th></tr></thead><tbody>`;
+  const body = rows.map(r=>`<tr>
+    <td>${esc(r.tool||"—")}</td><td>${esc(r.topic||"—")}</td>
+    ${advMode?`<td>${r.missionKind?`<span class="badge kind">${esc(r.missionKind)}</span>`:"—"}</td>`:""}
+    <td>${r.score}/${r.total}</td>
+    <td class="pct ${pctClass(r.percent)}">${r.percent}%</td>
+    <td>${r.xpEarned||0}</td><td>${esc(r.dateLabel)}</td></tr>`).join("");
+  return head+body+"</tbody></table>";
+}
+
+function copySummary(){
+  const rows = filtered();
+  const s = summarise(rows);
+  const name = current.name || "Student";
+  const text = `${name} — MMT results\nAttempts: ${s.attempts}\nAverage: ${s.averagePercent}%\nBest: ${s.bestPercent}%\nTotal XP: ${s.totalXp}`;
+  navigator.clipboard?.writeText(text);
+  const b=$("copyBtn"); const o=b.textContent; b.textContent="Copied!"; setTimeout(()=>b.textContent=o,1200);
+}
+
+function esc(s){ return String(s??"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+</script>
+</body>
+</html>

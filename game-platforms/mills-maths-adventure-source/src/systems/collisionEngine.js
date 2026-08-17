@@ -1,0 +1,61 @@
+/**
+ * COLLISION ENGINE (Phase 2H-B) — a lightweight, pure collision + ground-height
+ * system. No physics library: just circle push-out (which slides naturally) and
+ * a tiny height-field for the plaza plateau + stairs.
+ *
+ * Pure: no React/three/stores.
+ */
+import { PLATEAU, STAIRS } from "../data/worldColliders.js";
+import { bridgeHeightAt } from "../data/worldBridges.js";
+
+export const PLAYER_RADIUS = 0.5;
+// Largest height the player can walk UP in one step (stairs/kerbs); anything
+// taller is a wall and needs a jump.
+export const STEP_UP = 0.45;
+// Largest height the player can step DOWN smoothly; bigger drops cause a fall.
+export const STEP_DOWN = 0.55;
+
+/**
+ * Surface height at (x, z): plateau height inside the plateau circle, the step
+ * height inside a stair band, otherwise 0 (island ground).
+ */
+export function groundHeightAt(x, z) {
+  // Raised bridge decks override the flat ground (walk up-and-over the moat).
+  const bh = bridgeHeightAt(x, z);
+  if (bh > 0) return bh;
+  // Square plateau (W6-C): inside the straight-edged rectangle → plateau height.
+  if (Math.abs(x - PLATEAU.x) <= PLATEAU.halfW && Math.abs(z - PLATEAU.z) <= PLATEAU.halfD) return PLATEAU.height;
+  for (const s of STAIRS) {
+    if (x >= s.xMin && x <= s.xMax && z >= s.zMin && z <= s.zMax) return s.height;
+  }
+  return 0;
+}
+
+/**
+ * Resolve a desired position against circular colliders by pushing the point
+ * out of any it overlaps (a few passes handle overlapping colliders). Sliding
+ * emerges because only the penetrating (normal) component is corrected.
+ * Returns { x, z, gate } where `gate` is a locked-gate collider that was hit
+ * (used to show a contextual prompt), or null.
+ */
+export function resolveCircle(x, z, colliders, r = PLAYER_RADIUS) {
+  let px = x;
+  let pz = z;
+  let gate = null;
+  for (let pass = 0; pass < 3; pass++) {
+    for (const c of colliders) {
+      const dx = px - c.x;
+      const dz = pz - c.z;
+      const min = r + c.radius;
+      const d2 = dx * dx + dz * dz;
+      if (d2 < min * min) {
+        const d = Math.sqrt(d2) || 1e-4;
+        const push = min - d;
+        px += (dx / d) * push;
+        pz += (dz / d) * push;
+        if (c.kind === "gate") gate = c;
+      }
+    }
+  }
+  return { x: px, z: pz, gate };
+}

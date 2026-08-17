@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MMT Student Dashboard</title>
+  <style>
+    :root{
+      --bg:#f6f7fb; --card:#fff; --ink:#111827; --muted:#64748b; --border:#e5e7eb;
+      --shadow:0 14px 40px rgba(15,23,42,.10); --radius:18px;
+      --blue:#2563eb; --blueDark:#1d4ed8; --green:#16a34a; --yellow:#eab308; --red:#dc2626; --purple:#7c3aed;
+      --orange:#ea580c; --footer-h:44px;
+      --mathFont:"Cambria Math","STIX Two Math","STIXGeneral","Times New Roman",serif;
+      --uiFont:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:var(--uiFont);background:radial-gradient(circle at top left,rgba(37,99,235,.11),transparent 30rem),radial-gradient(circle at top right,rgba(124,58,237,.10),transparent 30rem),var(--bg);color:var(--ink);padding-bottom:var(--footer-h)}
+    .topbar{position:sticky;top:0;z-index:20;background:linear-gradient(135deg,#0f172a,#123b7a 55%,#2563eb);color:white;padding:12px 24px;display:grid;grid-template-columns:minmax(170px,1fr) auto minmax(170px,1fr);align-items:center;gap:18px;box-shadow:0 10px 28px rgba(15,23,42,.22)}
+    .brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:white;justify-self:start;border-radius:14px;padding:8px 12px;margin-left:-12px;transition:.18s ease}.brand:hover{background:rgba(255,255,255,.12);transform:translateY(-1px);box-shadow:0 0 10px rgba(124,58,237,.6),0 0 18px rgba(37,99,235,.4)}
+    .brand-logo{width:42px;height:42px;object-fit:contain;background:white;border-radius:6px;padding:3px}.brand-text strong{display:block;font-size:1.12rem;line-height:1;letter-spacing:-.03em}.brand-text span{display:block;font-size:.75rem;opacity:.84;font-weight:650}.top-title{font-weight:950;font-size:clamp(1.2rem,2vw,1.65rem);letter-spacing:-.04em;text-align:center}
+    .wrap{max-width:1180px;margin:18px auto 40px;padding:0 16px}.panel{background:rgba(255,255,255,.96);border-radius:22px;box-shadow:var(--shadow);padding:18px;border:1px solid rgba(226,232,240,.9)}
+    .hero{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px}h1{font-size:32px;font-weight:1000;margin:0 0 6px;letter-spacing:-.04em}.subtitle{margin:0;color:var(--muted);font-weight:850;font-size:15px;line-height:1.35;max-width:760px}
+    .statusPill{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);background:#fff;border-radius:999px;padding:9px 13px;font-weight:1000;box-shadow:0 8px 18px rgba(0,0,0,.04);color:#111827}.statusDot{width:12px;height:12px;border-radius:999px;background:#cbd5e1}.statusDot.ok{background:var(--green)}.statusDot.warn{background:var(--yellow)}.statusDot.bad{background:var(--red)}
+    .heroTools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+    .languageBox{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);background:#fff;border-radius:999px;padding:7px 10px;box-shadow:0 8px 18px rgba(0,0,0,.04)}
+    .languageBox label{margin:0;font-size:12px;color:#334155}
+    .languageBox select{min-width:150px;border:0;padding:5px 6px;border-radius:999px;font-size:13px;background:#f8fafc}
+    .i18nBlock{display:block}
+    .enSub{display:block;margin-top:3px;color:var(--muted);font-size:.86em;font-weight:800;line-height:1.25}
+    .rtl{direction:rtl;text-align:right}
+    .rtl .enSub{direction:ltr;text-align:right}
+
+    .loginCard{border:1px solid var(--border);border-radius:20px;background:linear-gradient(180deg,#fff,#f9fafb);padding:16px;margin:14px 0;display:flex;gap:14px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap}label{display:block;font-weight:1000;color:var(--ink);margin:0 0 8px;font-size:14px}.fieldRow{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+    input,select{border:2px solid #e5e7eb;border-radius:14px;padding:12px 13px;font-weight:1000;font-size:16px;min-width:min(320px,86vw);outline:none;background:#fff}input{text-transform:uppercase;letter-spacing:.05em}input:focus,select:focus{border-color:#93c5fd;box-shadow:0 0 0 4px rgba(37,99,235,.12)}
+    button{border:none;border-radius:14px;padding:12px 15px;font-weight:1000;cursor:pointer;background:#f3f4f6;color:#111827;transition:transform .04s ease,filter .15s ease,opacity .2s ease;user-select:none;font-size:15px;font-family:var(--uiFont)}button:active{transform:scale(.98)}button.primary{background:var(--blue);color:#fff}button.ghost{background:#eef2ff;color:#1d4ed8}button.danger{background:#fee2e2;color:#991b1b}button.good{background:#dcfce7;color:#166534}button:disabled{opacity:.55;cursor:not-allowed;transform:none}.btnRow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.tinyBtn{padding:8px 10px;font-size:12px;border-radius:999px}
+    .message{display:none;margin:12px 0;padding:12px 14px;border-radius:16px;font-weight:950;line-height:1.3}.message.show{display:block}.message.info{background:#eef2ff;color:#1d4ed8;border:1px solid rgba(37,99,235,.18)}.message.bad{background:#fee2e2;color:#991b1b;border:1px solid rgba(220,38,38,.20)}.message.good{background:#dcfce7;color:#166534;border:1px solid rgba(22,163,74,.25)}
+    .profileCard{display:none;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;border:1px solid rgba(37,99,235,.18);background:linear-gradient(180deg,#fff,#f8fbff);border-radius:22px;padding:14px;margin:14px 0}.profileCard.show{display:grid}.avatar{width:64px;height:64px;border-radius:18px;display:flex;align-items:center;justify-content:center;color:white;font-size:24px;font-weight:1000;background:linear-gradient(135deg,var(--blue),var(--purple));box-shadow:0 12px 22px rgba(37,99,235,.20)}.profileName{font-size:24px;font-weight:1000;letter-spacing:-.03em}.profileMeta{color:var(--muted);font-weight:900;margin-top:4px;font-size:14px}.goalBox{grid-column:1/-1;background:#fff7ed;border:1px solid rgba(234,88,12,.18);border-radius:16px;padding:11px 13px;color:#9a3412;font-weight:900;display:none}.goalBox.show{display:block}
+    .summaryGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:16px 0}.summaryCard{border:1px solid var(--border);background:#fff;border-radius:18px;padding:16px;box-shadow:0 10px 24px rgba(15,23,42,.06)}.summaryLabel{font-weight:950;color:var(--muted);font-size:13px}.summaryValue{font-size:32px;font-weight:1000;margin-top:4px;letter-spacing:-.04em}.summarySub{font-size:12px;color:var(--muted);font-weight:850;margin-top:4px}
+    .toolbar{display:none;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:14px 0;padding:12px;border:1px solid var(--border);border-radius:18px;background:rgba(255,255,255,.92);position:sticky;top:78px;z-index:10}.toolbar.show{display:flex}.toolbar select{min-width:190px}.searchBox{min-width:min(280px,86vw);text-transform:none;letter-spacing:0}
+    .dashGrid{display:none;grid-template-columns:1.1fr .9fr;gap:14px;margin:16px 0}.dashGrid.show{display:grid}.insightPanel{border:1px solid var(--border);background:#fff;border-radius:22px;padding:14px;box-shadow:0 10px 24px rgba(15,23,42,.06)}.insightTitle{font-size:18px;font-weight:1000;letter-spacing:-.03em;margin-bottom:8px}.chartWrap{height:240px;position:relative}.chartWrap canvas{width:100%;height:100%;display:block}.recommendList,.bestList,.diagList,.leaderList{display:grid;gap:8px}.recItem,.bestItem,.diagItem,.leaderItem{border:1px solid rgba(229,231,235,.95);border-radius:14px;background:#f8fafc;padding:10px;font-weight:900;color:#334155;font-size:13px;line-height:1.35}.recItem strong,.bestItem strong,.diagItem strong{color:#111827}.leaderItem{display:flex;justify-content:space-between;gap:12px}.leaderMe{background:#ecfdf5;border-color:rgba(22,163,74,.25);color:#166534}
+
+    .summaryGrid{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .summaryCard.reward{background:linear-gradient(180deg,#fff,#f8fbff);border-color:rgba(37,99,235,.18)}
+    .xpValue{color:var(--purple)}
+    .rewardList,.badgeGallery{display:grid;gap:8px}
+    .rewardItem,.badgeItem{border:1px solid rgba(229,231,235,.95);border-radius:14px;background:#f8fafc;padding:10px;font-weight:900;color:#334155;font-size:13px;line-height:1.35}
+    .rewardItem strong,.badgeItem strong{color:#111827}
+    .badgeItem{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center}
+    .badgeIcon{width:38px;height:38px;border-radius:14px;background:#fff7ed;border:1px solid rgba(234,179,8,.24);display:flex;align-items:center;justify-content:center;font-size:22px}
+    .badgeCount{border-radius:999px;background:#eef2ff;color:#1d4ed8;padding:5px 8px;font-weight:1000;font-size:12px}
+    .rewardMeta{color:var(--muted);font-size:12px;font-weight:850;margin-top:2px}
+    .achRewardRow{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+    .rewardChip{display:inline-flex;align-items:center;gap:4px;border-radius:999px;background:#f5f3ff;color:#5b21b6;border:1px solid rgba(124,58,237,.18);padding:4px 7px;font-size:11px;font-weight:1000}
+    @media(max-width:900px){.summaryGrid{grid-template-columns:1fr 1fr}}
+    @media(max-width:560px){.summaryGrid{grid-template-columns:1fr}}
+    .topicSection{margin-top:16px;border:1px solid rgba(229,231,235,.95);border-radius:22px;background:#fff;box-shadow:0 10px 26px rgba(15,23,42,.06);overflow:hidden}.topicHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:16px 18px;background:linear-gradient(180deg,#fff,#f8fafc);border-bottom:1px solid rgba(229,231,235,.95);cursor:pointer}.topicTitle{font-size:22px;font-weight:1000;letter-spacing:-.03em}.topicMeta{font-weight:950;color:var(--muted);font-size:13px}.levelSummary{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.levelMini{border:1px solid rgba(229,231,235,.95);background:#fff;border-radius:999px;padding:6px 9px;font-size:12px;font-weight:1000;color:#111827}.levelMini.basic,.levelMini.sweet{background:rgba(22,163,74,.10);color:#166534;border-color:rgba(22,163,74,.25)}.levelMini.expected,.levelMini.medium{background:rgba(234,179,8,.14);color:#854d0e;border-color:rgba(234,179,8,.28)}.levelMini.mild{background:#eef2ff;color:#1d4ed8;border-color:rgba(37,99,235,.18)}.levelMini.spicy{background:#ffedd5;color:#9a3412;border-color:rgba(249,115,22,.25)}.badgeRow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.miniBadge{border-radius:999px;padding:7px 10px;font-weight:1000;font-size:12px;border:1px solid rgba(229,231,235,.95);background:#fff}.miniBadge.green{color:#166534;background:rgba(22,163,74,.10);border-color:rgba(22,163,74,.25)}.miniBadge.blue{color:#1d4ed8;background:#eef2ff;border-color:rgba(37,99,235,.18)}.miniBadge.gold{color:#854d0e;background:rgba(234,179,8,.14);border-color:rgba(234,179,8,.28)}
+    .achievementList{display:grid;gap:10px;padding:14px}.topicSection.collapsed .achievementList{display:none}.achievement{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;border:1px solid rgba(229,231,235,.95);border-radius:18px;padding:12px;background:#fff}.trophy{width:50px;height:50px;border-radius:15px;background:rgba(234,179,8,.12);border:1px solid rgba(234,179,8,.32);display:flex;align-items:center;justify-content:center;font-size:28px}.achTitle{font-weight:1000;font-size:17px}.achMeta{color:var(--muted);font-weight:850;font-size:13px;margin-top:3px;line-height:1.35}.scorePill{min-width:76px;text-align:center;border-radius:999px;padding:9px 12px;font-weight:1000;border:2px solid rgba(17,24,39,.14);background:#f8fafc}.scorePill.high{color:var(--green);background:rgba(22,163,74,.08);border-color:rgba(22,163,74,.30)}.scorePill.mid{color:#854d0e;background:rgba(234,179,8,.13);border-color:rgba(234,179,8,.28)}.scorePill.low{color:#991b1b;background:rgba(220,38,38,.08);border-color:rgba(220,38,38,.22)}
+    .emptyState{display:none;text-align:center;border:2px dashed #d1d5db;border-radius:22px;background:#fff;padding:28px;margin-top:16px}.emptyState.show{display:block}.emptyIcon{font-size:44px}.emptyTitle{font-size:24px;font-weight:1000;margin-top:8px}.emptyText{color:var(--muted);font-weight:850;margin-top:6px}.mmtFooter{position:fixed;left:0;right:0;bottom:0;height:var(--footer-h);display:flex;align-items:center;justify-content:center;padding:0 12px;background:rgba(255,255,255,.92);border-top:1px solid rgba(229,231,235,.95);backdrop-filter:blur(8px);z-index:500;font-weight:900;color:#111827;text-align:center;font-size:13px}.mmtFooter a{color:#2563eb;text-decoration:none;font-weight:950}.mmtFooter a:hover{text-decoration:underline}
+    @media(max-width:900px){.dashGrid{grid-template-columns:1fr}.toolbar{top:120px}.topbar{grid-template-columns:1fr auto;gap:10px}.top-title{grid-column:1/-1;grid-row:2}.brand-text span{display:none}.summaryGrid{grid-template-columns:1fr 1fr}.profileCard{grid-template-columns:auto 1fr}.profileCard .btnRow{grid-column:1/-1}.achievement{grid-template-columns:auto 1fr}.scorePill{grid-column:1/-1;justify-self:start}.loginCard{align-items:stretch}.btnRow{width:100%}button.primary{flex:1}}
+    @media(max-width:560px){.summaryGrid{grid-template-columns:1fr}.topicHeader{align-items:flex-start}.summaryValue{font-size:30px}.toolbar{position:static}.fieldRow{width:100%}input,select{min-width:100%}.chartWrap{height:200px}}
+    @media print{.topbar,.loginCard,.toolbar,.mmtFooter,.message,.profileCard .btnRow{display:none!important}.wrap{max-width:none;margin:0;padding:0}.panel{box-shadow:none;border:none}.topicSection{box-shadow:none;break-inside:avoid}.achievement{break-inside:avoid}.dashGrid{display:grid!important}.topicSection.collapsed .achievementList{display:grid}}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="https://www.millsmathstools.au" aria-label="Back to Mills Maths Tools">
+      <img src="../../assets/mmt.png" alt="Mills Maths Tools logo" class="brand-logo" onerror="this.style.visibility='hidden'">
+      <div class="brand-text"><strong>MMT</strong><span>Mills Maths Tools</span></div>
+    </a>
+    <div class="top-title" data-i18n="Student Progress Dashboard">Student Progress Dashboard</div>
+    <div></div>
+  </header>
+
+  <main class="wrap">
+    <section class="panel">
+      <div class="hero">
+        <div><h1 data-i18n="My Achievements">My Achievements</h1><p class="subtitle" data-i18n="Enter your student code to view certificates, personal bests, progress trends and recommended next steps across MMT enabled Mills Maths Tools quizzes.">Enter your student code to view certificates, personal bests, progress trends and recommended next steps across MMT enabled Mills Maths Tools quizzes.</p></div>
+        <div class="heroTools">
+          <div class="languageBox"><label for="languageSelect" data-i18n="Language">Language</label><select id="languageSelect" aria-label="Language"><option value="en">English</option><option value="fa">فارسی (Farsi / Persian)</option><option value="ar">العربية (Arabic)</option></select></div>
+          <div class="statusPill"><span id="statusDot" class="statusDot"></span><span id="statusText">Database not connected</span></div>
+        </div>
+      </div>
+
+      <div class="loginCard">
+        <div class="fieldRow">
+          <div><label for="codeInput" data-i18n="Student code">Student code</label><input id="codeInput" type="text" autocomplete="off" placeholder="Enter your student code" data-i18n-placeholder="Enter your student code" /></div>
+          <div id="pinField" style="display:none"><label for="pinInput" data-i18n="Student PIN">Student PIN</label><input id="pinInput" type="password" autocomplete="off" placeholder="Enter PIN" data-i18n-placeholder="Enter PIN" /></div>
+        </div>
+        <div class="btnRow"><button id="loadBtn" class="primary" type="button" data-i18n="Load achievements">Load achievements</button><button id="clearBtn" class="ghost" type="button" data-i18n="Clear">Clear</button><button id="printBtn" class="ghost" type="button" data-i18n="Print">Print</button><button id="copySummaryBtn" class="ghost" type="button" data-i18n="Copy summary">Copy summary</button></div>
+      </div>
+
+      <div id="message" class="message"></div>
+
+      <div id="profileCard" class="profileCard">
+        <div id="avatar" class="avatar">?</div>
+        <div><div id="profileName" class="profileName">Student</div><div id="profileMeta" class="profileMeta">Class: — · Teacher: —</div></div>
+        <div class="btnRow"><button id="collapseAllBtn" class="ghost tinyBtn" type="button" data-i18n="Collapse topics">Collapse topics</button><button id="expandAllBtn" class="ghost tinyBtn" type="button" data-i18n="Expand topics">Expand topics</button></div>
+        <div id="goalBox" class="goalBox"></div>
+      </div>
+
+      <div id="summaryGrid" class="summaryGrid" style="display:none">
+        <div class="summaryCard"><div class="summaryLabel" data-i18n="Certificates">Certificates</div><div id="totalCerts" class="summaryValue">0</div><div class="summarySub" data-i18n="Saved quiz completions">Saved quiz completions</div></div>
+        <div class="summaryCard"><div class="summaryLabel" data-i18n="Topics">Topics</div><div id="totalTopics" class="summaryValue">0</div><div class="summarySub" data-i18n="Different areas attempted">Different areas attempted</div></div>
+        <div class="summaryCard"><div class="summaryLabel" data-i18n="Best score">Best score</div><div id="bestScore" class="summaryValue">—</div><div class="summarySub" data-i18n="Highest percentage">Highest percentage</div></div>
+        <div class="summaryCard"><div class="summaryLabel" data-i18n="Average">Average</div><div id="avgScore" class="summaryValue">—</div><div class="summarySub" data-i18n="Across saved attempts">Across saved attempts</div></div>
+        <div class="summaryCard reward"><div class="summaryLabel" data-i18n="Total XP">Total XP</div><div id="totalXp" class="summaryValue xpValue">0</div><div class="summarySub" data-i18n="Experience points earned">Experience points earned</div></div>
+        <div class="summaryCard reward"><div class="summaryLabel" data-i18n="Badges">Badges</div><div id="totalBadges" class="summaryValue">0</div><div class="summarySub" data-i18n="Different badges earned">Different badges earned</div></div>
+        <div class="summaryCard reward"><div class="summaryLabel" data-i18n="Current streak">Current streak</div><div id="currentStreak" class="summaryValue">0</div><div class="summarySub" data-i18n="Recent active days">Recent active days</div></div>
+        <div class="summaryCard reward"><div class="summaryLabel" data-i18n="Mastery level">Mastery level</div><div id="masteryLevel" class="summaryValue">—</div><div class="summarySub" data-i18n="Overall progress level">Overall progress level</div></div>
+      </div>
+
+      <div id="dashGrid" class="dashGrid">
+        <section class="insightPanel"><div class="insightTitle" data-i18n="Progress over time">Progress over time</div><div class="chartWrap"><canvas id="progressCanvas"></canvas></div></section>
+        <section class="insightPanel"><div class="insightTitle" data-i18n="Recommended next steps">Recommended next steps</div><div id="recommendList" class="recommendList"></div></section>
+        <section class="insightPanel"><div class="insightTitle" data-i18n="XP progress">XP progress</div><div id="xpList" class="rewardList"></div></section>
+        <section class="insightPanel"><div class="insightTitle" data-i18n="Badge gallery">Badge gallery</div><div id="badgeList" class="badgeGallery"></div></section>
+        <section class="insightPanel"><div class="insightTitle" data-i18n="Personal bests">Personal bests</div><div id="bestList" class="bestList"></div></section>
+        <section class="insightPanel"><div class="insightTitle" data-i18n="Strengths and focus areas">Strengths and focus areas</div><div id="diagList" class="diagList"></div></section>
+        <section class="insightPanel"><div class="insightTitle" data-i18n="Class leaderboard">Class leaderboard</div><div id="leaderList" class="leaderList"></div></section>
+      </div>
+
+      <div id="toolbar" class="toolbar">
+        <div class="statusPill"><span class="statusDot ok"></span><span id="studentLabel">Student: —</span></div>
+        <div class="btnRow"><input id="searchInput" class="searchBox" placeholder="Search achievements" data-i18n-placeholder="Search achievements" /><select id="topicFilter" aria-label="Filter by topic"><option value="all" data-i18n="All topics">All topics</option></select><select id="levelFilter" aria-label="Filter by level"><option value="all" data-i18n="All levels">All levels</option></select><select id="sortSelect" aria-label="Sort achievements"><option value="newest" data-i18n="Newest first">Newest first</option><option value="oldest" data-i18n="Oldest first">Oldest first</option><option value="best" data-i18n="Best score first">Best score first</option><option value="topic" data-i18n="Topic A–Z">Topic A–Z</option></select></div>
+      </div>
+
+      <div id="emptyState" class="emptyState"><div class="emptyIcon">🏆</div><div class="emptyTitle" data-i18n="No achievements yet">No achievements yet</div><div class="emptyText" data-i18n="Complete an MMT enabled quiz with this student code and certificates will appear here.">Complete an MMT enabled quiz with this student code and certificates will appear here.</div></div>
+      <div id="dashboard"></div>
+    </section>
+  </main>
+
+  <div class="mmtFooter"><span data-i18n="This tool and more can be found at">This tool and more can be found at</span>&nbsp;<a href="https://www.millsmathstools.au">www.millsmathstools.au</a></div>
+
+  <script type="module">
+    const firebaseConfig = {
+      apiKey: "AIzaSyDYoJuHGslYY-cvV2rtuLkL6bE_hRDOESw",
+      authDomain: "mills-maths-tools.firebaseapp.com",
+      projectId: "mills-maths-tools",
+      storageBucket: "mills-maths-tools.firebasestorage.app",
+      messagingSenderId: "835000359454",
+      appId: "1:835000359454:web:d7876be83ee367b5006c0f",
+      measurementId: "G-35YCH5NJEG"
+    };
+    const ACHIEVEMENTS_COLLECTION = "achievements";
+
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getAuth, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+    import { getFirestore, collection, doc, getDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+    import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-functions.js";
+    // Phase 3D.1: secure code exchange. The dashboard no longer signs in
+    // anonymously or reads students/{code} directly. It calls the
+    // exchangeStudentCode Cloud Function (server validates code + PIN + active),
+    // signs in with the returned custom token, and uses the safe profile.
+
+    const el = id => document.getElementById(id);
+    const codeInput = el('codeInput'), pinInput = el('pinInput'), pinField = el('pinField');
+    const loadBtn = el('loadBtn'), clearBtn = el('clearBtn'), printBtn = el('printBtn'), copySummaryBtn = el('copySummaryBtn');
+    const message = el('message'), statusDot = el('statusDot'), statusText = el('statusText');
+    const dashboard = el('dashboard'), emptyState = el('emptyState'), summaryGrid = el('summaryGrid'), toolbar = el('toolbar'), dashGrid = el('dashGrid');
+    const topicFilter = el('topicFilter'), levelFilter = el('levelFilter'), sortSelect = el('sortSelect'), searchInput = el('searchInput'), studentLabel = el('studentLabel');
+    const profileCard = el('profileCard'), avatar = el('avatar'), profileName = el('profileName'), profileMeta = el('profileMeta'), goalBox = el('goalBox');
+    const bestList = el('bestList'), recommendList = el('recommendList'), diagList = el('diagList'), leaderList = el('leaderList'), xpList = el('xpList'), badgeList = el('badgeList'), progressCanvas = el('progressCanvas');
+    const collapseAllBtn = el('collapseAllBtn'), expandAllBtn = el('expandAllBtn');
+
+    let db = null, auth = null, functions = null, allAchievements = [], classAchievements = [], currentCode = '', currentStudent = null, pinRequired = false;
+
+    function showMessage(text, type='info'){ message.innerHTML = bilingualHTML(text); message.className = `message show ${type}`; }
+    function hideMessage(){ message.className = 'message'; message.textContent = ''; }
+    function setStatus(kind, text){ statusDot.className = 'statusDot ' + (kind || ''); statusText.dataset.key = text; statusText.innerHTML = bilingualHTML(text); }
+    function looksConfigured(){ return firebaseConfig.apiKey && !String(firebaseConfig.apiKey).includes('PASTE_') && firebaseConfig.projectId && !String(firebaseConfig.projectId).includes('PASTE_'); }
+    function normaliseCode(code){ return String(code || '').trim().toUpperCase().replace(/[^A-Z0-9-]/g,''); }
+    function pct(a){ const score = Number(a.score ?? 0), total = Number(a.total ?? 0); return total ? Math.round((score / total) * 100) : (Number(a.percent ?? a.percentage ?? 0) || 0); }
+    function dateValue(a){ const raw = a.createdAt || a.dateCompleted || a.timestamp || a.date || a.completedAt || a.dateClient; if(raw && typeof raw.toDate === 'function') return raw.toDate(); if(raw && raw.seconds) return new Date(raw.seconds * 1000); if(raw) return new Date(raw); return new Date(0); }
+    function dateText(a){ const d = dateValue(a); if(Number.isNaN(d.getTime()) || d.getTime() === 0) return 'Date not recorded'; return d.toLocaleDateString('en-AU', { day:'numeric', month:'short', year:'numeric' }); }
+    function scoreClass(a){ const p = pct(a); if(p >= 80) return 'high'; if(p >= 50) return 'mid'; return 'low'; }
+    function topicOf(a){ return a.topic || a.quizTopic || a.toolTopic || 'Untitled topic'; }
+    function levelOf(a){ return a.englishLevel || a.level || 'Level not recorded'; }
+    function levelKeyOf(a){ return String(levelOf(a)).toLowerCase(); }
+    function toolOf(a){ return a.tool || a.sourceTool || a.quizId || 'Mills Maths Tools quiz'; }
+    function scoreText(a){ return `${Number(a.score ?? 0)}/${Number(a.total ?? 0)}`; }
+    function typeSummary(a){ if(Array.isArray(a.types) && a.types.length) return a.types.map(t => `${t.label || t.typeId || 'Question type'} (${Number(t.ok ?? 0)}/${Number(t.total ?? 0)})`).join(', '); if(Array.isArray(a.questionTypes)) return a.questionTypes.join(', '); if(a.questionTypes) return String(a.questionTypes); return 'Question types not recorded'; }
+    function xpOf(a){ return Math.max(0, Math.round(Number(a.xpAwarded ?? a.xp ?? a.experiencePoints ?? 0) || 0)); }
+    function masteryOf(a){ return a.masteryLevel || a.mastery || ''; }
+    function badgeIdsOf(a){
+      const raw = a.badgesEarned || a.badges || a.badgeIds || [];
+      if(Array.isArray(raw)) return raw.map(x => typeof x === 'string' ? x : (x.id || x.name || '')).filter(Boolean);
+      if(typeof raw === 'string') return raw.split(/[;,]/).map(x=>x.trim()).filter(Boolean);
+      return [];
+    }
+    function badgeInfo(id){
+      const key = String(id||'').toLowerCase();
+      const map = {
+        'quiz-complete': ['✅','Quiz Complete'],
+        'perfect-score': ['🎯','Perfect Score'],
+        'accuracy-star': ['⭐','Accuracy Star'],
+        'equation-progress': ['🧠','Equation Progress'],
+        'streak-builder': ['🔥','Streak Builder'],
+        'mastery': ['🏆','Mastery']
+      };
+      const found = map[key] || ['🏅', String(id||'Badge').replace(/[-_]/g,' ').replace(/\b\w/g, c=>c.toUpperCase())];
+      return { icon:found[0], name:found[1], id:key };
+    }
+    function allBadgeCounts(list=allAchievements){
+      const counts = new Map();
+      list.forEach(a => badgeIdsOf(a).forEach(id => counts.set(id, (counts.get(id)||0)+1)));
+      return counts;
+    }
+    function calculateStreak(list=allAchievements){
+      const days = new Set(list.map(a=>dateValue(a)).filter(d=>d.getTime()).map(d=>{ const x = new Date(d); x.setHours(0,0,0,0); return x.getTime(); }));
+      if(!days.size) return 0;
+      let cursor = new Date(); cursor.setHours(0,0,0,0);
+      const latest = Math.max(...days);
+      if(!days.has(cursor.getTime())) cursor = new Date(latest);
+      let streak = 0;
+      while(days.has(cursor.getTime())){ streak++; cursor.setDate(cursor.getDate()-1); }
+      return streak;
+    }
+    function overallMasteryLabel(list=allAchievements){
+      if(!list.length) return '—';
+      const avgPct = Math.round(list.reduce((s,a)=>s+pct(a),0)/list.length);
+      if(avgPct >= 90) return 'Mastery';
+      if(avgPct >= 75) return 'Proficient';
+      if(avgPct >= 50) return 'Developing';
+      return 'Beginning';
+    }
+
+    function escapeHTML(s){ return String(s ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch])); }
+    const I18N = {
+      fa: {
+        "Language":"زبان",
+        "This tool and more can be found at":"این ابزار و ابزارهای بیشتر در این نشانی هستند",
+        "Student Progress Dashboard":"داشبورد پیشرفت دانش‌آموز",
+        "My Achievements":"دستاوردهای من",
+        "Enter your student code to view certificates, personal bests, progress trends and recommended next steps across MMT enabled Mills Maths Tools quizzes.":"کد دانش‌آموزی خود را وارد کنید تا گواهی‌ها، بهترین نتایج شخصی، روند پیشرفت و گام‌های بعدی پیشنهادی را در آزمون‌های فعال MMT از Mills Maths Tools ببینید.",
+        "Student code":"کد دانش‌آموز",
+        "Student PIN":"رمز دانش‌آموز",
+        "Enter your student code":"کد دانش‌آموزی خود را وارد کنید",
+        "Enter PIN":"رمز را وارد کنید",
+        "Load achievements":"نمایش دستاوردها",
+        "Clear":"پاک کردن",
+        "Print":"چاپ",
+        "Copy summary":"کپی خلاصه",
+        "Collapse topics":"بستن موضوع‌ها",
+        "Expand topics":"باز کردن موضوع‌ها",
+        "Certificates":"گواهی‌ها",
+        "Topics":"موضوع‌ها",
+        "Best score":"بهترین نمره",
+        "Average":"میانگین",
+        "Saved quiz completions":"تکمیل‌های ذخیره‌شده آزمون",
+        "Different areas attempted":"حوزه‌های مختلف تمرین‌شده",
+        "Highest percentage":"بالاترین درصد",
+        "Across saved attempts":"در همه تلاش‌های ذخیره‌شده",
+        "Total XP":"مجموع XP",
+        "Experience points earned":"امتیازهای تجربه کسب‌شده",
+        "Badges":"نشان‌ها",
+        "Different badges earned":"نشان‌های مختلف کسب‌شده",
+        "Current streak":"روند فعلی",
+        "Recent active days":"روزهای فعال اخیر",
+        "Mastery level":"سطح تسلط",
+        "Overall progress level":"سطح کلی پیشرفت",
+        "XP progress":"پیشرفت XP",
+        "Badge gallery":"گالری نشان‌ها",
+        "XP earned from completed quizzes":"XP کسب‌شده از آزمون‌های کامل‌شده",
+        "Best XP result":"بهترین نتیجه XP",
+        "No XP has been saved yet. Complete an MMT enabled quiz that records XP.":"هنوز XP ذخیره نشده است. یک آزمون فعال MMT که XP ثبت می‌کند کامل کنید.",
+        "Badges will appear after quizzes start saving badge data.":"وقتی آزمون‌ها داده‌های نشان را ذخیره کنند، نشان‌ها اینجا نمایش داده می‌شوند.",
+        "Last earned":"آخرین بار کسب‌شده",
+        "Progress over time":"پیشرفت در طول زمان",
+        "Recommended next steps":"گام‌های بعدی پیشنهادی",
+        "Personal bests":"بهترین نتایج شخصی",
+        "Strengths and focus areas":"نقاط قوت و حوزه‌های تمرکز",
+        "Class leaderboard":"جدول رتبه‌بندی کلاس",
+        "Class":"کلاس",
+        "Teacher":"معلم",
+        "Message from your teacher":"پیام معلم شما",
+        "Student":"دانش‌آموز",
+        "Search achievements":"جستجوی دستاوردها",
+        "All topics":"همه موضوع‌ها",
+        "All levels":"همه سطح‌ها",
+        "Newest first":"جدیدترین اول",
+        "Oldest first":"قدیمی‌ترین اول",
+        "Best score first":"بهترین نمره اول",
+        "Topic A–Z":"موضوع از A تا Z",
+        "No achievements yet":"هنوز دستاوردی وجود ندارد",
+        "Complete an MMT enabled quiz with this student code and certificates will appear here.":"یک آزمون فعال MMT را با این کد دانش‌آموزی کامل کنید تا گواهی‌ها اینجا نمایش داده شوند.",
+        "Database not connected":"پایگاه داده وصل نیست",
+        "Paste database config to connect":"برای اتصال، تنظیمات پایگاه داده را وارد کنید",
+        "Database connected":"پایگاه داده وصل شد",
+        "Database connection failed":"اتصال به پایگاه داده ناموفق بود",
+        "Database is not connected yet.":"پایگاه داده هنوز وصل نیست.",
+        "Enter your student code first.":"ابتدا کد دانش‌آموزی خود را وارد کنید.",
+        "Loading...":"در حال بارگذاری...",
+        "Student code not found. Check the code with your teacher.":"کد دانش‌آموز پیدا نشد. کد را با معلم خود بررسی کنید.",
+        "This student code is inactive. Check with your teacher.":"این کد دانش‌آموزی غیرفعال است. با معلم خود بررسی کنید.",
+        "This dashboard requires a student PIN. Enter your PIN and press Load achievements again.":"این داشبورد به رمز دانش‌آموزی نیاز دارد. رمز را وارد کنید و دوباره روی نمایش دستاوردها بزنید.",
+        "Incorrect PIN. Check it with your teacher.":"رمز اشتباه است. آن را با معلم خود بررسی کنید.",
+        "Could not load achievements. Check that your database is connected and quizzes are saving correctly.":"امکان بارگذاری دستاوردها وجود نداشت. اتصال پایگاه داده و ذخیره شدن آزمون‌ها را بررسی کنید.",
+        "No achievements found for this code yet.":"هنوز دستاوردی برای این کد پیدا نشده است.",
+        "No matching achievements":"دستاوردی مطابق جستجو پیدا نشد",
+        "Try changing the topic, level, search or sort options.":"موضوع، سطح، جستجو یا مرتب‌سازی را تغییر دهید.",
+        "Complete a quiz to build your personal best list.":"یک آزمون کامل کنید تا فهرست بهترین نتایج شخصی شما ساخته شود.",
+        "Question-type data is not recorded for these attempts yet. Future quizzes can save type data to show strengths and focus areas.":"داده‌های نوع سؤال برای این تلاش‌ها هنوز ثبت نشده است. آزمون‌های آینده می‌توانند این داده‌ها را برای نمایش نقاط قوت و حوزه‌های تمرکز ذخیره کنند.",
+        "Class leaderboard will appear after more classmates complete quizzes.":"جدول رتبه‌بندی کلاس پس از تکمیل آزمون توسط هم‌کلاسی‌های بیشتر نمایش داده می‌شود.",
+        "Summary copied to clipboard.":"خلاصه در کلیپ‌بورد کپی شد."
+      },
+      ar: {
+        "Language":"اللغة",
+        "This tool and more can be found at":"يمكن العثور على هذه الأداة والمزيد على",
+        "Student Progress Dashboard":"لوحة تقدم الطالب",
+        "My Achievements":"إنجازاتي",
+        "Enter your student code to view certificates, personal bests, progress trends and recommended next steps across MMT enabled Mills Maths Tools quizzes.":"أدخل رمز الطالب لعرض الشهادات، أفضل النتائج الشخصية، اتجاهات التقدم والخطوات التالية المقترحة في اختبارات Mills Maths Tools المفعّلة من MMT.",
+        "Student code":"رمز الطالب",
+        "Student PIN":"الرمز السري للطالب",
+        "Enter your student code":"أدخل رمز الطالب",
+        "Enter PIN":"أدخل الرمز السري",
+        "Load achievements":"عرض الإنجازات",
+        "Clear":"مسح",
+        "Print":"طباعة",
+        "Copy summary":"نسخ الملخص",
+        "Collapse topics":"طي الموضوعات",
+        "Expand topics":"توسيع الموضوعات",
+        "Certificates":"الشهادات",
+        "Topics":"الموضوعات",
+        "Best score":"أفضل نتيجة",
+        "Average":"المتوسط",
+        "Saved quiz completions":"الاختبارات المكتملة المحفوظة",
+        "Different areas attempted":"مجالات مختلفة تمت محاولتها",
+        "Highest percentage":"أعلى نسبة",
+        "Across saved attempts":"عبر المحاولات المحفوظة",
+        "Total XP":"إجمالي XP",
+        "Experience points earned":"نقاط الخبرة المكتسبة",
+        "Badges":"الشارات",
+        "Different badges earned":"الشارات المختلفة المكتسبة",
+        "Current streak":"السلسلة الحالية",
+        "Recent active days":"أيام النشاط الأخيرة",
+        "Mastery level":"مستوى الإتقان",
+        "Overall progress level":"مستوى التقدم العام",
+        "XP progress":"تقدم XP",
+        "Badge gallery":"معرض الشارات",
+        "XP earned from completed quizzes":"XP المكتسبة من الاختبارات المكتملة",
+        "Best XP result":"أفضل نتيجة XP",
+        "No XP has been saved yet. Complete an MMT enabled quiz that records XP.":"لم يتم حفظ XP بعد. أكمل اختبارًا مفعّلًا في MMT يسجل XP.",
+        "Badges will appear after quizzes start saving badge data.":"ستظهر الشارات عندما تبدأ الاختبارات في حفظ بيانات الشارات.",
+        "Last earned":"آخر مرة تم الحصول عليها",
+        "Progress over time":"التقدم بمرور الوقت",
+        "Recommended next steps":"الخطوات التالية المقترحة",
+        "Personal bests":"أفضل النتائج الشخصية",
+        "Strengths and focus areas":"نقاط القوة ومجالات التركيز",
+        "Class leaderboard":"لوحة ترتيب الصف",
+        "Class":"الصف",
+        "Teacher":"المعلم",
+        "Message from your teacher":"رسالة من معلمك",
+        "Student":"الطالب",
+        "Search achievements":"البحث في الإنجازات",
+        "All topics":"كل الموضوعات",
+        "All levels":"كل المستويات",
+        "Newest first":"الأحدث أولاً",
+        "Oldest first":"الأقدم أولاً",
+        "Best score first":"أفضل نتيجة أولاً",
+        "Topic A–Z":"الموضوعات A–Z",
+        "No achievements yet":"لا توجد إنجازات بعد",
+        "Complete an MMT enabled quiz with this student code and certificates will appear here.":"أكمل اختباراً مفعلاً من MMT باستخدام رمز الطالب هذا وستظهر الشهادات هنا.",
+        "Database not connected":"قاعدة البيانات غير متصلة",
+        "Paste database config to connect":"أدخل إعدادات قاعدة البيانات للاتصال",
+        "Database connected":"قاعدة البيانات متصلة",
+        "Database connection failed":"فشل الاتصال بقاعدة البيانات",
+        "Database is not connected yet.":"قاعدة البيانات غير متصلة بعد.",
+        "Enter your student code first.":"أدخل رمز الطالب أولاً.",
+        "Loading...":"جارٍ التحميل...",
+        "Student code not found. Check the code with your teacher.":"لم يتم العثور على رمز الطالب. تحقق من الرمز مع معلمك.",
+        "This student code is inactive. Check with your teacher.":"رمز الطالب هذا غير نشط. تحقق مع معلمك.",
+        "This dashboard requires a student PIN. Enter your PIN and press Load achievements again.":"تتطلب هذه اللوحة رمزاً سرياً للطالب. أدخل الرمز ثم اضغط عرض الإنجازات مرة أخرى.",
+        "Incorrect PIN. Check it with your teacher.":"الرمز السري غير صحيح. تحقق منه مع معلمك.",
+        "Could not load achievements. Check that your database is connected and quizzes are saving correctly.":"تعذر تحميل الإنجازات. تحقق من اتصال قاعدة البيانات وأن الاختبارات تُحفظ بشكل صحيح.",
+        "No achievements found for this code yet.":"لا توجد إنجازات لهذا الرمز حتى الآن.",
+        "No matching achievements":"لا توجد إنجازات مطابقة",
+        "Try changing the topic, level, search or sort options.":"جرّب تغيير الموضوع أو المستوى أو البحث أو خيارات الترتيب.",
+        "Complete a quiz to build your personal best list.":"أكمل اختباراً لبناء قائمة أفضل نتائجك الشخصية.",
+        "Question-type data is not recorded for these attempts yet. Future quizzes can save type data to show strengths and focus areas.":"لم يتم تسجيل بيانات نوع السؤال لهذه المحاولات بعد. يمكن للاختبارات القادمة حفظ هذه البيانات لإظهار نقاط القوة ومجالات التركيز.",
+        "Class leaderboard will appear after more classmates complete quizzes.":"ستظهر لوحة ترتيب الصف بعد أن يكمل المزيد من زملاء الصف الاختبارات.",
+        "Summary copied to clipboard.":"تم نسخ الملخص إلى الحافظة."
+      }
+    };
+    let currentLanguage = localStorage.getItem('mmtStudentDashboardLanguage') || 'en';
+    function translateText(text){ return I18N[currentLanguage]?.[text] || text; }
+    function bilingualHTML(text){
+      const translated = translateText(text);
+      if(currentLanguage === 'en' || translated === text) return escapeHTML(text);
+      return `<span class="i18nBlock ${currentLanguage==='ar'||currentLanguage==='fa'?'rtl':''}">${escapeHTML(translated)}<span class="enSub">${escapeHTML(text)}</span></span>`;
+    }
+    function applyLanguage(){
+      document.documentElement.lang = currentLanguage === 'fa' ? 'fa' : currentLanguage === 'ar' ? 'ar' : 'en';
+      document.body.classList.toggle('rtl', currentLanguage === 'fa' || currentLanguage === 'ar');
+      const select = el('languageSelect'); if(select) select.value = currentLanguage;
+      document.querySelectorAll('[data-i18n]').forEach(node=>{ const key=node.getAttribute('data-i18n'); node.innerHTML=bilingualHTML(key); });
+      document.querySelectorAll('[data-i18n-placeholder]').forEach(node=>{ const key=node.getAttribute('data-i18n-placeholder'); node.placeholder = currentLanguage==='en' ? key : `${translateText(key)} / ${key}`; });
+      if(statusText) statusText.innerHTML = bilingualHTML(statusText.dataset.key || statusText.textContent || 'Database not connected');
+      if(currentStudent) updateProfile();
+    }
+    function initials(name){ const parts = String(name||'Student').trim().split(/\s+/).filter(Boolean); return (parts[0]?.[0] || 'S') + (parts[1]?.[0] || ''); }
+    function hashColour(text){ let h=0; for(const c of String(text)) h=(h*31+c.charCodeAt(0))>>>0; return `linear-gradient(135deg,hsl(${h%360} 78% 45%),hsl(${(h+70)%360} 78% 45%))`; }
+
+    async function initFirebase(){
+      if(!looksConfigured()){ setStatus('warn', 'Paste database config to connect'); showMessage('This dashboard is database-ready. Paste your database configuration into the script before uploading it to your site.', 'info'); return; }
+      // Phase 3D.1: initialise the app + handles, but DO NOT sign in here. The
+      // secure custom-token sign-in happens in loadAchievements() via the
+      // exchangeStudentCode Cloud Function (no anonymous auth).
+      try{ const app = initializeApp(firebaseConfig); auth = getAuth(app); db = getFirestore(app); functions = getFunctions(app); setStatus('ok', 'Database connected'); hideMessage(); }
+      catch(err){ console.error(err); setStatus('bad', 'Database connection failed'); showMessage('Database connection failed. Check your internet connection and database settings.', 'bad'); }
+    }
+
+    // Phase 3D.1: secure sign-in. Validates the code (+ optional PIN) server-side
+    // and signs in with the returned custom token. Returns the safe profile, or
+    // throws an HttpsError whose message is shown to the student.
+    async function exchangeStudentCode(code){
+      const call = httpsCallable(functions, 'exchangeStudentCode');
+      const res = await call({ studentCode: code, pin: (pinInput.value || undefined) });
+      const data = res.data || {};
+      if(!data.token) throw new Error('Sign-in failed. Please try again.');
+      await signInWithCustomToken(auth, data.token);
+      return data.profile;
+    }
+
+    async function loadAchievements(){
+      hideMessage(); dashboard.innerHTML = ''; emptyState.classList.remove('show'); summaryGrid.style.display = 'none'; toolbar.classList.remove('show'); dashGrid.classList.remove('show'); profileCard.classList.remove('show');
+      currentCode = normaliseCode(codeInput.value); codeInput.value = currentCode;
+      if(!currentCode){ showMessage('Enter your student code first.', 'bad'); return; }
+      if(!db || !functions){ showMessage('Database is not connected yet.', 'bad'); return; }
+      loadBtn.disabled = true; loadBtn.innerHTML = bilingualHTML('Loading...');
+      try{
+        // Server-side validation: not-found / inactive / missing-PIN / wrong-PIN
+        // all come back as errors. A PIN-required student is prompted to add it.
+        try{
+          currentStudent = await exchangeStudentCode(currentCode);
+        }catch(err){
+          const m = String(err && err.message || '');
+          if(/pin/i.test(m)){ pinField.style.display = 'block'; showMessage(m, /incorrect/i.test(m) ? 'bad' : 'info'); return; }
+          if(/not found/i.test(m)){ showMessage('Student code not found. Check the code with your teacher.', 'bad'); return; }
+          if(/not active|inactive/i.test(m)){ showMessage('This student code is inactive. Check with your teacher.', 'bad'); return; }
+          showMessage(m || 'Could not sign in. Check the code with your teacher.', 'bad'); return;
+        }
+        if(!currentStudent || !currentStudent.studentCode){ showMessage('Student code not found. Check the code with your teacher.', 'bad'); return; }
+
+        // Signed in as this student — claim-based rules allow reading own achievements.
+        const q = query(collection(db, ACHIEVEMENTS_COLLECTION), where('studentCode', '==', currentStudent.studentCode));
+        const snap = await getDocs(q);
+        allAchievements = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        classAchievements = []; // class leaderboard disabled under secure rules (see below)
+        renderDashboard();
+      }catch(err){ console.error(err); showMessage('Could not load achievements. Check that your database is connected and quizzes are saving correctly.', 'bad'); }
+      finally{ loadBtn.disabled = false; loadBtn.innerHTML = bilingualHTML('Load achievements'); }
+    }
+
+    // Phase 3D.1: the class leaderboard read by className is DENIED under the
+    // claim-based rules (a student may only read their own achievements). It is
+    // disabled here; a future teacher/Cloud-Function path can restore it safely.
+    async function loadClassLeaderboard(){ classAchievements = []; }
+
+    function updateProfile(){
+      const name = currentStudent?.name || [currentStudent?.firstName, currentStudent?.surname].filter(Boolean).join(' ') || 'Student';
+      profileName.textContent = name;
+      profileMeta.innerHTML = currentLanguage === 'en' ? `Class: ${currentStudent?.className || '—'} · Teacher: ${currentStudent?.teacher || currentStudent?.teacherName || '—'}` : `${translateText('Class')}: ${currentStudent?.className || '—'} · ${translateText('Teacher')}: ${currentStudent?.teacher || currentStudent?.teacherName || '—'}<span class="enSub">Class: ${currentStudent?.className || '—'} · Teacher: ${currentStudent?.teacher || currentStudent?.teacherName || '—'}</span>`;
+      avatar.textContent = initials(name); avatar.style.background = hashColour(currentStudent?.studentCode || name);
+      const teacherMsg = currentStudent?.teacherComment || currentStudent?.nextStep || currentStudent?.goal || currentStudent?.dashboardMessage || '';
+      goalBox.classList.toggle('show', !!teacherMsg); goalBox.innerHTML = teacherMsg ? (currentLanguage === 'en' ? `Message from your teacher: ${escapeHTML(teacherMsg)}` : `${translateText('Message from your teacher')}: ${escapeHTML(teacherMsg)}<span class="enSub">Message from your teacher: ${escapeHTML(teacherMsg)}</span>`) : '';
+      profileCard.classList.add('show'); studentLabel.innerHTML = currentLanguage === 'en' ? `Student: ${escapeHTML(name)} · ${escapeHTML(currentStudent?.className || currentCode)}` : `${translateText('Student')}: ${escapeHTML(name)} · ${escapeHTML(currentStudent?.className || currentCode)}<span class="enSub">Student: ${escapeHTML(name)} · ${escapeHTML(currentStudent?.className || currentCode)}</span>`;
+    }
+
+    function updateSummary(list){
+      const topics = new Set(list.map(topicOf));
+      const best = list.length ? Math.max(...list.map(pct)) : 0;
+      const avg = list.length ? Math.round(list.reduce((s,a)=>s+pct(a),0)/list.length) : 0;
+      const totalXp = list.reduce((sum,a)=>sum+xpOf(a),0);
+      const badgeCounts = allBadgeCounts(list);
+      el('totalCerts').textContent = String(list.length);
+      el('totalTopics').textContent = String(topics.size);
+      el('bestScore').textContent = list.length ? `${best}%` : '—';
+      el('avgScore').textContent = list.length ? `${avg}%` : '—';
+      el('totalXp').textContent = String(totalXp);
+      el('totalBadges').textContent = String(Array.from(badgeCounts.values()).reduce((sum,n)=>sum+n,0));
+      el('currentStreak').textContent = String(calculateStreak(list));
+      el('masteryLevel').innerHTML = bilingualHTML(overallMasteryLabel(list));
+      summaryGrid.style.display = list.length ? 'grid' : 'none';
+    }
+
+    function updateFilters(list){
+      const topics = Array.from(new Set(list.map(topicOf))).sort((a,b)=>a.localeCompare(b)); const prevTopic = topicFilter.value || 'all'; topicFilter.innerHTML = '<option value="all" data-i18n="All topics">All topics</option>'; topics.forEach(t => { const opt=document.createElement('option'); opt.value=t; opt.textContent=t; topicFilter.appendChild(opt); }); if(topics.includes(prevTopic)) topicFilter.value = prevTopic;
+      const levels = Array.from(new Set(list.map(levelOf))).sort((a,b)=>a.localeCompare(b)); const prevLevel = levelFilter.value || 'all'; levelFilter.innerHTML = '<option value="all" data-i18n="All levels">All levels</option>'; levels.forEach(l => { const opt=document.createElement('option'); opt.value=l; opt.textContent=l; levelFilter.appendChild(opt); }); if(levels.includes(prevLevel)) levelFilter.value = prevLevel;
+    }
+
+    function sortedFiltered(){
+      let list = allAchievements.slice(); const term = String(searchInput.value||'').toLowerCase().trim();
+      if(topicFilter.value && topicFilter.value !== 'all') list = list.filter(a => topicOf(a) === topicFilter.value);
+      if(levelFilter.value && levelFilter.value !== 'all') list = list.filter(a => levelOf(a) === levelFilter.value);
+      if(term) list = list.filter(a => [topicOf(a), levelOf(a), toolOf(a), typeSummary(a), a.certificateText].join(' ').toLowerCase().includes(term));
+      const mode = sortSelect.value; list.sort((a,b)=>{ if(mode==='oldest') return dateValue(a)-dateValue(b); if(mode==='best') return pct(b)-pct(a)||dateValue(b)-dateValue(a); if(mode==='topic') return topicOf(a).localeCompare(topicOf(b)) || dateValue(b)-dateValue(a); return dateValue(b)-dateValue(a); }); return list;
+    }
+
+    function renderDashboard(){
+      updateProfile(); updateFilters(allAchievements); updateSummary(allAchievements); toolbar.classList.add('show'); dashboard.innerHTML = '';
+      if(!allAchievements.length){ emptyState.classList.add('show'); showMessage('No achievements found for this code yet.', 'info'); return; }
+      hideMessage(); emptyState.classList.remove('show'); dashGrid.classList.add('show');
+      renderInsights();
+      const list = sortedFiltered();
+      const grouped = new Map(); list.forEach(a => { const topic = topicOf(a); if(!grouped.has(topic)) grouped.set(topic, []); grouped.get(topic).push(a); });
+      for(const [topic, items] of grouped.entries()){
+        const section = document.createElement('section'); section.className = 'topicSection';
+        const best = Math.max(...items.map(pct)); const latest = items.reduce((acc,a)=>dateValue(a)>dateValue(acc)?a:acc,items[0]); const byLevel = new Map();
+        items.forEach(a => { const level = levelOf(a); const old = byLevel.get(level) || { best:0, count:0 }; old.best = Math.max(old.best, pct(a)); old.count++; byLevel.set(level, old); });
+        const levelHTML = Array.from(byLevel.entries()).map(([level, data]) => `<span class="levelMini ${escapeHTML(levelKeyOf({englishLevel:level}))}">${escapeHTML(level)} · best ${data.best}% · ${data.count}</span>`).join('');
+        section.innerHTML = `<div class="topicHeader" title="Click to collapse/expand"><div><div class="topicTitle">${escapeHTML(topic)}</div><div class="topicMeta">Latest: ${escapeHTML(dateText(latest))} · ${escapeHTML(toolOf(latest))}</div><div class="levelSummary">${levelHTML}</div></div><div class="badgeRow"><span class="miniBadge blue">${items.length} certificate${items.length===1?'':'s'}</span><span class="miniBadge green">Best ${best}%</span>${best===100?'<span class="miniBadge gold">Perfect score</span>':''}</div></div><div class="achievementList"></div>`;
+        section.querySelector('.topicHeader').addEventListener('click', () => section.classList.toggle('collapsed'));
+        const listEl = section.querySelector('.achievementList'); items.forEach(a => listEl.appendChild(makeAchievementCard(a))); dashboard.appendChild(section);
+      }
+      if(!list.length){ dashboard.innerHTML = ''; emptyState.classList.add('show'); emptyState.querySelector('.emptyTitle').innerHTML=bilingualHTML('No matching achievements'); emptyState.querySelector('.emptyText').innerHTML=bilingualHTML('Try changing the topic, level, search or sort options.'); }
+    }
+
+    function makeAchievementCard(a){
+      const card = document.createElement('div'); card.className = 'achievement';
+      const p = pct(a); const questionTypes = typeSummary(a); const certificate = a.certificateText || `Completed ${topicOf(a)} — ${levelOf(a)} with a score of ${scoreText(a)}.`;
+      const xp = xpOf(a);
+      const badges = badgeIdsOf(a).map(id=>badgeInfo(id)).slice(0,4);
+      const rewards = [xp ? `<span class="rewardChip">⚡ ${xp} XP</span>` : '', masteryOf(a) ? `<span class="rewardChip">🏆 ${escapeHTML(masteryOf(a))}</span>` : '', ...badges.map(b=>`<span class="rewardChip">${escapeHTML(b.icon)} ${escapeHTML(b.name)}</span>`)].filter(Boolean).join('');
+      card.innerHTML = `<div class="trophy">${p>=90?'🏆':p>=70?'⭐':'✅'}</div><div><div class="achTitle">${escapeHTML(levelOf(a))}</div><div class="achMeta">${escapeHTML(certificate)}</div><div class="achMeta">${escapeHTML(dateText(a))} · ${escapeHTML(toolOf(a))}</div><div class="achMeta">${escapeHTML(questionTypes)}</div>${rewards?`<div class="achRewardRow">${rewards}</div>`:''}</div><div class="scorePill ${scoreClass(a)}">${escapeHTML(scoreText(a))}<br><span style="font-size:12px">${p}%</span></div>`; return card;
+    }
+
+    function renderInsights(){ renderChart(); renderPersonalBests(); renderRecommendations(); renderRewardProgress(); renderBadgeGallery(); renderDiagnostics(); renderLeaderboard(); }
+    function renderRewardProgress(){
+      const totalXp = allAchievements.reduce((sum,a)=>sum+xpOf(a),0);
+      const xpRows = allAchievements.filter(a=>xpOf(a)>0).sort((a,b)=>dateValue(b)-dateValue(a));
+      if(!xpRows.length){ xpList.innerHTML = `<div class="rewardItem">${bilingualHTML('No XP has been saved yet. Complete an MMT enabled quiz that records XP.')}</div>`; return; }
+      const bestXp = xpRows.slice().sort((a,b)=>xpOf(b)-xpOf(a))[0];
+      const recent = xpRows.slice(0,5).map(a=>`<div class="rewardItem"><strong>+${xpOf(a)} XP</strong> · ${escapeHTML(topicOf(a))}<div class="rewardMeta">${escapeHTML(levelOf(a))} · ${pct(a)}% · ${escapeHTML(dateText(a))}</div></div>`).join('');
+      xpList.innerHTML = `<div class="rewardItem"><strong>${totalXp} XP</strong><div class="rewardMeta">${bilingualHTML('XP earned from completed quizzes')}</div></div><div class="rewardItem"><strong>${bilingualHTML('Best XP result')}: +${xpOf(bestXp)} XP</strong><div class="rewardMeta">${escapeHTML(topicOf(bestXp))} · ${escapeHTML(levelOf(bestXp))}</div></div>${recent}`;
+    }
+    function latestBadgeDate(id){
+      const matches = allAchievements.filter(a=>badgeIdsOf(a).includes(id)).sort((a,b)=>dateValue(b)-dateValue(a));
+      return matches.length ? dateText(matches[0]) : '—';
+    }
+    function renderBadgeGallery(){
+      const counts = allBadgeCounts(allAchievements);
+      if(!counts.size){ badgeList.innerHTML = `<div class="badgeItem"><div class="badgeIcon">🏅</div><div>${bilingualHTML('Badges will appear after quizzes start saving badge data.')}</div><span class="badgeCount">0</span></div>`; return; }
+      const rows = Array.from(counts.entries()).map(([id,count])=>({ ...badgeInfo(id), count, last: latestBadgeDate(id) })).sort((a,b)=>b.count-a.count || a.name.localeCompare(b.name));
+      badgeList.innerHTML = rows.map(b=>`<div class="badgeItem"><div class="badgeIcon">${escapeHTML(b.icon)}</div><div><strong>${escapeHTML(b.name)}</strong><div class="rewardMeta">${bilingualHTML('Last earned')}: ${escapeHTML(b.last)}</div></div><span class="badgeCount">×${b.count}</span></div>`).join('');
+    }
+
+    function renderPersonalBests(){
+      const bestMap = new Map(); allAchievements.forEach(a => { const key = `${topicOf(a)} — ${levelOf(a)}`; const old = bestMap.get(key); if(!old || pct(a)>pct(old)) bestMap.set(key,a); });
+      const rows = Array.from(bestMap.entries()).sort((a,b)=>pct(b[1])-pct(a[1])).slice(0,8);
+      bestList.innerHTML = rows.length ? rows.map(([key,a]) => `<div class="bestItem"><strong>${escapeHTML(key)}</strong><br>Best: ${scoreText(a)} (${pct(a)}%) · ${dateText(a)}</div>`).join('') : '<div class="bestItem">Complete a quiz to build your personal best list.</div>';
+    }
+    function renderRecommendations(){
+      const topicStats = new Map(); allAchievements.forEach(a => { const t=topicOf(a), old=topicStats.get(t)||{count:0,best:0,last:new Date(0),avgTotal:0}; old.count++; old.best=Math.max(old.best,pct(a)); old.last = dateValue(a)>old.last ? dateValue(a) : old.last; old.avgTotal += pct(a); topicStats.set(t,old); });
+      const recs=[]; for(const [topic,s] of topicStats.entries()){ const avg=Math.round(s.avgTotal/s.count); if(s.best<70) recs.push(`Practice <strong>${escapeHTML(topic)}</strong> again — your best is ${s.best}%.`); else if(avg<75) recs.push(`Build consistency in <strong>${escapeHTML(topic)}</strong> — average is ${avg}%.`); }
+      if(allAchievements.length && recs.length<3) recs.push('Try a harder level in one of your strongest topics.'); if(!allAchievements.length) recs.push('Complete your first MMT enabled quiz to receive a recommendation.');
+      recommendList.innerHTML = recs.slice(0,5).map(r=>`<div class="recItem">${r}</div>`).join('');
+    }
+    function renderDiagnostics(){
+      const types = new Map(); allAchievements.forEach(a => { if(Array.isArray(a.types)){ a.types.forEach(t => { const key=t.label||t.typeId||'Question type'; const old=types.get(key)||{ok:0,total:0}; old.ok += Number(t.ok||0); old.total += Number(t.total||0); types.set(key,old); }); }});
+      if(!types.size){ diagList.innerHTML = '<div class="diagItem">Question-type data is not recorded for these attempts yet. Future quizzes can save type data to show strengths and focus areas.</div>'; return; }
+      const rows = Array.from(types.entries()).map(([k,v])=>({label:k, pct:v.total?Math.round(v.ok/v.total*100):0, ...v})).sort((a,b)=>b.pct-a.pct);
+      const strengths = rows.filter(r=>r.pct>=80).slice(0,3).map(r=>`✓ ${escapeHTML(r.label)} (${r.pct}%)`);
+      const focus = rows.filter(r=>r.pct<70).sort((a,b)=>a.pct-b.pct).slice(0,3).map(r=>`• ${escapeHTML(r.label)} (${r.pct}%)`);
+      diagList.innerHTML = `<div class="diagItem"><strong>Strengths:</strong><br>${strengths.length?strengths.join('<br>'):'Keep building consistency to unlock strengths.'}</div><div class="diagItem"><strong>Focus areas:</strong><br>${focus.length?focus.join('<br>'):'No urgent focus areas yet.'}</div>`;
+    }
+    function renderLeaderboard(){
+      if(!classAchievements.length){ leaderList.innerHTML = '<div class="leaderItem"><span>Class leaderboard will appear after more classmates complete quizzes.</span></div>'; return; }
+      const byStudent = new Map(); classAchievements.forEach(a => { const code=a.studentCode||'unknown'; const old=byStudent.get(code)||{name:a.studentName||code, code, count:0, totalPct:0, best:0}; old.count++; old.totalPct+=pct(a); old.best=Math.max(old.best,pct(a)); byStudent.set(code,old); });
+      const rows = Array.from(byStudent.values()).map(r=>({...r,avg:Math.round(r.totalPct/r.count)})).sort((a,b)=>b.avg-a.avg||b.count-a.count).slice(0,5);
+      leaderList.innerHTML = rows.map((r,i)=>`<div class="leaderItem ${r.code===currentCode?'leaderMe':''}"><span>${i+1}. ${escapeHTML(r.code===currentCode?'You':r.name)}</span><strong>${r.avg}% avg · ${r.count}</strong></div>`).join('');
+    }
+    function renderChart(){
+      const ctx = progressCanvas.getContext('2d'); const rect = progressCanvas.getBoundingClientRect(); const dpr = window.devicePixelRatio || 1; progressCanvas.width = Math.max(300, rect.width*dpr); progressCanvas.height = Math.max(180, rect.height*dpr); ctx.scale(dpr,dpr); const w=rect.width, h=rect.height; ctx.clearRect(0,0,w,h);
+      const data = allAchievements.slice().sort((a,b)=>dateValue(a)-dateValue(b)).map(a=>({p:pct(a), d:dateValue(a)}));
+      ctx.lineWidth=1; ctx.strokeStyle='#e5e7eb'; ctx.fillStyle='#64748b'; ctx.font='12px system-ui'; for(let i=0;i<=4;i++){ const y=18+(h-42)*(i/4); ctx.beginPath(); ctx.moveTo(36,y); ctx.lineTo(w-12,y); ctx.stroke(); ctx.fillText(`${100-i*25}%`,4,y+4); }
+      if(data.length===0){ ctx.fillText('No data yet', w/2-28, h/2); return; }
+      const xFor=i => data.length===1 ? w/2 : 40 + (w-60)*(i/(data.length-1)); const yFor=p => 18 + (h-42)*(1-p/100);
+      ctx.lineWidth=3; ctx.strokeStyle='#2563eb'; ctx.beginPath(); data.forEach((pt,i)=>{ const x=xFor(i), y=yFor(pt.p); if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y); }); ctx.stroke(); ctx.fillStyle='#2563eb'; data.forEach((pt,i)=>{ ctx.beginPath(); ctx.arc(xFor(i), yFor(pt.p), 4, 0, Math.PI*2); ctx.fill(); });
+      ctx.fillStyle='#64748b'; ctx.fillText('Oldest', 38, h-8); ctx.fillText('Newest', w-62, h-8);
+    }
+    async function copySummary(){
+      if(!currentStudent){ showMessage('Load a student first.', 'bad'); return; }
+      const name = currentStudent.name || currentCode; const best = allAchievements.length ? Math.max(...allAchievements.map(pct)) : 0; const avg = allAchievements.length ? Math.round(allAchievements.reduce((s,a)=>s+pct(a),0)/allAchievements.length) : 0;
+      const totalXp = allAchievements.reduce((sum,a)=>sum+xpOf(a),0); const badgeCount = Array.from(allBadgeCounts(allAchievements).values()).reduce((sum,n)=>sum+n,0);
+      const text = `MMT Student Summary
+Student: ${name}
+Class: ${currentStudent.className || '—'}
+Certificates: ${allAchievements.length}
+Total XP: ${totalXp}
+Badges: ${badgeCount}
+Current streak: ${calculateStreak(allAchievements)}
+Mastery level: ${overallMasteryLabel(allAchievements)}
+Best score: ${best}%
+Average: ${avg}%
+Generated: ${new Date().toLocaleString('en-AU')}`;
+      try{ await navigator.clipboard.writeText(text); showMessage('Summary copied to clipboard.', 'good'); }catch{ window.prompt('Copy this summary:', text); }
+    }
+
+    loadBtn.addEventListener('click', loadAchievements); clearBtn.addEventListener('click', () => { codeInput.value=''; pinInput.value=''; pinField.style.display='none'; dashboard.innerHTML=''; allAchievements=[]; classAchievements=[]; currentStudent=null; currentCode=''; emptyState.classList.remove('show'); summaryGrid.style.display='none'; toolbar.classList.remove('show'); dashGrid.classList.remove('show'); profileCard.classList.remove('show'); hideMessage(); });
+    printBtn.addEventListener('click', () => window.print()); copySummaryBtn.addEventListener('click', copySummary);
+    codeInput.addEventListener('keydown', e => { if(e.key === 'Enter') loadAchievements(); }); pinInput.addEventListener('keydown', e => { if(e.key === 'Enter') loadAchievements(); }); codeInput.addEventListener('input', () => { codeInput.value = normaliseCode(codeInput.value); });
+    [topicFilter, levelFilter, sortSelect, searchInput].forEach(x => { x.addEventListener('input', renderDashboard); x.addEventListener('change', renderDashboard); });
+    collapseAllBtn.addEventListener('click', () => document.querySelectorAll('.topicSection').forEach(s => s.classList.add('collapsed'))); expandAllBtn.addEventListener('click', () => document.querySelectorAll('.topicSection').forEach(s => s.classList.remove('collapsed')));
+    window.addEventListener('resize', () => { if(allAchievements.length) renderChart(); });
+    el('languageSelect')?.addEventListener('change', e => { currentLanguage = e.target.value; localStorage.setItem('mmtStudentDashboardLanguage', currentLanguage); applyLanguage(); if(allAchievements.length) renderDashboard(); });
+    applyLanguage();
+    initFirebase();
+  </script>
+  <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "c7e5713b5e4f4993907eb285797dc89b"}'></script><!-- End Cloudflare Web Analytics -->
+</body>
+</html>

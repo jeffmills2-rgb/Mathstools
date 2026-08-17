@@ -1,0 +1,92 @@
+rules_version = '2';
+
+// Mills Maths Tools — Phase 3D claim-based rules (DRAFT, not auto-deployed).
+// Requires the secure code-exchange Cloud Functions (custom-token sign-in with
+// role claims). Reads/writes are scoped to the signed-in owner. Identity writes
+// stay server-side only. Default-deny.
+//
+// SOURCE OF TRUTH: src/cloud/firestoreRulesDraft.js (PHASE3D_CLAIMS_RULES),
+// verified by system checks. Deploy MANUALLY via the Firebase console/CLI AFTER
+// the exchange Cloud Functions are deployed and tested — never from code.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function authed()      { return request.auth != null; }
+    function role()        { return authed() ? request.auth.token.role : ''; }
+    function isStudent()   { return role() == 'student'; }
+    function isTeacher()   { return role() == 'teacher'; }
+    function myStudent()   { return request.auth.token.studentCode; }
+    function myTeacher()   { return request.auth.token.teacherCode; }
+    function pct(v)        { return v is number && v >= 0 && v <= 100; }
+    function nonneg(v)     { return v is number && v >= 0; }
+
+    // -------- Students: own doc (student) or teacher's class (teacher). No writes.
+    // Teacher LIST works only when the query is filtered by teacherCode == claim,
+    // because the per-doc read rule below forces that constraint.
+    match /students/{studentCode} {
+      allow read: if (isStudent() && myStudent() == studentCode)
+                  || (isTeacher() && resource.data.teacherCode == myTeacher());
+      allow create, update, delete: if false;   // identity writes: server-side only
+    }
+
+    // -------- Teachers: own doc only. No listing. No writes.
+    match /teachers/{teacherCode} {
+      allow get: if isTeacher() && myTeacher() == teacherCode;
+      allow list: if false;
+      allow create, update, delete: if false;
+    }
+
+    // -------- Achievements: own (student) / class (teacher) reads; create-only,
+    // and ONLY for the signed-in student's own studentCode.
+    match /achievements/{id} {
+      allow read: if (isStudent() && resource.data.studentCode == myStudent())
+                  || (isTeacher() && resource.data.teacherCode == myTeacher());
+      allow create: if isStudent()
+        && request.resource.data.studentCode == myStudent()
+        && request.resource.data.teacherCode is string
+        && request.resource.data.tool is string
+        && request.resource.data.score is number
+        && request.resource.data.total is number
+        && pct(request.resource.data.percent);
+      allow update, delete: if false;
+    }
+
+    // -------- Adventure attempts: own/class reads; create-only for own student;
+    // doc id == attemptId; source pinned; never edited/deleted.
+    match /adventureAttempts/{id} {
+      allow read: if (isStudent() && resource.data.studentCode == myStudent())
+                  || (isTeacher() && resource.data.teacherCode == myTeacher());
+      allow create: if isStudent()
+        && request.resource.data.attemptId == id
+        && request.resource.data.studentCode == myStudent()
+        && request.resource.data.teacherCode is string
+        && request.resource.data.missionKind is string
+        && request.resource.data.source == 'mills-maths-adventure'
+        && nonneg(request.resource.data.questionCount)
+        && nonneg(request.resource.data.correctCount)
+        && pct(request.resource.data.percent)
+        && request.resource.data.createdAtClient is string;
+      allow update, delete: if false;
+    }
+
+    // -------- Adventure assignments (teacher-set tasks): a teacher reads their
+    // own class's tasks; a student reads ACTIVE tasks for their own class. Writes
+    // go through the createAdventureTask Function only (server-side). The student
+    // query MUST filter by teacherCode + className + active to satisfy this rule.
+    match /adventureAssignments/{id} {
+      allow read: if (isTeacher() && resource.data.teacherCode == myTeacher())
+                  || (isStudent()
+                      && resource.data.teacherCode == request.auth.token.teacherCode
+                      && resource.data.className  == request.auth.token.className
+                      && resource.data.active == true);
+      allow create, update, delete: if false;   // via createAdventureTask only
+    }
+
+    // -------- Admin / identity writes: server-side (Admin SDK / Functions) only.
+    // -------- Default: deny everything else.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

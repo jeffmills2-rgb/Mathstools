@@ -1,0 +1,1333 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MMT Teacher Progress Dashboard</title>
+  <style>
+    :root{
+      --bg:#f5f7fb;
+      --card:#ffffff;
+      --ink:#0f172a;
+      --muted:#64748b;
+      --line:#dbe3ef;
+      --brand:#2563eb;
+      --brand-dark:#1d4ed8;
+      --brand-soft:#dbeafe;
+      --good:#16a34a;
+      --good-soft:#dcfce7;
+      --warn:#d97706;
+      --warn-soft:#fef3c7;
+      --bad:#dc2626;
+      --bad-soft:#fee2e2;
+      --purple:#7c3aed;
+      --purple-soft:#ede9fe;
+      --shadow:0 14px 34px rgba(15,23,42,.10);
+      --radius:20px;
+      --footer-h:44px;
+      --ui:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--ui);
+      color:var(--ink);
+      background:
+        radial-gradient(circle at top left,rgba(37,99,235,.13),transparent 32rem),
+        radial-gradient(circle at top right,rgba(124,58,237,.10),transparent 34rem),
+        linear-gradient(180deg,#f8fbff 0%,var(--bg) 100%);
+      min-height:100vh;
+      padding-bottom:var(--footer-h);
+    }
+    .topbar{position:sticky;top:0;z-index:30;background:linear-gradient(135deg,#0f172a,#123b7a 55%,#2563eb);color:white;box-shadow:0 10px 28px rgba(15,23,42,.22)}
+    .topbar-inner{max-width:1380px;margin:0 auto;padding:10px 18px;display:grid;grid-template-columns:minmax(180px,1fr) auto minmax(180px,1fr);gap:16px;align-items:center}
+    .brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:white;justify-self:start;border-radius:14px;padding:7px 10px;margin-left:-10px;transition:.18s ease}
+    .brand:hover{background:rgba(255,255,255,.12);transform:translateY(-1px)}
+    .logo{width:38px;height:38px;object-fit:contain;background:white;border-radius:8px;padding:3px}
+    .brand strong{display:block;font-size:1.08rem;line-height:1;letter-spacing:-.03em}.brand span{display:block;font-size:.76rem;opacity:.84;font-weight:700}
+    .top-title{font-size:clamp(1.15rem,2vw,1.55rem);font-weight:950;letter-spacing:-.04em;text-align:center}
+    .top-user{justify-self:end;display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+    .pill{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:8px 11px;font-weight:900;font-size:.82rem;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.22);color:white}
+    .wrap{max-width:1380px;margin:16px auto 42px;padding:0 16px}
+    .panel{background:rgba(255,255,255,.96);border:1px solid rgba(219,227,239,.94);box-shadow:var(--shadow);border-radius:var(--radius);padding:16px}
+    .loginPanel{max-width:760px;margin:38px auto;padding:28px;border-radius:26px;background:rgba(255,255,255,.96);border:1px solid rgba(219,227,239,.94);box-shadow:var(--shadow)}
+    h1{margin:0 0 8px;font-size:clamp(2rem,4vw,3rem);letter-spacing:-.055em;line-height:1}
+    h2{margin:0;font-size:1.16rem;letter-spacing:-.025em}
+    h3{margin:0;font-size:1rem;letter-spacing:-.02em}
+    .lead{margin:0;color:var(--muted);font-weight:760;line-height:1.45;max-width:720px}
+    .loginGrid{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end;margin-top:22px}
+    label{display:block;font-size:.82rem;font-weight:900;color:#334155;margin:0 0 6px}
+    input,select{width:100%;border:1px solid var(--line);border-radius:14px;background:white;padding:11px 12px;font:inherit;font-weight:800;color:var(--ink);outline:none}
+    input:focus,select:focus{border-color:rgba(37,99,235,.7);box-shadow:0 0 0 4px rgba(37,99,235,.12)}
+
+    textarea{width:100%;border:1px solid var(--line);border-radius:14px;background:white;padding:11px 12px;font:inherit;font-weight:800;color:var(--ink);outline:none;min-height:132px;resize:vertical;line-height:1.4}
+    textarea:focus{border-color:rgba(37,99,235,.7);box-shadow:0 0 0 4px rgba(37,99,235,.12)}
+    .manageGrid{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:14px;align-items:start}
+    .formGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .teacherToolsCard{border:1px solid var(--line);background:#f8fafc;border-radius:18px;padding:14px}
+    .classManageList{display:grid;gap:9px}
+    .classManageItem{border:1px solid var(--line);background:white;border-radius:16px;padding:12px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center}
+    .classManageName{font-weight:1000;font-size:1rem}
+    .classManageMeta{color:var(--muted);font-size:.8rem;font-weight:800;margin-top:3px}
+    @media(max-width:900px){.manageGrid,.formGrid{grid-template-columns:1fr}}
+    input.codeInput{text-transform:uppercase;letter-spacing:.08em;font-size:1.08rem;text-align:center;min-width:260px}
+    button{border:0;border-radius:999px;padding:10px 14px;font:inherit;font-weight:900;cursor:pointer;transition:.15s ease;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;white-space:nowrap}
+    button:hover:not(:disabled){transform:translateY(-1px)}
+    button:disabled{opacity:.55;cursor:not-allowed;transform:none}
+    .primary{background:var(--brand);color:white}.primary:hover{background:var(--brand-dark)}
+    .secondary{background:var(--brand-soft);color:var(--brand)}.neutral{background:#eef2f7;color:#0f172a}.danger{background:var(--bad-soft);color:#991b1b}.success{background:var(--good-soft);color:#166534}
+    .tiny{font-size:.78rem;min-height:32px;padding:7px 10px}
+    .message{display:none;margin-top:12px;border-radius:14px;padding:11px 13px;font-weight:850;line-height:1.35}.message.show{display:block}.message.ok{background:var(--good-soft);color:#166534;border:1px solid #86efac}.message.warn{background:var(--warn-soft);color:#92400e;border:1px solid #fed7aa}.message.bad{background:var(--bad-soft);color:#991b1b;border:1px solid #fecaca}.message.info{background:#eef2ff;color:#1d4ed8;border:1px solid #bfdbfe}
+    .hidden{display:none!important}
+    .hero{display:grid;grid-template-columns:minmax(0,1.4fr) 360px;gap:14px;margin-bottom:14px}
+    .heroCard{padding:18px 20px;position:relative;overflow:hidden}.heroCard:after{content:"";position:absolute;width:190px;height:190px;border-radius:999px;right:-72px;top:-82px;background:linear-gradient(135deg,rgba(37,99,235,.15),rgba(124,58,237,.12))}
+    .heroCard>*{position:relative;z-index:1}
+    .statusGrid{display:grid;grid-template-columns:1fr;gap:10px}.statusBox{border:1px solid var(--line);border-radius:16px;background:#f8fafc;padding:12px}.statusLabel{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:950}.statusValue{font-size:1.04rem;font-weight:950;margin-top:3px}.statusValue.good{color:var(--good)}.statusValue.bad{color:var(--bad)}
+    .controls{display:grid;grid-template-columns:1fr 170px 170px 170px 150px;gap:10px;margin:0 0 14px}.controls .field{min-width:0}
+    .actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.rightActions{justify-content:flex-end}
+    .summary{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin:14px 0}.summaryCard{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:0 8px 18px rgba(15,23,42,.05)}.summaryLabel{font-size:.76rem;color:var(--muted);font-weight:950;text-transform:uppercase;letter-spacing:.05em}.summaryValue{font-size:2rem;font-weight:1000;letter-spacing:-.05em;margin-top:4px}.summarySub{font-size:.78rem;color:var(--muted);font-weight:800;margin-top:2px}
+    .mainGrid{display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:14px;align-items:start}.leftStack,.rightStack{display:grid;gap:14px}.rightStack{position:sticky;top:78px;max-height:calc(100vh - 96px);overflow:auto;padding-right:2px}
+    .sectionHead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:12px}.sectionHint{color:var(--muted);font-size:.84rem;font-weight:750;margin-top:3px;line-height:1.35}
+    .chartCard{min-height:330px}.chartWrap{width:100%;height:280px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(180deg,#fff,#f8fafc);padding:10px;overflow:hidden}.chartSvg{width:100%;height:100%;display:block}.axisText{fill:#64748b;font-size:11px;font-weight:800}.barLabel{fill:#0f172a;font-size:12px;font-weight:900}.gridLine{stroke:#e2e8f0;stroke-width:1}.bar{fill:#2563eb;rx:8}.linePath{stroke:#7c3aed;stroke-width:4;fill:none;stroke-linecap:round;stroke-linejoin:round}.lineDot{fill:#7c3aed;stroke:white;stroke-width:3}
+    .tableWrap{overflow:auto;border:1px solid var(--line);border-radius:16px;background:white}table{width:100%;border-collapse:collapse;min-width:780px}th,td{padding:9px 10px;text-align:left;border-bottom:1px solid #edf2f7;font-size:.86rem;vertical-align:middle}th{position:sticky;top:0;background:#f8fafc;color:#475569;font-size:.7rem;letter-spacing:.07em;text-transform:uppercase;font-weight:950;z-index:1}tr:last-child td{border-bottom:0}.studentTable tbody tr{cursor:pointer}.studentTable tbody tr:hover{background:#f8fafc}.selectedRow{background:#eff6ff!important}.code{font-family:"SFMono-Regular",Consolas,monospace;background:#f1f5f9;border-radius:9px;padding:5px 7px;font-weight:950;letter-spacing:.03em;display:inline-block}
+    .badge{display:inline-flex;border-radius:999px;padding:5px 8px;font-size:.72rem;font-weight:950}.badge.good{background:var(--good-soft);color:#166534}.badge.warn{background:var(--warn-soft);color:#92400e}.badge.bad{background:var(--bad-soft);color:#991b1b}.badge.blue{background:#dbeafe;color:#1d4ed8}.badge.purple{background:var(--purple-soft);color:#5b21b6}.badge.neutral{background:#f1f5f9;color:#334155}
+    .cardsGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.smallCard{border:1px solid var(--line);background:#fff;border-radius:16px;padding:12px}.smallTitle{font-weight:950}.smallMeta{color:var(--muted);font-size:.8rem;font-weight:760;margin-top:4px;line-height:1.35}
+    .attentionList{display:grid;gap:8px}.attentionItem{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:14px;padding:10px;background:#fff}.attentionIcon{width:34px;height:34px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:#fff7ed;border:1px solid #fed7aa}.attentionName{font-weight:950}.attentionReason{color:var(--muted);font-size:.8rem;font-weight:760;margin-top:2px}
+    .heatmap{overflow:auto}.heatmap table{min-width:620px}.heatCell{min-width:72px;text-align:center;border-radius:10px;font-weight:950}.heatHigh{background:#dcfce7;color:#166534}.heatMid{background:#fef3c7;color:#92400e}.heatLow{background:#fee2e2;color:#991b1b}.heatEmpty{background:#f1f5f9;color:#64748b}
+    .studentDetail{display:grid;gap:10px}.studentHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.avatar{width:50px;height:50px;border-radius:18px;background:linear-gradient(135deg,#2563eb,#7c3aed);color:white;display:flex;align-items:center;justify-content:center;font-weight:1000;font-size:1.1rem;flex:0 0 auto}.studentHeadLeft{display:flex;gap:10px;align-items:center}.studentName{font-weight:1000;font-size:1.08rem}.studentMeta{color:var(--muted);font-weight:800;font-size:.82rem;margin-top:2px}.detailStats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.detailStat{background:#f8fafc;border:1px solid var(--line);border-radius:14px;padding:10px}.detailStat strong{font-size:1.25rem;letter-spacing:-.04em}.detailStat span{display:block;color:var(--muted);font-size:.75rem;font-weight:850;margin-top:2px}.attemptList{max-height:290px;overflow:auto;display:grid;gap:8px}.attempt{border:1px solid var(--line);border-radius:14px;padding:10px;background:#fff}.attemptTop{display:flex;justify-content:space-between;gap:8px}.attemptTitle{font-weight:950}.attemptMeta{color:var(--muted);font-size:.78rem;font-weight:800;margin-top:3px}
+    .empty{display:none;text-align:center;border:1px dashed var(--line);border-radius:18px;padding:24px;color:var(--muted);font-weight:850;background:#f8fafc}.empty.show{display:block}
+    .footer{position:fixed;left:0;right:0;bottom:0;height:var(--footer-h);display:flex;align-items:center;justify-content:center;padding:0 12px;background:rgba(255,255,255,.92);border-top:1px solid rgba(229,231,235,.95);backdrop-filter:blur(8px);z-index:500;font-weight:900;color:#111827;text-align:center;font-size:13px}.footer a{color:var(--brand);text-decoration:none;font-weight:950}
+
+
+    /* Dashboard polish pass: richer snapshots, sticky filters, class chips and health cards */
+    .hero{grid-template-columns:minmax(0,1fr) 330px;gap:12px;margin-bottom:12px}
+    .heroCard{min-height:170px;padding:20px 22px}
+    .heroCard h1{font-size:clamp(1.9rem,3.2vw,2.65rem)}
+    .snapshotGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:18px;max-width:850px}
+    .snapshotTile{border:1px solid var(--line);background:rgba(248,250,252,.86);border-radius:16px;padding:11px 12px;backdrop-filter:blur(8px)}
+    .snapshotTile strong{display:block;font-size:1.35rem;font-weight:1000;letter-spacing:-.04em;color:#0f172a;line-height:1}
+    .snapshotTile span{display:block;margin-top:4px;font-size:.73rem;font-weight:950;text-transform:uppercase;letter-spacing:.055em;color:var(--muted)}
+    .statusGrid{align-content:start}.statusBox{padding:11px 12px}.statusValue{letter-spacing:-.02em}
+    .filterPanel{position:sticky;top:78px;z-index:15;box-shadow:0 12px 26px rgba(15,23,42,.08)}
+    .quickChips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.quickChip{border:1px solid var(--line);background:white;color:#334155;border-radius:999px;padding:8px 12px;font-size:.82rem;font-weight:950;min-height:34px}.quickChip.active{background:var(--brand);color:white;border-color:var(--brand)}.quickChip .miniCount{opacity:.75;margin-left:5px}
+    .classManageList{grid-template-columns:repeat(2,minmax(0,1fr))}.classManageItem{align-items:stretch}.classManageTop{display:flex;align-items:center;gap:8px;justify-content:space-between}.healthBadge{display:inline-flex;align-items:center;border-radius:999px;padding:4px 8px;font-size:.7rem;font-weight:1000}.healthStrong{background:var(--good-soft);color:#166534}.healthConsolidating{background:var(--warn-soft);color:#92400e}.healthSupport{background:var(--bad-soft);color:#991b1b}.classMetrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:10px}.classMetric{border:1px solid #e2e8f0;background:#f8fafc;border-radius:12px;padding:7px}.classMetric strong{display:block;font-weight:1000}.classMetric span{display:block;font-size:.68rem;color:var(--muted);font-weight:900;text-transform:uppercase;letter-spacing:.04em}
+    .onboardingBox{border:1px solid #bfdbfe;background:#eff6ff;color:#1e3a8a;border-radius:18px;padding:14px;margin-top:12px;font-weight:850;line-height:1.45}.onboardingBox strong{display:block;font-size:1rem;margin-bottom:4px}
+    .trendCard{border:1px solid var(--line);background:#fff;border-radius:18px;padding:14px}.trendSvg{width:100%;height:96px;display:block;background:linear-gradient(180deg,#ffffff,#f8fafc);border:1px solid #e2e8f0;border-radius:14px}.trendMeta{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:9px}.trendMeta div{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:8px;font-size:.76rem;font-weight:850;color:var(--muted)}.trendMeta strong{display:block;color:#0f172a;font-size:1rem}
+    @media(max-width:1120px){.filterPanel{position:static}.snapshotGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.classManageList{grid-template-columns:1fr}}
+    @media(max-width:720px){.snapshotGrid,.trendMeta{grid-template-columns:1fr}.heroCard{min-height:auto}.classMetrics{grid-template-columns:1fr}}
+
+    @media(max-width:1120px){.hero{grid-template-columns:1fr}.statusGrid{grid-template-columns:repeat(3,1fr)}.controls{grid-template-columns:1fr 1fr}.summary{grid-template-columns:repeat(3,1fr)}.mainGrid{grid-template-columns:1fr}.rightStack{position:static;max-height:none}}
+    @media(max-width:720px){.topbar-inner{grid-template-columns:1fr}.top-title{text-align:left}.top-user{justify-self:start}.wrap{padding:0 10px}.loginGrid,.controls{grid-template-columns:1fr}.summary{grid-template-columns:1fr 1fr}.cardsGrid{grid-template-columns:1fr}.detailStats{grid-template-columns:1fr}.statusGrid{grid-template-columns:1fr}}
+    .codePrintSheet{display:none}
+    .codeCardsMeta{font-weight:900;color:#334155;margin:0 0 8px;font-size:11pt}
+    .codeCardsGrid{display:grid;grid-template-columns:1fr 1fr;gap:4mm;page-break-after:always}
+    .codeCardsGrid:last-child{page-break-after:auto}
+    .studentCodeCard{border:1.4px solid #0f172a;border-radius:8px;padding:5mm;min-height:42mm;display:flex;flex-direction:column;justify-content:space-between;break-inside:avoid;background:white}
+    .studentCodeCard .miniBrand{display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:950;font-size:9pt;color:#2563eb;text-transform:uppercase;letter-spacing:.04em}
+    .studentCodeCard .studentName{font-size:15pt;font-weight:950;line-height:1.1;color:#0f172a;margin-top:2mm}
+    .studentCodeCard .studentCodeBig{font-family:"SFMono-Regular",Consolas,monospace;font-size:18pt;font-weight:1000;letter-spacing:.08em;text-align:center;border:1px dashed #94a3b8;border-radius:6px;padding:3mm 2mm;margin:3mm 0;background:#f8fafc;color:#0f172a}
+    .studentCodeCard .cardDetails{display:grid;gap:1.2mm;font-size:9.5pt;font-weight:800;color:#334155}
+    .studentCodeCard .cardDetails span{color:#64748b;font-weight:950;text-transform:uppercase;font-size:7.5pt;letter-spacing:.05em;margin-right:2mm}
+    @media print{.topbar,.loginPanel,.controls,.actions,.footer,.message{display:none!important}.wrap{max-width:none;margin:0;padding:0}.panel{box-shadow:none;border:none}.mainGrid{grid-template-columns:1fr}.rightStack{position:static;max-height:none}.chartWrap{break-inside:avoid}.tableWrap{overflow:visible}.attemptList{max-height:none}.leftStack,.rightStack{display:block}.panel{margin-bottom:12px}}
+    @media print{
+      @page{size:A4 portrait;margin:10mm}
+      body.printCodeCards{background:white!important;padding:0!important}
+      body.printCodeCards .topbar,body.printCodeCards .wrap,body.printCodeCards .footer{display:none!important}
+      body.printCodeCards .codePrintSheet{display:block!important}
+      body.printCodeCards .codeCardsGrid{grid-template-rows:repeat(6,42mm)}
+    }
+
+    .profileModalBackdrop{position:fixed;inset:0;background:rgba(15,23,42,.56);z-index:900;display:none;align-items:center;justify-content:center;padding:18px}
+    .profileModalBackdrop.show{display:flex}
+    .profileModal{width:min(1080px,100%);max-height:92vh;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:26px;box-shadow:0 30px 80px rgba(15,23,42,.34)}
+    .profileModalHead{position:sticky;top:0;z-index:2;background:linear-gradient(135deg,#0f172a,#123b7a 58%,#2563eb);color:white;padding:16px 18px;display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+    .profileModalTitle{font-size:1.35rem;font-weight:1000;letter-spacing:-.035em}.profileModalSub{font-size:.86rem;font-weight:800;opacity:.86;margin-top:3px}
+    .profileModalBody{padding:16px;display:grid;gap:14px}.profileCloseBtn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.28);color:white}.profileCloseBtn:hover{background:rgba(255,255,255,.22)}
+    .profileStats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}.profileStat{border:1px solid var(--line);background:#f8fafc;border-radius:16px;padding:12px}.profileStat strong{font-size:1.65rem;letter-spacing:-.05em}.profileStat span{display:block;color:var(--muted);font-size:.75rem;font-weight:900;text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
+    .profileGrid{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:14px}.profileSection{border:1px solid var(--line);border-radius:18px;background:white;padding:14px}.profileSectionTitle{font-size:1rem;font-weight:1000;margin:0 0 9px}.profileTopicList{display:grid;gap:8px}.profileTopicRow{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;border:1px solid #edf2f7;border-radius:14px;padding:10px;background:#f8fafc}.profileTopicName{font-weight:950}.profileTopicMeta{font-size:.78rem;color:var(--muted);font-weight:820;margin-top:2px}.profileTopicScore{font-size:1rem;font-weight:1000}.profileAttemptTable{max-height:460px;overflow:auto;border:1px solid var(--line);border-radius:16px}.profileAttemptTable table{min-width:760px}.profileAttemptTable th,.profileAttemptTable td{font-size:.84rem}.profileActions{display:flex;gap:8px;flex-wrap:wrap}.mutedSmall{font-size:.82rem;color:var(--muted);font-weight:800;line-height:1.35}
+    @media(max-width:900px){.profileStats{grid-template-columns:repeat(2,1fr)}.profileGrid{grid-template-columns:1fr}.profileModalBackdrop{padding:8px}.profileModal{max-height:96vh}}
+    @media print{.profileModalBackdrop{display:none!important}}
+    .masteryBadge{display:inline-flex;align-items:center;border-radius:999px;padding:5px 8px;font-size:.72rem;font-weight:950}.masterySecure{background:var(--good-soft);color:#166534}.masteryConsolidating{background:var(--warn-soft);color:#92400e}.masteryDeveloping{background:var(--bad-soft);color:#991b1b}.nextTaskBox{border:1px solid #bfdbfe;background:#eff6ff;color:#1e3a8a;border-radius:16px;padding:12px;font-weight:850;line-height:1.4}.profilePrintSummary{display:none}.certificateLine{border:1px solid #e2e8f0;background:#f8fafc;border-radius:12px;padding:9px;font-size:.82rem;font-weight:800;line-height:1.35}.activityDate{font-size:.75rem;color:var(--muted);font-weight:850;margin-top:2px}.compareText{font-size:.75rem;font-weight:900;margin-top:3px}.comparePositive{color:#166534}.compareNegative{color:#991b1b}.compareNeutral{color:#64748b}
+    @media print{body.printStudentProfile{background:white!important;padding:0!important}body.printStudentProfile .topbar,body.printStudentProfile .wrap,body.printStudentProfile .footer{display:none!important}body.printStudentProfile .profileModalBackdrop{display:block!important;position:static!important;background:white!important;padding:0!important}body.printStudentProfile .profileModal{width:100%!important;max-height:none!important;overflow:visible!important;box-shadow:none!important;border:none!important;border-radius:0!important}body.printStudentProfile .profileModalHead{position:static!important;background:#0f172a!important;color:white!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}body.printStudentProfile .profileActions,body.printStudentProfile .profileCloseBtn{display:none!important}body.printStudentProfile .profileAttemptTable{max-height:none!important;overflow:visible!important}.profilePrintSummary{display:block}}
+
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="https://www.millsmathstools.au" aria-label="Back to Mills Maths Tools">
+        <img src="../../assets/mmt.png" alt="Mills Maths Tools logo" class="logo" onerror="this.style.visibility='hidden'" />
+        <div><strong>MMT</strong><span>Mills Maths Tools</span></div>
+      </a>
+      <div class="top-title">Teacher Progress Dashboard</div>
+      <div class="top-user"><span id="teacherChip" class="pill hidden">Teacher</span><button id="logoutBtn" class="neutral tiny hidden" type="button">Change teacher</button></div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section id="loginPanel" class="loginPanel">
+      <h1>Teacher dashboard</h1>
+      <p class="lead">Enter your teacher code to view your classes, student progress, weekly completion patterns, strengths, and students who may need follow-up.</p>
+      <div class="loginGrid">
+        <div>
+          <label for="teacherCodeInput">Teacher code</label>
+          <input id="teacherCodeInput" class="codeInput" autocomplete="off" placeholder="Enter teacher code" />
+        </div>
+        <button id="loginBtn" class="primary" type="button">Open dashboard</button>
+      </div>
+      <div id="loginMessage" class="message"></div>
+    </section>
+
+    <section id="dashboardShell" class="hidden">
+      <section class="hero">
+        <div class="panel heroCard">
+          <h1 id="welcomeTitle">Welcome</h1>
+          <p id="welcomeSub" class="lead">Class progress across Firebase-enabled Mills Maths Tools quizzes.</p>
+          <div class="snapshotGrid" aria-label="Teacher snapshot">
+            <div class="snapshotTile"><strong id="snapshotStudents">0</strong><span>Students</span></div>
+            <div class="snapshotTile"><strong id="snapshotClasses">0</strong><span>Classes</span></div>
+            <div class="snapshotTile"><strong id="snapshotMonth">0</strong><span>30-day completions</span></div>
+            <div class="snapshotTile"><strong id="snapshotAttention">0</strong><span>Need support</span></div>
+          </div>
+        </div>
+        <div class="panel statusGrid">
+          <div class="statusBox"><div class="statusLabel">Online Database</div><div id="firebaseStatus" class="statusValue bad">Connecting</div></div>
+          <div class="statusBox"><div class="statusLabel">Teacher code</div><div id="teacherCodeStatus" class="statusValue">—</div></div>
+          <div class="statusBox"><div class="statusLabel">Visible average</div><div id="visibleAttemptStatus" class="statusValue">—</div></div>
+        </div>
+      </section>
+
+      <section class="panel filterPanel">
+        <div class="sectionHead">
+          <div><h2>Filters</h2><div class="sectionHint">Filter the whole dashboard by class, topic, level and date range.</div></div>
+          <div class="actions rightActions">
+            <button id="refreshBtn" class="secondary tiny" type="button">Refresh</button>
+            <button id="copySummaryBtn" class="secondary tiny" type="button">Copy summary</button>
+            <button id="exportCsvBtn" class="secondary tiny" type="button">Export CSV</button>
+            <button id="printCodeCardsBtn" class="secondary tiny" type="button">Print student codes</button>
+            <button id="printBtn" class="neutral tiny" type="button">Print</button>
+          </div>
+        </div>
+        <div class="controls">
+          <div class="field"><label for="searchInput">Search student or code</label><input id="searchInput" placeholder="Search students" /></div>
+          <div class="field"><label for="classFilter">Class</label><select id="classFilter"><option value="all">All classes</option></select></div>
+          <div class="field"><label for="topicFilter">Topic</label><select id="topicFilter"><option value="all">All topics</option></select></div>
+          <div class="field"><label for="levelFilter">Level</label><select id="levelFilter"><option value="all">All levels</option></select></div>
+          <div class="field"><label for="rangeFilter">Date range</label><select id="rangeFilter"><option value="all">All time</option><option value="7">Last 7 days</option><option value="30" selected>Last 30 days</option><option value="90">Last 90 days</option></select></div>
+        </div>
+        <div id="classQuickChips" class="quickChips" aria-label="Quick class filters"></div>
+        <div id="mainMessage" class="message"></div>
+      </section>
+
+      <section class="panel" id="teacherManagePanel">
+        <div class="sectionHead">
+          <div>
+            <h2>Manage my classes</h2>
+            <div class="sectionHint">Add students to your own teacher code. New class names are created automatically when you add students.</div>
+          </div>
+          <div class="actions rightActions">
+            <button id="refreshManageBtn" class="secondary tiny" type="button">Refresh class list</button>
+          </div>
+        </div>
+        <div class="manageGrid">
+          <div class="teacherToolsCard">
+            <h3>Add one student</h3>
+            <div class="sectionHint">Creates a unique student code attached to your teacher code.</div>
+            <div class="formGrid" style="margin-top:12px">
+              <div class="field"><label for="manageFirstName">First name</label><input id="manageFirstName" placeholder="Alex" /></div>
+              <div class="field"><label for="manageSurname">Surname</label><input id="manageSurname" placeholder="Smith" /></div>
+            </div>
+            <div class="field"><label for="manageClassName">Class</label><input id="manageClassName" placeholder="7MAB" /></div>
+            <div class="actions"><button id="addManagedStudentBtn" class="primary" type="button">Generate student code</button><button id="clearManagedStudentBtn" class="neutral" type="button">Clear</button></div>
+            <div id="manageSingleMessage" class="message"></div>
+          </div>
+          <div class="teacherToolsCard">
+            <h3>Bulk add class list</h3>
+            <div class="sectionHint">Paste one student per line. Codes are copied to your clipboard after creation.</div>
+            <div class="field" style="margin-top:12px"><label for="manageBulkClassName">Class</label><input id="manageBulkClassName" placeholder="7MAB" /></div>
+            <div class="field"><label for="manageBulkNames">Student names</label><textarea id="manageBulkNames" placeholder="Alex Smith&#10;Mia Nguyen&#10;Noah Patel"></textarea></div>
+            <div class="actions"><button id="bulkAddManagedBtn" class="primary" type="button">Generate class codes</button><button id="clearManagedBulkBtn" class="neutral" type="button">Clear</button></div>
+            <div id="manageBulkMessage" class="message"></div>
+          </div>
+        </div>
+        <div style="margin-top:14px" class="teacherToolsCard">
+          <div class="sectionHead" style="margin-bottom:10px">
+            <div><h3>My class lists</h3><div class="sectionHint">Copy student codes for a class or use the main filters above to view progress.</div></div>
+          </div>
+          <div id="managedClassList" class="classManageList"></div>
+          <div id="managedClassEmpty" class="empty">No classes yet. Add students above to create your first class.</div>
+        </div>
+      </section>
+
+      <section class="summary" id="summaryGrid">
+        <div class="summaryCard"><div class="summaryLabel">Classes</div><div id="sumClasses" class="summaryValue">0</div><div class="summarySub">Linked to this teacher</div></div>
+        <div class="summaryCard"><div class="summaryLabel">Students</div><div id="sumStudents" class="summaryValue">0</div><div class="summarySub">Visible active students</div></div>
+        <div class="summaryCard"><div class="summaryLabel">Completions</div><div id="sumAttempts" class="summaryValue">0</div><div class="summarySub">Quiz tasks completed</div></div>
+        <div class="summaryCard"><div class="summaryLabel">Average</div><div id="sumAverage" class="summaryValue">—</div><div class="summarySub">Across visible attempts</div></div>
+        <div class="summaryCard"><div class="summaryLabel">Recent</div><div id="sumRecent" class="summaryValue">—</div><div class="summarySub">Most recent completion</div></div>
+      </section>
+
+      <section class="mainGrid">
+        <div class="leftStack">
+          <section class="panel chartCard">
+            <div class="sectionHead">
+              <div><h2>Tasks completed per week</h2><div class="sectionHint">Weekly completion volume for the selected class/topic/level/date filters.</div></div>
+              <span id="chartRangeLabel" class="badge blue">Last 30 days</span>
+            </div>
+            <div class="chartWrap"><svg id="weeklyChart" class="chartSvg" viewBox="0 0 900 280" role="img" aria-label="Tasks completed per week chart"></svg></div>
+          </section>
+
+          <section class="panel">
+            <div class="sectionHead">
+              <div><h2>Class overview</h2><div class="sectionHint">Completion and average score by class.</div></div>
+            </div>
+            <div id="classCards" class="cardsGrid"></div>
+            <div id="classEmpty" class="empty">No classes to show.</div>
+          </section>
+
+          <section class="panel heatmap">
+            <div class="sectionHead">
+              <div><h2>Topic heat map</h2><div class="sectionHint">Average score by class and topic. Empty cells mean no attempts yet.</div></div>
+            </div>
+            <div id="heatmapWrap" class="tableWrap"></div>
+          </section>
+
+          <section class="panel">
+            <div class="sectionHead">
+              <div><h2>Students</h2><div class="sectionHint">Click a student to inspect attempts, personal bests and recommendations.</div></div>
+              <select id="studentSort" style="width:auto;min-width:180px"><option value="name">Sort by name</option><option value="attempts">Most attempts</option><option value="averageLow">Lowest average</option><option value="recent">Most recent</option></select>
+            </div>
+            <div class="tableWrap"><table class="studentTable"><thead><tr><th>Student</th><th>Class</th><th>Code</th><th>Attempts</th><th>Average</th><th>Best</th><th>Last attempt</th><th>Status</th></tr></thead><tbody id="studentTableBody"></tbody></table></div>
+            <div id="studentEmpty" class="empty">No students match the current filters.</div>
+          </section>
+        </div>
+
+        <aside class="rightStack">
+
+          <section class="panel">
+            <div class="sectionHead"><div><h2>Recent activity</h2><div class="sectionHint">Latest completions in the current view.</div></div></div>
+            <div id="recentActivityList" class="attentionList"></div>
+            <div id="recentActivityEmpty" class="empty">No recent activity for the current filters.</div>
+          </section>
+
+          <section class="panel">
+            <div class="sectionHead"><div><h2>Missing students</h2><div class="sectionHint">Students with no completions in the selected date/topic/level view.</div></div></div>
+            <div id="missingList" class="attentionList"></div>
+            <div id="missingEmpty" class="empty">Everyone has at least one completion in this view.</div>
+          </section>
+
+          <section class="panel">
+            <div class="sectionHead"><div><h2>Needs attention</h2><div class="sectionHint">Students with no attempts, low averages, or no recent activity.</div></div></div>
+            <div id="attentionList" class="attentionList"></div>
+            <div id="attentionEmpty" class="empty">No attention flags for the current filters.</div>
+          </section>
+
+          <section class="panel">
+            <div class="sectionHead"><div><h2>Top growth</h2><div class="sectionHint">Students with the clearest improvement from early to recent attempts.</div></div></div>
+            <div id="growthList" class="attentionList"></div>
+            <div id="growthEmpty" class="empty">Not enough repeated attempts yet.</div>
+          </section>
+
+          <section class="panel">
+            <div class="sectionHead"><div><h2>Student detail</h2><div class="sectionHint">Select a student from the table.</div></div></div>
+            <div id="studentDetail" class="studentDetail"></div>
+            <div id="detailEmpty" class="empty show">Select a student to view progress details.</div>
+          </section>
+        </aside>
+      </section>
+    </section>
+  </main>
+
+
+
+  <div id="studentProfileBackdrop" class="profileModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="studentProfileTitle">
+    <section class="profileModal">
+      <div class="profileModalHead">
+        <div>
+          <div id="studentProfileTitle" class="profileModalTitle">Student Achievement Profile</div>
+          <div id="studentProfileSub" class="profileModalSub">Achievement history</div>
+        </div>
+        <button id="closeStudentProfileBtn" class="profileCloseBtn tiny" type="button">Close</button>
+      </div>
+      <div id="studentProfileBody" class="profileModalBody"></div>
+    </section>
+  </div>
+
+  <section id="codePrintSheet" class="codePrintSheet" aria-hidden="true"></section>
+
+  <div class="footer">This tool and more can be found at&nbsp;<a href="https://www.millsmathstools.au">www.millsmathstools.au</a></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getAuth, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+    import { getFirestore, collection, doc, getDoc, getDocs, setDoc, serverTimestamp, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+    import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-functions.js";
+    // Phase 3D.1: secure code exchange. No anonymous auth and no direct
+    // teachers/{code} read before login. The teacher code is validated by the
+    // exchangeTeacherCode Cloud Function; we sign in with the returned custom
+    // token, and all queries are scoped to the teacher's teacherCode claim.
+    // Client-side student-management writes are DISABLED (server-side only).
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDYoJuHGslYY-cvV2rtuLkL6bE_hRDOESw",
+      authDomain: "mills-maths-tools.firebaseapp.com",
+      projectId: "mills-maths-tools",
+      storageBucket: "mills-maths-tools.firebasestorage.app",
+      messagingSenderId: "835000359454",
+      appId: "1:835000359454:web:d7876be83ee367b5006c0f",
+      measurementId: "G-35YCH5NJEG"
+    };
+
+    const COLLECTIONS = { teachers:'teachers', students:'students', achievements:'achievements' };
+    const ATTENTION_DAYS = 7;
+    const LOW_AVERAGE = 50;
+
+    let app=null, auth=null, db=null, functions=null, firebaseReady=false;
+    let currentTeacher=null;
+    let allStudents=[];
+    let allAchievements=[];
+    let selectedStudentCode='';
+
+    const $ = id => document.getElementById(id);
+    const els = {
+      loginPanel:$('loginPanel'), dashboardShell:$('dashboardShell'), teacherCodeInput:$('teacherCodeInput'), loginBtn:$('loginBtn'), loginMessage:$('loginMessage'),
+      teacherChip:$('teacherChip'), logoutBtn:$('logoutBtn'), welcomeTitle:$('welcomeTitle'), welcomeSub:$('welcomeSub'), firebaseStatus:$('firebaseStatus'), teacherCodeStatus:$('teacherCodeStatus'), visibleAttemptStatus:$('visibleAttemptStatus'), snapshotStudents:$('snapshotStudents'), snapshotClasses:$('snapshotClasses'), snapshotMonth:$('snapshotMonth'), snapshotAttention:$('snapshotAttention'), classQuickChips:$('classQuickChips'),
+      searchInput:$('searchInput'), classFilter:$('classFilter'), topicFilter:$('topicFilter'), levelFilter:$('levelFilter'), rangeFilter:$('rangeFilter'), refreshBtn:$('refreshBtn'), copySummaryBtn:$('copySummaryBtn'), exportCsvBtn:$('exportCsvBtn'), printCodeCardsBtn:$('printCodeCardsBtn'), printBtn:$('printBtn'), mainMessage:$('mainMessage'), teacherManagePanel:$('teacherManagePanel'), refreshManageBtn:$('refreshManageBtn'), manageFirstName:$('manageFirstName'), manageSurname:$('manageSurname'), manageClassName:$('manageClassName'), addManagedStudentBtn:$('addManagedStudentBtn'), clearManagedStudentBtn:$('clearManagedStudentBtn'), manageSingleMessage:$('manageSingleMessage'), manageBulkClassName:$('manageBulkClassName'), manageBulkNames:$('manageBulkNames'), bulkAddManagedBtn:$('bulkAddManagedBtn'), clearManagedBulkBtn:$('clearManagedBulkBtn'), manageBulkMessage:$('manageBulkMessage'), managedClassList:$('managedClassList'), managedClassEmpty:$('managedClassEmpty'),
+      sumClasses:$('sumClasses'), sumStudents:$('sumStudents'), sumAttempts:$('sumAttempts'), sumAverage:$('sumAverage'), sumRecent:$('sumRecent'), chartRangeLabel:$('chartRangeLabel'), weeklyChart:$('weeklyChart'), classCards:$('classCards'), classEmpty:$('classEmpty'), heatmapWrap:$('heatmapWrap'), studentSort:$('studentSort'), studentTableBody:$('studentTableBody'), studentEmpty:$('studentEmpty'), attentionList:$('attentionList'), attentionEmpty:$('attentionEmpty'), growthList:$('growthList'), growthEmpty:$('growthEmpty'), studentDetail:$('studentDetail'), detailEmpty:$('detailEmpty'), recentActivityList:$('recentActivityList'), recentActivityEmpty:$('recentActivityEmpty'), missingList:$('missingList'), missingEmpty:$('missingEmpty'), studentProfileBackdrop:$('studentProfileBackdrop'), studentProfileTitle:$('studentProfileTitle'), studentProfileSub:$('studentProfileSub'), studentProfileBody:$('studentProfileBody'), closeStudentProfileBtn:$('closeStudentProfileBtn'), codePrintSheet:$('codePrintSheet')
+    };
+
+    function normaliseCode(value){ return String(value||'').trim().toUpperCase().replace(/[^A-Z0-9-]/g,''); }
+    function showMessage(el,text,type='info'){ el.textContent=text; el.className=`message show ${type}`; }
+    function hideMessage(el){ el.textContent=''; el.className='message'; }
+    function escapeHTML(s){ return String(s ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
+    function num(v){ const n=Number(v); return Number.isFinite(n)?n:0; }
+    function pct(a){ const score=num(a.score), total=num(a.total); if(total) return Math.round(score/total*100); return num(a.percent ?? a.percentage); }
+    function scoreText(a){ return `${num(a.score)}/${num(a.total)}`; }
+    function topicOf(a){ return a.topic || a.quizTopic || a.toolTopic || a.tool || 'Untitled topic'; }
+    function levelOf(a){ return a.englishLevel || a.level || 'Level not recorded'; }
+    function studentCodeOf(a){ return normaliseCode(a.studentCode || a.code || ''); }
+    function studentNameOf(s){ return s.name || [s.firstName,s.surname].filter(Boolean).join(' ') || 'Unnamed student'; }
+    function dateValue(a){
+      const raw=a.createdAt || a.completedAt || a.dateCompleted || a.timestamp || a.date || a.dateClient;
+      if(raw && typeof raw.toDate==='function') return raw.toDate();
+      if(raw && raw.seconds) return new Date(raw.seconds*1000);
+      if(raw) { const d=new Date(raw); if(!Number.isNaN(d.getTime())) return d; }
+      return new Date(0);
+    }
+    function dateText(d){
+      if(!d || Number.isNaN(d.getTime()) || d.getTime()===0) return 'Not recorded';
+      return d.toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'});
+    }
+    function dateTimeText(d){
+      if(!d || Number.isNaN(d.getTime()) || d.getTime()===0) return 'Not recorded';
+      return d.toLocaleString('en-AU',{day:'numeric',month:'short',year:'numeric',hour:'numeric',minute:'2-digit'});
+    }
+    function daysAgo(d){ if(!d || d.getTime()===0) return Infinity; return Math.floor((Date.now()-d.getTime())/86400000); }
+    function initials(name){ return String(name||'?').split(/\s+/).filter(Boolean).slice(0,2).map(p=>p[0]).join('').toUpperCase() || '?'; }
+    function avg(list){ return list.length ? Math.round(list.reduce((s,a)=>s+pct(a),0)/list.length) : 0; }
+    function best(list){ return list.length ? Math.max(...list.map(pct)) : 0; }
+    function latestDate(list){ return list.length ? list.map(dateValue).sort((a,b)=>b-a)[0] : new Date(0); }
+    function mondayOf(d){ const x=new Date(d); x.setHours(0,0,0,0); const day=(x.getDay()+6)%7; x.setDate(x.getDate()-day); return x; }
+    function weekKey(d){ const m=mondayOf(d); const y=m.getFullYear(); const mo=String(m.getMonth()+1).padStart(2,'0'); const da=String(m.getDate()).padStart(2,'0'); return `${y}-${mo}-${da}`; }
+    function weekLabel(key){ const d=new Date(key+'T00:00:00'); return d.toLocaleDateString('en-AU',{day:'numeric',month:'short'}); }
+
+    function splitName(fullName){
+      const parts=String(fullName||'').trim().replace(/\s+/g,' ').split(' ').filter(Boolean);
+      if(!parts.length) return {firstName:'',surname:''};
+      if(parts.length===1) return {firstName:parts[0],surname:''};
+      return {firstName:parts[0],surname:parts.slice(1).join(' ')};
+    }
+    function buildFullName(firstName,surname){ return [firstName,surname].map(s=>String(s||'').trim()).filter(Boolean).join(' '); }
+    function randomStudentCode(){
+      const alphabet='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let code='';
+      for(let i=0;i<6;i++) code+=alphabet[Math.floor(Math.random()*alphabet.length)];
+      return code;
+    }
+    async function generateUniqueStudentCode(){
+      for(let attempt=0;attempt<30;attempt++){
+        const code=randomStudentCode();
+        const snap=await getDoc(doc(db,COLLECTIONS.students,code));
+        if(!snap.exists()) return code;
+      }
+      throw new Error('Could not generate a unique student code. Please try again.');
+    }
+    function cleanClassName(value){ return String(value||'').trim().toUpperCase(); }
+    async function createTeacherStudent(){
+      // Phase 3D.1: client-side student creation is DISABLED under the secure
+      // rules model (identity writes are server-side only). Manage students in
+      // the Firebase Console until an admin-auth Cloud Function is built. The
+      // unused serverTimestamp/setDoc imports are retained for that future path.
+      void serverTimestamp; void setDoc; void generateUniqueStudentCode; void buildFullName; void cleanClassName;
+      throw new Error('Adding students is disabled here under the secure rules model. Please add students in the Firebase Console (or ask your MMT admin) for now.');
+    }
+    function buildCodesText(students,heading='MMT Student Codes'){
+      const grouped=students.reduce((acc,student)=>{
+        const className=student.className || 'No class';
+        if(!acc[className]) acc[className]=[];
+        acc[className].push(student);
+        return acc;
+      },{});
+      const sections=Object.keys(grouped).sort().map(className=>{
+        const rows=grouped[className].slice().sort((a,b)=>studentNameOf(a).localeCompare(studentNameOf(b))).map(student=>`${studentNameOf(student)} — ${student.studentCode || student.id}`).join('\n');
+        return `${className}\n${rows}`;
+      });
+      return `${heading}\n\n${sections.join('\n\n')}`.trim();
+    }
+
+    function setFirebaseConnected(){
+      firebaseReady=true;
+      if(els.firebaseStatus){
+        els.firebaseStatus.textContent='Connected';
+        els.firebaseStatus.className='statusValue good';
+      }
+      if(els.loginBtn){
+        els.loginBtn.disabled=false;
+        els.loginBtn.textContent='Open dashboard';
+      }
+      if(els.loginMessage && els.loginMessage.classList.contains('show') && /connecting/i.test(els.loginMessage.textContent||'')){
+        hideMessage(els.loginMessage);
+      }
+    }
+
+    async function initFirebase(){
+      if(els.loginBtn){
+        els.loginBtn.disabled=true;
+        els.loginBtn.textContent='Connecting...';
+      }
+      app=initializeApp(firebaseConfig);
+      auth=getAuth(app);
+      db=getFirestore(app);
+      functions=getFunctions(app);
+
+      // Phase 3D.1: no anonymous sign-in. Identity comes from the secure teacher
+      // code exchange at login. Mark connected once handles are ready; also keep
+      // listening so a restored custom-token session re-enables the button.
+      onAuthStateChanged(auth,user=>{ if(user) setFirebaseConnected(); });
+      setFirebaseConnected();
+    }
+
+    async function loginTeacher(){
+      hideMessage(els.loginMessage);
+      const code=normaliseCode(els.teacherCodeInput.value);
+      els.teacherCodeInput.value=code;
+      if(!code) return showMessage(els.loginMessage,'Enter your teacher code first.','bad');
+      if(!firebaseReady) return showMessage(els.loginMessage,'Firebase is still connecting. Please wait a moment and try again.','warn');
+      els.loginBtn.disabled=true; els.loginBtn.textContent='Checking...';
+      try{
+        // Phase 3D.1: secure exchange — server validates the teacher code
+        // (+ active) and mints a custom token; we sign in with it. No direct
+        // teachers/{code} read from the client.
+        const call=httpsCallable(functions,'exchangeTeacherCode');
+        const res=await call({ teacherCode: code });
+        const data=res.data || {};
+        if(!data.token) throw new Error('Sign-in failed. Please try again.');
+        await signInWithCustomToken(auth,data.token);
+        currentTeacher={ teacherCode: data.profile.teacherCode, ...data.profile };
+        await loadTeacherData();
+        openDashboard();
+      }catch(error){
+        console.error(error);
+        const m=String(error && error.message || '');
+        if(/not found/i.test(m)) return showMessage(els.loginMessage,'That teacher code was not found. Please check the code with the MMT admin.','bad');
+        if(/not active|inactive/i.test(m)) return showMessage(els.loginMessage,'This teacher code is currently inactive. Please contact the MMT admin.','bad');
+        showMessage(els.loginMessage,m || 'Could not open teacher dashboard.','bad');
+      }finally{
+        els.loginBtn.disabled=false; els.loginBtn.textContent='Open dashboard';
+      }
+    }
+
+    function chunkArray(arr,size){
+      const chunks=[];
+      for(let i=0;i<arr.length;i+=size) chunks.push(arr.slice(i,i+size));
+      return chunks;
+    }
+
+    async function loadTeacherData(){
+      if(!currentTeacher) return;
+      // Load students by teacher ownership first. Achievements are then matched to these student codes.
+      // This recovers older quiz attempts that saved studentCode but did not save teacherCode.
+      const studentsQuery=query(collection(db,COLLECTIONS.students), where('teacherCode','==',currentTeacher.teacherCode));
+      const studentSnap=await getDocs(studentsQuery);
+      allStudents=studentSnap.docs.map(d=>({id:d.id,studentCode:normaliseCode(d.data().studentCode || d.id),...d.data()}));
+
+      const studentCodes=[...new Set(allStudents.map(s=>normaliseCode(s.studentCode || s.id)).filter(Boolean))];
+      const achievementMap=new Map();
+
+      async function addAchievementDocs(snap){
+        snap.docs.forEach(d=>{
+          const record={id:d.id,...d.data()};
+          const code=studentCodeOf(record);
+          if(studentCodes.includes(code)) achievementMap.set(d.id,record);
+        });
+      }
+
+      // 1) Preferred current structure: achievements with teacherCode.
+      try{
+        const q=query(collection(db,COLLECTIONS.achievements), where('teacherCode','==',currentTeacher.teacherCode));
+        await addAchievementDocs(await getDocs(q));
+      }catch(err){
+        console.warn('Could not query achievements by teacherCode:', err);
+      }
+
+      // 2) Backward-compatible recovery: achievements linked only by studentCode.
+      // Phase 3D.1: BEST-EFFORT ONLY. Under the claim-based rules a teacher may
+      // read achievements where teacherCode == own claim; an `in studentCode`
+      // query is NOT teacher-scoped and will be DENIED. It is kept in try/catch
+      // so the dashboard still works (modern records carry teacherCode). Legacy
+      // records without teacherCode need a one-off backfill (separate task).
+      // Firestore IN queries have a small item limit, so codes are chunked safely.
+      for(const chunk of chunkArray(studentCodes,30)){
+        if(!chunk.length) continue;
+        try{
+          const q=query(collection(db,COLLECTIONS.achievements), where('studentCode','in',chunk));
+          await addAchievementDocs(await getDocs(q));
+        }catch(err){
+          console.warn('Could not query achievements by studentCode chunk:', err);
+        }
+      }
+
+      // 3) Legacy fallback for any older record that used code instead of studentCode.
+      for(const chunk of chunkArray(studentCodes,30)){
+        if(!chunk.length) continue;
+        try{
+          const q=query(collection(db,COLLECTIONS.achievements), where('code','in',chunk));
+          await addAchievementDocs(await getDocs(q));
+        }catch(err){
+          console.warn('Could not query achievements by code chunk:', err);
+        }
+      }
+
+      allAchievements=[...achievementMap.values()].sort((a,b)=>dateValue(b)-dateValue(a));
+      populateFilters();
+      renderAll();
+    }
+
+    function openDashboard(){
+      els.loginPanel.classList.add('hidden');
+      els.dashboardShell.classList.remove('hidden');
+      els.teacherChip.classList.remove('hidden');
+      els.logoutBtn.classList.remove('hidden');
+      els.teacherChip.textContent=`${currentTeacher.teacherName || 'Teacher'} · ${currentTeacher.teacherCode}`;
+      els.welcomeTitle.textContent=`Welcome, ${currentTeacher.teacherName || 'Teacher'}`;
+      els.welcomeSub.textContent=`${currentTeacher.school || 'Mills Maths Tools'} · ${allStudents.length} linked student${allStudents.length===1?'':'s'} · use the quick filters below to switch classes quickly.`;
+      els.teacherCodeStatus.textContent=currentTeacher.teacherCode;
+    }
+
+    function populateFilters(){
+      const keepClass=els.classFilter.value, keepTopic=els.topicFilter.value, keepLevel=els.levelFilter.value;
+      const classes=[...new Set(allStudents.map(s=>s.className).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+      els.classFilter.innerHTML='<option value="all">All classes</option>'+classes.map(c=>`<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
+      if(classes.includes(keepClass)) els.classFilter.value=keepClass;
+      const topics=[...new Set(allAchievements.map(topicOf).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+      els.topicFilter.innerHTML='<option value="all">All topics</option>'+topics.map(t=>`<option value="${escapeHTML(t)}">${escapeHTML(t)}</option>`).join('');
+      if(topics.includes(keepTopic)) els.topicFilter.value=keepTopic;
+      const levels=[...new Set(allAchievements.map(levelOf).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+      els.levelFilter.innerHTML='<option value="all">All levels</option>'+levels.map(l=>`<option value="${escapeHTML(l)}">${escapeHTML(l)}</option>`).join('');
+      if(levels.includes(keepLevel)) els.levelFilter.value=keepLevel;
+    }
+
+    function filteredStudents(){
+      const term=els.searchInput.value.trim().toLowerCase();
+      const cls=els.classFilter.value;
+      return allStudents.filter(s=>{
+        if(s.active===false) return false;
+        if(cls!=='all' && s.className!==cls) return false;
+        if(term){
+          const hay=[studentNameOf(s),s.studentCode,s.className,s.teacherCode].join(' ').toLowerCase();
+          if(!hay.includes(term)) return false;
+        }
+        return true;
+      });
+    }
+
+    function filteredAchievements(){
+      const studentCodes=new Set(filteredStudents().map(s=>s.studentCode || s.id));
+      const topic=els.topicFilter.value, level=els.levelFilter.value, range=els.rangeFilter.value;
+      const cutoff=range==='all' ? null : new Date(Date.now()-Number(range)*86400000);
+      return allAchievements.filter(a=>{
+        if(!studentCodes.has(studentCodeOf(a))) return false;
+        if(topic!=='all' && topicOf(a)!==topic) return false;
+        if(level!=='all' && levelOf(a)!==level) return false;
+        if(cutoff && dateValue(a)<cutoff) return false;
+        return true;
+      });
+    }
+
+    function attemptsByStudent(list=filteredAchievements()){
+      const map=new Map();
+      list.forEach(a=>{ const code=studentCodeOf(a); if(!map.has(code)) map.set(code,[]); map.get(code).push(a); });
+      return map;
+    }
+
+    function renderAll(){
+      const students=filteredStudents();
+      const attempts=filteredAchievements();
+      els.visibleAttemptStatus.textContent=String(attempts.length);
+      renderSummary(students,attempts);
+      renderWeeklyChart(attempts);
+      renderClassCards(students,attempts);
+      renderHeatmap(students,attempts);
+      renderStudentTable(students,attempts);
+      renderRecentActivity(students,attempts);
+      renderMissingStudents(students,attempts);
+      renderAttention(students,attempts);
+      renderGrowth(students,attempts);
+      renderSelectedStudent();
+      renderManagedClasses();
+      renderClassQuickChips();
+    }
+
+
+    function attemptsInLastDays(days){
+      const cutoff=new Date(Date.now()-days*86400000);
+      return allAchievements.filter(a=>dateValue(a)>=cutoff);
+    }
+    function classHealthFor(students,attempts){
+      const activeStudents=students.filter(s=>s.active!==false);
+      const codes=new Set(activeStudents.map(s=>normaliseCode(s.studentCode||s.id)));
+      const list=attempts.filter(a=>codes.has(studentCodeOf(a)));
+      const missing=activeStudents.filter(s=>!list.some(a=>studentCodeOf(a)===normaliseCode(s.studentCode||s.id))).length;
+      const average=list.length?avg(list):0;
+      if(!activeStudents.length || missing>Math.max(1,Math.ceil(activeStudents.length*.35)) || (list.length && average<50)) return {label:'Needs support', cls:'healthSupport', average, missing};
+      if(average>=75 && missing===0) return {label:'Strong', cls:'healthStrong', average, missing};
+      return {label:'Consolidating', cls:'healthConsolidating', average, missing};
+    }
+    function renderClassQuickChips(){
+      if(!els.classQuickChips) return;
+      const classes=[...new Set(allStudents.filter(s=>s.active!==false).map(s=>s.className).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+      const current=els.classFilter.value || 'all';
+      const allCount=allStudents.filter(s=>s.active!==false).length;
+      const chips=[`<button type="button" class="quickChip ${current==='all'?'active':''}" data-class="all">All <span class="miniCount">${allCount}</span></button>`].concat(classes.map(cls=>{
+        const count=allStudents.filter(s=>s.active!==false && s.className===cls).length;
+        return `<button type="button" class="quickChip ${current===cls?'active':''}" data-class="${escapeHTML(cls)}">${escapeHTML(cls)} <span class="miniCount">${count}</span></button>`;
+      }));
+      els.classQuickChips.innerHTML=chips.join('');
+    }
+
+
+    function renderManagedClasses(){
+      if(!els.managedClassList) return;
+      const activeStudents=allStudents.filter(s=>s.active!==false);
+      const grouped=activeStudents.reduce((acc,student)=>{
+        const className=student.className || 'No class';
+        if(!acc[className]) acc[className]=[];
+        acc[className].push(student);
+        return acc;
+      },{});
+      const classes=Object.keys(grouped).sort((a,b)=>a.localeCompare(b));
+      els.managedClassEmpty.classList.toggle('show',classes.length===0);
+      if(!classes.length){
+        els.managedClassList.innerHTML='<div class="onboardingBox"><strong>Start by adding your first class list.</strong>Paste student names into the bulk box above, generate codes, then share those codes with students. Their quiz results will appear here automatically.</div>';
+        return;
+      }
+      els.managedClassList.innerHTML=classes.map(className=>{
+        const students=grouped[className].slice().sort((a,b)=>studentNameOf(a).localeCompare(studentNameOf(b)));
+        const codes=new Set(students.map(s=>normaliseCode(s.studentCode||s.id)));
+        const classAttempts=allAchievements.filter(a=>codes.has(studentCodeOf(a)));
+        const recent=classAttempts.filter(a=>daysAgo(dateValue(a))<=7).length;
+        const latest=latestDate(classAttempts);
+        const health=classHealthFor(students,classAttempts);
+        return `<div class="classManageItem">
+          <div>
+            <div class="classManageTop"><div class="classManageName">${escapeHTML(className)}</div><span class="healthBadge ${health.cls}">${health.label}</span></div>
+            <div class="classManageMeta">Latest attempt: ${latest.getTime()?dateText(latest):'none yet'}</div>
+            <div class="classMetrics">
+              <div class="classMetric"><strong>${students.length}</strong><span>Students</span></div>
+              <div class="classMetric"><strong>${classAttempts.length?health.average+'%':'—'}</strong><span>Average</span></div>
+              <div class="classMetric"><strong>${recent}</strong><span>7-day tasks</span></div>
+            </div>
+          </div>
+          <div class="actions rightActions"><button type="button" class="secondary tiny" data-copy-class="${escapeHTML(className)}">Copy codes</button><button type="button" class="neutral tiny" data-filter-class="${escapeHTML(className)}">Open</button></div>
+        </div>`;
+      }).join('');
+    }
+
+    function renderSummary(students,attempts){
+      const classes=new Set(students.map(s=>s.className).filter(Boolean));
+      els.sumClasses.textContent=String(classes.size);
+      els.sumStudents.textContent=String(students.length);
+      els.sumAttempts.textContent=String(attempts.length);
+      els.sumAverage.textContent=attempts.length ? `${avg(attempts)}%` : '—';
+      const latest=latestDate(attempts);
+      els.sumRecent.textContent=latest.getTime()?dateText(latest):'—';
+      if(els.visibleAttemptStatus) els.visibleAttemptStatus.textContent=attempts.length ? `${avg(attempts)}%` : '—';
+      const monthAttempts=attemptsInLastDays(30);
+      const activeStudents=allStudents.filter(s=>s.active!==false);
+      const classesAll=new Set(activeStudents.map(s=>s.className).filter(Boolean));
+      const attentionCount=activeStudents.filter(s=>attentionReasonsFor(s,attempts).length>0).length;
+      if(els.snapshotStudents) els.snapshotStudents.textContent=String(activeStudents.length);
+      if(els.snapshotClasses) els.snapshotClasses.textContent=String(classesAll.size);
+      if(els.snapshotMonth) els.snapshotMonth.textContent=String(monthAttempts.length);
+      if(els.snapshotAttention) els.snapshotAttention.textContent=String(attentionCount);
+      const range=els.rangeFilter.options[els.rangeFilter.selectedIndex]?.textContent || 'All time';
+      els.chartRangeLabel.textContent=range;
+    }
+
+    function renderWeeklyChart(attempts){
+      const svg=els.weeklyChart;
+      svg.innerHTML='';
+      const W=900,H=280,padL=46,padR=18,padT=22,padB=44;
+      const range=els.rangeFilter.value;
+      let start;
+      if(range==='all'){
+        const dates=attempts.map(dateValue).filter(d=>d.getTime());
+        start=dates.length?mondayOf(new Date(Math.min(...dates.map(d=>d.getTime())))):mondayOf(new Date(Date.now()-28*86400000));
+      }else start=mondayOf(new Date(Date.now()-Number(range)*86400000));
+      const end=mondayOf(new Date());
+      const keys=[];
+      for(let d=new Date(start); d<=end; d.setDate(d.getDate()+7)) keys.push(weekKey(d));
+      if(!keys.length) keys.push(weekKey(new Date()));
+      const counts=Object.fromEntries(keys.map(k=>[k,0]));
+      attempts.forEach(a=>{ const d=dateValue(a); if(d.getTime()){ const k=weekKey(d); if(counts[k]!==undefined) counts[k]++; }});
+      const vals=keys.map(k=>counts[k]||0);
+      const max=Math.max(1,...vals);
+      const chartW=W-padL-padR, chartH=H-padT-padB;
+      for(let i=0;i<=4;i++){
+        const y=padT+chartH-(chartH*i/4);
+        svg.insertAdjacentHTML('beforeend',`<line class="gridLine" x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}"></line><text class="axisText" x="8" y="${y+4}">${Math.round(max*i/4)}</text>`);
+      }
+      const gap=8;
+      const barW=Math.max(12,(chartW/keys.length)-gap);
+      const points=[];
+      keys.forEach((k,i)=>{
+        const x=padL+i*(chartW/keys.length)+gap/2;
+        const h=(vals[i]/max)*chartH;
+        const y=padT+chartH-h;
+        svg.insertAdjacentHTML('beforeend',`<rect class="bar" x="${x}" y="${y}" width="${barW}" height="${h}" rx="7"></rect><text class="barLabel" x="${x+barW/2}" y="${Math.max(padT+13,y-5)}" text-anchor="middle">${vals[i]}</text>`);
+        if(keys.length<=10 || i%2===0) svg.insertAdjacentHTML('beforeend',`<text class="axisText" x="${x+barW/2}" y="${H-15}" text-anchor="middle">${weekLabel(k)}</text>`);
+        points.push([x+barW/2,y]);
+      });
+      if(points.length>1){
+        const d=points.map((p,i)=>`${i?'L':'M'} ${p[0]} ${p[1]}`).join(' ');
+        svg.insertAdjacentHTML('beforeend',`<path class="linePath" d="${d}"></path>`);
+        points.forEach(p=>svg.insertAdjacentHTML('beforeend',`<circle class="lineDot" cx="${p[0]}" cy="${p[1]}" r="5"></circle>`));
+      }
+      if(!attempts.length){
+        svg.insertAdjacentHTML('beforeend',`<text x="450" y="138" text-anchor="middle" fill="#64748b" font-size="18" font-weight="900">No completions in this view yet</text>`);
+      }
+    }
+
+    function renderClassCards(students,attempts){
+      const classes=[...new Set(students.map(s=>s.className||'No class'))].sort();
+      els.classCards.innerHTML='';
+      els.classEmpty.classList.toggle('show',classes.length===0);
+      classes.forEach(cls=>{
+        const clsStudents=students.filter(s=>(s.className||'No class')===cls);
+        const codes=new Set(clsStudents.map(s=>s.studentCode||s.id));
+        const clsAttempts=attempts.filter(a=>codes.has(studentCodeOf(a)));
+        const latest=latestDate(clsAttempts);
+        const div=document.createElement('div');
+        div.className='smallCard';
+        div.innerHTML=`<div class="smallTitle">${escapeHTML(cls)}</div><div class="smallMeta">${clsStudents.length} students · ${clsAttempts.length} completions · average ${clsAttempts.length?avg(clsAttempts)+'%':'—'} · latest ${latest.getTime()?dateText(latest):'—'}</div>`;
+        div.addEventListener('click',()=>{els.classFilter.value=cls; renderAll();});
+        els.classCards.appendChild(div);
+      });
+    }
+
+    function renderHeatmap(students,attempts){
+      const classes=[...new Set(students.map(s=>s.className||'No class'))].sort();
+      const topics=[...new Set(attempts.map(topicOf))].sort();
+      if(!classes.length || !topics.length){ els.heatmapWrap.innerHTML='<div class="empty show">No topic data yet.</div>'; return; }
+      const studentByClass=new Map(classes.map(c=>[c,new Set(students.filter(s=>(s.className||'No class')===c).map(s=>s.studentCode||s.id))]));
+      let html='<table><thead><tr><th>Class</th>'+topics.map(t=>`<th>${escapeHTML(t)}</th>`).join('')+'</tr></thead><tbody>';
+      classes.forEach(cls=>{
+        html+=`<tr><td><strong>${escapeHTML(cls)}</strong></td>`;
+        topics.forEach(topic=>{
+          const codes=studentByClass.get(cls);
+          const list=attempts.filter(a=>codes.has(studentCodeOf(a)) && topicOf(a)===topic);
+          const value=list.length?avg(list):null;
+          const clsName=value===null?'heatEmpty':value>=75?'heatHigh':value>=50?'heatMid':'heatLow';
+          html+=`<td><div class="heatCell ${clsName}">${value===null?'—':value+'%'}<br><span style="font-size:10px;font-weight:800">${list.length||0}</span></div></td>`;
+        });
+        html+='</tr>';
+      });
+      html+='</tbody></table>';
+      els.heatmapWrap.innerHTML=html;
+    }
+
+    function studentStats(student,attempts){
+      const code=student.studentCode||student.id;
+      const list=attempts.filter(a=>studentCodeOf(a)===code);
+      const allList=allAchievements.filter(a=>studentCodeOf(a)===code);
+      const latest=latestDate(list.length?list:allList);
+      return {code,list,allList,attempts:list.length,average:list.length?avg(list):0,best:list.length?best(list):0,latest};
+    }
+
+    function renderStudentTable(students,attempts){
+      const rows=students.map(s=>({student:s,...studentStats(s,attempts)}));
+      const mode=els.studentSort.value;
+      rows.sort((a,b)=>{
+        if(mode==='attempts') return b.attempts-a.attempts || studentNameOf(a.student).localeCompare(studentNameOf(b.student));
+        if(mode==='averageLow') return (a.attempts? a.average:999)-(b.attempts? b.average:999) || studentNameOf(a.student).localeCompare(studentNameOf(b.student));
+        if(mode==='recent') return b.latest-a.latest;
+        return studentNameOf(a.student).localeCompare(studentNameOf(b.student));
+      });
+      els.studentTableBody.innerHTML=rows.map(r=>{
+        const status=r.attempts===0?'<span class="badge warn">No attempts</span>':r.average<LOW_AVERAGE?'<span class="badge bad">Low avg</span>':daysAgo(r.latest)>ATTENTION_DAYS?'<span class="badge warn">Inactive</span>':'<span class="badge good">On track</span>';
+        return `<tr data-code="${escapeHTML(r.code)}" class="${selectedStudentCode===r.code?'selectedRow':''}"><td><strong>${escapeHTML(studentNameOf(r.student))}</strong></td><td>${escapeHTML(r.student.className||'')}</td><td><span class="code">${escapeHTML(r.code)}</span></td><td>${r.attempts}</td><td>${r.attempts?r.average+'%':'—'}</td><td>${r.attempts?r.best+'%':'—'}</td><td>${r.latest.getTime()?dateText(r.latest):'—'}</td><td>${status}</td></tr>`;
+      }).join('');
+      els.studentEmpty.classList.toggle('show',rows.length===0);
+    }
+
+
+    function masteryFor(value){
+      if(value>=80) return {label:'Secure', cls:'masterySecure'};
+      if(value>=50) return {label:'Consolidating', cls:'masteryConsolidating'};
+      return {label:'Developing', cls:'masteryDeveloping'};
+    }
+
+    function classTopicAverage(className, topic){
+      const codes=new Set(allStudents.filter(s=>(s.className||'')===(className||'')).map(s=>normaliseCode(s.studentCode||s.id)));
+      const list=allAchievements.filter(a=>codes.has(studentCodeOf(a)) && topicOf(a)===topic);
+      return list.length?avg(list):null;
+    }
+
+    function allStudentAttempts(student){
+      const code=normaliseCode(student.studentCode||student.id);
+      return allAchievements.filter(a=>studentCodeOf(a)===code).sort((a,b)=>dateValue(b)-dateValue(a));
+    }
+
+    function attentionReasonsFor(student,attempts){
+      const st=studentStats(student,attempts);
+      const reasons=[];
+      if(st.attempts===0) reasons.push('No completions in the current view.');
+      if(st.attempts>0 && st.average<LOW_AVERAGE) reasons.push(`Average is ${st.average}% across ${st.attempts} completion${st.attempts===1?'':'s'}.`);
+      if(st.attempts>0 && daysAgo(st.latest)>ATTENTION_DAYS) reasons.push(`No completion for ${daysAgo(st.latest)} days.`);
+      const groups=topicSummaryFor(st.allList || allStudentAttempts(student));
+      const repeatedLow=groups.find(g=>g.count>=2 && g.average<LOW_AVERAGE);
+      if(repeatedLow) reasons.push(`Repeated low scores in ${repeatedLow.topic} (${repeatedLow.average}% average).`);
+      return reasons;
+    }
+
+    function suggestNextTask(student,list=allStudentAttempts(student)){
+      if(!list.length) return 'Suggested next task: start with an accessible Sweet or Mild quiz to build confidence and establish a first completion.';
+      const topics=topicSummaryFor(list);
+      const developing=topics.filter(t=>t.average<50).sort((a,b)=>a.average-b.average)[0];
+      if(developing) return `Suggested next task: revisit ${developing.topic} at the same or easier level. Aim to move from Developing to Consolidating.`;
+      const consolidating=topics.filter(t=>t.average<80).sort((a,b)=>a.average-b.average)[0];
+      if(consolidating) return `Suggested next task: practise ${consolidating.topic} again and aim for 80%+ to show secure fluency.`;
+      const recent=list[0];
+      return `Suggested next task: try a higher level or a new topic. Recent results suggest ${studentNameOf(student).split(' ')[0]} is ready for extension.`;
+    }
+
+
+    function renderRecentActivity(students,attempts){
+      const studentLookup=new Map(students.map(s=>[normaliseCode(s.studentCode||s.id),s]));
+      const sorted=attempts.slice().sort((a,b)=>dateValue(b)-dateValue(a)).slice(0,10);
+      els.recentActivityList.innerHTML=sorted.map(a=>{
+        const s=studentLookup.get(studentCodeOf(a))||{};
+        return `<div class="attentionItem" data-code="${escapeHTML(studentCodeOf(a))}"><div class="attentionIcon">✅</div><div><div class="attentionName">${escapeHTML(studentNameOf(s))}</div><div class="attentionReason">${escapeHTML(topicOf(a))} · ${escapeHTML(levelOf(a))} · ${pct(a)}%</div><div class="activityDate">${escapeHTML(dateTimeText(dateValue(a)))}</div></div></div>`;
+      }).join('');
+      els.recentActivityEmpty.classList.toggle('show',sorted.length===0);
+    }
+
+    function renderMissingStudents(students,attempts){
+      const attempted=new Set(attempts.map(studentCodeOf));
+      const missing=students.filter(s=>!attempted.has(normaliseCode(s.studentCode||s.id))).slice().sort((a,b)=>studentNameOf(a).localeCompare(studentNameOf(b)));
+      els.missingList.innerHTML=missing.slice(0,12).map(s=>`<div class="attentionItem" data-code="${escapeHTML(s.studentCode||s.id)}"><div class="attentionIcon">⬜</div><div><div class="attentionName">${escapeHTML(studentNameOf(s))}</div><div class="attentionReason">${escapeHTML(s.className||'')} · no completion for the selected filters.</div></div></div>`).join('');
+      els.missingEmpty.classList.toggle('show',missing.length===0);
+    }
+
+    function renderAttention(students,attempts){
+      const items=[];
+      students.forEach(s=>{
+        const reasons=attentionReasonsFor(s,attempts);
+        if(reasons.length){
+          const urgent=reasons.some(r=>r.includes('Repeated low') || r.includes('Average is'));
+          items.push({s,kind:urgent?'🔴':'🟠',reason:reasons.join(' ')});
+        }
+      });
+      els.attentionList.innerHTML=items.slice(0,12).map(item=>`<div class="attentionItem" data-code="${escapeHTML(item.s.studentCode||item.s.id)}"><div class="attentionIcon">${item.kind}</div><div><div class="attentionName">${escapeHTML(studentNameOf(item.s))}</div><div class="attentionReason">${escapeHTML(item.s.className||'')} · ${escapeHTML(item.reason)}</div></div></div>`).join('');
+      els.attentionEmpty.classList.toggle('show',items.length===0);
+    }
+
+    function renderGrowth(students,attempts){
+      const growth=[];
+      students.forEach(s=>{
+        const code=s.studentCode||s.id;
+        const list=attempts.filter(a=>studentCodeOf(a)===code).sort((a,b)=>dateValue(a)-dateValue(b));
+        if(list.length<2) return;
+        const first=list.slice(0,Math.ceil(list.length/2));
+        const recent=list.slice(Math.floor(list.length/2));
+        const diff=avg(recent)-avg(first);
+        if(diff>0) growth.push({s,diff,from:avg(first),to:avg(recent),count:list.length});
+      });
+      growth.sort((a,b)=>b.diff-a.diff);
+      els.growthList.innerHTML=growth.slice(0,8).map(g=>`<div class="attentionItem" data-code="${escapeHTML(g.s.studentCode||g.s.id)}"><div class="attentionIcon">📈</div><div><div class="attentionName">${escapeHTML(studentNameOf(g.s))}</div><div class="attentionReason">Improved by ${g.diff} percentage points (${g.from}% → ${g.to}%) across ${g.count} completions.</div></div></div>`).join('');
+      els.growthEmpty.classList.toggle('show',growth.length===0);
+    }
+
+    function recommendationFor(student,attempts){
+      const list=attempts.filter(a=>studentCodeOf(a)===(student.studentCode||student.id));
+      if(!list.length) return 'Start with one quiz at an accessible level and build a completion habit.';
+      const topicGroups=new Map();
+      list.forEach(a=>{const t=topicOf(a); if(!topicGroups.has(t))topicGroups.set(t,[]); topicGroups.get(t).push(a);});
+      const weakest=[...topicGroups.entries()].map(([topic,arr])=>({topic,average:avg(arr)})).sort((a,b)=>a.average-b.average)[0];
+      if(weakest && weakest.average<70) return `Recommended next: revisit ${weakest.topic} and aim to improve beyond ${weakest.average}%.`;
+      return 'Recommended next: try a higher level or a new topic to extend fluency.';
+    }
+
+    function topicSummaryFor(list){
+      const groups=new Map();
+      list.forEach(a=>{
+        const topic=topicOf(a);
+        if(!groups.has(topic)) groups.set(topic,[]);
+        groups.get(topic).push(a);
+      });
+      return [...groups.entries()].map(([topic,arr])=>({
+        topic,
+        count:arr.length,
+        average:avg(arr),
+        best:best(arr),
+        latest:latestDate(arr),
+        levels:[...new Set(arr.map(levelOf).filter(Boolean))].join(', ')
+      })).sort((a,b)=>String(a.topic).localeCompare(String(b.topic)));
+    }
+
+    function escapeCsvCell(value){
+      return `"${String(value ?? '').replace(/"/g,'""')}"`;
+    }
+
+    function buildStudentCsv(student,list){
+      const headers=['Student','Class','Student Code','Topic','Level','Score','Total','Percent','Date'];
+      const rows=list.map(a=>[studentNameOf(student),student.className||'',student.studentCode||student.id,topicOf(a),levelOf(a),num(a.score),num(a.total),pct(a),dateTimeText(dateValue(a))]);
+      return [headers,...rows].map(row=>row.map(escapeCsvCell).join(',')).join('\n');
+    }
+
+    function downloadStudentCsv(student,list){
+      const csv=buildStudentCsv(student,list);
+      const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      const safeName=studentNameOf(student).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') || 'student';
+      a.href=url;
+      a.download=`mmt-${safeName}-achievements.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function buildStudentSummaryText(student,list){
+      const code=student.studentCode||student.id;
+      const latest=latestDate(list);
+      const topicRows=topicSummaryFor(list).map(t=>`- ${t.topic}: ${t.count} completion${t.count===1?'':'s'}, average ${t.average}%, best ${t.best}%, latest ${dateText(t.latest)}`).join('\n') || '- No topics yet';
+      const attemptRows=list.map(a=>`- ${dateTimeText(dateValue(a))}: ${topicOf(a)} · ${levelOf(a)} · ${scoreText(a)} · ${pct(a)}%`).join('\n') || '- No achievements yet';
+      return `MMT Student Achievement Summary\nStudent: ${studentNameOf(student)}\nClass: ${student.className||''}\nStudent code: ${code}\nTotal completions: ${list.length}\nAverage: ${list.length?avg(list)+'%':'—'}\nBest: ${list.length?best(list)+'%':'—'}\nMost recent: ${latest.getTime()?dateTimeText(latest):'—'}\n\nTopic summary\n${topicRows}\n\nAchievement history\n${attemptRows}`;
+    }
+
+
+
+    function buildCertificateText(student,list){
+      const name=studentNameOf(student);
+      if(!list.length) return `${name} has no saved achievements yet.`;
+      return list.map(a=>`${name} completed ${topicOf(a)}, ${levelOf(a)} level, scoring ${scoreText(a)} (${pct(a)}%) on ${dateText(dateValue(a))}.`).join('\n');
+    }
+
+    function topicRowHtml(student,t){
+      const mastery=masteryFor(t.average);
+      const classAvg=classTopicAverage(student.className,t.topic);
+      let compare='No class comparison yet', compareCls='compareNeutral';
+      if(classAvg!==null){
+        const diff=t.average-classAvg;
+        if(diff>0){ compare=`${diff} percentage point${diff===1?'':'s'} above class average (${classAvg}%)`; compareCls='comparePositive'; }
+        else if(diff<0){ compare=`${Math.abs(diff)} percentage point${Math.abs(diff)===1?'':'s'} below class average (${classAvg}%)`; compareCls='compareNegative'; }
+        else { compare=`Matches class average (${classAvg}%)`; compareCls='compareNeutral'; }
+      }
+      return `<div class="profileTopicRow"><div><div class="profileTopicName">${escapeHTML(t.topic)} <span class="masteryBadge ${mastery.cls}">${mastery.label}</span></div><div class="profileTopicMeta">${t.count} completion${t.count===1?'':'s'} · best ${t.best}% · latest ${dateText(t.latest)}${t.levels?' · '+escapeHTML(t.levels):''}</div><div class="compareText ${compareCls}">${escapeHTML(compare)}</div></div><div class="profileTopicScore">${t.average}%</div></div>`;
+    }
+
+    function trendSparklineHtml(list){
+      const ordered=list.slice().sort((a,b)=>dateValue(a)-dateValue(b)).slice(-12);
+      if(!ordered.length) return '<div class="trendCard"><div class="smallTitle">Progress trend</div><div class="smallMeta">No saved attempts yet.</div></div>';
+      const W=600,H=96,pad=12;
+      const vals=ordered.map(pct);
+      const min=0,max=100;
+      const step=ordered.length>1?(W-pad*2)/(ordered.length-1):0;
+      const pts=vals.map((v,i)=>[pad+i*step, H-pad-((v-min)/(max-min))*(H-pad*2)]);
+      const path=pts.map((p,i)=>`${i?'L':'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
+      const circles=pts.map((p,i)=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="4"><title>${dateText(dateValue(ordered[i]))}: ${vals[i]}%</title></circle>`).join('');
+      const first=vals[0], last=vals[vals.length-1], change=last-first;
+      return `<div class="trendCard"><div class="smallTitle">Progress trend</div><div class="smallMeta">Last ${ordered.length} completion${ordered.length===1?'':'s'}.</div><svg class="trendSvg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Student trend graph"><line x1="${pad}" y1="${H-pad}" x2="${W-pad}" y2="${H-pad}" stroke="#e2e8f0"/><line x1="${pad}" y1="${pad}" x2="${pad}" y2="${H-pad}" stroke="#e2e8f0"/><path d="${path}" fill="none" stroke="#2563eb" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>${circles.replace(/<circle/g,'<circle fill="#2563eb" stroke="#fff" stroke-width="2"')}</svg><div class="trendMeta"><div><strong>${first}%</strong>First shown</div><div><strong>${last}%</strong>Latest</div><div><strong>${change>0?'+':''}${change}</strong>Change</div></div></div>`;
+    }
+
+
+    function openStudentProfile(student){
+      const code=normaliseCode(student.studentCode||student.id);
+      selectedStudentCode=code;
+      const list=allStudentAttempts(student);
+      const currentViewList=filteredAchievements().filter(a=>studentCodeOf(a)===code).sort((a,b)=>dateValue(b)-dateValue(a));
+      const topicRows=topicSummaryFor(list);
+      const latest=latestDate(list);
+      const reasons=attentionReasonsFor(student,filteredAchievements());
+      const certificates=list.slice(0,5).map(a=>`<div class="certificateLine">${escapeHTML(`${studentNameOf(student)} completed ${topicOf(a)}, ${levelOf(a)} level, scoring ${scoreText(a)} (${pct(a)}%) on ${dateText(dateValue(a))}.`)}</div>`).join('') || '<div class="empty show">No certificates available yet.</div>';
+      els.studentProfileTitle.textContent=studentNameOf(student);
+      els.studentProfileSub.textContent=`${student.className||'No class'} · ${code} · full achievement history`;
+      els.studentProfileBody.innerHTML=`
+        <div class="profileActions">
+          <button id="copyStudentProfileBtn" class="secondary tiny" type="button">Copy student summary</button>
+          <button id="copyStudentCertificatesBtn" class="secondary tiny" type="button">Copy certificates</button>
+          <button id="exportStudentProfileBtn" class="secondary tiny" type="button">Export student CSV</button>
+          <button id="printStudentProfileBtn" class="neutral tiny" type="button">Print parent/student summary</button>
+        </div>
+        <div class="profileStats">
+          <div class="profileStat"><strong>${list.length}</strong><span>Total completions</span></div>
+          <div class="profileStat"><strong>${list.length?avg(list)+'%':'—'}</strong><span>Average</span></div>
+          <div class="profileStat"><strong>${list.length?best(list)+'%':'—'}</strong><span>Best</span></div>
+          <div class="profileStat"><strong>${topicRows.length}</strong><span>Topics</span></div>
+          <div class="profileStat"><strong>${latest.getTime()?dateText(latest):'—'}</strong><span>Most recent</span></div>
+        </div>
+        ${trendSparklineHtml(list)}
+        <div class="nextTaskBox">${escapeHTML(suggestNextTask(student,list))}</div>
+        ${reasons.length?`<div class="smallCard"><div class="smallTitle">Needs follow-up because…</div><div class="smallMeta">${escapeHTML(reasons.join(' '))}</div></div>`:''}
+        <div class="smallCard">
+          <div class="smallTitle">Current dashboard view</div>
+          <div class="smallMeta">${currentViewList.length} of ${list.length} achievement${list.length===1?'':'s'} match the current class/topic/level/date filters. The profile below shows this student’s full saved achievement record.</div>
+        </div>
+        <div class="profileGrid">
+          <section class="profileSection">
+            <h3 class="profileSectionTitle">Topic mastery and class comparison</h3>
+            <div class="profileTopicList">
+              ${topicRows.length?topicRows.map(t=>topicRowHtml(student,t)).join(''):'<div class="empty show">No topic achievements yet.</div>'}
+            </div>
+          </section>
+          <section class="profileSection">
+            <h3 class="profileSectionTitle">Achievement certificates</h3>
+            <div class="profileTopicList">${certificates}</div>
+            <p class="mutedSmall">Use “Copy certificates” to copy all certificate lines for this student.</p>
+          </section>
+        </div>
+        <section class="profileSection">
+          <h3 class="profileSectionTitle">Printable summary</h3>
+          <div class="mutedSmall">The print button creates a clean parent/student-style summary with achievement history, next step and topic mastery.</div>
+          <div class="profilePrintSummary">
+            <h2>${escapeHTML(studentNameOf(student))} — Achievement Summary</h2>
+            <p><strong>Class:</strong> ${escapeHTML(student.className||'')} · <strong>Code:</strong> ${escapeHTML(code)}</p>
+            <p><strong>Next step:</strong> ${escapeHTML(suggestNextTask(student,list))}</p>
+          </div>
+        </section>
+        <section class="profileSection">
+          <h3 class="profileSectionTitle">Full achievement history</h3>
+          <div class="profileAttemptTable">
+            ${list.length?`<table><thead><tr><th>Date</th><th>Topic</th><th>Level</th><th>Score</th><th>Percent</th><th>Mastery</th></tr></thead><tbody>${list.map(a=>{const m=masteryFor(pct(a));return `<tr><td>${escapeHTML(dateTimeText(dateValue(a)))}</td><td><strong>${escapeHTML(topicOf(a))}</strong></td><td>${escapeHTML(levelOf(a))}</td><td>${escapeHTML(scoreText(a))}</td><td><span class="badge ${pct(a)>=80?'good':pct(a)>=50?'warn':'bad'}">${pct(a)}%</span></td><td><span class="masteryBadge ${m.cls}">${m.label}</span></td></tr>`}).join('')}</tbody></table>`:'<div class="empty show">No achievements saved for this student yet.</div>'}
+          </div>
+        </section>
+      `;
+      els.studentProfileBackdrop.classList.add('show');
+      const copyBtn=$('copyStudentProfileBtn');
+      const certBtn=$('copyStudentCertificatesBtn');
+      const exportBtn=$('exportStudentProfileBtn');
+      const printBtn=$('printStudentProfileBtn');
+      if(copyBtn) copyBtn.addEventListener('click',async()=>{ await copyText(buildStudentSummaryText(student,list)); showMessage(els.mainMessage,`Copied ${studentNameOf(student)}'s achievement summary.`, 'ok'); });
+      if(certBtn) certBtn.addEventListener('click',async()=>{ await copyText(buildCertificateText(student,list)); showMessage(els.mainMessage,`Copied ${studentNameOf(student)}'s certificate lines.`, 'ok'); });
+      if(exportBtn) exportBtn.addEventListener('click',()=>downloadStudentCsv(student,list));
+      if(printBtn) printBtn.addEventListener('click',()=>{document.body.classList.add('printStudentProfile'); window.print();});
+      renderStudentTable(filteredStudents(),filteredAchievements());
+      renderSelectedStudent();
+    }
+
+    function closeStudentProfile(){
+      els.studentProfileBackdrop.classList.remove('show');
+    }
+
+    function renderSelectedStudent(){
+      const students=filteredStudents();
+      const attempts=filteredAchievements();
+      const student=students.find(s=>(s.studentCode||s.id)===selectedStudentCode);
+      if(!student){ els.studentDetail.innerHTML=''; els.detailEmpty.classList.add('show'); return; }
+      els.detailEmpty.classList.remove('show');
+      const code=student.studentCode||student.id;
+      const list=attempts.filter(a=>studentCodeOf(a)===code).sort((a,b)=>dateValue(b)-dateValue(a));
+      const st=studentStats(student,attempts);
+      const topics=[...new Set(list.map(topicOf))];
+      const rec=suggestNextTask(student,allStudentAttempts(student));
+      els.studentDetail.innerHTML=`
+        <div class="studentHeader">
+          <div class="studentHeadLeft"><div class="avatar">${escapeHTML(initials(studentNameOf(student)))}</div><div><div class="studentName">${escapeHTML(studentNameOf(student))}</div><div class="studentMeta">${escapeHTML(student.className||'')} · ${escapeHTML(code)}</div></div></div>
+          <button type="button" class="secondary tiny" data-open-profile="${escapeHTML(code)}">Open profile</button>
+        </div>
+        <div class="detailStats"><div class="detailStat"><strong>${st.attempts}</strong><span>Attempts</span></div><div class="detailStat"><strong>${st.attempts?st.average+'%':'—'}</strong><span>Average</span></div><div class="detailStat"><strong>${st.attempts?st.best+'%':'—'}</strong><span>Best</span></div></div>
+        <div class="smallCard"><div class="smallTitle">Recommendation</div><div class="smallMeta">${escapeHTML(rec)}</div></div>
+        <div class="smallCard"><div class="smallTitle">Topics attempted</div><div class="smallMeta">${topics.length?escapeHTML(topics.join(', ')):'No topics yet'}</div></div>
+        <div class="attemptList">${list.length?list.map(a=>`<div class="attempt"><div class="attemptTop"><div class="attemptTitle">${escapeHTML(topicOf(a))}</div><span class="badge ${pct(a)>=80?'good':pct(a)>=50?'warn':'bad'}">${pct(a)}%</span></div><div class="attemptMeta">${escapeHTML(levelOf(a))} · ${escapeHTML(scoreText(a))} · ${escapeHTML(dateTimeText(dateValue(a)))}</div></div>`).join(''):'<div class="empty show">No attempts in the current view.</div>'}</div>
+      `;
+    }
+
+    function buildSummaryText(){
+      const students=filteredStudents(); const attempts=filteredAchievements();
+      return `MMT Teacher Progress Summary\nTeacher: ${currentTeacher.teacherName||''} (${currentTeacher.teacherCode})\nClasses: ${new Set(students.map(s=>s.className).filter(Boolean)).size}\nStudents: ${students.length}\nCompletions: ${attempts.length}\nAverage: ${attempts.length?avg(attempts)+'%':'—'}\nMost recent: ${latestDate(attempts).getTime()?dateText(latestDate(attempts)):'—'}`;
+    }
+
+    function buildStudentCodeCardsPrintSheet(){
+      const students=filteredStudents().slice().sort((a,b)=>{
+        const classCompare=String(a.className||'').localeCompare(String(b.className||''));
+        if(classCompare) return classCompare;
+        return studentNameOf(a).localeCompare(studentNameOf(b));
+      });
+      if(!students.length){
+        showMessage(els.mainMessage,'No visible students to print. Choose a class/filter first.','warn');
+        return false;
+      }
+      const selectedClass=els.classFilter.value && els.classFilter.value!=='all' ? els.classFilter.value : 'All visible classes';
+      const teacherName=currentTeacher?.teacherName || 'Teacher';
+      const chunks=[];
+      for(let i=0;i<students.length;i+=12) chunks.push(students.slice(i,i+12));
+      els.codePrintSheet.innerHTML=chunks.map((chunk,pageIndex)=>`
+        <div class="codeCardsMeta">MMT student codes · ${escapeHTML(selectedClass)} · ${escapeHTML(teacherName)} · Page ${pageIndex+1} of ${chunks.length}</div>
+        <div class="codeCardsGrid">
+          ${chunk.map(student=>`
+            <article class="studentCodeCard">
+              <div>
+                <div class="miniBrand"><span>Mills Maths Tools</span><span>Student login</span></div>
+                <div class="studentName">${escapeHTML(studentNameOf(student))}</div>
+              </div>
+              <div class="studentCodeBig">${escapeHTML(student.studentCode || student.id || '')}</div>
+              <div class="cardDetails">
+                <div><span>Class</span>${escapeHTML(student.className || '—')}</div>
+                <div><span>Teacher</span>${escapeHTML(student.teacherName || student.teacher || teacherName || '—')}</div>
+              </div>
+            </article>
+          `).join('')}
+        </div>
+      `).join('');
+      return true;
+    }
+
+    function printStudentCodeCards(){
+      if(!buildStudentCodeCardsPrintSheet()) return;
+      document.body.classList.add('printCodeCards');
+      window.print();
+    }
+
+    function exportCsv(){
+      const attempts=filteredAchievements();
+      const studentLookup=new Map(allStudents.map(s=>[s.studentCode||s.id,s]));
+      const headers=['Student','Class','Student Code','Topic','Level','Score','Total','Percent','Date'];
+      const rows=attempts.map(a=>{const s=studentLookup.get(studentCodeOf(a))||{};return [studentNameOf(s),s.className||'',studentCodeOf(a),topicOf(a),levelOf(a),num(a.score),num(a.total),pct(a),dateTimeText(dateValue(a))];});
+      const csv=[headers,...rows].map(row=>row.map(cell=>`"${String(cell??'').replace(/"/g,'""')}"`).join(',')).join('\n');
+      const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      a.href=url; a.download=`mmt-teacher-progress-${currentTeacher.teacherCode}.csv`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    }
+
+    async function copyText(text){ await navigator.clipboard.writeText(text); }
+
+    function logout(){
+      currentTeacher=null; allStudents=[]; allAchievements=[]; selectedStudentCode='';
+      els.dashboardShell.classList.add('hidden'); els.loginPanel.classList.remove('hidden'); els.teacherChip.classList.add('hidden'); els.logoutBtn.classList.add('hidden');
+      els.teacherCodeInput.focus();
+    }
+
+    els.loginBtn.addEventListener('click',loginTeacher);
+    els.teacherCodeInput.addEventListener('keydown',e=>{if(e.key==='Enter')loginTeacher();});
+    els.teacherCodeInput.addEventListener('input',()=>{els.teacherCodeInput.value=normaliseCode(els.teacherCodeInput.value);});
+    els.logoutBtn.addEventListener('click',logout);
+    els.refreshBtn.addEventListener('click',async()=>{try{await loadTeacherData();showMessage(els.mainMessage,'Dashboard refreshed.','ok')}catch(e){console.error(e);showMessage(els.mainMessage,e.message,'bad')}});
+    [els.searchInput,els.classFilter,els.topicFilter,els.levelFilter,els.rangeFilter,els.studentSort].forEach(el=>{el.addEventListener('input',renderAll);el.addEventListener('change',renderAll);});
+    els.copySummaryBtn.addEventListener('click',async()=>{await copyText(buildSummaryText());showMessage(els.mainMessage,'Summary copied to clipboard.','ok')});
+    els.exportCsvBtn.addEventListener('click',exportCsv);
+    els.printCodeCardsBtn.addEventListener('click',printStudentCodeCards);
+    els.printBtn.addEventListener('click',()=>window.print());
+    window.addEventListener('afterprint',()=>{ document.body.classList.remove('printCodeCards'); document.body.classList.remove('printStudentProfile'); if(els.codePrintSheet) els.codePrintSheet.innerHTML=''; });
+    els.studentTableBody.addEventListener('click',e=>{const row=e.target.closest('tr[data-code]'); if(!row)return; const code=row.dataset.code; const student=allStudents.find(s=>(s.studentCode||s.id)===code); if(student) openStudentProfile(student);});
+    els.studentDetail.addEventListener('click',e=>{const btn=e.target.closest('[data-open-profile]'); if(!btn)return; const code=btn.dataset.openProfile; const student=allStudents.find(s=>(s.studentCode||s.id)===code); if(student) openStudentProfile(student);});
+    els.closeStudentProfileBtn.addEventListener('click',closeStudentProfile);
+    els.studentProfileBackdrop.addEventListener('click',e=>{if(e.target===els.studentProfileBackdrop) closeStudentProfile();});
+    document.addEventListener('keydown',e=>{if(e.key==='Escape' && els.studentProfileBackdrop.classList.contains('show')) closeStudentProfile();});
+    els.attentionList.addEventListener('click',e=>{const item=e.target.closest('[data-code]'); if(!item)return; selectedStudentCode=item.dataset.code; renderAll();});
+    els.growthList.addEventListener('click',e=>{const item=e.target.closest('[data-code]'); if(!item)return; selectedStudentCode=item.dataset.code; renderAll();});
+    els.recentActivityList.addEventListener('click',e=>{const item=e.target.closest('[data-code]'); if(!item)return; selectedStudentCode=item.dataset.code; renderAll();});
+    els.missingList.addEventListener('click',e=>{const item=e.target.closest('[data-code]'); if(!item)return; selectedStudentCode=item.dataset.code; renderAll();});
+
+
+    if(els.refreshManageBtn){
+      els.refreshManageBtn.addEventListener('click',async()=>{try{await loadTeacherData();showMessage(els.mainMessage,'Class list refreshed.','ok')}catch(e){console.error(e);showMessage(els.mainMessage,e.message,'bad')}});
+    }
+    if(els.addManagedStudentBtn){
+      els.addManagedStudentBtn.addEventListener('click',async()=>{
+        els.addManagedStudentBtn.disabled=true; els.addManagedStudentBtn.textContent='Creating...';
+        try{
+          const student=await createTeacherStudent({firstName:els.manageFirstName.value,surname:els.manageSurname.value,className:els.manageClassName.value});
+          showMessage(els.manageSingleMessage,`Created ${student.name} with code ${student.studentCode}.`,'ok');
+          await copyText(`${student.name} — ${student.studentCode}`);
+          els.manageFirstName.value=''; els.manageSurname.value='';
+          await loadTeacherData();
+        }catch(e){console.error(e);showMessage(els.manageSingleMessage,e.message,'bad')}
+        finally{els.addManagedStudentBtn.disabled=false; els.addManagedStudentBtn.textContent='Generate student code';}
+      });
+    }
+    if(els.clearManagedStudentBtn){
+      els.clearManagedStudentBtn.addEventListener('click',()=>{els.manageFirstName.value='';els.manageSurname.value='';els.manageClassName.value='';});
+    }
+    if(els.bulkAddManagedBtn){
+      els.bulkAddManagedBtn.addEventListener('click',async()=>{
+        els.bulkAddManagedBtn.disabled=true; els.bulkAddManagedBtn.textContent='Creating...';
+        try{
+          const lines=els.manageBulkNames.value.split(/\r?\n/).map(line=>line.trim()).filter(Boolean);
+          if(!lines.length) throw new Error('Paste at least one student name.');
+          if(!els.manageBulkClassName.value.trim()) throw new Error('Please enter a class name for the bulk list.');
+          const created=[];
+          for(const line of lines){
+            const {firstName,surname}=splitName(line);
+            created.push(await createTeacherStudent({firstName,surname,className:els.manageBulkClassName.value}));
+          }
+          await copyText(buildCodesText(created,`${cleanClassName(els.manageBulkClassName.value)} Student Codes`));
+          showMessage(els.manageBulkMessage,`Created ${created.length} student code${created.length===1?'':'s'}. Codes copied to clipboard.`,'ok');
+          els.manageBulkNames.value='';
+          await loadTeacherData();
+        }catch(e){console.error(e);showMessage(els.manageBulkMessage,e.message,'bad')}
+        finally{els.bulkAddManagedBtn.disabled=false; els.bulkAddManagedBtn.textContent='Generate class codes';}
+      });
+    }
+    if(els.clearManagedBulkBtn){
+      els.clearManagedBulkBtn.addEventListener('click',()=>{els.manageBulkClassName.value='';els.manageBulkNames.value='';});
+    }
+    if(els.managedClassList){
+      els.managedClassList.addEventListener('click',async e=>{
+        const copyBtn=e.target.closest('[data-copy-class]');
+        const filterBtn=e.target.closest('[data-filter-class]');
+        if(copyBtn){
+          const cls=copyBtn.dataset.copyClass;
+          const students=allStudents.filter(s=>s.active!==false && (s.className||'No class')===cls);
+          if(!students.length) return showMessage(els.mainMessage,'No active students found for that class.','warn');
+          await copyText(buildCodesText(students,`${cls} Student Codes`));
+          showMessage(els.mainMessage,`${cls} student codes copied to clipboard.`,'ok');
+        }
+        if(filterBtn){
+          const cls=filterBtn.dataset.filterClass;
+          els.classFilter.value=cls;
+          renderAll();
+          window.scrollTo({top:0,behavior:'smooth'});
+        }
+      });
+    }
+
+
+    if(els.classQuickChips){
+      els.classQuickChips.addEventListener('click',e=>{
+        const chip=e.target.closest('[data-class]');
+        if(!chip) return;
+        els.classFilter.value=chip.dataset.class;
+        renderAll();
+      });
+    }
+
+    initFirebase().catch(error=>{
+      console.error(error);
+      firebaseReady=false;
+      if(els.firebaseStatus){
+        els.firebaseStatus.textContent='Connection failed';
+        els.firebaseStatus.className='statusValue bad';
+      }
+      if(els.loginBtn){
+        els.loginBtn.disabled=false;
+        els.loginBtn.textContent='Retry connection';
+        els.loginBtn.onclick=()=>initFirebase().catch(err=>{console.error(err);showMessage(els.loginMessage,err.message||'Firebase connection failed.','bad')});
+      }
+      showMessage(els.loginMessage,error.message||'Firebase connection failed.','bad');
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>MMT Admin — temporarily disabled</title>
+<link rel="stylesheet" href="../shared/portalStyles.css"/>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">Mills Maths Tools</div>
+  <div class="sub">Admin Console</div>
+</header>
+
+<div class="warn-banner" role="alert">
+  <strong>⚠ Admin identity management is temporarily disabled</strong> while the secure platform is being rebuilt.
+</div>
+
+<main class="wrap">
+  <section class="card section">
+    <h2>Manage students &amp; teachers in the Firebase Console for now</h2>
+    <p class="hint">Creating, editing, disabling, assigning or deleting student/teacher records from a web page is turned off under the secure rules model (Phase 3D/4A). There is <strong>no admin secret in this page</strong> and anonymous writes are <strong>not</strong> enabled.</p>
+    <p>Use the <a href="https://console.firebase.google.com/project/mills-maths-tools/firestore" target="_blank" rel="noopener">Firebase Console → Firestore</a> to manage the <code>students</code> and <code>teachers</code> collections until a dedicated admin-auth Cloud Function is built.</p>
+
+    <h3 style="margin-top:18px">What a future secure Admin Console will do</h3>
+    <ul class="muted">
+      <li>Create teacher codes and student codes (server-side, via an admin-only Cloud Function).</li>
+      <li>Assign students to teachers and classes.</li>
+      <li>Disable / reactivate codes without deleting historical achievements.</li>
+      <li>All behind a real admin sign-in — never a shared secret in the browser.</li>
+    </ul>
+    <p class="muted" style="margin-top:14px"><em>All write actions on this page are intentionally disabled.</em></p>
+  </section>
+</main>
+</body>
+</html>

@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>MMT Teacher Platform</title>
+<link rel="stylesheet" href="../shared/portalStyles.css"/>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">Mills Maths Tools</div>
+  <div class="sub">Teacher Platform</div>
+  <div class="spacer"></div>
+  <div class="who hidden" id="whoChip"></div>
+  <button class="btn ghost hidden" id="signoutBtn" type="button">Sign out</button>
+</header>
+
+<!-- LOGIN -->
+<main id="loginView" class="wrap">
+  <section class="card login">
+    <h1>Teacher sign in</h1>
+    <p class="lead">Enter your teacher code to view your students' results.</p>
+    <div class="secure"><span>🔒</span><span><strong>Secure sign-in.</strong> Your code is verified by our server and you are signed in with a secure token. You only ever see your own students and results.</span></div>
+    <div class="field"><label for="codeInput">Teacher code</label><input id="codeInput" placeholder="e.g. MILLS0423" autocomplete="off"/></div>
+    <button class="btn primary" id="loginBtn" type="button" style="width:100%">Sign in</button>
+    <div class="msg" id="loginMsg"></div>
+  </section>
+</main>
+
+<!-- DASHBOARD -->
+<main id="dashView" class="wrap hidden">
+  <section class="card profile" id="profileCard">
+    <div class="avatar" id="avatar">T</div>
+    <div><div class="name" id="profileName">Teacher</div><div class="meta" id="profileMeta">—</div></div>
+  </section>
+
+  <div class="cards">
+    <div class="card stat"><div class="label">Students</div><div class="value" id="statStudents">0</div></div>
+    <div class="card stat"><div class="label">Attempts</div><div class="value" id="statAttempts">0</div></div>
+    <div class="card stat"><div class="label">Average</div><div class="value" id="statAvg">0%</div></div>
+    <div class="card stat"><div class="label">Need support</div><div class="value" id="statSupport">0</div></div>
+  </div>
+
+  <section class="card section">
+    <h2>Filters</h2>
+    <div class="filters">
+      <select id="classFilter"><option value="">All classes</option></select>
+      <input id="searchInput" placeholder="Search student or code"/>
+      <select id="toolFilter"><option value="">All tools</option></select>
+      <select id="topicFilter"><option value="">All topics</option></select>
+      <select id="dateFilter"><option value="">Any time</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last term (90 days)</option></select>
+      <span class="spacer" style="flex:1"></span>
+      <button class="btn" id="csvBtn" type="button">Export CSV</button>
+      <button class="btn" id="copyBtn" type="button">Copy summary</button>
+    </div>
+    <div class="msg" id="advNote"></div>
+  </section>
+
+  <section class="card section">
+    <h2>Students</h2>
+    <p class="hint">Click a student for their detailed results.</p>
+    <div id="studentsBody"></div>
+  </section>
+
+  <section class="card section">
+    <h2>Results</h2>
+    <p class="hint">Individual attempts across your tools.</p>
+    <div id="resultsBody"></div>
+  </section>
+</main>
+
+<div class="modal-back" id="modalBack"><div class="modal" id="modal"></div></div>
+
+<script type="module">
+import { initPortal, loginTeacher, logout, normaliseCode, getDb } from "../shared/codeExchangeClient.js";
+import { COLLECTIONS } from "../shared/firebaseConfig.js";
+import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { getEnabledTools } from "../shared/mmtToolRegistry.js";
+import { normaliseAchievement, summarise, rollupByStudent, toCSV, summaryText } from "../shared/resultUtils.js";
+
+const $ = (id)=>document.getElementById(id);
+let teacher=null, students=[], all=[], attemptsByCode=new Map();
+
+initPortal();
+
+function showMsg(t,type="info"){ const m=$("loginMsg"); m.textContent=t; m.className=`msg show ${type}`; }
+function pctClass(p){ return p>=70?"hi":p>=50?"mid":"lo"; }
+function esc(s){ return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function hashColour(s){ let h=0; for(const c of String(s)) h=(h*31+c.charCodeAt(0))>>>0; return `linear-gradient(135deg,hsl(${h%360} 70% 45%),hsl(${(h+60)%360} 70% 45%))`; }
+
+$("codeInput").addEventListener("input", e=>{ e.target.value=normaliseCode(e.target.value); });
+$("codeInput").addEventListener("keydown", e=>{ if(e.key==="Enter") $("loginBtn").click(); });
+$("loginBtn").addEventListener("click", doLogin);
+$("signoutBtn").addEventListener("click", async ()=>{ await logout(); location.reload(); });
+["classFilter","toolFilter","topicFilter","dateFilter"].forEach(id=> $(id).addEventListener("change", render));
+$("searchInput").addEventListener("input", render);
+$("csvBtn").addEventListener("click", exportCsv);
+$("copyBtn").addEventListener("click", copySummary);
+$("modalBack").addEventListener("click", e=>{ if(e.target===$("modalBack")) $("modalBack").classList.remove("show"); });
+
+async function doLogin(){
+  const code = normaliseCode($("codeInput").value);
+  if(!code){ showMsg("Enter your teacher code first.","bad"); return; }
+  $("loginBtn").disabled=true; $("loginBtn").textContent="Signing in...";
+  const res = await loginTeacher(code);
+  $("loginBtn").disabled=false; $("loginBtn").textContent="Sign in";
+  if(!res.ok){ showMsg(res.error || "Could not sign in.","bad"); return; }
+  teacher = res.profile;
+  await loadData();
+  showDashboard();
+}
+
+async function loadData(){
+  const db = getDb();
+  // Students owned by this teacher (claim-scoped query).
+  const sSnap = await getDocs(query(collection(db, COLLECTIONS.students), where("teacherCode","==", teacher.teacherCode)));
+  students = sSnap.docs.map(d=>({ id:d.id, studentCode:d.data().studentCode||d.id, ...d.data() }));
+  // Compact results for this teacher (claim-scoped query).
+  const aSnap = await getDocs(query(collection(db, COLLECTIONS.achievements), where("teacherCode","==", teacher.teacherCode)));
+  all = aSnap.docs.map(d=> normaliseAchievement({ id:d.id, ...d.data() })).sort((a,b)=> b.time - a.time);
+  // Rich Adventure attempts — BEST EFFORT. A missing/denied query must not break the dashboard.
+  attemptsByCode = new Map();
+  try{
+    const rSnap = await getDocs(query(collection(db, COLLECTIONS.adventureAttempts), where("teacherCode","==", teacher.teacherCode)));
+    for(const d of rSnap.docs){ const r={ id:d.id, ...d.data() }; const code=r.studentCode||""; if(!attemptsByCode.has(code)) attemptsByCode.set(code,[]); attemptsByCode.get(code).push(r); }
+    $("advNote").className="msg"; $("advNote").textContent="";
+  }catch(err){
+    console.warn("adventureAttempts not available:", err);
+    $("advNote").className="msg info show"; $("advNote").textContent="Rich Adventure details are unavailable right now — showing compact results only.";
+  }
+}
+
+function showDashboard(){
+  $("loginView").classList.add("hidden"); $("dashView").classList.remove("hidden");
+  $("whoChip").classList.remove("hidden"); $("signoutBtn").classList.remove("hidden");
+  $("whoChip").textContent = `${teacher.teacherName||teacher.teacherCode} · ${teacher.school||""}`;
+  $("avatar").textContent = (teacher.teacherName||"T").slice(0,2).toUpperCase(); $("avatar").style.background = hashColour(teacher.teacherCode);
+  $("profileName").textContent = teacher.teacherName || teacher.teacherCode;
+  $("profileMeta").textContent = `Teacher code: ${teacher.teacherCode} · ${teacher.school||""}`;
+  const classes=[...new Set(students.map(s=>s.className).filter(Boolean))].sort();
+  classes.forEach(c=>{ const o=document.createElement("option"); o.value=c; o.textContent=c; $("classFilter").appendChild(o); });
+  getEnabledTools().forEach(t=>{ const o=document.createElement("option"); o.value=t.toolId; o.textContent=t.title; $("toolFilter").appendChild(o); });
+  [...new Set(all.map(r=>r.topic).filter(Boolean))].forEach(t=>{ const o=document.createElement("option"); o.value=t; o.textContent=t; $("topicFilter").appendChild(o); });
+  render();
+}
+
+function filteredResults(){
+  const cls=$("classFilter").value, tool=$("toolFilter").value, topic=$("topicFilter").value;
+  const days=Number($("dateFilter").value||0), search=normaliseCode($("searchInput").value);
+  const cutoff = days ? Date.now()-days*86400000 : 0;
+  return all.filter(r =>
+    (!cls || r.className===cls) && (!tool || r.toolId===tool) && (!topic || r.topic===topic) &&
+    (!cutoff || r.time>=cutoff) &&
+    (!search || (r.studentCode||"").includes(search) || (r.studentName||"").toUpperCase().includes(search)));
+}
+
+function render(){
+  const rows = filteredResults();
+  const roll = rollupByStudent(rows);
+  const s = summarise(rows);
+  $("statStudents").textContent = new Set(rows.map(r=>r.studentCode)).size || students.length;
+  $("statAttempts").textContent = s.attempts;
+  $("statAvg").textContent = s.averagePercent + "%";
+  $("statSupport").textContent = roll.filter(r=>r.needsSupport).length;
+
+  $("studentsBody").innerHTML = roll.length ? studentTable(roll) :
+    `<div class="empty"><div class="big">No student results yet</div>Once your students complete tools, they'll appear here.</div>`;
+  $("resultsBody").innerHTML = rows.length ? resultsTable(rows) :
+    `<div class="empty"><div class="big">No results match these filters</div>Try widening the class, tool or date filters.</div>`;
+
+  document.querySelectorAll("[data-student]").forEach(el=> el.addEventListener("click", ()=> openStudent(el.dataset.student)));
+}
+
+function studentTable(roll){
+  const head=`<table><thead><tr><th>Student</th><th>Code</th><th>Class</th><th>Attempts</th><th>Best</th><th>Average</th><th>Last active</th></tr></thead><tbody>`;
+  const body=roll.map(r=>`<tr data-student="${esc(r.studentCode)}" style="cursor:pointer">
+    <td>${esc(r.studentName||"—")} ${r.needsSupport?'<span class="badge support">support</span>':''}</td>
+    <td>${esc(r.studentCode||"—")}</td><td>${esc(r.className||"—")}</td>
+    <td>${r.attempts}</td><td class="pct ${pctClass(r.bestPercent)}">${r.bestPercent}%</td>
+    <td class="pct ${pctClass(r.averagePercent)}">${r.averagePercent}%</td><td>${esc(r.lastActive)}</td></tr>`).join("");
+  return head+body+"</tbody></table>";
+}
+
+function resultsTable(rows){
+  const head=`<table><thead><tr><th>Student</th><th>Class</th><th>Tool</th><th>Topic</th><th>Type</th><th>Score</th><th>%</th><th>Date</th></tr></thead><tbody>`;
+  const body=rows.map(r=>`<tr>
+    <td>${esc(r.studentName||r.studentCode)}</td><td>${esc(r.className||"—")}</td>
+    <td>${esc(r.tool||"—")}</td><td>${esc(r.topic||"—")}</td>
+    <td>${r.missionKind?`<span class="badge kind">${esc(r.missionKind)}</span>`:"—"}</td>
+    <td>${r.score}/${r.total}</td><td class="pct ${pctClass(r.percent)}">${r.percent}%</td><td>${esc(r.dateLabel)}</td></tr>`).join("");
+  return head+body+"</tbody></table>";
+}
+
+function openStudent(code){
+  const recs = all.filter(r=>r.studentCode===code);
+  const stu = students.find(s=>s.studentCode===code) || {};
+  const name = recs[0]?.studentName || stu.name || code;
+  const s = summarise(recs);
+  const attempts = attemptsByCode.get(code) || [];
+  let rich = "";
+  if(attempts.length){
+    rich = `<h4 style="margin:14px 0 6px">Adventure attempts (rich)</h4>` + attempts.sort((a,b)=>(b.createdAtClient||"").localeCompare(a.createdAtClient||"")).map(a=>{
+      const pass = a.percent!=null ? (a.percent>= (a.passThreshold||70)) : null;
+      const skills = Array.isArray(a.questionResults) ? a.questionResults : [];
+      const correct = skills.filter(q=>q.correct).length;
+      return `<div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px">
+        <strong>${esc(a.missionTitle||a.missionId||"Mission")}</strong>
+        ${a.missionKind?`<span class="badge kind">${esc(a.missionKind)}</span>`:""}
+        ${pass===true?'<span class="badge ok">pass</span>':pass===false?'<span class="badge support">retry</span>':''}
+        <div class="muted" style="font-size:.85rem;margin-top:4px">Score ${a.correctCount??correct}/${a.questionCount??skills.length} · ${a.percent??"—"}% · ${esc((a.topicIds||a.topics||[]).join(", ")||"—")}</div>
+        ${skills.length?`<div class="muted" style="font-size:.8rem;margin-top:4px">Question correctness: ${skills.map(q=>q.correct?"✓":"✗").join(" ")}</div>`:""}
+      </div>`;
+    }).join("");
+  } else {
+    rich = `<p class="muted" style="margin-top:12px">No rich Adventure details available for this student (compact results shown above).</p>`;
+  }
+  $("modal").innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h3 style="margin:0">${esc(name)}</h3><button class="btn" id="closeModal" type="button">Close</button>
+    </div>
+    <div class="muted" style="margin:4px 0 12px">${esc(code)} · ${esc(stu.className||recs[0]?.className||"—")}</div>
+    <div class="cards"><div class="card stat"><div class="label">Attempts</div><div class="value">${s.attempts}</div></div>
+      <div class="card stat"><div class="label">Average</div><div class="value">${s.averagePercent}%</div></div>
+      <div class="card stat"><div class="label">Best</div><div class="value">${s.bestPercent}%</div></div>
+      <div class="card stat"><div class="label">XP</div><div class="value">${s.totalXp}</div></div></div>
+    ${resultsTable(recs)}
+    ${rich}`;
+  $("modalBack").classList.add("show");
+  $("closeModal").addEventListener("click", ()=> $("modalBack").classList.remove("show"));
+}
+
+function exportCsv(){
+  const csv = toCSV(filteredResults());
+  const blob = new Blob([csv], {type:"text/csv"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = `mmt-results-${teacher.teacherCode}.csv`; a.click();
+  URL.revokeObjectURL(a.href);
+}
+function copySummary(){
+  const text = summaryText(filteredResults(), `${teacher.teacherName||teacher.teacherCode} — class results`);
+  navigator.clipboard?.writeText(text);
+  const b=$("copyBtn"); const o=b.textContent; b.textContent="Copied!"; setTimeout(()=>b.textContent=o,1200);
+}
+</script>
+</body>
+</html>
