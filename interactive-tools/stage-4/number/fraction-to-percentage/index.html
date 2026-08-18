@@ -1,0 +1,1201 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Fraction to Percentage | Mills Maths Tools</title>
+
+  <style>
+    :root{
+      --bg:#f8fafc;
+      --card:#ffffff;
+      --ink:#0f172a;
+      --muted:#64748b;
+      --border:#e2e8f0;
+      --shadow:0 18px 45px rgba(15,23,42,.13);
+      --blue:#2563eb;
+      --blue-dark:#1d4ed8;
+      --green:#22c55e;
+      --purple:#7c3aed;
+      --orange:#f97316;
+      --line:#334155;
+      --line-soft:#94a3b8;
+      --pink:#db2777;
+      --pink-soft:#fce7f3;
+      --uiFont:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      --mathFont:"STIX Two Math","Cambria Math","Latin Modern Math","Times New Roman",Georgia,serif;
+      --mono:ui-monospace,"SF Mono","SFMono-Regular",Menlo,Consolas,"Roboto Mono",monospace;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ min-height:100%; }
+    body{
+      margin:0;
+      font-family:var(--uiFont);
+      color:var(--ink);
+      background:
+        radial-gradient(circle at top left,rgba(37,99,235,.14),transparent 32rem),
+        radial-gradient(circle at top right,rgba(124,58,237,.12),transparent 34rem),
+        var(--bg);
+      overflow-x:hidden;
+    }
+    button,input{ font:inherit; }
+    [hidden]{ display:none !important; }
+
+    .app{ min-height:100dvh; display:flex; flex-direction:column; min-width:0; }
+
+    /* ---------- topbar ---------- */
+    .mmtTopbar{
+      position:relative; z-index:40;
+      background:linear-gradient(135deg,#0f172a,#123b7a 55%,#2563eb);
+      color:white; padding:14px 24px;
+      display:grid; grid-template-columns:minmax(220px,1fr) auto minmax(320px,1fr);
+      align-items:center; gap:18px;
+      box-shadow:0 10px 28px rgba(15,23,42,.22);
+    }
+    .mmtBrand{
+      display:flex; align-items:center; gap:12px; justify-self:start;
+      text-decoration:none; color:white; border-radius:14px; padding:8px 12px;
+      margin-left:-12px; font-weight:900;
+      transition:background .18s ease,transform .18s ease,box-shadow .18s ease;
+    }
+    .mmtBrand:hover{ background:rgba(255,255,255,.12); transform:translateY(-1px);
+      box-shadow:0 0 10px rgba(124,58,237,.6),0 0 18px rgba(37,99,235,.4); }
+    .mmtBrandLogo{
+      width:44px; height:44px; border-radius:9px; background:white; color:#1d4ed8;
+      display:grid; place-items:center; font-weight:1000; letter-spacing:-.08em;
+      box-shadow:inset 0 -2px 0 rgba(15,23,42,.08); flex:0 0 auto;
+    }
+    .mmtBrandText strong{ display:block; font-size:1.18rem; line-height:1; letter-spacing:-.03em; color:white; }
+    .mmtBrandText span{ display:block; font-size:.78rem; opacity:.82; font-weight:650; color:white; }
+    .mmtTopTitle{
+      font-weight:850; font-size:clamp(1.1rem,2vw,1.6rem); letter-spacing:-.04em;
+      text-align:center; color:white; white-space:nowrap;
+    }
+    .topActions{ justify-self:end; display:flex; align-items:center; justify-content:flex-end; gap:10px; flex-wrap:wrap; }
+
+    .btn{
+      appearance:none; border:1px solid rgba(255,255,255,.28); background:rgba(255,255,255,.14);
+      color:white; padding:11px 15px; border-radius:14px; font-weight:900; font-size:15px;
+      cursor:pointer; transition:.18s ease; user-select:none;
+    }
+    .btn:hover:not(:disabled){ background:rgba(255,255,255,.22); transform:translateY(-1px); }
+    .btn:active{ transform:translateY(0); }
+    .btn:focus-visible{ outline:none; box-shadow:0 0 0 4px rgba(255,255,255,.23); }
+    .btn-primary{ background:white; color:#1d4ed8; border-color:white; }
+    .btn-primary:hover:not(:disabled){ background:#eef2ff; color:#1d4ed8; }
+    .btn:disabled{ opacity:.45; cursor:not-allowed; transform:none; }
+
+    .menuWrap{ position:relative; display:inline-flex; }
+    .dropMenu{ position:absolute; top:calc(100% + 8px); right:0; min-width:240px; background:#fff; color:var(--ink);
+      border:1px solid rgba(226,232,240,.95); border-radius:14px; box-shadow:0 18px 45px rgba(15,23,42,.22);
+      padding:7px; display:none; z-index:120; text-align:left; }
+    .dropMenu.open{ display:grid; gap:4px; }
+    .toolLink{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border-radius:10px;
+      color:var(--ink); text-decoration:none; font-weight:900; font-size:.9rem; }
+    .toolLink::after{ content:'\203A'; color:var(--blue); font-weight:1000; font-size:1.1rem; line-height:1; }
+    .toolLink:hover,.toolLink:focus-visible{ background:#eef2ff; color:#1d4ed8; outline:none; }
+    .toolLink small{ display:block; font-weight:650; font-size:.74rem; color:var(--muted); }
+
+    .settingsMenu.open{ gap:14px; padding:16px 18px; min-width:296px; }
+    .settingsHead{ font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; font-weight:950; color:var(--muted); }
+    .settingsNote{ margin:0; font-size:.76rem; font-weight:650; color:var(--muted); line-height:1.4; }
+    .settingsRule{ height:1px; background:var(--border); margin:1px 0; }
+
+    /* the Random fraction submenu — opens on hover, and on click for touch */
+    .subWrap{ position:relative; }
+    .subRow{
+      display:flex; align-items:center; justify-content:space-between; gap:10px; width:100%;
+      appearance:none; border:1px solid transparent; background:transparent; cursor:pointer;
+      padding:9px 11px; border-radius:11px; font:inherit; font-weight:900; font-size:.92rem;
+      color:var(--ink); text-align:left; transition:background .16s ease; white-space:nowrap;
+    }
+    .subRow:hover,.subRow:focus-visible,.subWrap.open .subRow{ background:#eef2ff; color:#1d4ed8; outline:none; }
+    .subRow .val{ display:inline-flex; align-items:center; gap:6px; font-weight:800; font-size:.84rem; color:var(--muted); }
+    .subRow .val::after{ content:'\2039'; font-size:1.05rem; font-weight:1000; color:var(--blue); }
+    .subWrap.open .subRow .val{ color:var(--blue-dark); }
+
+    .subMenu{
+      position:absolute; top:-8px; right:calc(100% + 10px); min-width:236px;
+      background:#fff; border:1px solid rgba(226,232,240,.95); border-radius:14px;
+      box-shadow:0 18px 45px rgba(15,23,42,.22); padding:7px; display:none; z-index:130;
+    }
+    .subWrap:hover .subMenu, .subWrap.open .subMenu{ display:grid; gap:3px; }
+    .subOpt{
+      appearance:none; border:0; background:transparent; cursor:pointer; width:100%;
+      display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
+      padding:9px 11px; border-radius:10px; font:inherit; text-align:left;
+      font-weight:900; font-size:.9rem; color:var(--ink);
+    }
+    .subOpt small{ display:block; font-weight:650; font-size:.74rem; color:var(--muted); margin-top:2px; }
+    .subOpt:hover:not(:disabled),.subOpt:focus-visible{ background:#eef2ff; color:#1d4ed8; outline:none; }
+    .subOpt .tick{ color:var(--green); font-weight:1000; opacity:0; flex:0 0 auto; font-size:1.05rem; }
+    .subOpt.on .tick{ opacity:1; }
+    .subOpt:disabled{ opacity:.4; cursor:not-allowed; }
+
+    .layout{
+      width:min(1200px, calc(100vw - 48px));
+      margin:22px auto 14px;
+      background:rgba(255,255,255,.94);
+      border:1px solid rgba(226,232,240,.9);
+      border-radius:26px; box-shadow:var(--shadow); overflow:hidden;
+      display:block; position:relative;
+    }
+    .stage{ padding:18px clamp(14px,3vw,34px) 24px; display:flex; flex-direction:column; gap:13px; min-width:0; }
+
+    /* ---------- the compact control card ---------- */
+    .eqCard{
+      position:relative;
+      background:white; border:1px solid var(--border); border-radius:20px;
+      padding:14px 20px 16px; display:flex; flex-direction:column; align-items:center; gap:10px;
+    }
+    .eqEyebrow{ font-size:.7rem; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:950; text-align:center; }
+
+    /* one centred column — the fraction is the thing on screen */
+    .controlsGrid{ display:flex; flex-direction:column; align-items:center; gap:9px; width:100%; }
+
+    .fracEditor{ display:flex; align-items:center; gap:16px; justify-content:center; flex-wrap:wrap; }
+    .fracStack{ display:flex; flex-direction:column; align-items:center; gap:6px; }
+    .fracStack .barSep{ width:92px; height:4px; background:var(--line); border-radius:2px; }
+    .numBox{
+      width:96px; text-align:center; border:2px solid var(--border); border-radius:13px;
+      padding:2px 8px; background:#fff; color:var(--ink); font-family:var(--mathFont);
+      font-weight:700; font-size:clamp(1.5rem,3vw,2rem); line-height:1.15; outline:none;
+      transition:border-color .18s ease, box-shadow .18s ease;
+    }
+    .numBox:hover{ border-color:var(--line-soft); }
+    .numBox:focus{ border-color:var(--blue); box-shadow:0 0 0 4px rgba(37,99,235,.16); }
+    .pctBox{ width:150px; }
+    .pctWrap{ display:flex; align-items:center; gap:8px; }
+    .pctSign{ font-family:var(--mathFont); font-weight:800; font-size:clamp(1.4rem,2.6vw,1.8rem); color:var(--line); }
+
+    .enterBtn{
+      appearance:none; border:1px solid var(--blue); background:var(--blue); color:#fff;
+      font-weight:900; font-size:.98rem; padding:10px 18px; border-radius:12px; cursor:pointer;
+      box-shadow:0 8px 20px rgba(37,99,235,.22); transition:.16s ease;
+    }
+    .enterBtn:hover{ background:var(--blue-dark); transform:translateY(-1px); }
+    .enterBtn:focus-visible{ outline:none; box-shadow:0 0 0 4px rgba(37,99,235,.3); }
+
+    .inputMsg{ min-height:15px; margin:0; font-size:.84rem; font-weight:750; color:var(--pink); text-align:center; max-width:640px; }
+
+    /* the generator — tucked into the corner, it must not compete with the fraction */
+    .genBtn{
+      position:absolute; top:14px; right:16px; z-index:2;
+      appearance:none; border:1px solid #ddd6fe; background:#f5f3ff; color:#5b21b6;
+      font-weight:850; font-size:.82rem; padding:6px 13px; border-radius:999px; cursor:pointer;
+      transition:.16s ease; white-space:nowrap; display:inline-flex; align-items:center; gap:7px;
+    }
+    .genBtn:hover{ background:#ede9fe; border-color:#c4b5fd; }
+    .genBtn:focus-visible{ outline:none; box-shadow:0 0 0 4px rgba(124,58,237,.22); }
+    .genBtn .dice{ font-size:.95rem; line-height:1; }
+    .genBtn .tierTag{ color:var(--muted); font-weight:750; }
+
+    /* mode segmented control */
+    .segWrap{ display:inline-flex; background:#eef2f7; border:1px solid var(--border); border-radius:14px; padding:4px; gap:4px; }
+    .seg{
+      appearance:none; border:0; background:transparent; color:var(--muted);
+      font-weight:900; font-size:.9rem; padding:9px 14px; border-radius:11px; cursor:pointer; white-space:nowrap;
+      transition:.16s ease; font-family:var(--uiFont);
+    }
+    .seg.on{ background:#fff; color:var(--blue-dark); box-shadow:0 4px 12px rgba(15,23,42,.12); }
+
+    /* switches (live in the Settings menu) */
+    .sw{ display:inline-flex; align-items:center; gap:11px; cursor:pointer; user-select:none; font-weight:850; color:var(--line); font-size:.95rem; white-space:nowrap; }
+    .sw input{ position:absolute; opacity:0; width:0; height:0; }
+    .sw .track{ position:relative; width:50px; height:29px; border-radius:999px; background:#cbd5e1; transition:.18s ease; flex:0 0 auto; box-shadow:inset 0 1px 3px rgba(15,23,42,.18); }
+    .sw .track::after{ content:""; position:absolute; top:3px; left:3px; width:23px; height:23px; border-radius:50%; background:#fff; box-shadow:0 2px 6px rgba(15,23,42,.3); transition:.18s ease; }
+    .sw input:checked + .track{ background:var(--green); }
+    .sw input:checked + .track::after{ transform:translateX(21px); }
+    .sw input:focus-visible + .track{ box-shadow:0 0 0 4px rgba(37,99,235,.28); }
+
+    /* the diagram */
+    .svgCard{ background:white; border:1px solid var(--border); border-radius:22px; padding:10px clamp(8px,2vw,18px) 6px; }
+    .nline{ width:100%; height:auto; max-height:46vh; display:block; margin:0 auto; touch-action:none; user-select:none; -webkit-user-select:none; }
+    .nline text{ font-family:var(--mathFont); }
+    .nline.predicting{ cursor:ew-resize; }
+
+    /* narration */
+    .narrate{
+      background:white; border:1px solid var(--border); border-radius:20px;
+      padding:13px 18px; display:flex; flex-direction:column; gap:5px; align-items:center; text-align:center;
+    }
+    .stepCount{ font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; font-weight:950; color:var(--muted); }
+    .stepPrompt{ font-size:clamp(1rem,2vw,1.16rem); font-weight:800; color:var(--line); line-height:1.35; min-height:1.3em; }
+    .stepMaths{
+      font-family:var(--mathFont); font-size:clamp(1.22rem,2.6vw,1.75rem); font-weight:800; color:var(--purple);
+      line-height:1.25; min-height:1.3em; display:flex; align-items:center; justify-content:center; gap:.35em; flex-wrap:wrap;
+    }
+    .stepMaths .approx{ color:var(--muted); font-size:.72em; font-weight:750; }
+    .stepMaths.answer{ color:var(--pink); }
+
+    .navRow{ display:flex; gap:10px; justify-content:center; align-items:center; flex-wrap:wrap; padding-bottom:4px; }
+    .navBtn{
+      appearance:none; border:1px solid var(--border); background:#fff; color:var(--line);
+      font-weight:900; font-size:.94rem; padding:10px 16px; border-radius:13px; cursor:pointer;
+      transition:.16s ease; box-shadow:0 6px 16px rgba(15,23,42,.08);
+    }
+    .navBtn:hover:not(:disabled){ transform:translateY(-1px); background:#f8fafc; }
+    .navBtn:disabled{ opacity:.4; cursor:not-allowed; transform:none; }
+    .navBtn.next{ background:var(--purple); border-color:var(--purple); color:#fff; box-shadow:0 8px 20px rgba(124,58,237,.24); min-width:148px; }
+    .navBtn.next:hover:not(:disabled){ background:#6d28d9; }
+    .navBtn.lock{ background:var(--orange); border-color:var(--orange); color:#fff; box-shadow:0 8px 20px rgba(249,115,22,.24); }
+    .navBtn.lock:hover:not(:disabled){ background:#ea580c; }
+
+    .hint{ text-align:center; font-size:.8rem; font-weight:700; color:var(--muted); margin:0; }
+
+    /* stacked fraction in HTML text */
+    .frac{ display:inline-flex; flex-direction:column; align-items:center; vertical-align:middle; line-height:1; font-size:.82em; }
+    .frac .n{ padding:0 .3em .05em; }
+    .frac .d{ padding:.06em .3em 0; border-top:.09em solid currentColor; }
+    .mixed{ display:inline-flex; align-items:center; gap:.1em; }
+
+    @keyframes hopIn{ from{ opacity:0; transform:translateY(8px);} to{ opacity:1; transform:translateY(0);} }
+    .hopLabel{ animation:hopIn .32s ease both; }
+    @keyframes dashDraw{ from{ stroke-dashoffset:var(--dashLen);} to{ stroke-dashoffset:0;} }
+    .hopArc{ animation:dashDraw .42s ease both; }
+
+    /* the partition reveal: ticks sweep left to right, then the fraction pops */
+    @keyframes tickGrow{ from{ opacity:0; transform:scaleY(.1);} to{ opacity:1; transform:scaleY(1);} }
+    .tickIn{ animation:tickGrow .22s ease-out both; transform-box:view-box; }
+    @keyframes popIn{
+      0%{ opacity:0; transform:scale(.45); }
+      62%{ opacity:1; transform:scale(1.14); }
+      100%{ opacity:1; transform:scale(1); }
+    }
+    .popIn{ animation:popIn .44s cubic-bezier(.2,.75,.3,1.25) both; transform-box:view-box; }
+    @keyframes fadeIn{ from{ opacity:0; } to{ opacity:1; } }
+    .fadeIn{ animation:fadeIn .44s ease both; }
+
+    @media (max-width:980px){
+      .mmtTopbar{ grid-template-columns:1fr; justify-items:center; padding:12px 14px; }
+      .mmtBrand{ margin-left:0; } .topActions{ justify-self:center; justify-content:center; }
+      .dropMenu{ right:auto; left:50%; transform:translateX(-50%); }
+      .layout{ width:calc(100vw - 24px); }
+      .numBox{ width:82px; } .pctBox{ width:130px; }
+      .controlsGrid{ gap:16px; }
+      .genBtn{ position:static; margin-top:2px; }
+    }
+    @media (prefers-reduced-motion:reduce){
+      *{ animation-duration:.001ms !important; animation-delay:.001ms !important; transition-duration:.001ms !important; }
+    }
+  </style>
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "c7e5713b5e4f4993907eb285797dc89b"}'></script><!-- End Cloudflare Web Analytics -->
+</head>
+<body>
+  <div class="app">
+    <header class="mmtTopbar">
+      <a class="mmtBrand" href="https://www.millsmathstools.au" target="_self" aria-label="Back to Mills Maths Tools">
+        <span class="mmtBrandLogo" aria-hidden="true">MMT</span>
+        <span class="mmtBrandText"><strong>MMT</strong><span>Mills Maths Tools</span></span>
+      </a>
+      <div class="mmtTopTitle">Fraction to Percentage</div>
+      <div class="topActions">
+        <div class="menuWrap">
+          <button class="btn" id="settingsBtn" type="button" aria-haspopup="true" aria-expanded="false">Settings &#9662;</button>
+          <nav class="dropMenu settingsMenu" id="settingsMenu" aria-label="Settings">
+            <div class="settingsHead">Display</div>
+            <label class="sw"><input type="checkbox" id="predictToggle"><span class="track"></span><span>Predict mode</span></label>
+            <label class="sw"><input type="checkbox" id="tenthsToggle"><span class="track"></span><span>Show 10% ticks</span></label>
+            <label class="sw"><input type="checkbox" id="bandToggle" checked><span class="track"></span><span>Shade the distance</span></label>
+            <p class="settingsNote">Predict mode hides the value while a marker is dragged, so the class estimates first.</p>
+            <div class="settingsRule" role="separator"></div>
+            <div class="settingsHead">Randomiser</div>
+            <div class="subWrap" id="tierWrap">
+              <button class="subRow" id="tierRow" type="button" aria-haspopup="true" aria-expanded="false">
+                <span>Random fraction</span>
+                <span class="val" id="tierVal">Friendly</span>
+              </button>
+              <div class="subMenu" id="tierMenu" role="menu" aria-label="Random fraction setting">
+                <button class="subOpt on" type="button" role="menuitemradio" data-tier="friendly">
+                  <span>Friendly<small>Denominators that divide 100 &mdash; whole-number percentages</small></span>
+                  <span class="tick" aria-hidden="true">&#10003;</span>
+                </button>
+                <button class="subOpt" type="button" role="menuitemradio" data-tier="term">
+                  <span>Terminating<small>Percentages that stop, but not whole &mdash; like 12.5%</small></span>
+                  <span class="tick" aria-hidden="true">&#10003;</span>
+                </button>
+                <button class="subOpt" type="button" role="menuitemradio" data-tier="rec">
+                  <span>Recurring<small>Percentages that never stop &mdash; like 33&#8531;%</small></span>
+                  <span class="tick" aria-hidden="true">&#10003;</span>
+                </button>
+              </div>
+            </div>
+          </nav>
+        </div>
+        <div class="menuWrap">
+          <button class="btn" id="toolsBtn" type="button" aria-haspopup="true" aria-expanded="false">Tools &#9662;</button>
+          <nav class="dropMenu" id="toolsMenu" aria-label="Related tools">
+            <a class="toolLink" href="/worksheet-creators/stage-4/number/fraction-to-percentage.html">Worksheet creator<small>Printable A4 questions, with or without the number line</small></a>
+            <a class="toolLink" href="/online-quizzes/stage-4/number/fraction-to-percentage.html">Student Quiz<small>Four levels, secure login, saves to the dashboard</small></a>
+          </nav>
+        </div>
+        <button class="btn btn-primary" id="resetBtn" type="button">Reset</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="stage" id="stage">
+
+        <div class="eqCard">
+          <button class="genBtn" id="genBtn" type="button" title="Change the kind under Settings &rsaquo; Random fraction">
+            <span class="dice" aria-hidden="true">&#9860;</span>
+            <span>Generate random fraction</span>
+            <span class="tierTag" id="tierTag">&middot; Friendly</span>
+          </button>
+
+          <div class="segWrap" role="tablist" aria-label="Direction">
+            <button class="seg on" id="modeF2P" type="button" role="tab" aria-selected="true">Fraction &rarr; Percentage</button>
+            <button class="seg" id="modeP2F" type="button" role="tab" aria-selected="false">Percentage &rarr; Fraction</button>
+          </div>
+
+          <div class="controlsGrid">
+            <div class="eqEyebrow" id="inputEyebrow">Type a fraction</div>
+            <div class="fracEditor" id="fracEditor">
+              <div class="fracStack">
+                <input class="numBox" id="numInput" inputmode="numeric" autocomplete="off" value="3" aria-label="Numerator" />
+                <span class="barSep" aria-hidden="true"></span>
+                <input class="numBox" id="denInput" inputmode="numeric" autocomplete="off" value="5" aria-label="Denominator" />
+              </div>
+              <button class="enterBtn" id="useFracBtn" type="button">Enter</button>
+            </div>
+            <div class="fracEditor" id="pctEditor" hidden>
+              <div class="pctWrap">
+                <input class="numBox pctBox" id="pctInput" inputmode="decimal" autocomplete="off" value="60" aria-label="Percentage" />
+                <span class="pctSign">%</span>
+              </div>
+              <button class="enterBtn" id="usePctBtn" type="button">Enter</button>
+            </div>
+          </div>
+
+          <p class="inputMsg" id="inputMsg"></p>
+        </div>
+
+        <div class="svgCard">
+          <svg class="nline" id="nline" viewBox="0 0 1000 258" role="img" aria-label="Number line showing a fraction above and its percentage below"></svg>
+        </div>
+
+        <div class="narrate">
+          <div class="navRow">
+            <button class="navBtn" id="backBtn" type="button">&#9664; Back</button>
+            <button class="navBtn next" id="nextBtn" type="button">Next &#9654;</button>
+            <button class="navBtn lock" id="lockBtn" type="button" hidden>Lock in estimate</button>
+            <button class="navBtn" id="revealBtn" type="button">Reveal all</button>
+            <button class="navBtn" id="restartBtn" type="button">Start again</button>
+          </div>
+          <div class="stepCount" id="stepCount">Step 1 of 7</div>
+          <div class="stepPrompt" id="stepPrompt"></div>
+          <div class="stepMaths" id="stepMaths"></div>
+          <p class="hint" id="hint">Space or &rarr; for the next step, &larr; to go back.</p>
+        </div>
+
+      </section>
+    </main>
+  </div>
+
+<script>
+(function(){
+  "use strict";
+  const NS="http://www.w3.org/2000/svg";
+  const $=function(id){ return document.getElementById(id); };
+
+  /* ===================== number helpers ===================== */
+  function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ const t=a%b; a=b; b=t; } return a; }
+  function reduce(n,d){ const g=gcd(n,d)||1; return { n:n/g, d:d/g }; }
+  function isTerminating(d){ let x=d; while(x%2===0) x/=2; while(x%5===0) x/=5; return x===1; }
+  function fmtNum(x){ return String(Number(x.toFixed(8))); }
+
+  // exact percentage of the fraction n/d
+  function pctOf(n,d){
+    const N=100*n, D=d;
+    const g=gcd(N,D)||1;
+    const rn=N/g, rd=D/g;
+    const whole=Math.floor(rn/rd);
+    const rem=rn-whole*rd;
+    let kind='rec';
+    if(rd===1) kind='int';
+    else if(isTerminating(rd)) kind='dec';
+    return { rn:rn, rd:rd, whole:whole, rem:rem, kind:kind, value:rn/rd };
+  }
+  function pctPlain(n,d){
+    const p=pctOf(n,d);
+    if(p.kind==='int') return p.whole+"%";
+    if(p.kind==='dec') return fmtNum(p.value)+"%";
+    return (p.whole? p.whole:"")+" "+p.rem+"/"+p.rd+"%";
+  }
+
+  /* ===================== HTML fraction bits ===================== */
+  function htmlFrac(n,d){
+    return '<span class="frac"><span class="n">'+n+'</span><span class="d">'+d+'</span></span>';
+  }
+  function htmlPct(n,d,withSign){
+    const p=pctOf(n,d);
+    const sign=(withSign===false)?"":"%";
+    if(p.kind==='int') return p.whole+sign;
+    if(p.kind==='dec') return fmtNum(p.value)+sign;
+    let s='<span class="mixed">';
+    if(p.whole>0) s+='<span>'+p.whole+'</span>';
+    s+=htmlFrac(p.rem,p.rd);
+    s+='</span>'+sign;
+    return s;
+  }
+  function htmlApprox(n,d){
+    const p=pctOf(n,d);
+    if(p.kind!=='rec') return "";
+    return '<span class="approx">&#8776; '+ (Math.round(p.value*10)/10) +'%</span>';
+  }
+
+  /* ===================== SVG helpers ===================== */
+  function el(tag,attrs,text){
+    const e=document.createElementNS(NS,tag);
+    for(const k in attrs) e.setAttribute(k,attrs[k]);
+    if(text!=null) e.textContent=text;
+    return e;
+  }
+  const HALO={ stroke:"#fff", "stroke-width":"4.5", "paint-order":"stroke", "stroke-linejoin":"round" };
+  function txt(x,y,str,opts){
+    opts=opts||{};
+    const a=Object.assign({
+      x:x, y:y, "text-anchor":opts.anchor||"middle",
+      "font-weight":opts.weight||"800",
+      "font-size":opts.size||22,
+      fill:opts.fill||"#334155"
+    },HALO);
+    if(opts.family) a["font-family"]=opts.family;
+    return el("text",a,str);
+  }
+  function svgFrac(cx,cy,n,d,fs,fill){
+    const g=el("g",{});
+    const cw=fs*0.58;
+    const barW=Math.max(String(n).length,String(d).length)*cw+8;
+    g.appendChild(txt(cx, cy-fs*0.30, String(n), {size:fs, fill:fill}));
+    g.appendChild(el("line",{x1:cx-barW/2, y1:cy+fs*0.06, x2:cx+barW/2, y2:cy+fs*0.06,
+      stroke:fill||"#334155", "stroke-width":Math.max(2,fs*0.09), "stroke-linecap":"round"}));
+    g.appendChild(txt(cx, cy+fs*1.02, String(d), {size:fs, fill:fill}));
+    return g;
+  }
+  function svgFracWidth(n,d,fs){
+    return Math.max(String(n).length,String(d).length)*fs*0.58+8;
+  }
+  function svgPct(cx,cy,n,d,fs,fill){
+    const g=el("g",{});
+    const p=pctOf(n,d);
+    if(p.kind!=='rec'){
+      const s=(p.kind==='int'? String(p.whole) : fmtNum(p.value))+"%";
+      g.appendChild(txt(cx,cy+fs*0.35,s,{size:fs,fill:fill}));
+      return g;
+    }
+    const cw=fs*0.58;
+    const wholeStr = p.whole>0 ? String(p.whole) : "";
+    const wholeW = wholeStr ? wholeStr.length*cw+4 : 0;
+    const fracFs = fs*0.78;
+    const fracW = svgFracWidth(p.rem,p.rd,fracFs)+4;
+    const signW = fs*0.66;
+    const total = wholeW+fracW+signW;
+    let x = cx-total/2;
+    if(wholeStr){ g.appendChild(txt(x+wholeW/2, cy+fs*0.35, wholeStr, {size:fs, fill:fill})); x+=wholeW; }
+    g.appendChild(svgFrac(x+fracW/2, cy, p.rem, p.rd, fracFs, fill));
+    x+=fracW;
+    g.appendChild(txt(x+signW/2, cy+fs*0.35, "%", {size:fs, fill:fill}));
+    return g;
+  }
+
+  /* ---- label widths + collision-free placement ---- */
+  function labelWidthFrac(n,d,fs){ return svgFracWidth(n,d,fs)+10; }
+  function labelWidthPct(n,d,fs){
+    const p=pctOf(n,d);
+    if(p.kind!=='rec'){
+      const s=(p.kind==='int'? String(p.whole) : fmtNum(p.value))+"%";
+      return s.length*fs*0.56+10;
+    }
+    const cw=fs*0.58;
+    const wholeW = p.whole>0 ? String(p.whole).length*cw+4 : 0;
+    const fracFs = fs*0.78;
+    return wholeW + svgFracWidth(p.rem,p.rd,fracFs)+4 + fs*0.66 + 10;
+  }
+  // A label that would sit on top of an endpoint takes a second row rather than
+  // being dropped — e.g. 94% next to 100%, or the first small jump next to 0%.
+  function rowAgainst(x,w,reserved){
+    for(let i=0;i<reserved.length;i++){
+      if(Math.abs(reserved[i].x-x) < (reserved[i].w+w)/2 + 5) return 1;
+    }
+    return 0;
+  }
+
+  /* ===================== geometry — ONE line, ticks both sides ===================== */
+  const LEFT=126, RIGHT=920, W=RIGHT-LEFT;
+  const LINE_Y=140;
+  const FR_LABEL_Y = LINE_Y-58;   // centre of the stacked fraction labels (above)
+  const FR_END_Y   = LINE_Y-40;   // baseline of "0" / "1 whole"
+  const FR_WHOLE_Y = LINE_Y-100;  // the d/d label, above "1 whole"
+  const PC_LABEL_Y = LINE_Y+58;   // centre of the percentage labels (below)
+  const PC_END_Y   = LINE_Y+66;   // baseline of "0%" / "100%"
+  const ARC_Y      = LINE_Y+15;   // where the counting-on hops sit
+  const FR_ROW     = -36;         // second-row offset, fraction side (further from the line)
+  const PC_ROW     = 30;          // second-row offset, percentage side
+  const TICK_SWEEP = 1500;        // ms for the ticks to sweep left to right
+  const POP_AFTER  = 1620;        // ms before the fraction pops in
+
+  const C={
+    frac:"#1e293b", fracAccent:"#7c3aed",
+    pct:"#1d4ed8", faint:"#cbd5e1",
+    target:"#db2777", whole:"#0f172a",
+    muted:"#64748b", predict:"#f97316"
+  };
+
+  /* ===================== state ===================== */
+  const state={
+    mode:"f2p",
+    num:3, den:5,
+    step:0,
+    predict:false, predictValue:null, predictLocked:false,
+    tenths:false, band:true,
+    tier:"friendly",
+    animHop:null, animPartition:false
+  };
+
+  function axisMax(){
+    const v=state.num/state.den;
+    return v>1 ? (state.num+1)/state.den : 1;
+  }
+  function X(v){ return LEFT + (v/axisMax())*W; }
+  function vFromX(x){ return ((x-LEFT)/W)*axisMax(); }
+
+  /* ===================== step model ===================== */
+  function perHop(){ return state.num<=12; }
+  function buildSteps(){
+    const n=state.num;
+    const steps=[];
+    if(state.mode==="f2p"){
+      steps.push({id:"bare"});
+      steps.push({id:"partition"});
+      steps.push({id:"bticks"});
+      steps.push({id:"unit"});
+      if(n>1){
+        if(perHop()){ for(let k=2;k<=n;k++) steps.push({id:"hop", k:k}); }
+        else steps.push({id:"hopAll"});
+      }
+      steps.push({id:"answer"});
+    }else{
+      steps.push({id:"bare"});
+      steps.push({id:"locate"});
+      steps.push({id:"hundredths"});
+      steps.push({id:"simplify"});
+      steps.push({id:"partition"});
+      steps.push({id:"answer"});
+    }
+    return steps;
+  }
+  let STEPS=buildSteps();
+
+  function stepId(){ return STEPS[state.step] ? STEPS[state.step].id : "bare"; }
+  function indexOfId(id){ for(let i=0;i<STEPS.length;i++){ if(STEPS[i].id===id) return i; } return -1; }
+  function reached(id){ const i=indexOfId(id); return i>=0 && state.step>=i; }
+  function labelledHops(){
+    if(state.mode!=="f2p") return 0;
+    const s=STEPS[state.step];
+    if(!s) return 0;
+    if(s.id==="hop") return s.k;
+    if(s.id==="hopAll"||s.id==="answer") return state.num;
+    if(s.id==="unit") return 1;
+    return 0;
+  }
+
+  /* ===================== rendering ===================== */
+  function render(){
+    const svg=$("nline");
+    while(svg.firstChild) svg.removeChild(svg.firstChild);
+    const root=el("g",{});
+    svg.appendChild(root);
+
+    const n=state.num, d=state.den;
+    const value=n/d;
+    const amax=axisMax();
+    const maxK=Math.round(amax*d);
+    const id=stepId();
+    const xW=X(1);
+    const xv=X(value);
+
+    const showPartition   = reached("partition");
+    const showPctTicks    = (state.mode==="f2p") && reached("bticks");
+    const showTenths      = state.tenths || (state.mode==="p2f" && reached("locate"));
+    const isAnswer        = (id==="answer");
+    const hops            = labelledHops();
+
+    /* ---- faint 10% ticks, hanging below the line (the percentage side) ---- */
+    if(showTenths){
+      const gT=el("g",{});
+      const lastTenth=Math.floor(amax*10+1e-9);
+      for(let t=0;t<=lastTenth;t++){
+        if(t%10===0) continue;
+        if(showPartition && Math.abs((t*d)/10 - Math.round((t*d)/10))<1e-9) continue;
+        const x=X(t/10);
+        gT.appendChild(el("line",{x1:x,y1:LINE_Y+3,x2:x,y2:LINE_Y+13,stroke:C.faint,"stroke-width":2,"stroke-linecap":"round"}));
+      }
+      const x50=X(0.5);
+      gT.appendChild(el("line",{x1:x50,y1:LINE_Y+3,x2:x50,y2:LINE_Y+17,stroke:"#94a3b8","stroke-width":2.5,"stroke-linecap":"round"}));
+      root.appendChild(gT);
+    }
+
+    /* ---- shaded distance: fraction above the line, percentage below ---- */
+    if(state.band){
+      if(showPartition || state.mode==="p2f"){
+        // fill-opacity, not opacity, so the fade-in can multiply on top of it
+        const fb=el("rect",{x:LEFT,y:LINE_Y-11,width:Math.max(0,xv-LEFT),height:9,rx:4.5,
+          fill:C.fracAccent,"fill-opacity":.22});
+        if(state.animPartition){
+          // hold the shading back — it would give the position away before the ticks arrive
+          fb.setAttribute("class","fadeIn");
+          fb.style.animationDelay=POP_AFTER+"ms";
+        }
+        root.appendChild(fb);
+      }
+      const pctSpan = (state.mode==="f2p") ? (hops>0 ? X(hops/d)-LEFT : 0)
+                                           : (reached("locate") ? xv-LEFT : 0);
+      if(pctSpan>0){
+        root.appendChild(el("rect",{x:LEFT,y:LINE_Y+2,width:Math.max(0,pctSpan),height:9,rx:4.5,
+          fill:C.pct,"fill-opacity":.22}));
+      }
+    }
+
+    /* ---- the single axis ---- */
+    root.appendChild(el("line",{x1:LEFT,y1:LINE_Y,x2:RIGHT,y2:LINE_Y,stroke:C.frac,"stroke-width":4,"stroke-linecap":"round"}));
+
+    // side names, tucked at the far left so they never crowd the 0 / 0% labels
+    root.appendChild(txt(10, FR_END_Y, "Fraction", {anchor:"start", size:15, fill:C.muted, weight:"900", family:"var(--uiFont)"}));
+    root.appendChild(txt(10, PC_END_Y, "Percentage", {anchor:"start", size:15, fill:C.muted, weight:"900", family:"var(--uiFont)"}));
+
+    /* ---- endpoints: 0 and the whole ---- */
+    function endTick(x,color){
+      return el("line",{x1:x,y1:LINE_Y-24,x2:x,y2:LINE_Y+24,stroke:color,"stroke-width":5,"stroke-linecap":"round"});
+    }
+    root.appendChild(endTick(LEFT,C.frac));
+    root.appendChild(txt(LEFT, FR_END_Y, "0", {size:24, fill:C.frac}));
+    root.appendChild(txt(LEFT, PC_END_Y, "0%", {size:24, fill:C.pct}));
+
+    root.appendChild(endTick(xW,C.whole));
+    root.appendChild(txt(xW, FR_END_Y, "1 whole", {size:22, fill:C.whole, family:"var(--uiFont)", weight:"900"}));
+    root.appendChild(txt(xW, PC_END_Y, "100%", {size:24, fill:C.pct}));
+
+    /* ---- the partition: one set of ticks, read from both sides ----
+       Only the fraction being asked about is named. The in-between unit fractions
+       were noise — the counting-on happens underneath, in percent.            */
+    if(showPartition){
+      const g=el("g",{});
+      const anim=state.animPartition;
+      let tickCount=0;
+      for(let k=1;k<=maxK;k++){ if(k!==Math.round(1*d)) tickCount++; }
+      let idx=0;
+      for(let k=1;k<=maxK;k++){
+        if(k===Math.round(1*d)) continue;
+        const x=X(k/d);
+        const isTarget=(k===n);
+        const t=el("line",{x1:x,y1:LINE_Y-(isTarget?20:13),x2:x,y2:LINE_Y+(isTarget?20:13),
+          stroke:isTarget?C.target:C.frac,"stroke-width":isTarget?4.5:3,"stroke-linecap":"round"});
+        if(anim){
+          const delay = (tickCount<=1) ? 0 : (idx/(tickCount-1))*TICK_SWEEP;
+          t.setAttribute("class","tickIn");
+          t.style.transformOrigin=x+"px "+LINE_Y+"px";
+          t.style.animationDelay=delay.toFixed(1)+"ms";
+        }
+        g.appendChild(t);
+        idx++;
+      }
+      // the one named fraction — it pops in once the sweep has finished
+      const fs=24, wF=labelWidthFrac(n,d,fs);
+      const reserved=[{x:LEFT,w:44},{x:xW,w:104}];
+      const frRow=rowAgainst(xv,wF,reserved);
+      const frY=FR_LABEL_Y + frRow*FR_ROW;
+      const lab=svgFrac(xv, frY, n, d, fs, C.target);
+      lab.setAttribute("data-label","frac");
+      if(anim){
+        lab.setAttribute("class","popIn");
+        lab.style.transformOrigin=xv+"px "+frY+"px";
+        lab.style.animationDelay=POP_AFTER+"ms";
+      }
+      g.appendChild(lab);
+      // d/d belongs above "1 whole", unless the named fraction was bumped up there
+      if(maxK>=d && d<=12 && !(frRow>0 && Math.abs(xv-xW)<130)){
+        g.appendChild(svgFrac(xW, FR_WHOLE_Y, d, d, 18, C.muted));
+      }
+      root.appendChild(g);
+    }
+
+    /* ---- percentage labels below the same ticks (forward direction) ---- */
+    if(showPctTicks){
+      const g=el("g",{});
+      // the ticks themselves are already there — this side only adds the reading
+      // Only the value just counted to is named. Step back and forth to show the rest —
+      // a full trail of numbers is more to read than it is worth.
+      if(hops>0 && hops!==Math.round(1*d)){
+        const isTarget=(hops===n);
+        const fs=isTarget?23:20;
+        const x=X(hops/d), w=labelWidthPct(hops,d,fs);
+        const row=rowAgainst(x,w,[{x:LEFT,w:56},{x:xW,w:96}]);
+        const lab=svgPct(x, PC_LABEL_Y + row*PC_ROW, hops, d, fs, isTarget?C.target:C.pct);
+        lab.setAttribute("data-label","pct");
+        if(state.animHop===hops) lab.setAttribute("class","hopLabel");
+        g.appendChild(lab);
+      }
+      // the counting-on hop, drawn below the line
+      if(state.animHop && state.animHop>=1){
+        const k=state.animHop;
+        const x1=X((k-1)/d), x2=X(k/d);
+        const r=Math.abs(x2-x1)/2;
+        const path=el("path",{
+          d:"M "+x1+" "+ARC_Y+" A "+r+" "+Math.min(26,r*1.4)+" 0 0 0 "+x2+" "+ARC_Y,
+          fill:"none", stroke:C.pct, "stroke-width":3, "stroke-linecap":"round", opacity:.85
+        });
+        const len=Math.max(24,Math.abs(x2-x1)*1.6);
+        path.setAttribute("stroke-dasharray",len);
+        path.style.setProperty("--dashLen",len);
+        path.setAttribute("class","hopArc");
+        g.appendChild(path);
+      }
+      root.appendChild(g);
+    }
+
+    /* ---- reverse direction: the percentage is given, the fraction is found ---- */
+    if(state.mode==="p2f"){
+      const pctReserved=[{x:LEFT,w:56},{x:xW,w:96}];
+      const frReserved=[{x:LEFT,w:44},{x:xW,w:104}];
+      if(reached("locate")){
+        root.appendChild(el("line",{x1:xv,y1:LINE_Y-20,x2:xv,y2:LINE_Y+20,stroke:C.target,"stroke-width":4.5,"stroke-linecap":"round"}));
+        const wP=labelWidthPct(n,d,24);
+        const pl=svgPct(xv, PC_LABEL_Y + rowAgainst(xv,wP,pctReserved)*PC_ROW, n, d, 24, C.target);
+        pl.setAttribute("data-label","pct");
+        root.appendChild(pl);
+      }
+      if(reached("hundredths") && !reached("simplify")){
+        const p=pctOf(n,d);
+        let hn, hd;
+        if(p.kind==='int'){ hn=p.whole; hd=100; }
+        else if(p.kind==='dec'){
+          let v=p.value; hd=100;
+          while(Math.abs(v-Math.round(v))>1e-9 && hd<1e7){ v*=10; hd*=10; }
+          hn=Math.round(v);
+        }else{ const h=reduce(100*n,d); hn=h.n; hd=h.d; }
+        const wF=labelWidthFrac(hn,hd,20);
+        root.appendChild(svgFrac(xv, FR_LABEL_Y + rowAgainst(xv,wF,frReserved)*FR_ROW, hn, hd, 20, C.fracAccent));
+      }
+      if(reached("simplify") && !reached("partition")){
+        const wF=labelWidthFrac(n,d,24);
+        root.appendChild(svgFrac(xv, FR_LABEL_Y + rowAgainst(xv,wF,frReserved)*FR_ROW, n, d, 24, C.target));
+      }
+    }
+
+    /* ---- the answer: one tick, both names (the labels themselves come from above) ---- */
+    if(isAnswer){
+      root.appendChild(el("circle",{cx:xv,cy:LINE_Y,r:10,fill:"#fff",stroke:C.target,"stroke-width":4.5}));
+    }
+
+    /* ---- predict marker ---- */
+    if(state.predictValue!=null){
+      const px=X(state.predictValue);
+      const below=(state.mode==="f2p");
+      const dir=below?1:-1;
+      const g=el("g",{});
+      g.appendChild(el("line",{x1:px,y1:LINE_Y-16,x2:px,y2:LINE_Y+16,stroke:C.predict,"stroke-width":3.5,"stroke-linecap":"round"}));
+      g.appendChild(el("path",{
+        d:"M "+px+" "+(LINE_Y+dir*8)+" l -11 "+(dir*20)+" l 22 0 Z",
+        fill:C.predict, stroke:"#fff", "stroke-width":2, "stroke-linejoin":"round"
+      }));
+      g.appendChild(txt(px, below? LINE_Y+52 : LINE_Y-40, state.predictLocked? "estimate" : "drag me",
+        {size:16, fill:C.predict, weight:"900", family:"var(--uiFont)"}));
+      root.appendChild(g);
+    }
+
+    svg.classList.toggle("predicting", predictDraggable());
+    svg.setAttribute("aria-label", describe());
+  }
+
+  function describe(){
+    const f=state.num+" over "+state.den;
+    if(state.mode==="f2p") return "Number line. Fraction "+f+" above, percentage "+pctPlain(state.num,state.den)+" below.";
+    return "Number line. Percentage "+pctPlain(state.num,state.den)+" below, fraction "+f+" above.";
+  }
+
+  /* ===================== narration ===================== */
+  function narrate(){
+    const n=state.num, d=state.den;
+    const s=STEPS[state.step];
+    const id=s?s.id:"bare";
+    let prompt="", maths="";
+
+    if(state.mode==="f2p"){
+      switch(id){
+        case "bare":
+          prompt = state.predict && !state.predictLocked
+            ? "Drag the orange marker to where you think "+htmlFrac(n,d)+" sits, then lock it in."
+            : "More or less than half? How do you know?";
+          maths = htmlFrac(n,d)+" &nbsp;=&nbsp; ?%";
+          break;
+        case "partition":
+          prompt = "The whole is split into "+d+" equal parts. Where is "+htmlFrac(n,d)+"?";
+          maths = "1 whole = "+d+" parts";
+          break;
+        case "bticks":
+          prompt = "Read the same ticks from underneath. What is <em>one</em> jump worth?";
+          maths = "100% &nbsp;&divide;&nbsp; "+d+" &nbsp;=&nbsp; ?";
+          break;
+        case "unit":
+          prompt = "One part of the whole is one part of 100%.";
+          maths = "100 &divide; "+d+" = "+htmlPct(1,d,false)+" &nbsp;so&nbsp; "+htmlFrac(1,d)+" = "+htmlPct(1,d)+" "+htmlApprox(1,d);
+          break;
+        case "hop":
+          prompt = "Count on in jumps of "+htmlPct(1,d,false)+".";
+          maths = s.k+" &times; "+htmlPct(1,d,false)+" = "+htmlPct(s.k,d)+" "+htmlApprox(s.k,d);
+          break;
+        case "hopAll":
+          prompt = "Count on in jumps of "+htmlPct(1,d,false)+" &mdash; "+n+" of them.";
+          maths = n+" &times; "+htmlPct(1,d,false)+" = "+htmlPct(n,d)+" "+htmlApprox(n,d);
+          break;
+        case "answer":
+          prompt = "One tick, two names. The point never moved.";
+          maths = htmlFrac(n,d)+" = "+htmlPct(n,d)+" "+htmlApprox(n,d);
+          break;
+      }
+    }else{
+      const overHundred=(n/d)>1;
+      switch(id){
+        case "bare":
+          prompt = state.predict && !state.predictLocked
+            ? "Drag the orange marker to where you think "+htmlPct(n,d)+" sits, then lock it in."
+            : (overHundred ? "More or less than one whole? How do you know?" : "More or less than half? How do you know?");
+          maths = htmlPct(n,d)+" &nbsp;=&nbsp; ?";
+          break;
+        case "locate":
+          prompt = "Every 10% is one tenth of the whole.";
+          maths = htmlPct(n,d)+" &nbsp;is here";
+          break;
+        case "hundredths":
+          prompt = "Per cent means <em>out of one hundred</em>.";
+          maths = htmlPct(n,d)+" = "+hundredthsHtml();
+          break;
+        case "simplify":
+          prompt = "Divide the top and the bottom by the same number.";
+          maths = hundredthsHtml()+" &nbsp;&divide;&nbsp;"+hcfForSimplify()+"&nbsp; = "+htmlFrac(n,d);
+          break;
+        case "partition":
+          prompt = "So the whole splits into "+d+" equal parts. Does the point land on one?";
+          maths = "1 whole = "+d+" parts";
+          break;
+        case "answer":
+          prompt = "One tick, two names. The point never moved.";
+          maths = htmlPct(n,d)+" = "+htmlFrac(n,d);
+          break;
+      }
+    }
+
+    if(id==="answer" && state.predictLocked && state.predictValue!=null){
+      const est=Math.round(state.predictValue*1000)/10;
+      const act=pctOf(n,d).value;
+      const off=Math.abs(est-act);
+      const word = off<1 ? "spot on" : (off<5 ? "very close" : (off<12 ? "in the right area" : "worth a rethink"));
+      prompt += " &mdash; the estimate was "+est+"%, "+word+".";
+    }
+
+    $("stepPrompt").innerHTML=prompt;
+    const m=$("stepMaths");
+    m.innerHTML=maths;
+    m.classList.toggle("answer", id==="answer");
+    $("stepCount").textContent="Step "+(state.step+1)+" of "+STEPS.length;
+  }
+
+  function hundredthsHtml(){
+    const p=pctOf(state.num,state.den);
+    if(p.kind==='int') return htmlFrac(p.whole,100);
+    if(p.kind==='dec'){
+      let v=p.value, den=100;
+      while(Math.abs(v-Math.round(v))>1e-9 && den<1e7){ v*=10; den*=10; }
+      return htmlFrac(Math.round(v),den);
+    }
+    return htmlFrac(100*state.num,state.den);
+  }
+  function hcfForSimplify(){
+    const p=pctOf(state.num,state.den);
+    if(p.kind==='int') return String(gcd(p.whole,100)||1);
+    if(p.kind==='dec'){
+      let v=p.value, den=100;
+      while(Math.abs(v-Math.round(v))>1e-9 && den<1e7){ v*=10; den*=10; }
+      return String(gcd(Math.round(v),den)||1);
+    }
+    return String(gcd(100*state.num,state.den)||1);
+  }
+
+  /* ===================== predict ===================== */
+  function predictDraggable(){ return state.predict && state.step===0 && !state.predictLocked; }
+  function updatePredictUI(){
+    const on=predictDraggable();
+    $("lockBtn").hidden=!on;
+    $("lockBtn").disabled=(state.predictValue==null);
+    $("nextBtn").disabled = on && !state.predictLocked;
+    $("hint").innerHTML = on
+      ? "Drag on the line to place the estimate. The value stays hidden until it is locked in."
+      : "Space or &rarr; for the next step, &larr; to go back.";
+  }
+  function pointerToValue(evt){
+    const svg=$("nline");
+    const r=svg.getBoundingClientRect();
+    const cx=(evt.touches&&evt.touches[0]? evt.touches[0].clientX : evt.clientX);
+    const vx=(cx-r.left)/r.width*1000;
+    let v=vFromX(vx);
+    const amax=axisMax();
+    if(v<0) v=0; if(v>amax) v=amax;
+    return v;
+  }
+  function onPointerDown(e){
+    if(!predictDraggable()) return;
+    e.preventDefault();
+    state.predictValue=pointerToValue(e);
+    render(); narrate(); updatePredictUI();
+    const move=function(ev){ ev.preventDefault(); state.predictValue=pointerToValue(ev); render(); };
+    const up=function(){
+      window.removeEventListener("pointermove",move);
+      window.removeEventListener("pointerup",up);
+      updatePredictUI();
+    };
+    window.addEventListener("pointermove",move,{passive:false});
+    window.addEventListener("pointerup",up);
+  }
+
+  /* ===================== navigation ===================== */
+  let hopTimer=null, partTimer=null;
+  function clearAnims(){
+    if(hopTimer){ clearTimeout(hopTimer); hopTimer=null; }
+    if(partTimer){ clearTimeout(partTimer); partTimer=null; }
+    state.animHop=null; state.animPartition=false;
+  }
+  function goto(i){
+    const prev=state.step;
+    const prevHops=labelledHops();
+    clearAnims();
+    state.step=Math.max(0,Math.min(STEPS.length-1,i));
+    const nowHops=labelledHops();
+    const single=(state.step===prev+1);
+    state.animHop = (single && nowHops>prevHops && nowHops>0) ? nowHops : null;
+    state.animPartition = (single && stepId()==="partition");
+    render(); narrate(); syncNav();
+    if(state.animHop!=null){
+      hopTimer=setTimeout(function(){ state.animHop=null; hopTimer=null; render(); },520);
+    }
+    if(state.animPartition){
+      partTimer=setTimeout(function(){ state.animPartition=false; partTimer=null; render(); },POP_AFTER+520);
+    }
+  }
+  function syncNav(){
+    $("backBtn").disabled=(state.step===0);
+    $("revealBtn").disabled=(state.step===STEPS.length-1);
+    updatePredictUI();
+    if(!predictDraggable()) $("nextBtn").disabled=(state.step===STEPS.length-1);
+  }
+  function resetSteps(){
+    clearAnims();
+    STEPS=buildSteps();
+    state.step=0;
+    state.predictValue=null;
+    state.predictLocked=false;
+    render(); narrate(); syncNav();
+  }
+
+  /* ===================== input ===================== */
+  function msg(s){ $("inputMsg").innerHTML=s||""; }
+  function setFraction(n,d,quiet){
+    if(!(n>0) || !(d>1)){ if(!quiet) msg("Use a numerator of 1 or more and a denominator of 2 or more."); return false; }
+    if(d>100){ if(!quiet) msg("Keep the denominator at 100 or below so the parts stay readable."); return false; }
+    if(n/d>4){ if(!quiet) msg("That is more than 4 wholes — try a smaller numerator."); return false; }
+    state.num=n; state.den=d;
+    $("numInput").value=n; $("denInput").value=d;
+    const p=pctOf(n,d);
+    $("pctInput").value = p.kind==='rec' ? fmtNum(Math.round(p.value*100)/100) : fmtNum(p.value);
+    msg("");
+    resetSteps();
+    return true;
+  }
+  function setPercentage(str){
+    const t=String(str).trim().replace("%","");
+    if(!/^\d+(\.\d+)?$/.test(t)){ msg("Type a percentage such as 60, 12.5 or 140."); return false; }
+    const v=parseFloat(t);
+    if(!(v>0)){ msg("The percentage needs to be more than 0."); return false; }
+    if(v>400){ msg("Keep it at 400% or below so the line stays readable."); return false; }
+    let numer=v, denom=100;
+    while(Math.abs(numer-Math.round(numer))>1e-9 && denom<1e7){ numer*=10; denom*=10; }
+    const r=reduce(Math.round(numer),denom);
+    if(r.d>100){
+      msg("That percentage does not give a simple fraction. Try 60, 12.5 or 140 — or use Fraction &rarr; Percentage for thirds and sevenths.");
+      return false;
+    }
+    return setFraction(r.n,r.d,false);
+  }
+
+  /* ===================== the randomiser ===================== */
+  const TIER_DENS={
+    friendly:[2,4,5,10,20,25,50],
+    term:[8,16,32,40,80],
+    rec:[3,6,7,9,11,12,15]
+  };
+  const TIER_KIND={ friendly:"int", term:"dec", rec:"rec" };
+  const TIER_LABEL={ friendly:"Friendly", term:"Terminating", rec:"Recurring" };
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  function randomFraction(){
+    const tier=state.tier;
+    const dens=TIER_DENS[tier];
+    const wantKind=TIER_KIND[tier];
+    const prev=state.num+"/"+state.den;
+    for(let attempt=0; attempt<400; attempt++){
+      const d=pick(dens);
+      let n;
+      if(Math.random()<0.75){ n=1+Math.floor(Math.random()*Math.min(d-1,12)); }   // proper, small
+      else if(Math.random()<0.6){ n=1+Math.floor(Math.random()*(d-1)); }          // proper, any
+      else { n=d+1+Math.floor(Math.random()*Math.min(d-1,8)); }                   // past one whole
+      if(!(n>0) || n/d>2.2) continue;
+      if(pctOf(n,d).kind!==wantKind) continue;          // keep the tier honest after reducing
+      if(state.mode==="p2f" && pctOf(n,d).kind==="rec") continue;
+      if(n+"/"+d===prev) continue;
+      return {n:n,d:d};
+    }
+    return {n:3,d:5};
+  }
+  function generate(){
+    const f=randomFraction();
+    setFraction(f.n,f.d);
+  }
+  function setTier(t){
+    state.tier=t;
+    const opts=document.querySelectorAll(".subOpt");
+    for(let i=0;i<opts.length;i++){
+      const on=(opts[i].dataset.tier===t);
+      opts[i].classList.toggle("on", on);
+      opts[i].setAttribute("aria-checked", String(on));
+    }
+    $("tierVal").textContent=TIER_LABEL[t];
+    $("tierTag").innerHTML="&middot; "+TIER_LABEL[t];
+  }
+  function syncTierAvailability(){
+    const rec=document.querySelector('.subOpt[data-tier="rec"]');
+    const blocked=(state.mode==="p2f");
+    rec.disabled=blocked;
+    rec.title=blocked ? "Recurring percentages are a Fraction → Percentage lesson" : "";
+    if(blocked && state.tier==="rec") setTier("friendly");
+  }
+
+  /* ===================== mode ===================== */
+  function setMode(m){
+    state.mode=m;
+    $("modeF2P").classList.toggle("on",m==="f2p");
+    $("modeP2F").classList.toggle("on",m==="p2f");
+    $("modeF2P").setAttribute("aria-selected",String(m==="f2p"));
+    $("modeP2F").setAttribute("aria-selected",String(m==="p2f"));
+    $("fracEditor").hidden=(m!=="f2p");
+    $("pctEditor").hidden=(m!=="p2f");
+    $("inputEyebrow").textContent = m==="f2p" ? "Type a fraction" : "Type a percentage";
+    syncTierAvailability();
+    msg(m==="p2f" ? "Reverse mode takes percentages that give a simple fraction (60, 12.5, 140)." : "");
+    resetSteps();
+  }
+
+  /* ===================== wiring ===================== */
+  function closeMenus(){
+    ["toolsMenu","settingsMenu"].forEach(function(id){ $(id).classList.remove("open"); });
+    $("toolsBtn").setAttribute("aria-expanded","false");
+    $("settingsBtn").setAttribute("aria-expanded","false");
+    $("tierWrap").classList.remove("open");
+    $("tierRow").setAttribute("aria-expanded","false");
+  }
+  function wireMenu(btnId,menuId){
+    $(btnId).addEventListener("click",function(e){
+      e.stopPropagation();
+      const m=$(menuId), wasOpen=m.classList.contains("open");
+      closeMenus();
+      if(!wasOpen){ m.classList.add("open"); $(btnId).setAttribute("aria-expanded","true"); }
+    });
+    $(menuId).addEventListener("click",function(e){ e.stopPropagation(); });
+  }
+
+  function wire(){
+    wireMenu("toolsBtn","toolsMenu");
+    wireMenu("settingsBtn","settingsMenu");
+    document.addEventListener("click",closeMenus);
+
+    $("modeF2P").addEventListener("click",function(){ setMode("f2p"); });
+    $("modeP2F").addEventListener("click",function(){ setMode("p2f"); });
+
+    $("useFracBtn").addEventListener("click",function(){
+      setFraction(parseInt($("numInput").value,10), parseInt($("denInput").value,10));
+    });
+    $("usePctBtn").addEventListener("click",function(){ setPercentage($("pctInput").value); });
+    ["numInput","denInput"].forEach(function(idd){
+      $(idd).addEventListener("keydown",function(e){ if(e.key==="Enter") $("useFracBtn").click(); });
+    });
+    $("pctInput").addEventListener("keydown",function(e){ if(e.key==="Enter") $("usePctBtn").click(); });
+
+    // the Random fraction submenu: hover opens it via CSS, click handles touch
+    $("tierRow").addEventListener("click",function(e){
+      e.stopPropagation();
+      const w=$("tierWrap"), open=w.classList.toggle("open");
+      $("tierRow").setAttribute("aria-expanded",String(open));
+    });
+    const tierOpts=document.querySelectorAll(".subOpt");
+    for(let i=0;i<tierOpts.length;i++){
+      tierOpts[i].addEventListener("click",function(e){
+        e.stopPropagation();
+        if(this.disabled) return;
+        setTier(this.dataset.tier);
+        $("tierWrap").classList.remove("open");
+        $("tierRow").setAttribute("aria-expanded","false");
+      });
+    }
+    $("genBtn").addEventListener("click",generate);
+
+    $("predictToggle").addEventListener("change",function(e){
+      state.predict=e.target.checked;
+      if(!state.predict){ state.predictValue=null; state.predictLocked=false; }
+      render(); narrate(); syncNav();
+    });
+    $("tenthsToggle").addEventListener("change",function(e){ state.tenths=e.target.checked; render(); });
+    $("bandToggle").addEventListener("change",function(e){ state.band=e.target.checked; render(); });
+
+    $("nextBtn").addEventListener("click",function(){ goto(state.step+1); });
+    $("backBtn").addEventListener("click",function(){ goto(state.step-1); });
+    $("revealBtn").addEventListener("click",function(){ goto(STEPS.length-1); });
+    $("restartBtn").addEventListener("click",function(){ resetSteps(); });
+    $("lockBtn").addEventListener("click",function(){
+      if(state.predictValue==null) return;
+      state.predictLocked=true;
+      render(); narrate(); syncNav();
+    });
+
+    $("resetBtn").addEventListener("click",function(){
+      $("predictToggle").checked=false; state.predict=false;
+      $("tenthsToggle").checked=false; state.tenths=false;
+      $("bandToggle").checked=true; state.band=true;
+      setTier("friendly");
+      setMode("f2p"); setFraction(3,5);
+    });
+
+    $("nline").addEventListener("pointerdown",onPointerDown);
+
+    document.addEventListener("keydown",function(e){
+      const t=e.target;
+      if(t && (t.tagName==="INPUT"||t.tagName==="TEXTAREA")) return;
+      if(e.key===" "||e.key==="ArrowRight"){ e.preventDefault(); if(!$("nextBtn").disabled) goto(state.step+1); }
+      else if(e.key==="ArrowLeft"){ e.preventDefault(); goto(state.step-1); }
+      else if(e.key==="g"||e.key==="G"){ generate(); }
+    });
+  }
+
+  /* ===================== boot ===================== */
+  wire();
+  setTier("friendly");
+  setMode("f2p");
+  setFraction(3,5);
+
+  window.__F2P__={ pctOf:pctOf, reduce:reduce, gcd:gcd, isTerminating:isTerminating,
+                   state:state, buildSteps:buildSteps, setFraction:setFraction,
+                   setPercentage:setPercentage, axisMax:axisMax, X:X, render:render, narrate:narrate,
+                   randomFraction:randomFraction, setTier:setTier, TIER_KIND:TIER_KIND };
+})();
+</script>
+</body>
+</html>

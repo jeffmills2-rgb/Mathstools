@@ -1,0 +1,750 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Fraction to Percentage — Worksheet Generator</title>
+
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --ink:#111827;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --shadow:0 14px 40px rgba(0,0,0,.10);
+      --radius:18px;
+
+      --blue:#2563eb;
+      --green:#16a34a;
+      --red:#dc2626;
+
+      --friendly1:#4ade80; --friendly2:#16a34a;
+      --medium1:#facc15;   --medium2:#d97706;
+      --spicy1:#fb923c;    --spicy2:#ea580c;
+
+      --footer-h:44px;
+      --mathFont:"Cambria Math","STIX Two Math","STIXGeneral","Times New Roman",serif;
+      --uiFont:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--ink);
+      font-family:var(--uiFont);
+      padding-bottom:var(--footer-h);
+    }
+
+    .wrap{ max-width:1280px; margin:14px auto 32px; padding:0 14px; }
+
+    .card{
+      background:var(--card);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:16px;
+    }
+
+    .title{ margin:0 0 4px; font-size:28px; font-weight:1000; letter-spacing:.2px; }
+
+    .subtitle{
+      margin:0 0 14px; color:var(--muted); font-weight:850;
+      font-size:15px; line-height:1.35;
+    }
+
+    .controls{
+      display:flex; align-items:flex-end; justify-content:space-between;
+      gap:12px; flex-wrap:wrap; padding:12px;
+      border:1px solid var(--border); border-radius:18px;
+      background:linear-gradient(180deg,#ffffff,#f9fafb);
+    }
+
+    .fieldRow{ display:flex; gap:16px; flex-wrap:wrap; align-items:flex-end; }
+
+    label{ display:block; margin:0 0 7px; font-size:15px; font-weight:950; }
+
+    select, input[type="number"]{
+      border:2px solid #e5e7eb; border-radius:14px; padding:12px 13px;
+      font-weight:950; font-size:17px; background:#fff; min-width:220px; outline:none;
+    }
+    input[type="number"]{ min-width:180px; }
+
+    .toggles{
+      display:flex; flex-direction:column; gap:9px;
+      padding:4px 2px 2px;
+    }
+
+    .sw{
+      display:inline-flex; align-items:center; gap:10px; cursor:pointer;
+      user-select:none; font-weight:950; font-size:14.5px; color:#111827; white-space:nowrap;
+    }
+    .sw input{ position:absolute; opacity:0; width:0; height:0; }
+    .sw .track{
+      position:relative; width:46px; height:26px; border-radius:999px; background:#cbd5e1;
+      transition:.18s ease; flex:0 0 auto; box-shadow:inset 0 1px 3px rgba(15,23,42,.18);
+    }
+    .sw .track::after{
+      content:""; position:absolute; top:3px; left:3px; width:20px; height:20px;
+      border-radius:50%; background:#fff; box-shadow:0 2px 6px rgba(15,23,42,.3); transition:.18s ease;
+    }
+    .sw input:checked + .track{ background:var(--green); }
+    .sw input:checked + .track::after{ transform:translateX(20px); }
+    .sw input:focus-visible + .track{ box-shadow:0 0 0 4px rgba(37,99,235,.28); }
+    .sw input:disabled + .track{ opacity:.45; }
+
+    .btnRow{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end; }
+
+    button{
+      border:none; border-radius:14px; padding:12px 16px; font-weight:1000; cursor:pointer;
+      background:#f3f4f6; color:#111827;
+      transition:transform .04s ease, filter .15s ease, opacity .2s ease;
+      user-select:none; font-size:16px;
+    }
+    button:active{ transform:scale(.98); }
+    button.primary{ background:#2563eb; color:#fff; }
+    button.ghost{ background:#eef2ff; color:#1d4ed8; }
+    button.danger{ background:#fee2e2; color:#991b1b; }
+
+    .outWrap{ margin-top:14px; }
+
+    .page{
+      margin-top:14px; background:#fff; border:1px solid var(--border);
+      border-radius:18px; box-shadow:0 10px 26px rgba(15,23,42,.08); overflow:hidden;
+    }
+
+    .pageHeader{
+      padding:10px 14px 8px; border-bottom:1px solid rgba(229,231,235,.95);
+      display:flex; align-items:flex-start; justify-content:space-between;
+      gap:10px; flex-wrap:wrap;
+    }
+
+    .hdrTitle{ font-weight:1000; font-size:15px; line-height:1.12; }
+    .hdrSub{ color:var(--muted); font-weight:850; font-size:12px; margin-top:2px; }
+
+    .nameDate{
+      display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;
+      justify-content:flex-end; margin-left:auto;
+    }
+    .lineField{ display:flex; flex-direction:column; gap:4px; min-width:126px; }
+    .lineLabel{ font-size:11px; font-weight:950; color:var(--muted); }
+    .lineBox{ height:22px; border:1.8px solid #111827; border-radius:9px; background:#fff; }
+
+    .grid{
+      padding:16px 16px 18px; display:grid;
+      grid-template-columns:repeat(3, 1fr);
+      grid-template-rows:repeat(6, minmax(0, 1fr));
+      gap:12px 14px; min-height:1120px; align-content:stretch;
+    }
+    /* with the number line the card needs room to breathe — two across, four down */
+    .grid.withLine{
+      grid-template-columns:repeat(2, 1fr);
+      grid-template-rows:repeat(4, minmax(0, 1fr));
+      gap:12px 14px;
+    }
+
+    .qCard{
+      border:1px solid rgba(229,231,235,.95); border-radius:14px;
+      padding:12px 12px 10px; background:#fff; break-inside:avoid;
+      display:flex; flex-direction:column; justify-content:space-between;
+      min-height:0; height:100%; position:relative; overflow:hidden;
+    }
+
+    .qBadge{
+      position:absolute; top:8px; right:8px; min-width:28px; height:28px;
+      border-radius:999px; display:flex; align-items:center; justify-content:center;
+      font-size:12px; font-weight:1000; color:#fff; box-shadow:0 4px 10px rgba(0,0,0,.08);
+    }
+    .qBadge.friendly{ background:linear-gradient(180deg,var(--friendly1),var(--friendly2)); }
+    .qBadge.medium{ background:linear-gradient(180deg,var(--medium1),var(--medium2)); }
+    .qBadge.spicy{ background:linear-gradient(180deg,var(--spicy1),var(--spicy2)); }
+
+    .prompt{ text-align:center; margin:2px 0 0; padding:0 8px; }
+
+    .promptSmall{
+      font-weight:900; font-size:10px; color:var(--muted); margin-bottom:6px;
+      line-height:1.15; min-height:12px; letter-spacing:.15px; padding-right:24px;
+    }
+
+    .questionLine{
+      display:flex; justify-content:center; align-items:center; gap:8px; flex-wrap:wrap;
+      font-family:var(--mathFont); font-weight:1000; color:#0f172a;
+      line-height:1.15; text-align:center; font-size:29px; min-height:78px;
+    }
+    .withLine .questionLine{ min-height:0; font-size:22px; }
+
+    .questionLine .eq{ color:#111827; }
+    .questionLine .blank{
+      display:inline-block; min-width:66px; border-bottom:2.4px solid #111827;
+      height:1.05em; vertical-align:-.12em;
+    }
+    .questionLine .pctSign{ font-family:var(--uiFont); font-weight:1000; font-size:.8em; }
+
+    .fraction{
+      display:inline-flex; flex-direction:column; align-items:center; justify-content:center;
+      line-height:1; vertical-align:middle; min-width:24px; transform:translateY(1px);
+    }
+    .fraction .top, .fraction .bottom{ display:block; text-align:center; line-height:1; }
+    .fraction .bar{
+      width:100%; min-width:18px; height:2.8px; background:#111;
+      border-radius:999px; margin:2px 0;
+    }
+    .mixedNum{ display:inline-flex; align-items:center; gap:.14em; }
+
+    .lineWrap{ margin:2px 0 0; }
+    .lineWrap svg{ width:100%; height:auto; display:block; }
+    .lineWrap svg text{ font-family:var(--mathFont); }
+
+    .ansRow{
+      margin-top:12px; display:flex; align-items:center; justify-content:center;
+      gap:8px; flex-wrap:wrap;
+    }
+    .ansLabel{ font-weight:950; font-size:15px; font-family:var(--mathFont); line-height:1; }
+    .ansBox{ width:110px; height:30px; border:1.8px solid #111827; border-radius:999px; background:#fff; }
+    .ansBox.key{
+      display:flex; align-items:center; justify-content:center; font-weight:1000;
+      font-size:16px; font-family:var(--mathFont); color:var(--green);
+      border-color:var(--green); background:rgba(22,163,74,.08); padding:0 8px;
+      width:auto; min-width:110px;
+    }
+
+    .pageFooter{
+      padding:7px 14px; border-top:1px solid rgba(229,231,235,.95);
+      display:flex; align-items:center; justify-content:center; gap:10px;
+      font-weight:950; color:#111827; font-size:12px; background:rgba(255,255,255,.96);
+    }
+    .pageFooter a{ color:#2563eb; text-decoration:none; font-weight:1000; }
+    .pageFooter a:hover{ text-decoration:underline; }
+
+    .mmtFooter{
+      position:fixed; left:0; right:0; bottom:0; height:var(--footer-h);
+      display:flex; align-items:center; justify-content:center; padding:0 12px;
+      background:rgba(255,255,255,.92); border-top:1px solid rgba(229,231,235,.95);
+      backdrop-filter:blur(8px); z-index:500; font-weight:900; color:#111827;
+      text-align:center; font-size:13px;
+    }
+    .mmtFooter a{ color:#2563eb; text-decoration:none; font-weight:950; }
+    .mmtFooter a:hover{ text-decoration:underline; }
+
+    @media print{
+      @page{ size:A4; margin:7mm; }
+
+      html, body{ width:210mm; height:auto; }
+
+      body{
+        background:#fff; padding-bottom:0;
+        -webkit-print-color-adjust:exact; print-color-adjust:exact;
+      }
+
+      .wrap{ max-width:none; margin:0; padding:0; }
+      .card{ box-shadow:none; border-radius:0; padding:0; }
+      .controls, .title, .subtitle, .mmtFooter{ display:none !important; }
+
+      .page{
+        margin:0; border:none; border-radius:0; box-shadow:none; page-break-after:always;
+      }
+      .page:last-child{ page-break-after:auto; }
+
+      .pageHeader{ padding:2.4mm 3.2mm 2mm; }
+      .hdrTitle{ font-size:10px; }
+      .hdrSub{ font-size:8.4px; }
+
+      .nameDate{ gap:6px; }
+      .lineField{ min-width:86px; gap:2px; }
+      .lineLabel{ font-size:8px; }
+      .lineBox{ height:15px; border-width:1.2px; border-radius:7px; }
+
+      .grid{ padding:3.6mm 3.2mm 3.2mm; gap:2.2mm 2.5mm; min-height:221mm; }
+      .grid.withLine{ gap:3mm 3.2mm; min-height:243mm; }
+
+      .qCard{ padding:3.2mm 2.2mm 2.4mm; border-radius:10px; border-color:#d5dae1; }
+
+      .qBadge{ top:2mm; right:2mm; min-width:6.2mm; height:6.2mm; font-size:8px; }
+
+      .prompt{ padding:0 2mm; }
+      .promptSmall{ font-size:7px; min-height:3mm; margin-bottom:1.2mm; padding-right:6.5mm; }
+
+      .questionLine{ font-size:17px; min-height:22mm; gap:4px; }
+      .withLine .questionLine{ font-size:13px; min-height:0; margin-bottom:1mm; }
+      .questionLine .blank{ min-width:14mm; border-bottom-width:1.6px; }
+
+      .fraction{ min-width:14px; }
+      .fraction .bar{ min-width:12px; height:2px; margin:1px 0; }
+
+      .ansRow{ margin-top:2.4mm; gap:3px; }
+      .ansLabel{ font-size:9px; }
+      .ansBox{ width:18mm; height:4.8mm; border-width:1.2px; }
+      .ansBox.key{ font-size:10px; min-width:18mm; }
+
+      .pageFooter{ padding:1.8mm 3.2mm 1.3mm; font-size:7.8px; }
+    }
+  </style>
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "c7e5713b5e4f4993907eb285797dc89b"}'></script><!-- End Cloudflare Web Analytics -->
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1 class="title">Fraction to Percentage — Worksheet Generator</h1>
+      <p class="subtitle">Printable A4 worksheets built from the <strong>Fraction to Percentage</strong> teaching tool. The levels are the tool's own three tiers. With <em>Show number line</em> on, every question arrives at the tool's first reveal — the whole partitioned into equal parts with the fraction marked — so students count on in percent. With it off you get a plain conversion card.</p>
+
+      <div class="controls">
+        <div class="fieldRow">
+          <div>
+            <label for="levelSel">Level</label>
+            <select id="levelSel">
+              <option value="friendly">Friendly — whole-number percentages</option>
+              <option value="term">Terminating — stop, but not whole (12.5%)</option>
+              <option value="rec">Recurring — never stop (33&#8531;%)</option>
+              <option value="mixed">Mixed — all three</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="countInp">Number of questions (1&ndash;72)</label>
+            <input id="countInp" type="number" min="1" max="72" value="18" />
+          </div>
+
+          <div class="toggles">
+            <label class="sw"><input type="checkbox" id="lineToggle" /><span class="track"></span><span>Show number line</span></label>
+            <label class="sw"><input type="checkbox" id="improperToggle" /><span class="track"></span><span>Include past 100%</span></label>
+            <label class="sw"><input type="checkbox" id="reverseToggle" /><span class="track"></span><span>Include reverse questions</span></label>
+            <label class="sw"><input type="checkbox" id="keyToggle" checked /><span class="track"></span><span>Answer key pages</span></label>
+          </div>
+        </div>
+
+        <div class="btnRow">
+          <button id="genBtn" class="primary">Generate worksheet</button>
+          <button id="printBtn" class="ghost">Print (Ctrl+P)</button>
+          <button id="resetBtn" class="danger">Reset</button>
+        </div>
+      </div>
+
+      <div id="out" class="outWrap"></div>
+    </div>
+  </div>
+
+  <div class="mmtFooter">
+    This tool and more can be found at&nbsp;
+    <a href="https://www.millsmathstools.au">www.millsmathstools.au</a>
+  </div>
+
+<script>
+(() => {
+  "use strict";
+
+  const SITE = "https://www.millsmathstools.au";
+  const NS = "http://www.w3.org/2000/svg";
+
+  /* ===================== number helpers (ported from the teaching tool) ===================== */
+  function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ const t=a%b; a=b; b=t; } return a; }
+  function reduce(n,d){ const g=gcd(n,d)||1; return { n:n/g, d:d/g }; }
+  function isTerminating(d){ let x=d; while(x%2===0) x/=2; while(x%5===0) x/=5; return x===1; }
+  function fmtNum(x){ return String(Number(x.toFixed(8))); }
+
+  // the exact percentage of n/d — kind is 'int', 'dec' or 'rec'
+  function pctOf(n,d){
+    const N=100*n, D=d;
+    const g=gcd(N,D)||1;
+    const rn=N/g, rd=D/g;
+    const whole=Math.floor(rn/rd);
+    const rem=rn-whole*rd;
+    let kind='rec';
+    if(rd===1) kind='int';
+    else if(isTerminating(rd)) kind='dec';
+    return { rn, rd, whole, rem, kind, value:rn/rd };
+  }
+
+  /* ===================== HTML fraction bits ===================== */
+  function fractionHTML(num, den){
+    return '<span class="fraction"><span class="top">'+num+'</span><span class="bar"></span><span class="bottom">'+den+'</span></span>';
+  }
+  // the percentage written the way the tool writes it — 60%, 12.5% or 33 1/3 %
+  function pctHTML(n,d,withSign){
+    const p=pctOf(n,d);
+    const sign=(withSign===false)?"":'<span class="pctSign">%</span>';
+    if(p.kind==='int') return p.whole+sign;
+    if(p.kind==='dec') return fmtNum(p.value)+sign;
+    let s='<span class="mixedNum">';
+    if(p.whole>0) s+='<span>'+p.whole+'</span>';
+    s+=fractionHTML(p.rem,p.rd);
+    s+='</span>'+sign;
+    return s;
+  }
+  function pctPlain(n,d){
+    const p=pctOf(n,d);
+    if(p.kind==='int') return p.whole+"%";
+    if(p.kind==='dec') return fmtNum(p.value)+"%";
+    return (p.whole? p.whole+" ":"")+p.rem+"/"+p.rd+"%";
+  }
+
+  /* ===================== the mini number line =====================
+     With the toggle on, the card opens at the tool's FIRST REVEAL: the whole is
+     partitioned into d equal parts and the fraction being asked about is named.
+     Nothing on the percentage side but the two endpoints — that is the work.   */
+
+  const SVG_W = 520, SVG_H = 178;
+  const L = 48, R = 476;
+  const LINE_Y = 100;
+  const FR_LABEL_Y = LINE_Y - 44;   // centre of the stacked fraction label
+  const FR_END_Y   = LINE_Y - 28;   // baseline of "0" / "1 whole"
+  const PC_END_Y   = LINE_Y + 40;   // baseline of "0%" / "100%"
+  const FR_ROW     = -32;           // second-row offset above the line
+  const PC_ROW     = 26;            // second-row offset below the line
+
+  const C = {
+    frac:"#1e293b", pct:"#1d4ed8", target:"#db2777",
+    whole:"#0f172a", muted:"#64748b", faint:"#cbd5e1"
+  };
+
+  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+  function svgText(x,y,str,o){
+    o = o || {};
+    return '<text x="'+x+'" y="'+y+'" text-anchor="'+(o.anchor||"middle")+'"'
+      + ' font-size="'+(o.size||18)+'" font-weight="'+(o.weight||"800")+'"'
+      + ' fill="'+(o.fill||C.frac)+'"'
+      + (o.family? ' font-family="'+o.family+'"' : '')
+      + ' stroke="#fff" stroke-width="4" paint-order="stroke" stroke-linejoin="round"'
+      + '>'+esc(str)+'</text>';
+  }
+  function svgLine(x1,y1,x2,y2,stroke,w){
+    return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+stroke+'" stroke-width="'+w+'" stroke-linecap="round"/>';
+  }
+  function fracWidth(n,d,fs){ return Math.max(String(n).length,String(d).length)*fs*0.58+8; }
+  function svgFrac(cx,cy,n,d,fs,fill){
+    const barW = fracWidth(n,d,fs);
+    return '<g>'
+      + svgText(cx, cy-fs*0.30, String(n), {size:fs, fill:fill})
+      + svgLine(cx-barW/2, cy+fs*0.06, cx+barW/2, cy+fs*0.06, fill, Math.max(2,fs*0.09))
+      + svgText(cx, cy+fs*1.02, String(d), {size:fs, fill:fill})
+      + '</g>';
+  }
+  // a label that would sit on an endpoint takes a second row rather than being dropped
+  function rowAgainst(x,w,reserved){
+    for(let i=0;i<reserved.length;i++){
+      if(Math.abs(reserved[i].x-x) < (reserved[i].w+w)/2 + 4) return 1;
+    }
+    return 0;
+  }
+
+  function numberLineSVG(q){
+    const n=q.n, d=q.d;
+    const value=n/d;
+    const amax = value>1 ? (n+1)/d : 1;
+    const X = v => L + (v/amax)*(R-L);
+    const maxK = Math.round(amax*d);
+    const xW = X(1), xv = X(value);
+
+    let s = '<svg viewBox="0 0 '+SVG_W+' '+SVG_H+'" role="img" aria-label="'+esc(q.reverse
+        ? 'Number line from 0 to 100 per cent with '+pctPlain(n,d)+' marked'
+        : 'Number line with the whole split into '+d+' equal parts and '+n+' over '+d+' marked')+'">';
+
+    if(q.reverse){
+      // reverse: per cent is given, the fraction is the work — tenths, no partition
+      const lastTenth = Math.floor(amax*10 + 1e-9);
+      for(let t=1;t<=lastTenth;t++){
+        if(t%10===0) continue;
+        s += svgLine(X(t/10), LINE_Y+3, X(t/10), LINE_Y+13, C.faint, 2);
+      }
+      s += svgLine(X(0.5), LINE_Y+3, X(0.5), LINE_Y+17, "#94a3b8", 2.4);
+    } else {
+      // shaded distance on the fraction side, exactly as the tool shades it
+      s += '<rect x="'+L+'" y="'+(LINE_Y-11)+'" width="'+Math.max(0,xv-L)+'" height="9" rx="4.5" fill="#7c3aed" fill-opacity="0.22"/>';
+    }
+
+    // the axis
+    s += svgLine(L, LINE_Y, R, LINE_Y, C.frac, 3.4);
+
+    // endpoints
+    const endTick = (x,col) => svgLine(x, LINE_Y-18, x, LINE_Y+18, col, 4);
+    s += endTick(L, C.frac);
+    s += svgText(L, FR_END_Y, "0", {size:19, fill:C.frac});
+    s += svgText(L, PC_END_Y, "0%", {size:19, fill:C.pct});
+    s += endTick(xW, C.whole);
+    s += svgText(xW, FR_END_Y, "1 whole", {size:17, fill:C.whole, family:"var(--uiFont)", weight:"900"});
+    s += svgText(xW, PC_END_Y, "100%", {size:19, fill:C.pct});
+
+    const frReserved = [{x:L,w:40},{x:xW,w:96}];
+    const pcReserved = [{x:L,w:52},{x:xW,w:88}];
+
+    if(q.reverse){
+      // the given percentage sits under its own tick; the fraction above is the blank
+      s += svgLine(xv, LINE_Y-16, xv, LINE_Y+16, C.target, 4);
+      const w = String(pctPlain(n,d)).length*10+12;
+      const row = rowAgainst(xv, w, pcReserved);
+      s += svgText(xv, PC_END_Y + row*PC_ROW, pctPlain(n,d), {size:19, fill:C.target});
+      s += svgText(xv, FR_LABEL_Y + rowAgainst(xv,34,frReserved)*FR_ROW + 6, "?", {size:26, fill:C.target, weight:"900"});
+    } else {
+      // the partition — one set of ticks, read from both sides
+      for(let k=1;k<=maxK;k++){
+        if(k===Math.round(d)) continue;                 // the whole already has its endpoint
+        const isTarget = (k===n);
+        const x = X(k/d);
+        s += svgLine(x, LINE_Y-(isTarget?17:11), x, LINE_Y+(isTarget?17:11),
+                     isTarget?C.target:C.frac, isTarget?4:2.4);
+      }
+      const fs = 20;
+      const row = rowAgainst(xv, fracWidth(n,d,fs)+10, frReserved);
+      s += svgFrac(xv, FR_LABEL_Y + row*FR_ROW, n, d, fs, C.target);
+      // the blank the student fills in, under the same tick
+      const pRow = rowAgainst(xv, 46, pcReserved);
+      s += svgLine(xv-24, PC_END_Y + pRow*PC_ROW + 3, xv+24, PC_END_Y + pRow*PC_ROW + 3, C.target, 2.2);
+      s += svgText(xv+34, PC_END_Y + pRow*PC_ROW, "%", {size:18, fill:C.target});
+    }
+
+    s += '</svg>';
+    return s;
+  }
+
+  /* ===================== the question banks =====================
+     Denominators are the teaching tool's own three tiers. With the number line
+     showing, anything past 20 parts is unreadable at this size, so those tiers
+     are trimmed rather than the ticks being crowded.                            */
+
+  const TIER_DENS = {
+    friendly:[2,4,5,10,20,25,50],
+    term:[8,16,32,40,80],
+    rec:[3,6,7,9,11,12,15]
+  };
+  const TIER_DENS_LINE = {
+    friendly:[2,4,5,10,20],
+    term:[8,16],
+    rec:[3,6,7,9,11,12,15]
+  };
+  const TIER_KIND  = { friendly:"int", term:"dec", rec:"rec" };
+  const TIER_LABEL = { friendly:"Friendly", term:"Terminating", rec:"Recurring", mixed:"Mixed" };
+  const TIER_BADGE = { friendly:"friendly", term:"medium", rec:"spicy" };
+  const TIERS = ["friendly","term","rec"];
+
+  function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+  function choice(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  function buildQuestion(tier, opts, seen){
+    const dens = (opts.showLine ? TIER_DENS_LINE : TIER_DENS)[tier];
+    const wantKind = TIER_KIND[tier];
+    // a reverse question has to come back to a simple fraction, so recurring is out
+    const reverse = opts.reverse && wantKind!=="rec" && Math.random()<0.3;
+
+    for(let tries=0; tries<600; tries++){
+      const d = choice(dens);
+      let n;
+      const roll = Math.random();
+      if(opts.improper && roll<0.22){
+        n = d+1+Math.floor(Math.random()*Math.min(d-1,8));      // past one whole
+      } else if(roll<0.78){
+        n = randInt(1, Math.min(d-1,12));                        // proper, small
+      } else {
+        n = randInt(1, d-1);                                     // proper, any
+      }
+      if(!(n>0)) continue;
+      if(n===d) continue;
+      if(n/d > 2.2) continue;
+      if(!opts.improper && n>=d) continue;
+      if(opts.showLine && n>d && Math.round(((n+1)/d)*d) > 26) continue;  // too many ticks
+      if(pctOf(n,d).kind !== wantKind) continue;                 // keep the tier honest after reducing
+      const key = n+"/"+d;
+      if(seen.has(key)) continue;
+      seen.add(key);
+      return { n, d, tier, reverse };
+    }
+    // fall back rather than loop for ever — a repeat is better than a blank card
+    const d = choice(dens);
+    const n = Math.max(1, d-1);
+    return { n, d, tier, reverse:false };
+  }
+
+  function buildQuestions(levelKey, count, opts){
+    const seen = new Set();
+    const list = [];
+    for(let i=0;i<count;i++){
+      // once the distinct pool runs dry, let repeats through
+      if(seen.size > 90) seen.clear();
+      const tier = (levelKey==="mixed") ? TIERS[i % 3] : levelKey;
+      list.push(buildQuestion(tier, opts, seen));
+    }
+    if(levelKey==="mixed"){
+      for(let i=list.length-1;i>0;i--){
+        const j=Math.floor(Math.random()*(i+1));
+        const t=list[i]; list[i]=list[j]; list[j]=t;
+      }
+    }
+    return list;
+  }
+
+  /* ===================== answers ===================== */
+  function answerHTML(q){
+    if(q.reverse){
+      const r = reduce(q.n, q.d);          // the percentage was built from n/d — simplify it
+      return fractionHTML(r.n, r.d);
+    }
+    return pctHTML(q.n, q.d, true);
+  }
+
+  /* ===================== page building ===================== */
+  function pageHeaderHTML(levelName, pageLabel, showNameDate){
+    return '<div class="pageHeader">'
+      + '<div>'
+      +   '<div class="hdrTitle">Fraction to Percentage &mdash; Worksheet ('+levelName+')</div>'
+      +   '<div class="hdrSub">'+pageLabel+'</div>'
+      + '</div>'
+      + (showNameDate
+          ? '<div class="nameDate">'
+            + '<div class="lineField"><div class="lineLabel">Name</div><div class="lineBox"></div></div>'
+            + '<div class="lineField"><div class="lineLabel">Date</div><div class="lineBox"></div></div>'
+            + '</div>'
+          : '')
+      + '</div>';
+  }
+
+  function pageFooterHTML(){
+    return '<div class="pageFooter">This tool and more can be found at <a href="'+SITE+'">www.millsmathstools.au</a></div>';
+  }
+
+  function makeQuestionCard(q, qNumber, showAnswer, showLine){
+    const card = document.createElement("div");
+    card.className = "qCard";
+
+    const badge = document.createElement("div");
+    badge.className = "qBadge " + TIER_BADGE[q.tier];
+    badge.textContent = qNumber;
+    card.appendChild(badge);
+
+    const prompt = document.createElement("div");
+    prompt.className = "prompt";
+
+    const instruction = q.reverse
+      ? "Write the percentage as a fraction in its simplest form."
+      : (showLine ? "Write the marked fraction as a percentage."
+                  : "Write the fraction as a percentage.");
+
+    let body;
+    if(showLine){
+      body = '<div class="lineWrap">'+numberLineSVG(q)+'</div>';
+    } else if(q.reverse){
+      body = '<div class="questionLine">'+pctHTML(q.n,q.d,true)+'<span class="eq">=</span></div>';
+    } else {
+      body = '<div class="questionLine">'+fractionHTML(q.n,q.d)+'<span class="eq">=</span></div>';
+    }
+
+    prompt.innerHTML = '<div class="promptSmall">'+instruction+'</div>' + body;
+    card.appendChild(prompt);
+
+    const ansRow = document.createElement("div");
+    ansRow.className = "ansRow";
+    ansRow.innerHTML = '<div class="ansLabel">Answer:</div>'
+      + '<div class="ansBox '+(showAnswer?"key":"")+'">'+(showAnswer? answerHTML(q) : "")+'</div>';
+    card.appendChild(ansRow);
+
+    return card;
+  }
+
+  function buildPages(questions, levelName, titleLabel, showAnswers, showLine, perPage){
+    const totalPages = Math.ceil(questions.length / perPage);
+    const pages = [];
+
+    for(let p=0; p<totalPages; p++){
+      const page = document.createElement("div");
+      page.className = "page";
+      page.innerHTML = pageHeaderHTML(levelName, titleLabel+" &mdash; Page "+(p+1)+" of "+totalPages, !showAnswers);
+
+      const grid = document.createElement("div");
+      grid.className = "grid" + (showLine ? " withLine" : "");
+
+      const start = p*perPage;
+      questions.slice(start, start+perPage).forEach((q,i) => {
+        grid.appendChild(makeQuestionCard(q, start+i+1, showAnswers, showLine));
+      });
+      page.appendChild(grid);
+
+      const fw = document.createElement("div");
+      fw.innerHTML = pageFooterHTML();
+      page.appendChild(fw.firstElementChild);
+
+      pages.push(page);
+    }
+    return pages;
+  }
+
+  /* ===================== wiring ===================== */
+  const levelSel      = document.getElementById("levelSel");
+  const countInp      = document.getElementById("countInp");
+  const lineToggle    = document.getElementById("lineToggle");
+  const improperToggle= document.getElementById("improperToggle");
+  const reverseToggle = document.getElementById("reverseToggle");
+  const keyToggle     = document.getElementById("keyToggle");
+  const genBtn        = document.getElementById("genBtn");
+  const printBtn      = document.getElementById("printBtn");
+  const resetBtn      = document.getElementById("resetBtn");
+  const out           = document.getElementById("out");
+
+  function perPage(){ return lineToggle.checked ? 8 : 18; }
+
+  function syncCountForLayout(){
+    countInp.value = String(perPage());
+  }
+
+  function syncReverseAvailability(){
+    // reverse questions need a fraction to come back to, so recurring cannot offer them
+    const off = (levelSel.value === "rec");
+    reverseToggle.disabled = off;
+    if(off) reverseToggle.checked = false;
+  }
+
+  function generate(){
+    out.innerHTML = "";
+
+    const levelKey = levelSel.value;
+    const showLine = lineToggle.checked;
+    const pp = perPage();
+
+    let n = Number(countInp.value);
+    if(!Number.isFinite(n)) n = pp;
+    n = Math.max(1, Math.min(72, Math.round(n)));
+    countInp.value = String(n);
+
+    const opts = {
+      showLine,
+      improper: improperToggle.checked,
+      reverse: reverseToggle.checked && !reverseToggle.disabled
+    };
+
+    const questions = buildQuestions(levelKey, n, opts);
+    const levelName = TIER_LABEL[levelKey];
+
+    buildPages(questions, levelName, "Worksheet", false, showLine, pp).forEach(pg => out.appendChild(pg));
+    if(keyToggle.checked){
+      buildPages(questions, levelName, "Answer key", true, showLine, pp).forEach(pg => out.appendChild(pg));
+    }
+
+    if(out.firstElementChild){
+      out.firstElementChild.scrollIntoView({ behavior:"smooth", block:"start" });
+    }
+  }
+
+  function resetAll(){
+    out.innerHTML = "";
+    levelSel.value = "friendly";
+    lineToggle.checked = false;
+    improperToggle.checked = false;
+    reverseToggle.checked = false;
+    keyToggle.checked = true;
+    syncReverseAvailability();
+    syncCountForLayout();
+  }
+
+  levelSel.addEventListener("change", syncReverseAvailability);
+  lineToggle.addEventListener("change", syncCountForLayout);
+  genBtn.addEventListener("click", generate);
+  printBtn.addEventListener("click", () => window.print());
+  resetBtn.addEventListener("click", resetAll);
+
+  syncReverseAvailability();
+  syncCountForLayout();
+
+  // expose the maths for the headless check
+  window.__F2P_WS__ = { pctOf, pctPlain, buildQuestions, reduce };
+})();
+</script>
+</body>
+</html>

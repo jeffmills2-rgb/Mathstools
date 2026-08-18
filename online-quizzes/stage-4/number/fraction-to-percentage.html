@@ -1,0 +1,937 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Fraction to Percentage – Student Quiz</title>
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --ink:#111827;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --shadow:0 16px 44px rgba(0,0,0,.12);
+
+      --blue:#2563eb;
+      --blueDark:#1d4ed8;
+      --green:#16a34a;
+      --greenSoft:#dcfce7;
+      --red:#dc2626;
+      --redSoft:#fee2e2;
+
+      --sweet1:#22c55e; --sweet2:#0f766e;
+      --mild1:#60a5fa; --mild2:#2563eb;
+      --medium1:#facc15; --medium2:#d97706;
+      --spicy1:#fb923c; --spicy2:#ea580c;
+
+      --mathFont:"Cambria Math","STIX Two Math","STIXGeneral","Times New Roman",serif;
+      --uiFont:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{ margin:0; font-family:var(--uiFont); background:var(--bg); color:var(--ink); }
+
+    .wrap{ max-width:1600px; margin:0 auto; padding:10px 12px 16px; min-height:100%; display:flex; flex-direction:column; }
+    .card{
+      background:var(--card); border:1px solid var(--border); border-radius:24px; box-shadow:var(--shadow);
+      padding:10px 12px 16px; min-height:calc(100vh - 28px); display:flex; flex-direction:column;
+      overflow:hidden; position:relative;
+    }
+
+    .topRow{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:8px; }
+    .backBtn{
+      border:none; background:#f3f4f6; color:var(--ink); cursor:pointer; padding:10px 12px; border-radius:12px;
+      font-weight:950; display:inline-flex; align-items:center; gap:8px; transition:background .15s ease, transform .04s ease;
+    }
+    .backBtn:hover{ background:#eef2ff; }
+    .backBtn:active{ transform:scale(.98); }
+    .rightPanel{ display:flex; justify-content:flex-end; gap:10px; }
+    .resetBtn{
+      border:none; font-weight:950; cursor:pointer; padding:10px 14px; border-radius:14px;
+      background:#fee2e2; color:#991b1b; transition:transform .04s ease, opacity .2s ease;
+    }
+    .resetBtn:active{ transform:scale(.98); }
+    .levelBannerWrap{ flex:1 1 420px; display:flex; justify-content:center; align-items:center; min-width:280px; }
+    .levelBanner{
+      width:min(660px,100%); border-radius:18px; padding:8px 14px; color:#fff; font-weight:1000;
+      font-size:28px; text-align:center; background:linear-gradient(180deg,#1d4ed8,#1e3a8a);
+      box-shadow:0 10px 20px rgba(0,0,0,.10); user-select:none;
+    }
+
+    .progressRow{ display:flex; align-items:center; gap:12px; margin:2px 4px 12px; }
+    .progressTrack{ flex:1; height:10px; background:#e5e7eb; border-radius:999px; overflow:hidden; box-shadow:inset 0 1px 2px rgba(0,0,0,.08); }
+    .progressFill{ height:100%; width:0%; background:#2563eb; border-radius:999px; transition:width .2s ease; }
+    .qCounter{ font-weight:950; white-space:nowrap; }
+
+    .questionArea{ min-height:104px; display:flex; justify-content:center; align-items:center; margin-top:4px; text-align:center; padding:4px 8px; }
+    .questionText{
+      font-family:var(--mathFont); font-size:clamp(30px,3.6vw,58px); line-height:1.05; font-weight:700; color:#111;
+      display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:10px;
+    }
+    .questionText .ui{ font-family:var(--uiFont); font-weight:950; font-size:.46em; color:#374151; }
+    .questionText .eq{ color:#111827; }
+    .fraction{ display:inline-flex; flex-direction:column; align-items:center; line-height:1; transform:translateY(2px); min-width:1.45em; }
+    .fraction .bar{ width:1.35em; border-top:3px solid #111; margin:3px 0 2px; }
+    .qHint{ text-align:center; color:var(--muted); font-weight:800; font-size:14px; min-height:18px; margin-top:2px; }
+
+    .answerArea{ margin-top:6px; display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap; }
+    .answerLabel{ font-weight:950; font-size:20px; font-family:var(--mathFont); }
+    .answerInput{
+      width:210px; max-width:72vw; border:3px solid #111827; border-radius:20px; padding:14px 16px;
+      font-size:22px; font-weight:950; text-align:center; font-family:var(--mathFont); outline:none; background:#fff;
+      transition:border-color .15s ease, box-shadow .15s ease, background .15s ease;
+    }
+    .answerInput:disabled{ opacity:.45; background:#f8fafc; cursor:not-allowed; }
+    .answerInput.ok{ border-color:var(--green); box-shadow:0 0 0 4px rgba(22,163,74,.15); background:var(--greenSoft); }
+    .answerInput.bad{ border-color:var(--red); box-shadow:0 0 0 4px rgba(220,38,38,.12); background:var(--redSoft); }
+    .pctAfter{ font-family:var(--mathFont); font-weight:950; font-size:26px; }
+    .ansGroup.hide{ display:none !important; }
+
+    .enterBtn,.nextBtn,.revealBtn,.giveBtn{
+      border:none; border-radius:14px; padding:12px 18px; font-weight:1000; cursor:pointer;
+      transition:transform .04s ease, opacity .2s ease, background .15s ease;
+    }
+    .enterBtn:active,.nextBtn:active,.revealBtn:active,.giveBtn:active{ transform:scale(.98); }
+    .enterBtn{ background:#1d4ed8; color:#fff; }
+    .enterBtn:disabled{ opacity:.4; cursor:not-allowed; }
+    .nextBtn{ background:#111827; color:#fff; display:none; }
+    .nextBtn.show{ display:inline-block; }
+    .revealBtn{ background:#7c3aed; color:#fff; display:none; }
+    .revealBtn.show{ display:inline-block; }
+    .giveBtn{ background:#f3f4f6; color:#111827; display:none; }
+    .giveBtn.show{ display:inline-block; }
+
+    .feedbackWrap{ min-height:62px; margin-top:10px; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:10px; }
+    .feedback{
+      display:none; padding:12px 16px; border-radius:16px; font-weight:900; font-size:16px; line-height:1.35;
+      max-width:min(760px, 92vw); text-align:center; box-shadow:0 8px 20px rgba(0,0,0,.05);
+    }
+    .feedback.show{ display:block; }
+    .feedback.correct{ background:var(--greenSoft); border:1px solid #86efac; color:#166534; }
+    .feedback.incorrect{ background:var(--redSoft); border:1px solid #fca5a5; color:#991b1b; }
+    .feedback.info{ background:#eef2ff; border:1px solid #c7d2fe; color:#3730a3; }
+
+    .workArea{ flex:1; min-height:300px; display:flex; align-items:flex-start; justify-content:center; padding:6px 6px 0; }
+    .workArea.noModel{ min-height:40px; }
+    .modelCol{ display:flex; flex-direction:column; align-items:center; gap:12px; width:min(1120px, 94vw); }
+    .modelControls{ display:flex; justify-content:center; min-height:46px; }
+    .lineFrame{ width:100%; background:#fff; border:1px solid var(--border); border-radius:22px; padding:6px 10px 2px; }
+    .nline{ width:100%; height:auto; display:block; touch-action:none; user-select:none; -webkit-user-select:none; }
+    .nline text{ font-family:var(--mathFont); }
+    .nline.dragging{ cursor:ew-resize; }
+
+    .footer{ margin-top:12px; padding-top:10px; border-top:1px solid #e5e7eb; text-align:center; color:#4b5563; font-weight:700; font-size:14px; }
+    .footer a{ color:#2563eb; text-decoration:none; font-weight:900; }
+
+    .modalBack{
+      position:fixed; inset:0; background:rgba(17,24,39,.35); display:none; align-items:center; justify-content:center;
+      padding:24px; z-index:50; backdrop-filter:blur(4px); overflow:auto;
+    }
+    .modalBack.show{ display:flex; }
+    .modal{ width:min(1820px, 96vw); background:#fff; border-radius:34px; border:1px solid var(--border); box-shadow:var(--shadow); padding:0; }
+    .modalHead{ padding:26px 26px 12px; font-weight:1000; font-size:38px; }
+    .modalBody{ padding:0 22px 22px; }
+    .levelList{ display:grid; gap:16px; }
+    .levelCard{ display:grid; grid-template-columns:1fr auto; gap:18px; align-items:center; border-radius:24px; padding:20px 24px; border:3px solid rgba(17,24,39,.06); }
+    .levelCard .name{ font-size:34px; font-weight:1000; line-height:1; }
+    .levelCard .desc{ font-size:16px; color:#374151; margin-top:8px; line-height:1.45; font-weight:700; }
+    .startBtn{
+      border:none; border-radius:18px; padding:14px 26px; font-weight:1000; background:#2563eb; color:#fff; cursor:pointer;
+      transition:transform .04s ease, filter .15s ease; user-select:none; min-width:136px; font-size:18px;
+    }
+    .startBtn:active{ transform:scale(.98); }
+    .sweetBg{ background:#ccead5; border-color:#71e39b; }
+    .mildBg{ background:#d9e6f8; border-color:#8ab8ff; }
+    .mediumBg{ background:#f0ebb8; border-color:#edcc45; }
+    .spicyBg{ background:#eedfc9; border-color:#f2af68; }
+
+    .certWrap{ display:flex; gap:18px; align-items:flex-start; padding:8px 0 8px; }
+    .trophyBox{ width:96px; height:96px; border-radius:20px; display:flex; align-items:center; justify-content:center; font-size:48px; background:#fff7ed; border:2px solid rgba(249,115,22,.18); flex:0 0 auto; }
+    .certText{ font-weight:1000; font-size:36px; margin:0; line-height:1.12; }
+    .certSub{ margin-top:10px; color:#6b7280; font-weight:950; font-size:26px; line-height:1.15; }
+    .modalActions{ padding:18px 24px 24px; display:flex; gap:12px; justify-content:flex-start; flex-wrap:wrap; }
+    .btn{ border:none; border-radius:14px; padding:12px 16px; font-weight:1000; cursor:pointer; background:#f3f4f6; color:#111827; }
+    .btn.primary{ background:#2563eb; color:#fff; }
+    .btn.danger{ background:#fee2e2; color:#991b1b; }
+
+    @media (max-width: 980px){
+      .levelBanner{ font-size:24px; }
+      .questionArea{ min-height:92px; }
+      .levelCard .name{ font-size:30px; }
+      .modalHead{ font-size:30px; }
+      .certText{ font-size:28px; }
+      .certSub{ font-size:20px; }
+    }
+    @media (max-width: 720px){
+      .topRow{ align-items:stretch; }
+      .rightPanel{ width:100%; }
+      .levelCard{ grid-template-columns:1fr; }
+      .answerArea{ gap:10px; }
+      .answerInput{ width:170px; }
+      .modalHead{ font-size:26px; }
+      .certWrap{ flex-direction:column; }
+    }
+    @media (prefers-reduced-motion:reduce){ *{ animation-duration:.001ms !important; transition-duration:.001ms !important; } }
+  </style>
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "c7e5713b5e4f4993907eb285797dc89b"}'></script><!-- End Cloudflare Web Analytics -->
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="topRow">
+      <button class="backBtn" id="backBtn" type="button">&larr; Back</button>
+      <div class="levelBannerWrap"><div class="levelBanner" id="levelBanner">Level: &mdash;</div></div>
+      <div class="rightPanel"><span id="mmtAuthSlot"></span><button class="resetBtn" id="resetBtn" type="button">Reset</button></div>
+    </div>
+
+    <div class="progressRow">
+      <div class="progressTrack"><div class="progressFill" id="progressFill"></div></div>
+      <div class="qCounter" id="qCounter">Question 1 / 15</div>
+    </div>
+
+    <div class="questionArea">
+      <div class="questionText" id="questionText">
+        <span id="qLead">&mdash;</span>
+        <span class="eq ansGroup">=</span>
+        <input class="answerInput ansGroup" id="answerInput" inputmode="text" autocomplete="off" placeholder="e.g. 60" />
+        <span class="pctAfter ansGroup">%</span>
+        <button id="enterBtn" class="enterBtn ansGroup" type="button">Enter</button>
+        <button id="nextBtn" class="nextBtn" type="button">Next &rarr;</button>
+      </div>
+    </div>
+    <div class="qHint" id="qHint"></div>
+
+    <div class="feedbackWrap">
+      <div class="feedback correct" id="feedbackOk">Correct!</div>
+      <div class="feedback incorrect" id="feedbackBad">Not quite.</div>
+      <div class="feedback info" id="feedbackInfo"></div>
+    </div>
+
+    <div class="workArea" id="workArea">
+      <div class="modelCol" id="modelCol">
+        <div class="lineFrame" id="lineFrame">
+          <svg class="nline" id="nline" viewBox="0 0 1000 258" role="img" aria-label="Number line"></svg>
+        </div>
+        <div class="modelControls"><button id="modelBtn" class="revealBtn" type="button">Lock in estimate</button></div>
+      </div>
+    </div>
+
+    <div class="footer">This tool and more at <a href="https://www.millsmathstools.au" target="_blank" rel="noopener">millsmathstools.au</a></div>
+  </div>
+</div>
+
+<div class="modalBack show" id="levelModalBack">
+  <div class="modal">
+    <div class="modalHead">Choose your level</div>
+    <div class="modalBody">
+      <div class="levelList">
+        <div class="levelCard sweetBg"><div><div class="name">Sweet</div><div class="desc">Friendly fractions only &mdash; denominators that divide 100, so every answer is a whole number. Estimate first, then the whole is split into equal parts, then one part is named for you. You work out the rest.</div></div><button class="startBtn" data-level="sweet">Start</button></div>
+        <div class="levelCard mildBg"><div><div class="name">Mild</div><div class="desc">Friendly fractions, then percentages that stop but are not whole &mdash; like 12.5%. Some go past one whole. Same three steps: estimate, split, one part named.</div></div><button class="startBtn" data-level="mild">Start</button></div>
+        <div class="levelCard mediumBg"><div><div class="name">Medium</div><div class="desc">Five friendly, five terminating, then five recurring &mdash; percentages that never stop, like 33&#8531;%. Improper fractions throughout.</div></div><button class="startBtn" data-level="medium">Start</button></div>
+        <div class="levelCard spicyBg"><div><div class="name">Spicy</div><div class="desc">The same questions as Medium, with no number line at all. Just the fraction and the answer box.</div></div><button class="startBtn" data-level="spicy">Start</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modalBack" id="certModalBack">
+  <div class="modal" style="width:min(1320px, 92vw)">
+    <div class="modalHead">Certificate</div>
+    <div class="modalBody">
+      <div class="certWrap">
+        <div class="trophyBox">&#127942;</div>
+        <div>
+          <div id="certText" class="certText">You completed the quiz.</div>
+          <div class="certSub">Screenshot this and paste into Google Classroom.</div>
+        </div>
+      </div>
+    </div>
+    <div class="modalActions">
+      <button class="btn primary" id="copyBtn" type="button">Copy to clipboard</button>
+      <button class="btn" id="sameLevelBtn" type="button">Close</button>
+      <button class="btn danger" id="levelsBtn" type="button">Back to level menu</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const NS = "http://www.w3.org/2000/svg";
+  const $ = id => document.getElementById(id);
+  const QUIZ_LEN = 15;
+  // estimate -> a held beat so the estimate can be read -> placement -> one part named -> done
+  const PH = { ESTIMATE:0, HELD:1, PLACED:2, UNIT:3, DONE:4 };
+
+  /* ===================== maths (same helpers as the teaching tool) ===================== */
+  function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ const t=a%b; a=b; b=t; } return a; }
+  function reduce(n,d){ const g=gcd(n,d)||1; return { n:n/g, d:d/g }; }
+  function isTerminating(d){ let x=d; while(x%2===0) x/=2; while(x%5===0) x/=5; return x===1; }
+  function fmtNum(x){ return String(Number(x.toFixed(8))); }
+  function pctOf(n,d){
+    const N=100*n, D=d, g=gcd(N,D)||1;
+    const rn=N/g, rd=D/g;
+    const whole=Math.floor(rn/rd), rem=rn-whole*rd;
+    let kind='rec';
+    if(rd===1) kind='int'; else if(isTerminating(rd)) kind='dec';
+    return { rn, rd, whole, rem, kind, value:rn/rd };
+  }
+  function pctPlain(n,d){
+    const p=pctOf(n,d);
+    if(p.kind==='int') return p.whole+"%";
+    if(p.kind==='dec') return fmtNum(p.value)+"%";
+    return (p.whole? p.whole+" ":"")+p.rem+"/"+p.rd+"%";
+  }
+  function fracHTML(n,d){
+    return '<span class="fraction"><span>'+n+'</span><span class="bar"></span><span>'+d+'</span></span>';
+  }
+  function pctHTML(n,d){
+    const p=pctOf(n,d);
+    if(p.kind==='int') return p.whole+'%';
+    if(p.kind==='dec') return fmtNum(p.value)+'%';
+    return (p.whole>0? p.whole+' ' : '')+fracHTML(p.rem,p.rd)+'%';
+  }
+
+  /* ===================== answer parsing =====================
+     Accepts 60, 12.5, "33 1/3", "1/3", "100/3" — with or without a % sign. */
+  function parseAnswer(raw){
+    let s = String(raw||"").trim().replace(/%/g,"").replace(/\s+/g," ").trim();
+    if(!s) return null;
+    let m = s.match(/^(-?\d+)\s+(\d+)\s*\/\s*(\d+)$/);          // mixed number
+    if(m){ const w=+m[1], a=+m[2], b=+m[3]; if(!b) return null; return w + a/b; }
+    m = s.match(/^(-?\d+)\s*\/\s*(\d+)$/);                       // plain fraction
+    if(m){ const b=+m[2]; if(!b) return null; return (+m[1])/b; }
+    m = s.match(/^-?\d*\.?\d+$/);                                // decimal
+    if(m) return parseFloat(s);
+    return null;
+  }
+  // recurring answers may be rounded — 1 dp or better is accepted
+  function isCorrect(q, val){
+    if(val==null || !isFinite(val)) return false;
+    const exact = 100*q.n/q.d;
+    if(Math.abs(val-exact) < 1e-9) return true;
+    return q.kind==='rec' && Math.abs(val-exact) <= 0.05;
+  }
+
+  /* ===================== the question banks =====================
+     No unit fractions anywhere: with the first part revealed, 1/d would BE the
+     answer. Denominators are the teaching tool's tiers, trimmed to what the
+     number line can show at readable tick spacing when a model is used.        */
+  const DENS = {
+    int:{ model:[4,5,10,20,25],  plain:[4,5,10,20,25,50] },
+    dec:{ model:[8,16],          plain:[8,16,32,40] },
+    rec:{ model:[3,6,7,9,12],    plain:[3,6,7,9,11,12,15] }
+  };
+  const MAX_TICKS = 24;
+
+  // 15 slots per level: { kind, improper }
+  function slots(spec){
+    const out=[];
+    spec.forEach(([kind,count,improperFrom])=>{
+      for(let i=0;i<count;i++) out.push({ kind, improper: improperFrom!=null && i>=improperFrom });
+    });
+    return out;
+  }
+  const PLANS = {
+    // Sweet — friendly only, all proper
+    sweet:  slots([['int',15,null]]),
+    // Mild — 7 friendly (last 2 improper), then 8 terminating (last 3 improper)
+    mild:   slots([['int',7,5], ['dec',8,5]]),
+    // Medium — 5 friendly, 5 terminating, 5 recurring; last 2 of each block improper
+    medium: slots([['int',5,3], ['dec',5,3], ['rec',5,3]])
+  };
+  PLANS.spicy = PLANS.medium;   // same bank, no model
+
+  const LEVELS = {
+    sweet:  { name:"Sweet",  model:true,  plan:"sweet"  },
+    mild:   { name:"Mild",   model:true,  plan:"mild"   },
+    medium: { name:"Medium", model:true,  plan:"medium" },
+    spicy:  { name:"Spicy",  model:false, plan:"spicy"  }
+  };
+
+  function randInt(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+  function choice(a){ return a[Math.floor(Math.random()*a.length)]; }
+
+  function makeQuestion(slot, useModel, seen){
+    const dens = DENS[slot.kind][useModel ? "model" : "plain"];
+    for(let tries=0; tries<800; tries++){
+      const d = choice(dens);
+      let n;
+      if(slot.improper){
+        n = d + randInt(1, Math.max(1, Math.min(d-1, 8)));
+        if(n/d > 2.2) continue;
+      } else {
+        n = randInt(2, d-1);                 // never a unit fraction
+        if(n < 2) continue;
+      }
+      if(n === 1) continue;
+      if(n === d) continue;
+      if(pctOf(n,d).kind !== slot.kind) continue;
+      if(useModel){
+        const ticks = n>d ? n+1 : d;
+        if(ticks > MAX_TICKS) continue;
+      }
+      const key = n+"/"+d;
+      if(seen.has(key)) continue;
+      seen.add(key);
+      return { n, d, kind:slot.kind, improper:!!slot.improper };
+    }
+    // deterministic fall-back per kind so a question always exists
+    const fb = { int:{n:3,d:4}, dec:{n:3,d:8}, rec:{n:2,d:3} }[slot.kind];
+    return { n:fb.n, d:fb.d, kind:slot.kind, improper:false };
+  }
+
+  function buildBank(levelKey){
+    const cfg = LEVELS[levelKey];
+    const plan = PLANS[cfg.plan];
+    const seen = new Set();
+    return plan.map(s => makeQuestion(s, cfg.model, seen));
+  }
+
+  /* ===================== the number line ===================== */
+  const LEFT=126, RIGHT=920, W=RIGHT-LEFT, LINE_Y=140;
+  const FR_LABEL_Y=LINE_Y-58, FR_END_Y=LINE_Y-40, PC_LABEL_Y=LINE_Y+58, PC_END_Y=LINE_Y+66;
+  const ARC_Y=LINE_Y+15, FR_ROW=-36, PC_ROW=30;
+  const C={ frac:"#1e293b", fracAccent:"#7c3aed", pct:"#1d4ed8", faint:"#cbd5e1",
+            target:"#db2777", whole:"#0f172a", muted:"#64748b", predict:"#f97316" };
+
+  function el(tag,attrs,text){
+    const e=document.createElementNS(NS,tag);
+    for(const k in attrs) e.setAttribute(k,attrs[k]);
+    if(text!=null) e.textContent=text;
+    return e;
+  }
+  const HALO={ stroke:"#fff","stroke-width":"4.5","paint-order":"stroke","stroke-linejoin":"round" };
+  function txt(x,y,s,o){
+    o=o||{};
+    const a=Object.assign({ x, y, "text-anchor":o.anchor||"middle", "font-weight":o.weight||"800",
+      "font-size":o.size||22, fill:o.fill||"#334155" }, HALO);
+    if(o.family) a["font-family"]=o.family;
+    return el("text",a,s);
+  }
+  function fracW(n,d,fs){ return Math.max(String(n).length,String(d).length)*fs*0.58+8; }
+  function svgFrac(cx,cy,n,d,fs,fill){
+    const g=el("g",{}), bw=fracW(n,d,fs);
+    g.appendChild(txt(cx, cy-fs*0.30, String(n), {size:fs, fill}));
+    g.appendChild(el("line",{x1:cx-bw/2,y1:cy+fs*0.06,x2:cx+bw/2,y2:cy+fs*0.06,stroke:fill,"stroke-width":Math.max(2,fs*0.09),"stroke-linecap":"round"}));
+    g.appendChild(txt(cx, cy+fs*1.02, String(d), {size:fs, fill}));
+    return g;
+  }
+  function svgPct(cx,cy,n,d,fs,fill){
+    const g=el("g",{}), p=pctOf(n,d);
+    if(p.kind!=='rec'){
+      g.appendChild(txt(cx,cy+fs*0.35,(p.kind==='int'?String(p.whole):fmtNum(p.value))+"%",{size:fs,fill}));
+      return g;
+    }
+    const cw=fs*0.58, wStr=p.whole>0?String(p.whole):"";
+    const wW=wStr?wStr.length*cw+4:0, ffs=fs*0.78, fW=fracW(p.rem,p.rd,ffs)+4, sW=fs*0.66;
+    let x=cx-(wW+fW+sW)/2;
+    if(wStr){ g.appendChild(txt(x+wW/2, cy+fs*0.35, wStr, {size:fs, fill})); x+=wW; }
+    g.appendChild(svgFrac(x+fW/2, cy, p.rem, p.rd, ffs, fill)); x+=fW;
+    g.appendChild(txt(x+sW/2, cy+fs*0.35, "%", {size:fs, fill}));
+    return g;
+  }
+  function labelWpct(n,d,fs){
+    const p=pctOf(n,d);
+    if(p.kind!=='rec') return ((p.kind==='int'?String(p.whole):fmtNum(p.value))+"%").length*fs*0.56+10;
+    const cw=fs*0.58, wW=p.whole>0?String(p.whole).length*cw+4:0;
+    return wW + fracW(p.rem,p.rd,fs*0.78)+4 + fs*0.66 + 10;
+  }
+  function rowAgainst(x,w,res){
+    for(let i=0;i<res.length;i++) if(Math.abs(res[i].x-x) < (res[i].w+w)/2 + 5) return 1;
+    return 0;
+  }
+
+  /* phase: 0 estimate · 1 partition + fraction placed · 2 one part named · 3 full answer */
+  function drawLine(q, phase, estimate){
+    const svg=$("nline");
+    while(svg.firstChild) svg.removeChild(svg.firstChild);
+    const root=el("g",{}); svg.appendChild(root);
+    if(!q) return;
+
+    const n=q.n, d=q.d, value=n/d;
+    const amax = value>1 ? (n+1)/d : 1;
+    const X = v => LEFT + (v/amax)*W;
+    const maxK = Math.round(amax*d);
+    const xW=X(1), xv=X(value);
+
+    if(phase>=PH.PLACED){
+      root.appendChild(el("rect",{x:LEFT,y:LINE_Y-11,width:Math.max(0,xv-LEFT),height:9,rx:4.5,
+        fill:C.fracAccent,"fill-opacity":.22}));
+    }
+    if(phase>=PH.UNIT){
+      root.appendChild(el("rect",{x:LEFT,y:LINE_Y+2,width:Math.max(0,X(1/d)-LEFT),height:9,rx:4.5,
+        fill:C.pct,"fill-opacity":.22}));
+    }
+
+    root.appendChild(el("line",{x1:LEFT,y1:LINE_Y,x2:RIGHT,y2:LINE_Y,stroke:C.frac,"stroke-width":4,"stroke-linecap":"round"}));
+    root.appendChild(txt(10, FR_END_Y, "Fraction", {anchor:"start", size:15, fill:C.muted, weight:"900", family:"var(--uiFont)"}));
+    root.appendChild(txt(10, PC_END_Y, "Percentage", {anchor:"start", size:15, fill:C.muted, weight:"900", family:"var(--uiFont)"}));
+
+    const endTick=(x,c)=>el("line",{x1:x,y1:LINE_Y-24,x2:x,y2:LINE_Y+24,stroke:c,"stroke-width":5,"stroke-linecap":"round"});
+    root.appendChild(endTick(LEFT,C.frac));
+    root.appendChild(txt(LEFT, FR_END_Y, "0", {size:24, fill:C.frac}));
+    root.appendChild(txt(LEFT, PC_END_Y, "0%", {size:24, fill:C.pct}));
+    root.appendChild(endTick(xW,C.whole));
+    root.appendChild(txt(xW, FR_END_Y, "1 whole", {size:22, fill:C.whole, family:"var(--uiFont)", weight:"900"}));
+    root.appendChild(txt(xW, PC_END_Y, "100%", {size:24, fill:C.pct}));
+
+    const frRes=[{x:LEFT,w:44},{x:xW,w:104}], pcRes=[{x:LEFT,w:56},{x:xW,w:96}];
+
+    if(phase>=PH.PLACED){
+      for(let k=1;k<=maxK;k++){
+        if(k===d) continue;
+        const isT=(k===n), x=X(k/d);
+        root.appendChild(el("line",{x1:x,y1:LINE_Y-(isT?20:13),x2:x,y2:LINE_Y+(isT?20:13),
+          stroke:isT?C.target:C.frac,"stroke-width":isT?4.5:3,"stroke-linecap":"round"}));
+      }
+      root.appendChild(svgFrac(xv, FR_LABEL_Y + rowAgainst(xv,fracW(n,d,24)+10,frRes)*FR_ROW, n, d, 24, C.target));
+    }
+
+    if(phase>=PH.UNIT){
+      // the first part named — 100 ÷ d — and the hop that got there
+      const x1=LEFT, x2=X(1/d), r=Math.abs(x2-x1)/2;
+      root.appendChild(el("path",{ d:"M "+x1+" "+ARC_Y+" A "+r+" "+Math.min(26,r*1.4)+" 0 0 0 "+x2+" "+ARC_Y,
+        fill:"none", stroke:C.pct, "stroke-width":3, "stroke-linecap":"round", opacity:.85 }));
+      const fs=20, w=labelWpct(1,d,fs);
+      root.appendChild(svgPct(x2, PC_LABEL_Y + rowAgainst(x2,w,pcRes)*PC_ROW, 1, d, fs, C.pct));
+      root.appendChild(svgFrac(x2, FR_LABEL_Y + rowAgainst(x2,fracW(1,d,17)+10,frRes.concat([{x:xv,w:fracW(n,d,24)+10}]))*FR_ROW, 1, d, 17, C.muted));
+    }
+
+    if(phase>=PH.DONE){
+      root.appendChild(el("circle",{cx:xv,cy:LINE_Y,r:10,fill:"#fff",stroke:C.target,"stroke-width":4.5}));
+      const fs=23, w=labelWpct(n,d,fs);
+      root.appendChild(svgPct(xv, PC_LABEL_Y + rowAgainst(xv,w,pcRes)*PC_ROW, n, d, fs, C.target));
+    }
+
+    if(phase<=PH.HELD && estimate!=null){
+      const px=LEFT + (estimate/amax)*W;
+      const g=el("g",{});
+      g.appendChild(el("line",{x1:px,y1:LINE_Y-16,x2:px,y2:LINE_Y+16,stroke:C.predict,"stroke-width":3.5,"stroke-linecap":"round"}));
+      g.appendChild(el("path",{ d:"M "+px+" "+(LINE_Y+8)+" l -11 20 l 22 0 Z", fill:C.predict, stroke:"#fff","stroke-width":2,"stroke-linejoin":"round"}));
+      g.appendChild(txt(px, LINE_Y+52, estimateMoved ? "your estimate" : "drag me", {size:16, fill:C.predict, weight:"900", family:"var(--uiFont)"}));
+      root.appendChild(g);
+    }
+
+    svg.setAttribute("aria-label", phase<=PH.HELD
+      ? "Number line from 0 to 1 whole. Drag the marker to estimate where "+n+" over "+d+" sits."
+      : "Number line with the whole split into "+d+" equal parts and "+n+" over "+d+" marked.");
+  }
+
+  /* ===================== state ===================== */
+  let levelKey=null, bank=[], qIndex=0, score=0;
+  let phase=PH.ESTIMATE, estimate=null, estimateMoved=false, answered=false, usedReveal=false;
+  const typeTags=new Set();
+
+  const qLead=$("qLead"), qHint=$("qHint"), answerInput=$("answerInput");
+  const enterBtn=$("enterBtn"), modelBtn=$("modelBtn"), nextBtn=$("nextBtn");
+  const fbOk=$("feedbackOk"), fbBad=$("feedbackBad"), fbInfo=$("feedbackInfo");
+  const workArea=$("workArea"), modelCol=$("modelCol"), levelBanner=$("levelBanner");
+  const progressFill=$("progressFill"), qCounter=$("qCounter");
+  const levelModalBack=$("levelModalBack"), certModalBack=$("certModalBack"), certText=$("certText");
+
+  function q(){ return bank[qIndex]; }
+  function usesModel(){ return !!(levelKey && LEVELS[levelKey].model); }
+
+  function hideFeedback(){ [fbOk,fbBad,fbInfo].forEach(e=>e.classList.remove("show")); }
+  function say(kind,html){
+    hideFeedback();
+    const e = kind==="ok"?fbOk : kind==="bad"?fbBad : fbInfo;
+    e.innerHTML = html; e.classList.add("show");
+  }
+
+  function setProgress(){
+    qCounter.textContent = "Question "+Math.min(QUIZ_LEN,qIndex+1)+" / "+QUIZ_LEN;
+    progressFill.style.width = ((qIndex/QUIZ_LEN)*100)+"%";
+  }
+
+  function showAnswerGroup(on){
+    document.querySelectorAll(".ansGroup").forEach(e=>e.classList.toggle("hide", !on));
+  }
+
+  function render(){
+    const cur=q();
+    if(!cur) return;
+    setProgress();
+
+    const model=usesModel();
+    workArea.classList.toggle("noModel", !model);
+    modelCol.style.display = model ? "" : "none";
+
+    // while estimating there is nothing on screen but the fraction and the bare line
+    const estimating = model && phase<=PH.HELD;
+    showAnswerGroup(!estimating);
+
+    if(estimating){
+      qLead.innerHTML = '<span class="ui">Estimate &mdash; where does</span>'+fracHTML(cur.n,cur.d)+'<span class="ui">sit?</span>';
+      qHint.textContent = phase===PH.ESTIMATE ? "Drag the orange marker on the line, then lock it in. This one is not marked." : "";
+    } else {
+      qLead.innerHTML = fracHTML(cur.n,cur.d);
+      qHint.textContent = cur.kind==="rec"
+        ? "This one recurs. Write it as a mixed number like 33 1/3, or round to 1 decimal place."
+        : (cur.kind==="dec" ? "This one stops, but it is not a whole number." : "");
+    }
+
+    answerInput.disabled = answered || estimating;
+    enterBtn.disabled    = answered || estimating;
+    nextBtn.classList.toggle("show", answered);
+    nextBtn.textContent  = qIndex >= QUIZ_LEN-1 ? "Finish \u2192" : "Next \u2192";
+
+    // the model's own control sits under the line, away from the answer
+    let label=null, disabled=false;
+    if(model && !answered){
+      if(phase===PH.ESTIMATE){ label="Lock in estimate"; disabled=!estimateMoved; }
+      else if(phase===PH.HELD){ label="Next \u2192"; }
+      else if(phase===PH.PLACED){ label="Reveal one part"; }
+    }
+    if(label==null){ modelBtn.classList.remove("show"); }
+    else { modelBtn.textContent=label; modelBtn.disabled=disabled; modelBtn.classList.add("show"); }
+
+    if(model) drawLine(cur, phase, estimate);
+    if(!estimating && !answered) setTimeout(()=>{ try{ answerInput.focus(); }catch(e){} }, 40);
+  }
+
+  function startQuestion(){
+    const cur=bank[qIndex];
+    phase = usesModel() ? PH.ESTIMATE : PH.PLACED;
+    // the marker starts mid-line so there is something to grab; it does not count
+    // as an estimate until it has actually been moved
+    const amax = cur && (cur.n/cur.d)>1 ? (cur.n+1)/cur.d : 1;
+    estimate = usesModel() ? amax/2 : null;
+    estimateMoved=false; answered=false; usedReveal=false;
+    answerInput.classList.remove("ok","bad");
+    answerInput.value="";
+    hideFeedback();
+    render();
+  }
+
+  // the estimate is held on screen for a beat before the placement replaces it
+  function lockEstimate(){
+    const cur=q();
+    if(estimate==null || !estimateMoved) return;
+    const est = Math.round(estimate*1000)/10;
+    const off = Math.abs(est - 100*cur.n/cur.d);
+    const word = off<1 ? "spot on" : (off<5 ? "very close" : (off<12 ? "in the right area" : "worth a rethink"));
+    typeTags.add("estimate:"+(off<5?"close":off<12?"near":"far"));
+    phase=PH.HELD;
+    render();
+    say("info","Your estimate was <b>"+est+"%</b> &mdash; "+word+".");
+  }
+
+  function showPlacement(){ phase=PH.PLACED; hideFeedback(); render(); }
+
+  // no words for this one — the line says it
+  function revealUnit(){
+    usedReveal=true;
+    typeTags.add("usedUnitReveal");
+    phase=PH.UNIT; hideFeedback(); render();
+  }
+
+  function finishQuestion(correct){
+    answered=true;
+    if(correct) score++;
+    const cur=q();
+    typeTags.add("kind:"+cur.kind);
+    if(cur.improper) typeTags.add("improper");
+    answerInput.disabled=true; enterBtn.disabled=true;
+    modelBtn.classList.remove("show");
+    nextBtn.classList.add("show");
+    nextBtn.textContent = qIndex >= QUIZ_LEN-1 ? "Finish \u2192" : "Next \u2192";
+    if(usesModel()){ phase=PH.DONE; drawLine(cur, PH.DONE, null); }
+    setTimeout(()=>{ try{ nextBtn.focus(); }catch(e){} }, 40);
+  }
+
+  // one attempt per question — right or wrong, the quiz moves on, so the score is out of 15
+  function submitAnswer(){
+    if(answered || answerInput.disabled) return;
+    const cur=q();
+    const val=parseAnswer(answerInput.value);
+    if(val==null){
+      answerInput.classList.add("bad");
+      say("bad","Type a percentage &mdash; a number like 60 or 12.5"+(cur.kind==="rec"?", or a mixed number like 33 1/3":"")+".");
+      return;                       // an empty or unreadable box is not an attempt
+    }
+    const ok=isCorrect(cur,val);
+    answerInput.classList.remove(ok?"bad":"ok");
+    answerInput.classList.add(ok?"ok":"bad");
+    say(ok?"ok":"bad", (ok?"Correct &mdash; ":"Not quite &mdash; ")+fracHTML(cur.n,cur.d)+" = "+pctHTML(cur.n,cur.d)+".");
+    finishQuestion(ok);
+  }
+
+  function nextQuestion(){
+    if(qIndex >= QUIZ_LEN-1){ showCertificate(); return; }
+    qIndex++;
+    startQuestion();
+  }
+
+  function showCertificate(){
+    const cfg=LEVELS[levelKey];
+    progressFill.style.width="100%";
+    qCounter.textContent="Question "+QUIZ_LEN+" / "+QUIZ_LEN;
+    certText.textContent = "You completed level "+cfg.name+" on Fraction to Percentage and received a score of "+score+" out of "+QUIZ_LEN+".";
+    certModalBack.classList.add("show");
+    if(window.MMTSave) window.MMTSave({
+      tool:"fraction-to-percentage-student-quiz", topic:"fdp",
+      level:cfg.name, levelKey, score, total:QUIZ_LEN,
+      percent:Math.round((score/QUIZ_LEN)*100), masteryTopic:"fraction-to-percentage",
+      types:["level:"+levelKey].concat(Array.from(typeTags)),
+      certificateText:"Fraction to Percentage — "+cfg.name+": "+score+"/"+QUIZ_LEN
+    });
+  }
+
+  function startLevel(key){
+    levelKey=key;
+    bank=buildBank(key);
+    qIndex=0; score=0; typeTags.clear();
+    levelBanner.textContent="Level: "+LEVELS[key].name;
+    levelModalBack.classList.remove("show");
+    certModalBack.classList.remove("show");
+    startQuestion();
+  }
+
+  /* ===================== estimate dragging ===================== */
+  function valueFromEvent(e){
+    const svg=$("nline"), r=svg.getBoundingClientRect();
+    const cx = (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX;
+    const vx = (cx-r.left)/r.width*1000;
+    const cur=q(); if(!cur) return 0;
+    const amax = (cur.n/cur.d)>1 ? (cur.n+1)/cur.d : 1;
+    let v = ((vx-LEFT)/W)*amax;
+    if(v<0) v=0; if(v>amax) v=amax;
+    return v;
+  }
+  $("nline").addEventListener("pointerdown", function(e){
+    if(!usesModel() || phase!==PH.ESTIMATE || !q()) return;
+    e.preventDefault();
+    estimate = valueFromEvent(e); estimateMoved=true;
+    drawLine(q(),PH.ESTIMATE,estimate);
+    modelBtn.disabled=false;
+    const move = ev => { ev.preventDefault(); estimate = valueFromEvent(ev); drawLine(q(),PH.ESTIMATE,estimate); };
+    const up = () => { window.removeEventListener("pointermove",move); window.removeEventListener("pointerup",up); };
+    window.addEventListener("pointermove",move,{passive:false});
+    window.addEventListener("pointerup",up);
+  });
+
+  /* ===================== wiring ===================== */
+  document.querySelectorAll(".startBtn").forEach(b => b.addEventListener("click", () => startLevel(b.dataset.level)));
+  enterBtn.addEventListener("click", submitAnswer);
+  nextBtn.addEventListener("click", nextQuestion);
+  modelBtn.addEventListener("click", () => {
+    if(phase===PH.ESTIMATE) lockEstimate();
+    else if(phase===PH.HELD) showPlacement();
+    else if(phase===PH.PLACED) revealUnit();
+  });
+  answerInput.addEventListener("keydown", e => {
+    if(e.key!=="Enter") return;
+    e.preventDefault();
+    // submitting disables the box, which moves focus — without this the same
+    // keypress would bubble to the document handler and skip the feedback
+    e.stopPropagation();
+    if(answered) nextQuestion(); else submitAnswer();
+  });
+  document.addEventListener("keydown", e => {
+    if(e.key!=="Enter") return;
+    if(levelModalBack.classList.contains("show") || certModalBack.classList.contains("show")) return;
+    if(document.activeElement===answerInput) return;
+    e.preventDefault();
+    if(answered){ nextQuestion(); return; }
+    if(modelBtn.classList.contains("show") && !modelBtn.disabled){ modelBtn.click(); return; }
+    submitAnswer();
+  });
+  // Back goes to the level menu, not out of the quiz
+  $("backBtn").addEventListener("click", () => { certModalBack.classList.remove("show"); levelModalBack.classList.add("show"); });
+  $("resetBtn").addEventListener("click", () => { certModalBack.classList.remove("show"); levelModalBack.classList.add("show"); });
+  $("levelsBtn").addEventListener("click", () => { certModalBack.classList.remove("show"); levelModalBack.classList.add("show"); });
+  $("sameLevelBtn").addEventListener("click", () => certModalBack.classList.remove("show"));
+  $("copyBtn").addEventListener("click", async () => {
+    const cfg=LEVELS[levelKey]||{name:"—"};
+    const text="🏆 Mills Maths Tools – Fraction to Percentage\nLevel: "+cfg.name+"\nScore: "+score+" / "+QUIZ_LEN+"\n\n"+certText.textContent;
+    try{ await navigator.clipboard.writeText(text); $("copyBtn").textContent="Copied!";
+      setTimeout(()=>$("copyBtn").textContent="Copy to clipboard",1200); }
+    catch(e){ window.prompt("Copy this text:", text); }
+  });
+
+  // expose for the headless checks
+  window.__F2P_QUIZ__ = { buildBank, PLANS, LEVELS, pctOf, parseAnswer, isCorrect, DENS, QUIZ_LEN };
+})();
+</script>
+
+<!-- ===== MMT student-code login + secure save + sign-in banner ===== -->
+<div id="mmtLoginOverlay" style="position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(15,23,42,.55);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <div style="background:#fff;border-radius:22px;box-shadow:0 20px 60px rgba(0,0,0,.28);max-width:460px;width:100%;overflow:hidden;">
+    <div style="font-weight:1000;font-size:22px;padding:20px 22px 6px;color:#111827;">Student login</div>
+    <div style="padding:6px 22px 20px;">
+      <p style="color:#6b7280;font-weight:600;font-size:15px;line-height:1.45;margin:0 0 14px;">Enter your MMT student code so your result saves to your teacher&rsquo;s dashboard. No code? Press <b>Skip</b> to do the quiz without saving.</p>
+      <label for="mmtCodeInput" style="display:block;font-weight:900;color:#111827;margin-bottom:6px;">Student code</label>
+      <input id="mmtCodeInput" autocomplete="off" placeholder="enter code here" style="width:100%;height:52px;border:2px solid #e5e7eb;border-radius:14px;padding:0 14px;font-size:20px;font-weight:900;outline:none;text-transform:uppercase;box-sizing:border-box;" />
+      <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
+        <button id="mmtLoginBtn" type="button" style="flex:1;min-width:120px;border:none;border-radius:14px;padding:13px 18px;font-weight:1000;font-size:16px;cursor:pointer;background:#2563eb;color:#fff;">Start</button>
+        <button id="mmtSkipBtn" type="button" style="flex:1;min-width:120px;border:none;border-radius:14px;padding:13px 18px;font-weight:1000;font-size:16px;cursor:pointer;background:#f3f4f6;color:#111827;">Skip student code</button>
+      </div>
+      <div id="mmtLoginMsg" style="margin-top:10px;font-weight:900;font-size:14px;min-height:18px;"></div>
+    </div>
+  </div>
+</div>
+<div id="mmtSaveStatus" style="display:none;position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:2147483001;background:#111827;color:#fff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-weight:900;font-size:14px;padding:10px 18px;border-radius:999px;box-shadow:0 10px 30px rgba(0,0,0,.3);"></div>
+<script>
+/* MMT student-code login + secure achievement save + sign-in banner.
+   Self-contained: shows a login overlay on load (above the quiz's own menu),
+   dynamically imports the shared secure quiz client so the page still runs
+   offline/locally (demo mode = no save), and exposes window.MMTSave(payload)
+   for the quiz to call when a student finishes. Never stores typed answers.
+
+   It also paints a status chip — "Signed in as NAME", or "Guest mode" with a
+   Sign in button — into #mmtAuthSlot if the page provides one, otherwise pinned
+   top-right; and it keeps every .certSub line honest, so the certificate only
+   mentions Google Classroom when the result is NOT going to a dashboard. */
+(function(){
+  "use strict";
+  var MMT=null, tried=false, mode="pending", student=null;
+  var UIFONT="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
+  function normalise(c){ return String(c||"").trim().toUpperCase().replace(/[^A-Z0-9-]/g,""); }
+  function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  async function load(){
+    if(tried) return MMT; tried=true;
+    try{ var mod=await import("/portal/shared/quizClient.js"); MMT=mod.MMTQuiz; MMT.init(); }
+    catch(e){ MMT=null; console.warn("MMT quiz client unavailable — demo mode only:", e&&e.message); }
+    return MMT;
+  }
+  var overlay=document.getElementById("mmtLoginOverlay");
+  var codeInput=document.getElementById("mmtCodeInput");
+  var loginBtn=document.getElementById("mmtLoginBtn");
+  var skipBtn=document.getElementById("mmtSkipBtn");
+  var msg=document.getElementById("mmtLoginMsg");
+  var statusEl=document.getElementById("mmtSaveStatus");
+  function hideOverlay(){ if(overlay) overlay.style.display="none"; }
+  function openOverlay(){
+    if(!overlay) return;
+    if(msg){ msg.textContent=""; }
+    overlay.style.display="flex";
+    setTimeout(function(){ try{ codeInput.focus(); codeInput.select(); }catch(e){} }, 60);
+  }
+  function showStatus(t){ if(!statusEl) return; statusEl.textContent=t; statusEl.style.display="block"; }
+
+  /* ---- who am I: the chip in the banner ---- */
+  var chip=null;
+  function studentName(){
+    if(!student) return "";
+    return student.name || [student.firstName,student.surname].filter(Boolean).join(" ") || student.studentCode || "";
+  }
+  function ensureChip(){
+    if(chip) return chip;
+    var slot=document.getElementById("mmtAuthSlot");
+    chip=document.createElement("div");
+    chip.id="mmtAuthChip";
+    // a slotted chip sits in the page's own flow, so it stays behind the quiz's
+    // modals rather than bleeding over them; the unslotted fallback pins itself
+    // top-right at a z-index below the usual modal layer
+    chip.style.cssText="display:inline-flex;align-items:center;gap:8px;font-family:"+UIFONT
+      +";font-weight:900;font-size:13px;line-height:1;white-space:nowrap;"
+      + (slot ? "" : "position:fixed;top:10px;right:10px;z-index:40;");
+    (slot||document.body).appendChild(chip);
+    return chip;
+  }
+  function paintChip(){
+    var c=ensureChip();
+    if(mode==="pending"){ c.innerHTML=""; return; }
+    if(mode==="registered"){
+      c.innerHTML='<span style="display:inline-flex;align-items:center;gap:7px;background:#dcfce7;color:#166534;'
+        +'border:1px solid #86efac;border-radius:999px;padding:7px 13px;">'
+        +'<span aria-hidden="true" style="font-size:9px;">&#9679;</span>Signed in as '+esc(studentName())+'</span>';
+      return;
+    }
+    c.innerHTML='<span style="display:inline-flex;align-items:center;gap:7px;background:#f3f4f6;color:#4b5563;'
+      +'border:1px solid #e5e7eb;border-radius:999px;padding:7px 13px;">'
+      +'<span aria-hidden="true" style="font-size:9px;">&#9675;</span>Guest mode</span>'
+      +'<button type="button" id="mmtChipSignIn" style="border:none;border-radius:999px;padding:7px 14px;'
+      +'font-family:inherit;font-weight:900;font-size:13px;cursor:pointer;background:#2563eb;color:#fff;">Sign in</button>';
+    var b=document.getElementById("mmtChipSignIn");
+    if(b) b.addEventListener("click", openOverlay);
+  }
+
+  /* ---- the certificate line: Google Classroom only when nothing is being saved ---- */
+  function paintCert(text){
+    var els=document.querySelectorAll(".certSub");
+    for(var i=0;i<els.length;i++) els[i].textContent=text;
+  }
+  function certResting(){
+    paintCert(mode==="registered"
+      ? "This result saves to "+studentName()+"'s dashboard."
+      : "Screenshot this and paste into Google Classroom.");
+  }
+  function setMode(m, profile){
+    mode=m; student=profile||null;
+    paintChip(); certResting();
+  }
+
+  async function doLogin(){
+    msg.style.color="#6b7280"; msg.textContent="Checking…";
+    var code=normalise(codeInput.value); codeInput.value=code;
+    if(!code){ msg.style.color="#dc2626"; msg.textContent="Please type your student code, or press Skip."; return; }
+    await load();
+    if(!MMT){ msg.style.color="#dc2626"; msg.textContent="Login isn’t available here — press Skip to do the quiz."; return; }
+    try{
+      var r=await MMT.signIn(code);
+      if(r&&r.ok){ setMode("registered", r.profile); msg.style.color="#16a34a";
+        msg.textContent="Signed in as "+(studentName()||code); setTimeout(hideOverlay,450); }
+      else { msg.style.color="#dc2626"; msg.textContent=(r&&r.error)||"Could not sign in."; }
+    }catch(e){ msg.style.color="#dc2626"; msg.textContent="Could not sign in. You can Skip to continue."; }
+  }
+  if(loginBtn) loginBtn.addEventListener("click", doLogin);
+  if(skipBtn) skipBtn.addEventListener("click", function(){
+    setMode("skip", null);
+    if(MMT){ try{MMT.skipDemo();}catch(e){} }
+    hideOverlay();
+  });
+  if(codeInput){
+    codeInput.addEventListener("keydown", function(e){ if(e.key==="Enter"){ e.preventDefault(); e.stopPropagation(); doLogin(); } });
+    setTimeout(function(){ try{ codeInput.focus(); }catch(e){} }, 60);
+  }
+
+  window.MMTSave=async function(payload){
+    payload=payload||{};
+    if(mode!=="registered"){
+      paintCert("Screenshot this and paste into Google Classroom.");
+      showStatus("Not saved — no student code"); return {skipped:true};
+    }
+    showStatus("Saving…");
+    paintCert("Saving to "+studentName()+"'s dashboard…");
+    try{
+      await load();
+      if(MMT&&MMT.getMode&&MMT.getMode()==="registered"){
+        var r=await MMT.saveAchievement(payload);
+        var ok=!!(r&&r.saved);
+        showStatus(ok ? "Saved to your dashboard ✓" : "Not saved");
+        paintCert(ok ? "Saved to "+studentName()+"'s dashboard ✓ — your teacher can see this result."
+                     : "Could not save this one — screenshot it and send it to your teacher.");
+        return r;
+      }
+      showStatus("Not saved");
+      paintCert("Could not save this one — screenshot it and send it to your teacher.");
+      return {skipped:true};
+    }catch(e){
+      showStatus("Save failed (your result still counts locally)");
+      paintCert("Could not save this one — screenshot it and send it to your teacher.");
+      return {error:true};
+    }
+  };
+  window.MMTMode=function(){ return mode; };
+  // helpers so a quiz's own certificate / clipboard text can drop the Google
+  // Classroom instruction when the result is already going to a dashboard
+  function certTail(){ return mode==="registered" ? "" : " Paste a screenshot into Google Classroom."; }
+  function shareLine(){
+    return mode==="registered"
+      ? "Saved to "+studentName()+"'s dashboard — your teacher can see this result."
+      : "Submit a screenshot or paste this into Google Classroom.";
+  }
+  window.MMTAuth={ mode:function(){ return mode; }, student:function(){ return student; },
+                   name:studentName, signedIn:function(){ return mode==="registered"; },
+                   signIn:openOverlay, certTail:certTail, shareLine:shareLine };
+  paintChip();
+  load(); /* warm up so sign-in is instant */
+})();
+</script>
+
+</body>
+</html>

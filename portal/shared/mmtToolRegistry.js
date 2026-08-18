@@ -162,6 +162,14 @@ export const MMT_TOOLS = Object.freeze([
   // Each page now shows the student-login modal on load and writes an `achievements`
   // record via window.MMTSave; achievementToolName MUST match the `tool` string the page writes.
   {
+    toolId: "fraction-to-percentage-quiz", title: "Fraction to Percentage — Student Quiz", category: "Quiz",
+    enabled: true, resultCollection: "achievements", richCollection: null,
+    achievementToolName: "fraction-to-percentage-student-quiz", topics: ["fdp"], stage: "Stage 4",
+    launchUrl: "/online-quizzes/stage-4/number/fraction-to-percentage.html",
+    supportsAdventureAttempts: false, supportsSkillBreakdown: false,
+    notes: "Sweet/Mild/Medium/Spicy, 15 questions, built on the Fraction to Percentage double number line. Each question opens with an ESTIMATE (drag the marker), which clears on the first reveal; the second reveal names ONE part (100 ÷ d) and the student counts on. No unit fractions in any bank — 1/d would be the answer. Sweet = friendly only; Mild = 7 friendly then 8 terminating (improper in both); Medium = 5 friendly / 5 terminating / 5 recurring; Spicy = Medium's bank with NO model. Secure student-code login + achievements save; masteryTopic 'fraction-to-percentage'; types[] carry level/kind/improper/estimate-accuracy flags. No typed answers stored.",
+  },
+  {
     toolId: "fraction-of-amount-quiz", title: "Fraction of an Amount — Student Quiz", category: "Quiz",
     enabled: true, resultCollection: "achievements", richCollection: null,
     achievementToolName: "fraction-of-amount-student-quiz", topics: ["fdp"], stage: "Stage 4",

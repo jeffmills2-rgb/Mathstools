@@ -614,6 +614,13 @@ window.MMT_TOOL_LINKS = {
       tags: ["fractions", "decimals", "number line", "fraction bar", "division", "equivalence", "recurring"]
     },
     {
+      title: "Fraction to Percentage",
+      kind: "Teacher tool",
+      url: "/interactive-tools/stage-4/number/fraction-to-percentage/",
+      note: "Fraction above the line, percentage below. Step-by-step reveals find one part of 100, then count on. Estimate-first predict mode; handles recurring percentages and past 100%.",
+      tags: ["fractions", "percentages", "conversion", "number line", "estimation", "recurring", "per cent", "unit fraction"]
+    },
+    {
       title: "Times Table Chart — Fractions of an Amount",
       kind: "Teacher tool",
       url: "/interactive-tools/stage-4/number/fraction-of-amount/",
@@ -656,6 +663,13 @@ window.MMT_TOOL_LINKS = {
       tags: ["quiz", "fractions", "decimals", "percentages", "conversion"]
     },
     {
+      title: "Fraction to Percentage",
+      kind: "Student quiz",
+      url: "/online-quizzes/stage-4/number/fraction-to-percentage.html",
+      note: "Four levels, 15 questions. Estimate first, then the whole is partitioned, then one part is named and the student counts on. Spicy drops the model entirely.",
+      tags: ["student quiz", "fractions", "percentages", "conversion", "number line", "estimation", "recurring"]
+    },
+    {
       title: "Calculating Fractions of Amounts",
       kind: "Worksheet maker",
       url: "/worksheet-creators/stage-4/number/fraction-of-amount.html",
@@ -668,6 +682,13 @@ window.MMT_TOOL_LINKS = {
       url: "/worksheet-creators/stage-4/number/fractions-decimals-percentages.html",
       note: "Generates printable FDP worksheets with answers.",
       tags: ["worksheet generator", "printable", "fractions", "decimals", "percentages"]
+    },
+    {
+      title: "Fraction to Percentage",
+      kind: "Worksheet maker",
+      url: "/worksheet-creators/stage-4/number/fraction-to-percentage.html",
+      note: "Prints the interactive's number line with the fraction marked, or plain conversion questions. Friendly / Terminating / Recurring, past 100%, and an answer key.",
+      tags: ["worksheet generator", "printable", "fractions", "percentages", "conversion", "number line", "recurring"]
     },
     {
       title: "Fraction Hex Path",
