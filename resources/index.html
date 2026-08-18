@@ -166,6 +166,16 @@
     .t-docx{background:#dbeafe;color:#1d4ed8}
     .t-xlsx{background:#dcfce7;color:#15803d}
     .t-link{background:#e0e7ff;color:#4338ca}
+    /* Site tools all keep the glyph badge (files use a text badge), so a glyph
+       still reads as "this opens a page"; the glyph + tint say which kind. */
+    .k-tool{background:#e0e7ff;color:#4338ca}
+    .k-quiz{background:#cffafe;color:#0e7490}
+    .k-worksheet{background:#ede9fe;color:#6d28d9}
+    .k-lesson{background:#fef3c7;color:#b45309}
+    .k-game{background:#fce7f3;color:#be185d}
+    .k-cards{background:#ffedd5;color:#c2410c}
+    /* the arrow is the shared web cue — brighter on a site tool than on a file */
+    .res-item a.is-web .res-arrow{color:var(--brand-2);opacity:.85}
     .t-video{background:#fce7f3;color:#be185d}
     .res-name{flex:1;min-width:0;font-size:.87rem;font-weight:800;letter-spacing:-.015em;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .res-year{flex:0 0 auto;color:var(--muted);font-size:.74rem;font-weight:850;white-space:nowrap}
@@ -302,6 +312,48 @@
       '</svg>'
   };
 
+  /* One glyph per kind of site tool. Same 32-unit box, same stroke weight and
+     round joins as the globe above, so the set reads as one family — a glyph
+     badge means "web tool", the drawing says which sort. Anything whose kind is
+     not listed falls back to the globe. */
+  function svg(inner){
+    return '<svg viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" ' +
+      'stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + inner + '</svg>';
+  }
+  var KIND_VARIANT = {
+    'teacher tool':'tool', 'student quiz':'quiz', 'worksheet maker':'worksheet',
+    'lesson plan':'lesson', 'game':'game',
+    'flip cards':'cards', 'flash cards':'cards'
+  };
+  var KIND_ICON = {
+    /* a screen with a cursor on it — something you drive */
+    tool: svg('<rect x="3" y="5.5" width="26" height="20" rx="3"/>' +
+              '<path d="M3 11h26"/>' +
+              '<path d="M13.2 14.8 23 19.4l-4 1.1 1.6 3.9-2.3 1-1.6-3.9-2.9 2.4z" ' +
+                'fill="currentColor" stroke-width="1.5"/>'),
+    /* a clipboard with a tick — answer, check, score */
+    quiz: svg('<rect x="6.5" y="5" width="19" height="23" rx="3"/>' +
+              '<path d="M12 5.5h8v3.2h-8z" fill="currentColor" stroke-width="1.4"/>' +
+              '<path d="M11.4 17.6 14.8 21l6-7.2"/>'),
+    /* a printed sheet — the thing the generator makes */
+    worksheet: svg('<rect x="6.5" y="3.5" width="19" height="25" rx="2.6"/>' +
+              '<path d="M11 11h10M11 16h10M11 21h6"/>'),
+    /* an open book */
+    lesson: svg('<path d="M3.5 7.4c4-2 8.2-1.8 12.5 1.3 4.3-3.1 8.5-3.3 12.5-1.3v17.8c-4-2-8.2-1.8-12.5 1.3' +
+                '-4.3-3.1-8.5-3.3-12.5-1.3z"/><path d="M16 8.7v18.5"/>'),
+    /* a die */
+    game: svg('<rect x="5" y="5" width="22" height="22" rx="4.5"/>' +
+              '<circle cx="11.6" cy="11.6" r="1.7" fill="currentColor" stroke="none"/>' +
+              '<circle cx="16" cy="16" r="1.7" fill="currentColor" stroke="none"/>' +
+              '<circle cx="20.4" cy="20.4" r="1.7" fill="currentColor" stroke="none"/>'),
+    /* two cards, one turning over */
+    cards: svg('<rect x="3.5" y="8" width="15" height="20" rx="2.6"/>' +
+              '<path d="M13.5 8V6a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-2.5"/>')
+  };
+  function kindVariant(r){
+    return KIND_VARIANT[String(r.kind || '').trim().toLowerCase()] || null;
+  }
+
   function esc(s){
     return String(s == null ? '' : s)
       .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
@@ -370,12 +422,19 @@
     /* right-hand label: a year for uploaded files, a kind for site tools */
     var label = r.year || r.kind || '';
 
+    /* a site tool badges by KIND (teacher tool / quiz / worksheet / lesson /
+       game); an uploaded file badges by its file type */
+    var variant = type === 'link' ? kindVariant(r) : null;
+    var boxCls  = variant ? 'k-' + variant : 't-' + type;
+    var glyph   = variant ? KIND_ICON[variant] : TYPE_ICON[type];
+    var alt     = variant ? (r.kind || 'Web tool') : (TYPE_LABEL[type] || type);
+
     return '<li class="res-item">' +
-      '<a href="' + esc(href) + '" target="_blank" rel="noopener"' +
+      '<a class="' + (type === 'link' ? 'is-web' : 'is-file') + '" href="' + esc(href) + '" target="_blank" rel="noopener"' +
          (tip ? ' title="' + esc(tip) + '"' : '') + '>' +
-        '<span class="res-ico-box t-' + esc(type) + '"' +
-           (TYPE_ICON[type] ? ' role="img" aria-label="' + esc(TYPE_LABEL[type] || type) + '"' : '') + '>' +
-          (TYPE_ICON[type] || esc(TYPE_LABEL[type] || 'FILE')) + '</span>' +
+        '<span class="res-ico-box ' + esc(boxCls) + '"' +
+           (glyph ? ' role="img" aria-label="' + esc(alt) + '"' : '') + '>' +
+          (glyph || esc(TYPE_LABEL[type] || 'FILE')) + '</span>' +
         '<span class="res-name">' + highlight(r.title, state.q) + '</span>' +
         (label ? '<span class="res-year">' + esc(label) + '</span>' : '') +
         '<span class="res-arrow" aria-hidden="true">↗</span>' +
