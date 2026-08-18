@@ -16,6 +16,63 @@
 > §2 "TWO folders", §3 deploy paths and §5's `mathstools-main 2` heading below
 > describe the OLD layout — this block supersedes them.
 >
+> **NEW (2026-08-18, session — DEPLOYED, commits `34cbb73` / `9d962b3` /
+> `5c9029e`): FRACTION TO PERCENTAGE family, a shared quiz SIGN-IN BANNER, and
+> per-kind RESOURCE ICONS.**
+>
+> 1. **Fraction to Percentage.** The teaching tool
+>    (`interactive-tools/stage-4/number/fraction-to-percentage/`, built the night
+>    before) now has two siblings —
+>    `worksheet-creators/stage-4/number/fraction-to-percentage.html` and
+>    `online-quizzes/stage-4/number/fraction-to-percentage.html`. The tool's
+>    "Tools ▾" menu holds ONLY those two. All three are filed under
+>    **MA4-FRC-C-01** in `resources/toolLinks.js`, so they appear on Resources by
+>    Stage → Stage 4 → Fractions, Decimals and Percentages.
+>    - *Worksheet:* "Show number line" ON prints the tool's FIRST REVEAL — whole
+>      partitioned, fraction marked, shaded distance, blank under the tick — 2×4
+>      per A4; OFF is the plain conversion card, 3×6. The tier is re-checked
+>      AFTER reducing, so a "Friendly" question can never arrive recurring.
+>      Denominators cap at 20 when the model shows, or ticks become unreadable.
+>    - *Quiz:* 15 questions, Sweet / Mild / Medium / Spicy (**Spicy = Medium's
+>      bank with NO model**). Each model question runs estimate → a HELD beat to
+>      read the estimate → placement → one part named (100 ÷ d) → the student
+>      counts on. **No unit fractions in any bank** — with the first part
+>      revealed, 1/d would BE the answer. Recurring answers accept `66 2/3`,
+>      `200/3` or `66.7` and reject `66.6`. One attempt per question, so the
+>      score is a true /15; the estimate is never marked.
+>
+> 2. **Shared quiz login block v2.** The **ten** quizzes carrying
+>    `mmtLoginOverlay` now hold a BYTE-IDENTICAL copy. To change it: edit the
+>    copy in `online-quizzes/stage-4/number/fraction-to-percentage.html`, then
+>    re-apply to the other nine by replacing the span from
+>    `<!-- ===== MMT student-code login` to the `</script>` after
+>    `window.MMTMode=`. New in v2:
+>    - a status chip painted into **`#mmtAuthSlot`** (added beside each quiz's
+>      Reset button) — "Signed in as NAME", or "Guest mode" + a Sign in button
+>      that reopens the overlay. It sits in the page's own flow so it stays
+>      BEHIND the quiz's modals instead of bleeding over them;
+>    - `window.MMTAuth { mode, student, name, signedIn, signIn, certTail, shareLine }`;
+>    - certificate wording that follows the sign-in state — **Google Classroom is
+>      mentioned only when nothing is being saved**. The block rewrites every
+>      `.certSub`; a quiz's OWN certificate / clipboard / canvas text calls
+>      `MMTAuth.certTail()` or `.shareLine()`.
+>    **Firestore rules did NOT need changing** — the live `achievements` block
+>    already allows create for the signed-in student, and these write that same
+>    shape. Do not re-investigate this.
+>
+> 3. **Resources by Stage icons.** Uploaded files badge with a TEXT label, so a
+>    GLYPH badge now means "this opens a page" and the drawing says which kind:
+>    teacher tool (screen + cursor), student quiz (clipboard + tick), worksheet
+>    maker (ruled sheet), lesson plan (open book), flip/flash cards, game (die).
+>    Edit `KIND_VARIANT` / `KIND_ICON` in `resources/index.html`; a `kind` with
+>    no entry falls back to the old globe.
+>
+> **Bridge gotcha (cost an hour):** a Claude session that dies mid-write leaves
+> `.git/index.lock` / `HEAD.lock` behind, and the desktop-bridge shell can only
+> `mv`, never delete — so git then refuses every commit with "Another git process
+> seems to be running". Check `find .git -name '*.lock'` and clear them in
+> Terminal. The bridge also has NO network, so `git push` must be run by hand.
+>
 > **NEW (2026-08-17, session — being pushed): STAGE 3 MULTIPLICATIVE RELATIONS
 > + GEOMETRIC MEASURE.** Two more Stage 3 banks, taking the stage to **6 of 8**
 > topics. **Geometric Measure** (18 types) reuses the linear, angle and length
@@ -65,7 +122,7 @@
 > `picker.mjs` which needs jsdom and skips without it), plus `layout-check.html`
 > which renders real questions in the browser and measures the boxes.
 >
-> Last reviewed: 2026-07-08. **All LIVE** — the Adventure now has **14 Stage 4
+> Last reviewed: 2026-08-18. **All LIVE** — the Adventure now has **14 Stage 4
 > topics** (deployed 2026-07-08, commit `aad2142`): the Phase 3A–3G expansion
 > (Ratios & Rates, Length, Equations, Probability, Indices, Linear) PLUS Angle
 > Relationships (3G), Properties of Geometrical Figures (3H) and Data
@@ -265,6 +322,13 @@ portal/PLACEMENT.md , portal/README.md   migration + structure notes
 - All Firebase quizzes were migrated to the secure exchange (via `quizClient.js`
   or inline). The decimal-zoom rounding quiz was converted from a public
   leaderboard to a secure achievements quiz.
+- **Fraction to Percentage family (2026-08-18):** teacher tool
+  `interactive-tools/stage-4/number/fraction-to-percentage/` (double number line,
+  fraction above / percentage below, step reveals, predict mode) +
+  `worksheet-creators/stage-4/number/fraction-to-percentage.html` +
+  `online-quizzes/stage-4/number/fraction-to-percentage.html` (registered in
+  `mmtToolRegistry.js` as `fraction-to-percentage-student-quiz`). See the
+  2026-08-18 header block.
 - **Fraction Bar + Number Line family (2026-07-08):**
   - **Teacher tool** `interactive-tools/stage-4/number/fraction-bar-number-line/index.html`
     — self-contained (inline CSS/JS): a fraction shown as a part-whole bar, a
@@ -333,6 +397,14 @@ portal/PLACEMENT.md , portal/README.md   migration + structure notes
   **function first**, then push the website.
 
 ## 8. Open / future items
+- **Student-quiz sign-in sweep:** 10 of 25 quizzes carry the v2 login block.
+  The other **15** still have bespoke inline sign-in and their own completion
+  screens (9 of those have no `.certSub` at all) — extend the v2 block to them
+  when convenient. Within the ten, `collecting-like-terms` and `factor-circles`
+  have no `.certSub` (they end with a copy-a-message panel), so only the chip
+  changed there; their "paste into Google Classroom" copy tips are about a
+  celebration message, not a result, and were left alone (the trilingual one
+  has AR/FA translations of that string too).
 - **Revision Generator — Stage 3**: 6 of 8 topics built (Represents Numbers,
   Additive Relations, Multiplicative Relations, Fractions, 2D Space and Area,
   Geometric Measure). Each remaining topic needs a new diagram engine first:
