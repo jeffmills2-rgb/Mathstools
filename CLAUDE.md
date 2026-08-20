@@ -471,6 +471,16 @@ portal/PLACEMENT.md , portal/README.md   migration + structure notes
   identity writes; never store typed answers; don't weaken the live rules without
   a clear reason.
 - Match existing design tokens / folder casing (lowercase-hyphenated).
+- **Teacher-facing controls stay readable in English.** A worksheet creator's
+  language `<select>` names the language in ENGLISH FIRST with the native script
+  in brackets — `English` / `Arabic (العربية)` / `Farsi / Persian (فارسی)` (the
+  Adding and Subtracting Fractions one prints bilingually, so it reads
+  `Arabic + English (العربية)`). The control's own label keeps the English name
+  in every language too (`زبان برگه (Worksheet language)`), or a teacher who
+  switches to Farsi cannot find the control again. Swept across all 7 creators
+  with a language selector on 2026-08-20. Student-facing toggles are different —
+  the quizzes' `EN / ع / فا` buttons are chosen BY the student, so native script
+  alone is right there.
 - When a change spans both repos (e.g. a teacher feature + a function), deploy the
   **function first**, then push the website.
 
