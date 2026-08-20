@@ -82,10 +82,13 @@
 >    tier** (value `coprime`) mirrors the quiz's fifth level — coprime pairs
 >    <= 10 (model pool capped at product 20 for readable ticks), its own dark-red
 >    badge, and Mixed spice now deals a ladder of all FOUR tiers;
->    2×4 per A4 with the model, 3×6 without. **"Fade the model"** scaffolds the
->    first half of the paper and withdraws support in the second half (pages
->    labelled "scaffolded" / "on your own", numbering continuous) — the
->    differentiation option. A **Worksheet language** select (EN / AR / FA,
+>    2×4 per A4 with the model, 3×6 without. (A "Fade the model" option that
+>    scaffolded only the first half was removed on teacher feedback 2026-08-20 —
+>    unnecessary; run two papers instead.) The control panel is laid out in three
+>    full-width BANDS — "The paper" (level / operation / count / language in an
+>    auto-fit grid), "Options" (the toggles in one wrapping row) and the action
+>    buttons — so nothing is orphaned when the window narrows.
+>    A **Worksheet language** select (EN / AR / FA,
 >    persisted as `mmt-asf-ws-lang`) prints every card instruction, the Answer
 >    label and Name/Date bilingually — Arabic or Farsi on top, English beneath —
 >    re-rendering the SAME questions on change.

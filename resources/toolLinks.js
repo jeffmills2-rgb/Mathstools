@@ -687,7 +687,7 @@ window.MMT_TOOL_LINKS = {
       title: "Adding and Subtracting Fractions",
       kind: "Worksheet maker",
       url: "/worksheet-creators/stage-4/number/adding-subtracting-fractions.html",
-      note: "Prints the tool's bar + number-line model with each question, plain cards, or a FADED paper — scaffolded first half, unsupported second half. Same/related/unrelated/Extra-hot (coprime) ladder or mixed spice, past 1 whole, negatives, answer key. Instructions print bilingually in Arabic or Farsi with English beneath.",
+      note: "Prints the tool's bar + number-line model with each question, or plain cards. Same/related/unrelated/Extra-hot (coprime) ladder or mixed spice, past 1 whole, negatives, answer key. Instructions print bilingually in Arabic or Farsi with English beneath.",
       tags: ["worksheet generator", "printable", "fractions", "adding fractions", "subtracting fractions", "common denominator", "number line", "bar model", "scaffolding", "differentiation", "multilingual", "Arabic", "Farsi", "EAL/D"]
     },
     {

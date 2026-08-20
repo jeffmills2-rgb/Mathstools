@@ -56,26 +56,40 @@
       font-size:15px; line-height:1.35;
     }
 
+    /* The panel reads top-to-bottom in three bands: what the paper IS,
+       what goes ON it, then the actions. Each band is a full-width row, so
+       nothing gets orphaned when the window narrows. */
     .controls{
-      display:flex; align-items:flex-end; justify-content:space-between;
-      gap:12px; flex-wrap:wrap; padding:12px;
+      display:flex; flex-direction:column; gap:0; padding:4px 16px 14px;
       border:1px solid var(--border); border-radius:18px;
       background:linear-gradient(180deg,#ffffff,#f9fafb);
     }
 
-    .fieldRow{ display:flex; gap:16px; flex-wrap:wrap; align-items:flex-end; }
+    .band{ padding:14px 0; }
+    .band + .band{ border-top:1px solid var(--border); }
+
+    .bandTitle{
+      font-size:11.5px; font-weight:950; letter-spacing:.09em; text-transform:uppercase;
+      color:var(--muted); margin:0 0 10px;
+    }
+
+    .fieldGrid{
+      display:grid; grid-template-columns:repeat(auto-fit, minmax(215px, 1fr));
+      gap:14px 16px; align-items:end;
+    }
 
     label{ display:block; margin:0 0 7px; font-size:15px; font-weight:950; }
 
     select, input[type="number"]{
       border:2px solid #e5e7eb; border-radius:14px; padding:12px 13px;
-      font-weight:950; font-size:17px; background:#fff; min-width:220px; outline:none;
+      font-weight:950; font-size:17px; background:#fff; outline:none;
+      width:100%; min-width:0;
     }
-    input[type="number"]{ min-width:180px; }
+    select:focus, input[type="number"]:focus{ border-color:var(--blue); }
 
+    /* the options sit in one wrapping row, not a tall column beside the fields */
     .toggles{
-      display:flex; flex-direction:column; gap:9px;
-      padding:4px 2px 2px;
+      display:flex; flex-direction:row; flex-wrap:wrap; gap:12px 26px; align-items:center;
     }
 
     .sw{
@@ -96,7 +110,7 @@
     .sw input:focus-visible + .track{ box-shadow:0 0 0 4px rgba(37,99,235,.28); }
     .sw input:disabled + .track{ opacity:.45; }
 
-    .btnRow{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end; }
+    .btnRow{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-start; }
 
     button{
       border:none; border-radius:14px; padding:12px 16px; font-weight:1000; cursor:pointer;
@@ -292,10 +306,12 @@
   <div class="wrap">
     <div class="card">
       <h1 class="title">Adding and Subtracting Fractions — Worksheet Generator</h1>
-      <p class="subtitle">Printable A4 worksheets built from the <strong>Adding and Subtracting Fractions</strong> teaching tool. The levels are the tool's own ladder: same denominators (count the pieces), related (one fraction renames), unrelated (both rename), and Extra hot — non-related (coprime) denominators up to 10, where the new unit is the denominators multiplied. With <em>Show the model</em> on, each question prints the two fraction bars and a number line already cut into the common unit, with the starting fraction marked — students count on or back. <em>Fade the model</em> scaffolds the first half only, so support is withdrawn on the same paper. Worksheet language prints every instruction bilingually — Arabic or Farsi on top, English beneath — for EAL/D students; the maths stays in Western numerals.</p>
+      <p class="subtitle">Printable A4 worksheets built from the <strong>Adding and Subtracting Fractions</strong> teaching tool. The levels are the tool's own ladder: same denominators (count the pieces), related (one fraction renames), unrelated (both rename), and Extra hot — non-related (coprime) denominators up to 10, where the new unit is the denominators multiplied. With <em>Show the model</em> on, each question prints the two fraction bars and a number line already cut into the common unit, with the starting fraction marked — students count on or back. Worksheet language prints every instruction bilingually — Arabic or Farsi on top, English beneath — for EAL/D students; the maths stays in Western numerals.</p>
 
       <div class="controls">
-        <div class="fieldRow">
+        <div class="band">
+          <p class="bandTitle">The paper</p>
+          <div class="fieldGrid">
           <div>
             <label for="levelSel">Level</label>
             <select id="levelSel">
@@ -329,20 +345,25 @@
               <option value="fa">Farsi / Persian + English (فارسی)</option>
             </select>
           </div>
+          </div>
+        </div>
 
+        <div class="band">
+          <p class="bandTitle">Options</p>
           <div class="toggles">
             <label class="sw"><input type="checkbox" id="modelToggle" /><span class="track"></span><span>Show the model</span></label>
-            <label class="sw"><input type="checkbox" id="fadeToggle" /><span class="track"></span><span>Fade the model (first half only)</span></label>
             <label class="sw"><input type="checkbox" id="improperToggle" /><span class="track"></span><span>Include answers past 1 whole</span></label>
             <label class="sw"><input type="checkbox" id="negativeToggle" /><span class="track"></span><span>Allow take-aways past zero</span></label>
             <label class="sw"><input type="checkbox" id="keyToggle" checked /><span class="track"></span><span>Answer key pages</span></label>
           </div>
         </div>
 
-        <div class="btnRow">
-          <button id="genBtn" class="primary">Generate worksheet</button>
-          <button id="printBtn" class="ghost">Print (Ctrl+P)</button>
-          <button id="resetBtn" class="danger">Reset</button>
+        <div class="band">
+          <div class="btnRow">
+            <button id="genBtn" class="primary">Generate worksheet</button>
+            <button id="printBtn" class="ghost">Print (Ctrl+P)</button>
+            <button id="resetBtn" class="danger">Reset</button>
+          </div>
         </div>
       </div>
 
@@ -683,29 +704,11 @@
     return pages;
   }
 
-  // split the run into a scaffolded half and a plain half when fading
   function buildAllPages(questions, levelName, titleLabel, showAnswers, layout){
-    const out = [];
-    const runs = [];
-    if(layout.mode==="model"){ runs.push({ qs:questions, model:true }); }
-    else if(layout.mode==="plain"){ runs.push({ qs:questions, model:false }); }
-    else{ // fade — the first half carries the model, the second stands alone
-      const cut = Math.ceil(questions.length/2);
-      runs.push({ qs:questions.slice(0,cut), model:true });
-      runs.push({ qs:questions.slice(cut), model:false });
-    }
-    let totalPages = 0;
-    runs.forEach(r => { r.per = r.model ? 8 : 18; totalPages += Math.ceil(r.qs.length/r.per); });
-    let pageOffset=0, startNum=1;
-    runs.forEach(r => {
-      if(!r.qs.length) return;
-      const label = titleLabel + (layout.mode==="fade" ? (r.model ? " · scaffolded" : " · on your own") : "");
-      buildPages(r.qs, levelName, label, showAnswers, r.model, r.per, startNum, pageOffset, totalPages)
-        .forEach(pg => out.push(pg));
-      pageOffset += Math.ceil(r.qs.length/r.per);
-      startNum += r.qs.length;
-    });
-    return out;
+    const model = (layout.mode==="model");
+    const per = model ? 8 : 18;
+    const totalPages = Math.ceil(questions.length/per);
+    return buildPages(questions, levelName, titleLabel, showAnswers, model, per, 1, 0, totalPages);
   }
 
   /* ===================== wiring ===================== */
@@ -714,7 +717,6 @@
   const opSel          = document.getElementById("opSel");
   const countInp       = document.getElementById("countInp");
   const modelToggle    = document.getElementById("modelToggle");
-  const fadeToggle     = document.getElementById("fadeToggle");
   const improperToggle = document.getElementById("improperToggle");
   const negativeToggle = document.getElementById("negativeToggle");
   const keyToggle      = document.getElementById("keyToggle");
@@ -723,16 +725,9 @@
   const resetBtn       = document.getElementById("resetBtn");
   const out            = document.getElementById("out");
 
-  function layoutMode(){
-    if(modelToggle.checked && fadeToggle.checked) return "fade";
-    if(modelToggle.checked) return "model";
-    return "plain";
-  }
+  function layoutMode(){ return modelToggle.checked ? "model" : "plain"; }
 
   function syncToggles(){
-    // fading only means something when the model is on
-    fadeToggle.disabled = !modelToggle.checked;
-    if(!modelToggle.checked) fadeToggle.checked = false;
     // negatives only exist when subtraction is in play
     const noSub = (opSel.value==="add");
     negativeToggle.disabled = noSub;
@@ -740,8 +735,7 @@
   }
 
   function syncCountForLayout(){
-    const mode = layoutMode();
-    countInp.value = String(mode==="plain" ? 18 : (mode==="model" ? 8 : 16));
+    countInp.value = String(layoutMode()==="model" ? 8 : 18);
   }
 
   // the last generated paper, so a language change re-renders the SAME questions
@@ -791,7 +785,6 @@
     langSel.value = LANG;
     opSel.value = "both";
     modelToggle.checked = false;
-    fadeToggle.checked = false;
     improperToggle.checked = false;
     negativeToggle.checked = false;
     keyToggle.checked = true;
@@ -807,7 +800,6 @@
     renderOut(false);              // same questions, new language
   });
   modelToggle.addEventListener("change", () => { syncToggles(); syncCountForLayout(); });
-  fadeToggle.addEventListener("change", syncCountForLayout);
   genBtn.addEventListener("click", generate);
   printBtn.addEventListener("click", () => window.print());
   resetBtn.addEventListener("click", resetAll);
