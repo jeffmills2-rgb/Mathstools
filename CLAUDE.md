@@ -16,6 +16,84 @@
 > §2 "TWO folders", §3 deploy paths and §5's `mathstools-main 2` heading below
 > describe the OLD layout — this block supersedes them.
 >
+> **NEW (2026-08-20, session — being pushed): ADDING AND SUBTRACTING FRACTIONS
+> family.** The teaching tool
+> (`interactive-tools/stage-4/number/adding-fractions/index.html`, built the
+> night before as "Adding Fractions") grew up and gained its two siblings:
+>
+> 1. **Teaching tool upgrades.** (a) The EQUIVALENT FRACTIONS now appear in a
+>    band between the joined bar and the number line once the split step is
+>    reached (e.g. 3/6 + 2/6 under their segments; subtraction writes −C/D
+>    inside the pink hatch) — the line moved down to make room (viewBox 436).
+>    (b) **Negative answers allowed**: the take-away may exceed the start; the
+>    axis extends to −1 (`axisMin()`), sign-aware fraction rendering everywhere,
+>    the swap/validation removed, narration adapts ("straight past zero").
+>    (c) Below-line labels sit lower and the landing tick is shorter, so labels
+>    like 17/20 no longer collide with ticks. (d) A "Tools ▾" menu links the two
+>    siblings. Retitled **Adding and Subtracting Fractions**.
+> 2. **Student quiz** `online-quizzes/stage-4/number/adding-subtracting-fractions.html`
+>    (registry id `adding-subtracting-fractions-quiz`). Sweet/Mild/Medium/Spicy,
+>    15 questions; the ladder raises the RENAMING demand while the model stays —
+>    Sweet same denominators, Mild related (one bar re-splits), Medium unrelated
+>    (both re-split, improper sums, simplifying), **Spicy = Medium with NO model
+>    + take-aways that pass zero** (negative answers). Estimate-first (drag the
+>    marker, never marked), then the bars, then an optional reveal (tagged
+>    `usedRenameReveal`) on **every modelled level — Sweet ("Show the pieces"),
+>    Mild and Medium ("Show the renaming")**; what disappears at Spicy and Extra
+>    hot is the model itself. The reveal is a **back/forward arrow pair** (forward
+>    disabled once revealed, back greyed until then) and the pieces ANIMATE
+>    falling into place and lifting back out (slideIn/slideOut on the strip
+>    segments, faded ticks/labels) instead of snapping; the same smooth BACK now
+>    exists on the teaching tool (`state.animExit` + exit classes slideOut /
+>    tickOut / fadeOut / popOut — one-step Back plays the current step's exit,
+>    then lands). A **fifth level, Extra hot** (`extrahot`): coprime denominator
+>    pairs, both <= 10, product >= 18, and BOTH fractions in simplest form
+>    (2/6 would quietly reduce to 1/3) — e.g. 3/8 + 4/7, where the new unit is
+>    the denominators multiplied; no model, improper sums + negative take-aways.
+>    The MathLive box sits on the equation's own line, vertically CENTRED with
+>    it (padding only — a min-height taller than the content top-aligns the
+>    fraction), and the fraction button + its translated "Click to enter a
+>    fraction" hint sit in their own centred row ABOVE the whole question card
+>    (`#fracBarRow`, revealed with the field, hidden in the estimate phase and
+>    when MathLive fails to load); landing labels drop a row near endpoint
+>    labels ("1 whole"). **Answers are entered in a MathLive fraction editor** —
+>    the Adventure's MathAnswerInput pattern trimmed to ONE fraction-template
+>    button (`\frac{#?}{#?}`, so a typed whole number stays outside → mixed
+>    numbers work), menu/keyboard icons hidden, Enter captured; loaded from
+>    jsDelivr (`mathlive@0.101.2`), and if the CDN is unreachable the plain
+>    typed input silently remains. **Never set `display`/flex on `<math-field>`**
+>    — it breaks MathLive's own hit-testing and the first keystroke after a click
+>    is swallowed (cost a debugging round); size it with min-height + padding.
+>    Marking reads the LATEX (never ascii-math,
+>    which flattens "1 3/20" to "13/20") via `latexToEntry()`, handling
+>    MathLive's brace-less `\frac44` form. Matched as EXACT rationals,
+>    any equivalent form (10/12 = 5/6 = mixed); one attempt per question. Carries
+>    the byte-identical v2 login block (now **eleven** quizzes — §8 updated).
+>    **Trilingual EN/AR/FA** (same convention as the Fractions Number Line Quiz:
+>    selected language on top, English beneath; maths/numerals stay Western/LTR;
+>    lang toggle in the top row, persisted as `mmt-asf-lang`; non-English
+>    attempts tagged `lang:ar`/`lang:fa` in `types[]`).
+> 3. **Worksheet creator** `worksheet-creators/stage-4/number/adding-subtracting-fractions.html`.
+>    Level ladder (same/related/unrelated/mixed spice), add/sub/both, past-1-whole
+>    and negative toggles, answer key. "Show the model" prints the two bars in
+>    their own units above a number line already cut into the COMMON unit with
+>    the start marked (the answer is NOT marked — counting on/back is the work;
+>    the count-on arrow hint was removed on teacher feedback); an **Extra hot
+>    tier** (value `coprime`) mirrors the quiz's fifth level — coprime pairs
+>    <= 10 (model pool capped at product 20 for readable ticks), its own dark-red
+>    badge, and Mixed spice now deals a ladder of all FOUR tiers;
+>    2×4 per A4 with the model, 3×6 without. **"Fade the model"** scaffolds the
+>    first half of the paper and withdraws support in the second half (pages
+>    labelled "scaffolded" / "on your own", numbering continuous) — the
+>    differentiation option. A **Worksheet language** select (EN / AR / FA,
+>    persisted as `mmt-asf-ws-lang`) prints every card instruction, the Answer
+>    label and Name/Date bilingually — Arabic or Farsi on top, English beneath —
+>    re-rendering the SAME questions on change.
+>
+> All three are filed under **MA4-FRC-C-01** in `resources/toolLinks.js`, mini
+> cards added on the homepage, quiz registered in `mmtToolRegistry.js`
+> (masteryTopic `adding-subtracting-fractions`).
+>
 > **NEW (2026-08-18, session — DEPLOYED, commits `34cbb73` / `9d962b3` /
 > `5c9029e`): FRACTION TO PERCENTAGE family, a shared quiz SIGN-IN BANNER, and
 > per-kind RESOURCE ICONS.**
@@ -397,7 +475,8 @@ portal/PLACEMENT.md , portal/README.md   migration + structure notes
   **function first**, then push the website.
 
 ## 8. Open / future items
-- **Student-quiz sign-in sweep:** 10 of 25 quizzes carry the v2 login block.
+- **Student-quiz sign-in sweep:** 11 of 26 quizzes carry the v2 login block
+  (adding-subtracting-fractions joined 2026-08-20).
   The other **15** still have bespoke inline sign-in and their own completion
   screens (9 of those have no `.certSub` at all) — extend the v2 block to them
   when convenient. Within the ten, `collecting-like-terms` and `factor-circles`

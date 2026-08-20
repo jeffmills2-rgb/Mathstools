@@ -621,6 +621,13 @@ window.MMT_TOOL_LINKS = {
       tags: ["fractions", "percentages", "conversion", "number line", "estimation", "recurring", "per cent", "unit fraction"]
     },
     {
+      title: "Adding and Subtracting Fractions",
+      kind: "Teacher tool",
+      url: "/interactive-tools/stage-4/number/adding-fractions/",
+      note: "Two fraction bars join on a number line, are renamed with a common denominator (equivalents shown under the bar), and the pieces are counted. Predict mode, a misconception step, and subtraction that can pass zero.",
+      tags: ["fractions", "adding fractions", "subtracting fractions", "common denominator", "equivalent fractions", "number line", "bar model", "renaming", "negatives"]
+    },
+    {
       title: "Times Table Chart — Fractions of an Amount",
       kind: "Teacher tool",
       url: "/interactive-tools/stage-4/number/fraction-of-amount/",
@@ -633,6 +640,13 @@ window.MMT_TOOL_LINKS = {
       url: "/online-quizzes/stage-4/number/fraction-of-amount.html",
       note: "Saves to the student dashboard.",
       tags: ["quiz", "fraction of an amount"]
+    },
+    {
+      title: "Adding and Subtracting Fractions",
+      kind: "Student quiz",
+      url: "/online-quizzes/stage-4/number/adding-subtracting-fractions.html",
+      note: "Five levels, 15 questions, trilingual EN/AR/FA, with an equation-editor answer box (fraction button). Sweet counts like parts; Mild renames one bar; Medium renames both (all three have back/forward reveal arrows); Spicy drops the model and lets take-aways pass zero; Extra hot uses non-related (coprime) denominators up to 10. Estimate first.",
+      tags: ["student quiz", "fractions", "adding fractions", "subtracting fractions", "common denominator", "equivalent fractions", "number line", "estimation", "negatives", "multilingual", "Arabic", "Farsi", "EAL/D"]
     },
     {
       title: "Decimal Zoom Rounding",
@@ -668,6 +682,13 @@ window.MMT_TOOL_LINKS = {
       url: "/online-quizzes/stage-4/number/fraction-to-percentage.html",
       note: "Four levels, 15 questions. Estimate first, then the whole is partitioned, then one part is named and the student counts on. Spicy drops the model entirely.",
       tags: ["student quiz", "fractions", "percentages", "conversion", "number line", "estimation", "recurring"]
+    },
+    {
+      title: "Adding and Subtracting Fractions",
+      kind: "Worksheet maker",
+      url: "/worksheet-creators/stage-4/number/adding-subtracting-fractions.html",
+      note: "Prints the tool's bar + number-line model with each question, plain cards, or a FADED paper — scaffolded first half, unsupported second half. Same/related/unrelated/Extra-hot (coprime) ladder or mixed spice, past 1 whole, negatives, answer key. Instructions print bilingually in Arabic or Farsi with English beneath.",
+      tags: ["worksheet generator", "printable", "fractions", "adding fractions", "subtracting fractions", "common denominator", "number line", "bar model", "scaffolding", "differentiation", "multilingual", "Arabic", "Farsi", "EAL/D"]
     },
     {
       title: "Calculating Fractions of Amounts",

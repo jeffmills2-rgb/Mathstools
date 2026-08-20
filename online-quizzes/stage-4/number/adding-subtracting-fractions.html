@@ -1,0 +1,1394 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Adding and Subtracting Fractions – Student Quiz</title>
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --ink:#111827;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --shadow:0 16px 44px rgba(0,0,0,.12);
+
+      --blue:#2563eb;
+      --blueDark:#1d4ed8;
+      --green:#16a34a;
+      --greenSoft:#dcfce7;
+      --red:#dc2626;
+      --redSoft:#fee2e2;
+
+      --sweet1:#22c55e; --sweet2:#0f766e;
+      --mild1:#60a5fa; --mild2:#2563eb;
+      --medium1:#facc15; --medium2:#d97706;
+      --spicy1:#fb923c; --spicy2:#ea580c;
+
+      --mathFont:"Cambria Math","STIX Two Math","STIXGeneral","Times New Roman",serif;
+      --uiFont:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{ margin:0; font-family:var(--uiFont); background:var(--bg); color:var(--ink); }
+
+    .wrap{ max-width:1600px; margin:0 auto; padding:10px 12px 16px; min-height:100%; display:flex; flex-direction:column; }
+    .card{
+      background:var(--card); border:1px solid var(--border); border-radius:24px; box-shadow:var(--shadow);
+      padding:10px 12px 16px; min-height:calc(100vh - 28px); display:flex; flex-direction:column;
+      overflow:hidden; position:relative;
+    }
+
+    .topRow{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:8px; }
+    .backBtn{
+      border:none; background:#f3f4f6; color:var(--ink); cursor:pointer; padding:10px 12px; border-radius:12px;
+      font-weight:950; display:inline-flex; align-items:center; gap:8px; transition:background .15s ease, transform .04s ease;
+    }
+    .backBtn:hover{ background:#eef2ff; }
+    .backBtn:active{ transform:scale(.98); }
+    .rightPanel{ display:flex; justify-content:flex-end; gap:10px; }
+    .resetBtn{
+      border:none; font-weight:950; cursor:pointer; padding:10px 14px; border-radius:14px;
+      background:#fee2e2; color:#991b1b; transition:transform .04s ease, opacity .2s ease;
+    }
+    .resetBtn:active{ transform:scale(.98); }
+    .levelBannerWrap{ flex:1 1 420px; display:flex; justify-content:center; align-items:center; min-width:280px; }
+    .levelBanner{
+      width:min(660px,100%); border-radius:18px; padding:8px 14px; color:#fff; font-weight:1000;
+      font-size:28px; text-align:center; background:linear-gradient(180deg,#1d4ed8,#1e3a8a);
+      box-shadow:0 10px 20px rgba(0,0,0,.10); user-select:none;
+    }
+
+    .progressRow{ display:flex; align-items:center; gap:12px; margin:2px 4px 12px; }
+    .progressTrack{ flex:1; height:10px; background:#e5e7eb; border-radius:999px; overflow:hidden; box-shadow:inset 0 1px 2px rgba(0,0,0,.08); }
+    .progressFill{ height:100%; width:0%; background:#2563eb; border-radius:999px; transition:width .2s ease; }
+    .qCounter{ font-weight:950; white-space:nowrap; }
+
+    .questionArea{ min-height:104px; display:flex; justify-content:center; align-items:center; margin-top:4px; text-align:center; padding:4px 8px; }
+    .questionText{
+      font-family:var(--mathFont); font-size:clamp(28px,3.4vw,54px); line-height:1.05; font-weight:700; color:#111;
+      display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:10px;
+    }
+    .questionText .ui{ font-family:var(--uiFont); font-weight:950; font-size:.46em; color:#374151; }
+    .questionText .eq{ color:#111827; }
+    .questionText .op{ color:#334155; }
+    .fraction{ display:inline-flex; flex-direction:column; align-items:center; line-height:1; transform:translateY(2px); min-width:1.45em; }
+    .fraction .bar{ width:1.35em; border-top:3px solid #111; margin:3px 0 2px; }
+    .negSign{ margin-right:.08em; }
+    .qHint{ text-align:center; color:var(--muted); font-weight:800; font-size:14px; min-height:18px; margin-top:2px; }
+
+    /* bilingual lines: target language on top, English beneath (numerals stay Western) */
+    .tl{ display:block; }
+    .tl[lang="ar"], .tl[lang="fa"]{ font-size:1.02em; }
+    .el{ display:block; font-size:.78em; opacity:.72; font-weight:600; margin-top:1px; }
+    bdi{ unicode-bidi:isolate; }
+    .biWrap{ display:inline-flex; flex-direction:column; align-items:center; text-align:center; }
+    .langTog{ display:inline-flex; border:1px solid var(--border); border-radius:12px; overflow:hidden; background:#fff; align-self:flex-start; }
+    .langTog button{ border:none; background:transparent; color:var(--ink); font-weight:900; font-size:13px; padding:9px 12px; cursor:pointer; transition:background .15s ease; }
+    .langTog button.on{ background:#2563eb; color:#fff; }
+
+    .answerArea{ margin-top:6px; display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap; }
+    .answerInput{
+      width:230px; max-width:72vw; border:3px solid #111827; border-radius:20px; padding:14px 16px;
+      font-size:22px; font-weight:950; text-align:center; font-family:var(--mathFont); outline:none; background:#fff;
+      transition:border-color .15s ease, box-shadow .15s ease, background .15s ease;
+    }
+    .answerInput:disabled{ opacity:.45; background:#f8fafc; cursor:not-allowed; }
+    .answerInput.ok{ border-color:var(--green); box-shadow:0 0 0 4px rgba(22,163,74,.15); background:var(--greenSoft); }
+    .answerInput.bad{ border-color:var(--red); box-shadow:0 0 0 4px rgba(220,38,38,.12); background:var(--redSoft); }
+    .ansGroup.hide{ display:none !important; }
+
+    /* the fraction editor (MathLive), swapped in when the library loads.
+       The fraction button + its label sit in their OWN row above the whole
+       question card, so the answer box lines up with the equation itself. */
+    .mathWrap{ display:inline-flex; align-items:center; }
+    .mathWrap[hidden]{ display:none !important; }
+    .fracBarRow{ display:flex; align-items:center; justify-content:center; gap:9px; margin:2px 0 4px; }
+    .fracBarRow[hidden]{ display:none !important; }
+    .fracHint{ font-family:var(--uiFont); font-size:13px; font-weight:800; color:var(--muted); line-height:1.2; }
+    .fracBtn{ border:2px solid var(--border); background:#fff; border-radius:14px; padding:7px 11px; cursor:pointer; transition:border-color .15s ease, background .15s ease, opacity .2s ease; }
+    .fracBtn:hover:not(:disabled){ border-color:#2563eb; background:#eef2ff; }
+    .fracBtn:disabled{ opacity:.45; cursor:not-allowed; }
+    .fracIco{ display:inline-flex; flex-direction:column; align-items:center; line-height:1; font-size:11px; gap:1px; color:#334155; font-weight:900; font-family:var(--uiFont); }
+    .fracIco span:first-child{ border-bottom:2px solid #334155; padding:0 3px 2px; }
+    .fracIco span:last-child{ padding:2px 3px 0; }
+    /* NOTE: never set display/flex or a min-height on <math-field> — display
+       breaks MathLive's own hit-testing (the first keystroke after a click is
+       swallowed), and a min-height taller than the content top-aligns the
+       fraction instead of centring it. Padding alone: the box hugs whatever is
+       inside, so it stays vertically centred against the equation. */
+    #mathField{ min-width:200px; max-width:72vw;
+      border:3px solid #111827; border-radius:20px; padding:13px 18px;
+      font-size:26px; background:#fff; transition:border-color .15s ease, box-shadow .15s ease, background .15s ease, opacity .2s ease; }
+    #mathField:focus-within{ outline:none; box-shadow:0 0 0 4px rgba(37,99,235,.18); }
+    #mathField.ok{ border-color:var(--green); box-shadow:0 0 0 4px rgba(22,163,74,.15); background:var(--greenSoft); }
+    #mathField.bad{ border-color:var(--red); box-shadow:0 0 0 4px rgba(220,38,38,.12); background:var(--redSoft); }
+    .mathWrap.dim #mathField{ opacity:.45; background:#f8fafc; }
+    /* only the fraction feature is wanted: hide MathLive's menu everywhere,
+       and its keyboard toggle on devices with a physical keyboard */
+    #mathField::part(menu-toggle){ display:none; }
+    @media (pointer: fine){ #mathField::part(virtual-keyboard-toggle){ display:none; } }
+
+    .enterBtn,.nextBtn,.revealBtn,.giveBtn{
+      border:none; border-radius:14px; padding:12px 18px; font-weight:1000; cursor:pointer;
+      transition:transform .04s ease, opacity .2s ease, background .15s ease;
+    }
+    .enterBtn:active,.nextBtn:active,.revealBtn:active,.giveBtn:active{ transform:scale(.98); }
+    .enterBtn{ background:#1d4ed8; color:#fff; }
+    .enterBtn:disabled{ opacity:.4; cursor:not-allowed; }
+    .nextBtn{ background:#111827; color:#fff; display:none; }
+    .nextBtn.show{ display:inline-block; }
+    .revealBtn{ background:#7c3aed; color:#fff; display:none; }
+    .revealBtn.show{ display:inline-block; }
+    .revealBtn:disabled{ opacity:.4; cursor:not-allowed; }
+    .stepNav{ display:inline-flex; gap:10px; }
+    .stepNav[hidden]{ display:none !important; }
+    .stepBtn{ border:none; border-radius:14px; width:54px; height:44px; font-size:20px; font-weight:1000; cursor:pointer;
+      background:#7c3aed; color:#fff; transition:background .2s ease, opacity .2s ease, transform .04s ease; }
+    .stepBtn:disabled{ opacity:.4; cursor:not-allowed; background:#94a3b8; }
+    .stepBtn:active:not(:disabled){ transform:scale(.96); }
+
+    .feedbackWrap{ min-height:62px; margin-top:10px; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:10px; }
+    .feedback{
+      display:none; padding:12px 16px; border-radius:16px; font-weight:900; font-size:16px; line-height:1.35;
+      max-width:min(760px, 92vw); text-align:center; box-shadow:0 8px 20px rgba(0,0,0,.05);
+    }
+    .feedback.show{ display:block; }
+    .feedback.correct{ background:var(--greenSoft); border:1px solid #86efac; color:#166534; }
+    .feedback.incorrect{ background:var(--redSoft); border:1px solid #fca5a5; color:#991b1b; }
+    .feedback.info{ background:#eef2ff; border:1px solid #c7d2fe; color:#3730a3; }
+    .feedback .fraction .bar{ border-top-color:currentColor; }
+
+    .workArea{ flex:1; min-height:300px; display:flex; align-items:flex-start; justify-content:center; padding:6px 6px 0; }
+    .workArea.noModel{ min-height:40px; }
+    .modelCol{ display:flex; flex-direction:column; align-items:center; gap:12px; width:min(1120px, 94vw); }
+    .modelControls{ display:flex; justify-content:center; min-height:46px; }
+    .lineFrame{ width:100%; background:#fff; border:1px solid var(--border); border-radius:22px; padding:6px 10px 2px; }
+    .nline{ width:100%; height:auto; display:block; touch-action:none; user-select:none; -webkit-user-select:none; }
+    .nline text{ font-family:var(--mathFont); }
+    .nline.dragging{ cursor:ew-resize; }
+
+    .footer{ margin-top:12px; padding-top:10px; border-top:1px solid #e5e7eb; text-align:center; color:#4b5563; font-weight:700; font-size:14px; }
+    .footer a{ color:#2563eb; text-decoration:none; font-weight:900; }
+
+    .modalBack{
+      position:fixed; inset:0; background:rgba(17,24,39,.35); display:none; align-items:center; justify-content:center;
+      padding:24px; z-index:50; backdrop-filter:blur(4px); overflow:auto;
+    }
+    .modalBack.show{ display:flex; }
+    .modal{ width:min(1820px, 96vw); background:#fff; border-radius:34px; border:1px solid var(--border); box-shadow:var(--shadow); padding:0; }
+    .modalHead{ padding:26px 26px 12px; font-weight:1000; font-size:38px; }
+    .modalHeadRow{ display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; }
+    .modalBody{ padding:0 22px 22px; }
+    .levelList{ display:grid; gap:16px; }
+    .levelCard{ display:grid; grid-template-columns:1fr auto; gap:18px; align-items:center; border-radius:24px; padding:20px 24px; border:3px solid rgba(17,24,39,.06); }
+    .levelCard .name{ font-size:34px; font-weight:1000; line-height:1; }
+    .levelCard .desc{ font-size:16px; color:#374151; margin-top:8px; line-height:1.45; font-weight:700; }
+    .startBtn{
+      border:none; border-radius:18px; padding:14px 26px; font-weight:1000; background:#2563eb; color:#fff; cursor:pointer;
+      transition:transform .04s ease, filter .15s ease; user-select:none; min-width:136px; font-size:18px;
+    }
+    .startBtn:active{ transform:scale(.98); }
+    .sweetBg{ background:#ccead5; border-color:#71e39b; }
+    .mildBg{ background:#d9e6f8; border-color:#8ab8ff; }
+    .mediumBg{ background:#f0ebb8; border-color:#edcc45; }
+    .spicyBg{ background:#eedfc9; border-color:#f2af68; }
+
+    .certWrap{ display:flex; gap:18px; align-items:flex-start; padding:8px 0 8px; }
+    .trophyBox{ width:96px; height:96px; border-radius:20px; display:flex; align-items:center; justify-content:center; font-size:48px; background:#fff7ed; border:2px solid rgba(249,115,22,.18); flex:0 0 auto; }
+    .certText{ font-weight:1000; font-size:36px; margin:0; line-height:1.12; }
+    .certSub{ margin-top:10px; color:#6b7280; font-weight:950; font-size:26px; line-height:1.15; }
+    .modalActions{ padding:18px 24px 24px; display:flex; gap:12px; justify-content:flex-start; flex-wrap:wrap; }
+    .btn{ border:none; border-radius:14px; padding:12px 16px; font-weight:1000; cursor:pointer; background:#f3f4f6; color:#111827; }
+    .btn.primary{ background:#2563eb; color:#fff; }
+    .btn.danger{ background:#fee2e2; color:#991b1b; }
+
+    @media (max-width: 980px){
+      .levelBanner{ font-size:24px; }
+      .questionArea{ min-height:92px; }
+      .levelCard .name{ font-size:30px; }
+      .modalHead{ font-size:30px; }
+      .certText{ font-size:28px; }
+      .certSub{ font-size:20px; }
+    }
+    @media (max-width: 720px){
+      .topRow{ align-items:stretch; }
+      .rightPanel{ width:100%; }
+      .levelCard{ grid-template-columns:1fr; }
+      .answerArea{ gap:10px; }
+      .answerInput{ width:180px; }
+      .modalHead{ font-size:26px; }
+      .certWrap{ flex-direction:column; }
+    }
+    /* the pieces falling into place — forward and back */
+    @keyframes slideFrom{ from{ transform:translate(var(--sx),var(--sy)); opacity:.25; } }
+    .slideIn{ animation:slideFrom .55s cubic-bezier(.25,.8,.3,1) both; }
+    @keyframes slideTo{ to{ transform:translate(var(--sx),var(--sy)); opacity:0; } }
+    .slideOut{ animation:slideTo .45s cubic-bezier(.55,.06,.68,.19) both; }
+    @keyframes fadeInK{ from{ opacity:0; } }
+    .fadeIn{ animation:fadeInK .4s ease both; }
+    @keyframes fadeOutK{ to{ opacity:0; } }
+    .fadeOut{ animation:fadeOutK .32s ease both; }
+
+    .xhotBg{ background:#f6d5d5; border-color:#ef8b8b; }
+
+    @media (prefers-reduced-motion:reduce){ *{ animation-duration:.001ms !important; transition-duration:.001ms !important; } }
+  </style>
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "c7e5713b5e4f4993907eb285797dc89b"}'></script><!-- End Cloudflare Web Analytics -->
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="topRow">
+      <button class="backBtn" id="backBtn" type="button">&larr; Back</button>
+      <div class="levelBannerWrap"><div class="levelBanner" id="levelBanner">Level: &mdash;</div></div>
+      <div class="rightPanel"><div class="langTog" aria-label="Language"><button type="button" data-lang="en" class="on">EN</button><button type="button" data-lang="ar">ع</button><button type="button" data-lang="fa">فا</button></div><span id="mmtAuthSlot"></span><button class="resetBtn" id="resetBtn" type="button">Reset</button></div>
+    </div>
+
+    <div class="progressRow">
+      <div class="progressTrack"><div class="progressFill" id="progressFill"></div></div>
+      <div class="qCounter" id="qCounter">Question 1 / 15</div>
+    </div>
+
+    <div class="fracBarRow ansGroup" id="fracBarRow" hidden>
+      <button id="fracBtn" class="fracBtn" type="button" title="Insert a fraction" aria-label="Insert a fraction"><span class="fracIco" aria-hidden="true"><span>&#9634;</span><span>&#9634;</span></span></button>
+      <span class="fracHint" id="fracHint">Click to enter a fraction</span>
+    </div>
+
+    <div class="questionArea">
+      <div class="questionText" id="questionText">
+        <span id="qLead">&mdash;</span>
+        <span class="eq ansGroup">=</span>
+        <input class="answerInput ansGroup" id="answerInput" inputmode="text" autocomplete="off" placeholder="e.g. 5/6" />
+        <span class="mathWrap ansGroup" id="mathWrap" hidden><math-field id="mathField"></math-field></span>
+        <button id="enterBtn" class="enterBtn ansGroup" type="button">Enter</button>
+        <button id="nextBtn" class="nextBtn" type="button">Next &rarr;</button>
+      </div>
+    </div>
+    <div class="qHint" id="qHint"></div>
+
+    <div class="feedbackWrap">
+      <div class="feedback correct" id="feedbackOk">Correct!</div>
+      <div class="feedback incorrect" id="feedbackBad">Not quite.</div>
+      <div class="feedback info" id="feedbackInfo"></div>
+    </div>
+
+    <div class="workArea" id="workArea">
+      <div class="modelCol" id="modelCol">
+        <div class="lineFrame" id="lineFrame">
+          <svg class="nline" id="nline" viewBox="0 0 1000 322" role="img" aria-label="Fraction bars and a number line"></svg>
+        </div>
+        <div class="modelControls"><button id="modelBtn" class="revealBtn" type="button">Lock in estimate</button><div class="stepNav" id="stepNav" hidden><button id="stepBackBtn" class="stepBtn" type="button" title="Back" aria-label="Back">&#8592;</button><button id="stepFwdBtn" class="stepBtn" type="button" title="Forward" aria-label="Forward">&#8594;</button></div></div>
+      </div>
+    </div>
+
+    <div class="footer">This tool and more at <a href="https://www.millsmathstools.au" target="_blank" rel="noopener">millsmathstools.au</a></div>
+  </div>
+</div>
+
+<div class="modalBack show" id="levelModalBack">
+  <div class="modal">
+    <div class="modalHead modalHeadRow"><span id="levelModalHead">Choose your level</span><div class="langTog" aria-label="Language"><button type="button" data-lang="en" class="on">EN</button><button type="button" data-lang="ar">ع</button><button type="button" data-lang="fa">فا</button></div></div>
+    <div class="modalBody">
+      <div class="levelList">
+        <div class="levelCard sweetBg"><div><div class="name">Sweet</div><div class="desc" id="descSweet"></div></div><button class="startBtn" data-level="sweet">Start</button></div>
+        <div class="levelCard mildBg"><div><div class="name">Mild</div><div class="desc" id="descMild"></div></div><button class="startBtn" data-level="mild">Start</button></div>
+        <div class="levelCard mediumBg"><div><div class="name">Medium</div><div class="desc" id="descMedium"></div></div><button class="startBtn" data-level="medium">Start</button></div>
+        <div class="levelCard spicyBg"><div><div class="name">Spicy</div><div class="desc" id="descSpicy"></div></div><button class="startBtn" data-level="spicy">Start</button></div>
+        <div class="levelCard xhotBg"><div><div class="name">Extra hot</div><div class="desc" id="descXhot"></div></div><button class="startBtn" data-level="extrahot">Start</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modalBack" id="certModalBack">
+  <div class="modal" style="width:min(1320px, 92vw)">
+    <div class="modalHead" id="certModalHead">Certificate</div>
+    <div class="modalBody">
+      <div class="certWrap">
+        <div class="trophyBox">&#127942;</div>
+        <div>
+          <div id="certText" class="certText">You completed the quiz.</div>
+          <div class="certSub">Screenshot this and paste into Google Classroom.</div>
+        </div>
+      </div>
+    </div>
+    <div class="modalActions">
+      <button class="btn primary" id="copyBtn" type="button">Copy to clipboard</button>
+      <button class="btn" id="sameLevelBtn" type="button">Close</button>
+      <button class="btn danger" id="levelsBtn" type="button">Back to level menu</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const NS = "http://www.w3.org/2000/svg";
+  const $ = id => document.getElementById(id);
+  const QUIZ_LEN = 15;
+
+  /* ===================== language (EN / Arabic / Farsi) =====================
+     Same convention as the Fractions Number Line Quiz: the selected language on
+     top, English beneath; maths, the model and all numerals stay LTR/Western. */
+  let LANG = "en";
+  try{ LANG = localStorage.getItem("mmt-asf-lang") || "en"; }catch(_){ }
+  function fill(s,vars){ return vars? String(s).replace(/\{(\w+)\}/g,(m,k)=> vars[k]!=null? "<bdi>"+vars[k]+"</bdi>":"") : s; }
+  function fillPlain(s,vars){ return vars? String(s).replace(/\{(\w+)\}/g,(m,k)=> vars[k]!=null? String(vars[k]):"") : s; }
+  function L(o,vars){ if(o==null) return ""; if(typeof o==="string") o={en:o};
+    const en=fill(o.en||"",vars); if(LANG==="en"||!o[LANG]) return en;
+    return '<span class="tl" dir="rtl" lang="'+LANG+'">'+fill(o[LANG],vars)+'</span><span class="el">'+en+'</span>'; }
+  // selected language only, single line — for the banner and counter
+  function one(o,vars){ if(o==null) return ""; if(typeof o==="string") o={en:o};
+    if(LANG==="en"||!o[LANG]) return fill(o.en||"",vars);
+    return '<span dir="rtl" lang="'+LANG+'">'+fill(o[LANG],vars)+'</span>'; }
+
+  const UI = {
+    levelWord:{en:"Level: {n}",ar:"المستوى: {n}",fa:"سطح: {n}"},
+    levelNone:{en:"Level: —",ar:"المستوى: —",fa:"سطح: —"},
+    qCounter:{en:"Question {n} / {t}",ar:"السؤال {n} من {t}",fa:"سؤال {n} از {t}"},
+    back:{en:"← Back",ar:"→ رجوع",fa:"→ بازگشت"},
+    reset:{en:"Reset",ar:"إعادة ضبط",fa:"بازنشانی"},
+    enter:{en:"Enter",ar:"أدخل",fa:"ثبت"},
+    next:{en:"Next →",ar:"التالي ←",fa:"بعدی ←"},
+    finish:{en:"Finish →",ar:"إنهاء ←",fa:"پایان ←"},
+    chooseLevel:{en:"Choose your level",ar:"اختر مستواك",fa:"سطح خود را انتخاب کن"},
+    certHead:{en:"Certificate",ar:"الشهادة",fa:"گواهی"},
+    copy:{en:"Copy to clipboard",ar:"انسخ إلى الحافظة",fa:"کپی در کلیپ‌بورد"},
+    copied:{en:"Copied!",ar:"تم النسخ!",fa:"کپی شد!"},
+    close:{en:"Close",ar:"إغلاق",fa:"بستن"},
+    backToLevels:{en:"Back to level menu",ar:"العودة إلى قائمة المستويات",fa:"بازگشت به منوی سطح‌ها"},
+    placeholder:{en:"e.g. 5/6",ar:"مثلاً 5/6",fa:"مثلاً 5/6"},
+    fracBtn:{en:"Insert a fraction",ar:"أدرج كسراً",fa:"درج کسر"},
+    fracHint:{en:"Click to enter a fraction",ar:"اضغط لإدخال كسر",fa:"برای وارد کردن کسر کلیک کن"},
+    stepBackTitle:{en:"Back",ar:"رجوع",fa:"بازگشت"},
+    descSweet:{en:"Same denominators — the pieces already match, so count them. Estimate where the answer lands first, then the bars show the pieces. Adding, then taking away.",
+      ar:"مقامات متساوية — الأجزاء متطابقة أصلاً، فقط عُدَّها. قدّر أولاً أين يقع الجواب، ثم تُظهر الأشرطة الأجزاء. جمع ثم طرح.",
+      fa:"مخرج‌های یکسان — تکه‌ها از قبل هم‌اندازه‌اند، فقط بشمارشان. اول تخمین بزن پاسخ کجا می‌افتد، بعد نوارها تکه‌ها را نشان می‌دهند. جمع، سپس تفریق."},
+    descMild:{en:"Related denominators, like 1/2 + 3/8 — only ONE fraction needs renaming before the pieces match. Same steps: estimate, then the bars, then the renaming if you want it.",
+      ar:"مقامات مترابطة، مثل ‎1/2 + 3/8‎ — كسر واحد فقط يحتاج إلى إعادة تسمية حتى تتطابق الأجزاء. الخطوات نفسها: قدّر، ثم الأشرطة، ثم إعادة التسمية إن أردت.",
+      fa:"مخرج‌های مرتبط، مثل ‎1/2 + 3/8‎ — فقط یک کسر باید هم‌ارز شود تا تکه‌ها جور شوند. همان مراحل: تخمین، بعد نوارها، بعد هم‌ارزسازی اگر خواستی."},
+    descMedium:{en:"Unrelated denominators, like 3/4 + 2/5 — BOTH fractions rename into a new unit. Use the arrows to show the renaming if you want it. Some answers pass one whole, and some need simplifying.",
+      ar:"مقامات غير مترابطة، مثل ‎3/4 + 2/5‎ — الكسران معاً يُعاد تسميتهما بوحدة جديدة. استخدم السهمين لإظهار إعادة التسمية إن أردت. بعض الإجابات تتجاوز الواحد الصحيح وبعضها يحتاج إلى تبسيط.",
+      fa:"مخرج‌های نامرتبط، مثل ‎3/4 + 2/5‎ — هر دو کسر به واحد تازه‌ای تبدیل می‌شوند. اگر خواستی با فلش‌ها هم‌ارزسازی را ببین. بعضی پاسخ‌ها از یک واحد می‌گذرند و بعضی نیاز به ساده‌سازی دارند."},
+    descSpicy:{en:"The same questions as Medium with no bars and no number line — and some take-aways are bigger than the start, so the answer can be negative.",
+      ar:"أسئلة المستوى المتوسط نفسها بلا أشرطة ولا خط أعداد — وبعض عمليات الطرح أكبر من البداية، فقد تكون الإجابة سالبة.",
+      fa:"همان سؤال‌های سطح متوسط بدون نوار و بدون خط اعداد — و در بعضی تفریق‌ها مقدار کم‌شده بزرگ‌تر است، پس پاسخ می‌تواند منفی باشد."},
+    descXhot:{en:"Non-related denominators with nothing shared, like 3/4 + 1/5 — the new unit is the two denominators multiplied. No bars, no number line, negatives possible. Denominators stay 10 or under.",
+      ar:"مقامات غير مترابطة لا تشترك في شيء، مثل ‎3/4 + 1/5‎ — الوحدة الجديدة هي حاصل ضرب المقامين. بلا أشرطة ولا خط أعداد، وقد تكون الإجابة سالبة. المقامات لا تتعدى 10.",
+      fa:"مخرج‌های نامرتبط بدون عامل مشترک، مثل ‎3/4 + 1/5‎ — واحد جدید حاصل‌ضرب دو مخرج است. بدون نوار و بدون خط اعداد، و پاسخ می‌تواند منفی باشد. مخرج‌ها حداکثر 10."},
+    estimateQ:{en:'<span class="ui">Estimate — where does</span>{expr}<span class="ui">land?</span>',
+      ar:'<span class="ui">قدّر — أين يقع</span>{expr}<span class="ui">؟</span>',
+      fa:'<span class="ui">تخمین بزن —</span>{expr}<span class="ui">کجا می‌افتد؟</span>'},
+    estHint:{en:"Drag the orange marker on the line, then lock it in. This one is not marked.",
+      ar:"اسحب المؤشر البرتقالي على الخط ثم ثبّته. هذا لا يُحتسب في العلامة.",
+      fa:"نشانگر نارنجی را روی خط بکش و سپس ثبتش کن. این نمره ندارد."},
+    hintDefault:{en:"Answer as a fraction, like 5/6 or 17/20. A mixed number like 1 3/20 works too.",
+      ar:"اكتب الإجابة كسراً مثل ‎5/6‎ أو ‎17/20‎. يمكن أيضاً عدد كسري مثل ‎1 3/20‎.",
+      fa:"پاسخ را به صورت کسر بنویس، مثل ‎5/6‎ یا ‎17/20‎. عدد مخلوط مثل ‎1 3/20‎ هم قبول است."},
+    hintNegative:{en:"The take-away is bigger than the start, so the answer is negative — write it like -1/6.",
+      ar:"المطروح أكبر من البداية، فالإجابة سالبة — اكتبها مثل ‎-1/6‎.",
+      fa:"مقدار کم‌شده از مقدار اول بزرگ‌تر است، پس پاسخ منفی است — مثل ‎-1/6‎ بنویس."},
+    lockEstimate:{en:"Lock in estimate",ar:"ثبّت التقدير",fa:"ثبت تخمین"},
+    showRenaming:{en:"Show the renaming",ar:"أظهر الكسور المكافئة",fa:"کسرهای هم‌ارز را نشان بده"},
+    showPieces:{en:"Show the pieces",ar:"أظهر الأجزاء",fa:"تکه‌ها را نشان بده"},
+    estFb:[
+      {en:"Your estimate lands at about <b>{v}</b> — spot on. The bars will tell.",
+       ar:"تقديرك يقع عند حوالي <b>{v}</b> — في الصميم. الأشرطة ستُظهر الجواب.",
+       fa:"تخمین تو حدود <b>{v}</b> است — دقیقاً درست. نوارها نشان می‌دهند."},
+      {en:"Your estimate lands at about <b>{v}</b> — very close. The bars will tell.",
+       ar:"تقديرك يقع عند حوالي <b>{v}</b> — قريب جداً. الأشرطة ستُظهر الجواب.",
+       fa:"تخمین تو حدود <b>{v}</b> است — خیلی نزدیک. نوارها نشان می‌دهند."},
+      {en:"Your estimate lands at about <b>{v}</b> — in the right area. The bars will tell.",
+       ar:"تقديرك يقع عند حوالي <b>{v}</b> — في المنطقة الصحيحة. الأشرطة ستُظهر الجواب.",
+       fa:"تخمین تو حدود <b>{v}</b> است — در محدوده درست. نوارها نشان می‌دهند."},
+      {en:"Your estimate lands at about <b>{v}</b> — worth a rethink. The bars will tell.",
+       ar:"تقديرك يقع عند حوالي <b>{v}</b> — يحتاج إعادة تفكير. الأشرطة ستُظهر الجواب.",
+       fa:"تخمین تو حدود <b>{v}</b> است — بهتر است دوباره فکر کنی. نوارها نشان می‌دهند."}
+    ],
+    parseErr:{en:"Type a fraction like <b>5/6</b>, a mixed number like <b>1 3/20</b>, or a negative like <b>-1/6</b>.",
+      ar:"اكتب كسراً مثل <b>‎5/6‎</b>، أو عدداً كسرياً مثل <b>‎1 3/20‎</b>، أو سالباً مثل <b>‎-1/6‎</b>.",
+      fa:"کسری مثل <b>‎5/6‎</b>، عدد مخلوطی مثل <b>‎1 3/20‎</b> یا منفی مثل <b>‎-1/6‎</b> بنویس."},
+    correct:{en:"Correct!",ar:"صحيح!",fa:"درست است!"},
+    notquite:{en:"Not quite.",ar:"ليس تماماً.",fa:"نه کاملاً."},
+    simplestNote:{en:"Your answer was right — the simplest name is shown above.",
+      ar:"إجابتك صحيحة — أبسط صورة معروضة أعلاه.",
+      fa:"پاسخت درست بود — ساده‌ترین صورت در بالا نشان داده شده."},
+    certText:{en:"You completed level {lvl} on Adding and Subtracting Fractions and received a score of {s} out of {t}.",
+      ar:"أكملت مستوى {lvl} في جمع الكسور وطرحها وحصلت على {s} من {t}.",
+      fa:"سطح {lvl} از جمع و تفریق کسرها را کامل کردی و نمره {s} از {t} گرفتی."}
+  };
+  // estimate -> a held beat to read the estimate -> bars shown, answer open
+  // -> the renaming revealed (optional) -> done
+  const PH = { ESTIMATE:0, HELD:1, WORK:2, SPLIT:3, DONE:4 };
+
+  /* ===================== maths (same helpers as the teaching tool) ===================== */
+  function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ const t=a%b; a=b; b=t; } return a; }
+  function lcm(a,b){ return a/(gcd(a,b)||1)*b; }
+
+  // everything derived from a question { a,b,c,d,op }
+  function derived(q){
+    const D = lcm(q.b,q.d);
+    const A = q.a*D/q.b, C = q.c*D/q.d;
+    const S = q.op==="add" ? A+C : A-C;
+    const g = gcd(S,D)||1;
+    return { D, A, C, S, g, sn:S/g, sd:D/g, va:q.a/q.b, vc:q.c/q.d, value:S/D, sameDen:(q.b===q.d) };
+  }
+
+  /* ===================== HTML fraction bits (sign-aware) ===================== */
+  function fracHTML(n,d){
+    if(n<0) return '<span class="negSign">&minus;</span>'+fracHTML(-n,d);
+    return '<span class="fraction"><span>'+n+'</span><span class="bar"></span><span>'+d+'</span></span>';
+  }
+  function mixedHTML(n,d){
+    if(n<0) return '<span class="negSign">&minus;</span>'+mixedHTML(-n,d);
+    if(d===1) return String(n);
+    if(n<d) return fracHTML(n,d);
+    const w=Math.floor(n/d), r=n-w*d;
+    if(r===0) return String(w);
+    return '<span style="display:inline-flex;align-items:center;gap:.1em;"><span>'+w+'</span>'+fracHTML(r,d)+'</span>';
+  }
+  // the full answer chain: S/D [= sn/sd] [= mixed]
+  function chainHTML(q){
+    const v=derived(q);
+    if(v.S===0) return fracHTML(0,v.D)+" = 0";
+    let s=fracHTML(v.S,v.D);
+    if(v.g>1) s+=" = "+(v.sd===1 ? String(v.sn) : fracHTML(v.sn,v.sd));
+    if(Math.abs(v.sn)>v.sd && v.sd>1) s+=" = "+mixedHTML(v.sn,v.sd);
+    return s;
+  }
+  function plainChain(q){
+    const v=derived(q);
+    if(v.S===0) return "0";
+    let s=v.S+"/"+v.D;
+    if(v.g>1) s+=" = "+(v.sd===1 ? String(v.sn) : v.sn+"/"+v.sd);
+    return s;
+  }
+
+  /* ===================== answer parsing =====================
+     Accepts 5/6, 10/12, "1 3/20", -1/6, "-1 1/6", 1, 0, and exact decimals
+     like 0.85. The value must be EXACTLY right; any equivalent form counts. */
+  function parseFrac(raw){
+    let s = String(raw||"").trim().replace(/−/g,"-").replace(/\s+/g," ");
+    if(!s) return null;
+    let sign = 1;
+    if(s[0]==="-"){ sign=-1; s=s.slice(1).trim(); }
+    if(s[0]==="+"){ s=s.slice(1).trim(); }
+    let m = s.match(/^(\d+)\s+(\d+)\s*\/\s*(\d+)$/);            // mixed number
+    if(m){ const w=+m[1], a=+m[2], b=+m[3]; if(!b) return null; return { n:sign*(w*b+a), d:b }; }
+    m = s.match(/^(\d+)\s*\/\s*(\d+)$/);                        // plain fraction
+    if(m){ const b=+m[2]; if(!b) return null; return { n:sign*(+m[1]), d:b }; }
+    m = s.match(/^(\d+)\.(\d+)$/);                              // exact decimal
+    if(m){ const d=Math.pow(10,m[2].length); return { n:sign*((+m[1])*d + (+m[2])), d:d }; }
+    m = s.match(/^(\d+)$/);                                     // whole number
+    if(m) return { n:sign*(+m[1]), d:1 };
+    return null;
+  }
+  function isCorrect(q, f){
+    if(!f || !isFinite(f.n) || !isFinite(f.d) || f.d<=0) return false;
+    const v=derived(q);
+    return f.n*v.D === v.S*f.d;                                 // exact cross-multiplied equality
+  }
+
+  /* ===================== the question banks =====================
+     The ladder walks the RENAMING demand upward while the model stays, then
+     Spicy removes the model (and lets a take-away pass zero):
+       Sweet  — same denominators: count like parts, no renaming.
+       Mild   — related denominators: only one bar re-splits.
+       Medium — unrelated: both bars re-split; past 1 whole; simplifying.
+       Spicy  — Medium's bank, NO model, and negative answers appear.         */
+  const RELATED_PAIRS=[[2,4],[2,6],[2,8],[2,10],[2,12],[3,6],[3,9],[3,12],[4,8],[4,12],[5,10],[6,12]];
+  const UNREL_MODEL=[[2,3],[2,5],[2,7],[2,9],[3,4],[3,5],[4,5],[4,6],[4,10],[6,9]];   // lcm <= 20 so ticks stay readable
+  const UNREL_PLAIN=UNREL_MODEL.concat([[3,7],[3,8],[6,8],[8,12]]);                    // lcm <= 24
+  // Extra hot: coprime pairs, denominators <= 10, kept substantial (product >= 18)
+  // — nothing shared, so the new unit is always the denominators multiplied
+  const COPRIME_PAIRS=[[2,9],[3,7],[3,8],[3,10],[4,5],[4,7],[4,9],[5,6],[5,7],[5,8],[5,9],[6,7],[7,8],[7,9],[7,10],[8,9],[9,10]];
+
+  function slots(spec){
+    const out=[];
+    spec.forEach(([op,den,count,improperFrom,negativeFrom])=>{
+      for(let i=0;i<count;i++) out.push({
+        op, den,
+        improper: improperFrom!=null && i>=improperFrom,
+        negative: negativeFrom!=null && i>=negativeFrom
+      });
+    });
+    return out;
+  }
+  const PLANS = {
+    // Sweet — 9 adds (last 2 past one whole), 6 take-aways
+    sweet:  slots([["add","same",9,7,null], ["sub","same",6,null,null]]),
+    // Mild — 8 adds (last 2 improper), 7 take-aways, all related
+    mild:   slots([["add","related",8,6,null], ["sub","related",7,null,null]]),
+    // Medium — related warm-up, then unrelated with improper sums
+    medium: slots([["add","related",2,null,null], ["add","unrelated",6,4,null],
+                   ["sub","related",2,null,null], ["sub","unrelated",5,null,null]]),
+    // Spicy — Medium's shape, but the last 3 take-aways pass zero
+    spicy:  slots([["add","related",2,null,null], ["add","unrelated",6,4,null],
+                   ["sub","related",2,null,null], ["sub","unrelated",5,null,2]]),
+    // Extra hot — every pair coprime (denominators <= 10), the new unit is the
+    // product of the denominators; improper sums and negative take-aways stay
+    extrahot: slots([["add","coprime",9,7,null], ["sub","coprime",6,null,4]])
+  };
+  const LEVELS = {
+    // reveal = the optional mid-question "show the pieces / renaming" step,
+    // driven by the back/forward arrows. Every modelled level offers it; the
+    // model itself is what disappears at Spicy and Extra hot.
+    sweet:  { name:"Sweet",  model:true,  plan:"sweet",  reveal:true },
+    mild:   { name:"Mild",   model:true,  plan:"mild",   reveal:true },
+    medium: { name:"Medium", model:true,  plan:"medium", reveal:true },
+    spicy:  { name:"Spicy",  model:false, plan:"spicy",  reveal:false },
+    extrahot:{ name:"Extra hot", model:false, plan:"extrahot", reveal:false }
+  };
+
+  function randInt(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+  function choice(a){ return a[Math.floor(Math.random()*a.length)]; }
+
+  function makeQuestion(slot, useModel, seen){
+    for(let tries=0; tries<900; tries++){
+      let b,d;
+      if(slot.den==="same"){ b=d=randInt(3,12); }
+      else{
+        const pool = slot.den==="related" ? RELATED_PAIRS
+                   : slot.den==="coprime" ? COPRIME_PAIRS
+                   : (useModel ? UNREL_MODEL : UNREL_PLAIN);
+        let pr=choice(pool);
+        if(Math.random()<0.5) pr=[pr[1],pr[0]];
+        b=pr[0]; d=pr[1];
+      }
+      const D=lcm(b,d);
+      const a=randInt(1,b-1), c=randInt(1,d-1);
+      // Extra hot asks for the hardest RENAMING, so both fractions arrive in
+      // simplest form — 2/6 would quietly reduce to 1/3 and change the question
+      if(slot.den==="coprime" && (gcd(a,b)!==1 || gcd(c,d)!==1)) continue;
+      const A=a*D/b, C=c*D/d;
+      const S = slot.op==="add" ? A+C : A-C;
+      if(slot.op==="add"){
+        if(slot.improper ? S<=D : S>D) continue;              // proper sums may equal one whole
+        if(slot.improper && useModel && D>12) continue;       // 0..2 line: keep ticks readable
+      }else{
+        if(slot.negative ? S>=0 : S<=0) continue;             // avoid zero answers
+      }
+      const key=a+"/"+b+slot.op+c+"/"+d;
+      if(seen.has(key)) continue;
+      seen.add(key);
+      return { a,b,c,d, op:slot.op, den:slot.den, improper:!!slot.improper, negative:!!slot.negative };
+    }
+    // deterministic fall-back so a question always exists
+    return slot.op==="add"
+      ? { a:1,b:4,c:2,d:4, op:"add", den:"same", improper:false, negative:false }
+      : { a:3,b:4,c:1,d:4, op:"sub", den:"same", improper:false, negative:false };
+  }
+
+  function buildBank(levelKey){
+    const cfg=LEVELS[levelKey];
+    const seen=new Set();
+    return PLANS[cfg.plan].map(s => makeQuestion(s, cfg.model, seen));
+  }
+
+  /* ===================== the model =====================
+     The teaching tool's picture, compact: the two bars in their OWN units, then
+     (on reveal) the joined bar renamed into the common unit with the equivalent
+     fractions written under it, and the number line partitioned to count on.  */
+  const LEFT=126, RIGHT=920, W=RIGHT-LEFT;
+  const BAR_H=24, Y_A=8, Y_B=42, Y_S=84, EQ_Y=136, LINE_Y=212, LBL_Y=LINE_Y+44;
+  const C={ segA:"#7c3aed", segB:"#2563eb", take:"#db2777", frame:"#e2e8f0", faint:"#cbd5e1",
+            line:"#1e293b", whole:"#0f172a", muted:"#64748b", target:"#db2777", predict:"#f97316" };
+
+  function el(tag,attrs,text){
+    const e=document.createElementNS(NS,tag);
+    for(const k in attrs) e.setAttribute(k,attrs[k]);
+    if(text!=null) e.textContent=text;
+    return e;
+  }
+  const HALO={ stroke:"#fff","stroke-width":"4.5","paint-order":"stroke","stroke-linejoin":"round" };
+  function txt(x,y,s,o){
+    o=o||{};
+    const a=Object.assign({ x, y, "text-anchor":o.anchor||"middle", "font-weight":o.weight||"800",
+      "font-size":o.size||22, fill:o.fill||"#334155" }, HALO);
+    if(o.family) a["font-family"]=o.family;
+    return el("text",a,s);
+  }
+  function fracW(n,d,fs){ return Math.max(String(Math.abs(n)).length,String(d).length)*fs*0.58+8; }
+  function svgFrac(cx,cy,n,d,fs,fill){
+    if(n<0){
+      const g=el("g",{});
+      g.appendChild(txt(cx-fracW(-n,d,fs)/2-fs*0.34, cy+fs*0.36, "−", {size:fs*0.92, fill}));
+      g.appendChild(svgFrac(cx,cy,-n,d,fs,fill));
+      return g;
+    }
+    const g=el("g",{}), bw=fracW(n,d,fs);
+    g.appendChild(txt(cx, cy-fs*0.30, String(n), {size:fs, fill}));
+    g.appendChild(el("line",{x1:cx-bw/2,y1:cy+fs*0.06,x2:cx+bw/2,y2:cy+fs*0.06,stroke:fill,"stroke-width":Math.max(2,fs*0.09),"stroke-linecap":"round"}));
+    g.appendChild(txt(cx, cy+fs*1.02, String(d), {size:fs, fill}));
+    return g;
+  }
+
+  function axisFor(q){
+    const v=derived(q);
+    return { amin: v.value<0 ? -1 : 0, amax: v.value>1 ? 2 : 1 };
+  }
+
+  function drawModel(q, phase, estimate, anim){
+    const svg=$("nline");
+    while(svg.firstChild) svg.removeChild(svg.firstChild);
+    if(!q) return;
+    const defs=el("defs",{});
+    const p=el("pattern",{id:"asfHatch", width:"8", height:"8", patternUnits:"userSpaceOnUse", patternTransform:"rotate(45)"});
+    p.appendChild(el("rect",{width:"8",height:"8",fill:"rgba(219,39,119,.14)"}));
+    p.appendChild(el("line",{x1:"0",y1:"0",x2:"0",y2:"8",stroke:"#db2777","stroke-width":"3"}));
+    defs.appendChild(p); svg.appendChild(defs);
+    const root=el("g",{}); svg.appendChild(root);
+
+    const v=derived(q);
+    const ax=axisFor(q);
+    const X = u => LEFT + ((u-ax.amin)/(ax.amax-ax.amin))*W;
+    const xva=X(v.va), xval=X(v.value), x0=X(0), x1=X(1);
+    const add=(q.op==="add");
+
+    /* ---- the two bars in their own units (from WORK) ---- */
+    function bar(y,den,count,color){
+      const g=el("g",{});
+      g.appendChild(el("rect",{x:x0,y,width:x1-x0,height:BAR_H,rx:6,fill:"#fff",stroke:C.frame,"stroke-width":2}));
+      for(let k=1;k<den;k++){
+        const x=x0+(x1-x0)*k/den;
+        g.appendChild(el("line",{x1:x,y1:y+2,x2:x,y2:y+BAR_H-2,stroke:C.faint,"stroke-width":2}));
+      }
+      g.appendChild(el("rect",{x:x0,y,width:(x1-x0)*count/den,height:BAR_H,rx:6,fill:color,"fill-opacity":.8}));
+      for(let k=1;k<count;k++){
+        const x=x0+(x1-x0)*k/den;
+        g.appendChild(el("line",{x1:x,y1:y+3,x2:x,y2:y+BAR_H-3,stroke:"#fff","stroke-width":2.4,"stroke-linecap":"round"}));
+      }
+      root.appendChild(g);
+    }
+    if(phase>=PH.WORK){
+      bar(Y_A,q.b,q.a,C.segA);
+      bar(Y_B,q.d,q.c, add?C.segB:C.take);
+      root.appendChild(svgFrac(96, Y_A+BAR_H/2-7, q.a, q.b, 14, C.segA));
+      root.appendChild(svgFrac(96, Y_B+BAR_H/2-1, q.c, q.d, 14, add?C.segB:C.take));
+      root.appendChild(txt(52,(Y_A+Y_B+BAR_H)/2+8, add?"+":"−", {size:26, fill:C.line}));
+    }
+
+    /* ---- the joined bar, renamed (from SPLIT) ---- */
+    if(phase>=PH.SPLIT){
+      const gFrame=el("g",{});
+      gFrame.appendChild(el("rect",{x:x0,y:Y_S,width:x1-x0,height:BAR_H,rx:6,fill:"none",stroke:C.frame,"stroke-width":2}));
+      if(ax.amax===2) gFrame.appendChild(el("rect",{x:x1,y:Y_S,width:X(2)-x1,height:BAR_H,rx:6,fill:"none",stroke:C.frame,"stroke-width":2,"stroke-dasharray":"3 5"}));
+      if(ax.amin===-1) gFrame.appendChild(el("rect",{x:X(-1),y:Y_S,width:x0-X(-1),height:BAR_H,rx:6,fill:"none",stroke:C.frame,"stroke-width":2,"stroke-dasharray":"3 5"}));
+      root.appendChild(gFrame);
+      if(anim){ gFrame.setAttribute("class", anim==="in" ? "fadeIn" : "fadeOut"); }
+
+      // pieces fall into place going forward, and rise back going backward
+      function pieceAnim(g,dx,dy){
+        if(!anim) return;
+        g.setAttribute("class", anim==="in" ? "slideIn" : "slideOut");
+        g.style.setProperty("--sx",dx+"px");
+        g.style.setProperty("--sy",dy+"px");
+      }
+      function softAnim(node,delay){
+        if(!anim) return;
+        node.setAttribute("class", anim==="in" ? "fadeIn" : "fadeOut");
+        if(anim==="in" && delay) node.style.animationDelay=delay+"ms";
+      }
+      function seg(xA,xB,color,parts){
+        const g=el("g",{});
+        g.appendChild(el("rect",{x:xA,y:Y_S,width:Math.max(0,xB-xA),height:BAR_H,rx:6,fill:color,"fill-opacity":.8}));
+        for(let k=1;k<parts;k++){
+          const x=xA+(xB-xA)*k/parts;
+          g.appendChild(el("line",{x1:x,y1:Y_S+3,x2:x,y2:Y_S+BAR_H-3,stroke:"#fff","stroke-width":2.4,"stroke-linecap":"round"}));
+        }
+        root.appendChild(g);
+        return g;
+      }
+      pieceAnim(seg(x0,xva,C.segA,v.A), 0, Y_A-Y_S);
+      if(add){
+        pieceAnim(seg(xva,xval,C.segB,v.C), x0-xva, Y_B-Y_S);
+      }else{
+        const gT=el("g",{});
+        gT.appendChild(el("rect",{x:xval,y:Y_S,width:Math.max(0,xva-xval),height:BAR_H,rx:6,
+          fill:"url(#asfHatch)",stroke:C.take,"stroke-width":2.2}));
+        const ay=Y_S-9;
+        gT.appendChild(el("line",{x1:xva,y1:ay,x2:xval+10,y2:ay,stroke:C.take,"stroke-width":2.6,"stroke-linecap":"round"}));
+        gT.appendChild(el("path",{d:"M "+(xval+2)+" "+ay+" l 11 -5 l 0 10 Z",fill:C.take}));
+        root.appendChild(gT);
+        pieceAnim(gT, x0-xval, Y_B-Y_S);
+      }
+
+      // the equivalent fractions, written under the joined bar
+      const gEq=el("g",{});
+      const wA=xva-x0;
+      if(v.A>0) gEq.appendChild(svgFrac(x0+wA/2, EQ_Y, v.A, v.D, 19, C.segA));
+      if(v.C>0){
+        if(add){
+          const wB=xval-xva;
+          if(wA>44 && wB>44) gEq.appendChild(txt(xva, EQ_Y+8, "+", {size:21, fill:C.line}));
+          gEq.appendChild(svgFrac(xva+wB/2, EQ_Y, v.C, v.D, 19, C.segB));
+        }else if(xva-xval>52){
+          const cxT=(xval+xva)/2;
+          gEq.appendChild(txt(cxT-fracW(v.C,v.D,16)/2-5, Y_S+BAR_H/2+6, "−", {size:15, fill:C.take}));
+          gEq.appendChild(svgFrac(cxT+6, Y_S+BAR_H/2-3, v.C, v.D, 16, C.take));
+        }
+      }
+      root.appendChild(gEq);
+      softAnim(gEq, 260);
+    }
+
+    /* ---- the number line (always) ---- */
+    root.appendChild(el("line",{x1:LEFT,y1:LINE_Y,x2:RIGHT,y2:LINE_Y,stroke:C.line,"stroke-width":4,"stroke-linecap":"round"}));
+    const endTick=(x)=>el("line",{x1:x,y1:LINE_Y-20,x2:x,y2:LINE_Y+20,stroke:C.line,"stroke-width":5,"stroke-linecap":"round"});
+    root.appendChild(endTick(LEFT));
+    if(ax.amin===-1){
+      root.appendChild(txt(LEFT,LINE_Y+42,"−1",{size:22,fill:C.line}));
+      root.appendChild(endTick(x0));
+      root.appendChild(txt(x0,LINE_Y+42,"0",{size:22,fill:C.line}));
+    }else{
+      root.appendChild(txt(LEFT,LINE_Y+42,"0",{size:22,fill:C.line}));
+    }
+    root.appendChild(endTick(x1));
+    root.appendChild(txt(x1,LINE_Y+42,"1 whole",{size:19,fill:C.whole,family:"var(--uiFont)",weight:"900"}));
+    if(ax.amax===2){
+      root.appendChild(endTick(X(2)));
+      root.appendChild(txt(X(2),LINE_Y+42,"2 wholes",{size:19,fill:C.whole,family:"var(--uiFont)",weight:"900"}));
+    }
+
+    // the common-denominator partition, once the renaming is revealed
+    if(phase>=PH.SPLIT){
+      const gTicks=el("g",{});
+      const from=Math.round(ax.amin*v.D), to=Math.round(ax.amax*v.D);
+      for(let k=from+1;k<to;k++){
+        if(k % v.D === 0) continue;
+        const x=X(k/v.D);
+        gTicks.appendChild(el("line",{x1:x,y1:LINE_Y-11,x2:x,y2:LINE_Y+11,stroke:C.faint,"stroke-width":2}));
+      }
+      if(Math.abs(v.va-v.value)>1e-9){
+        gTicks.appendChild(el("line",{x1:xva,y1:LINE_Y-13,x2:xva,y2:LINE_Y+13,stroke:C.segA,"stroke-width":3.5,"stroke-linecap":"round"}));
+      }
+      root.appendChild(gTicks);
+      if(anim){
+        gTicks.setAttribute("class", anim==="in" ? "fadeIn" : "fadeOut");
+        if(anim==="in") gTicks.style.animationDelay="180ms";
+      }
+    }
+
+    // the landing point (labels drop a row when they'd sit on an endpoint label)
+    if(phase>=PH.WORK){
+      const endXs=[LEFT,x1];
+      if(ax.amin===-1) endXs.push(x0);
+      if(ax.amax===2) endXs.push(X(2));
+      const dropY = endXs.some(p=>Math.abs(xval-p)<60) ? 34 : 0;
+      root.appendChild(el("line",{x1:xval,y1:LINE_Y-18,x2:xval,y2:LINE_Y+12,stroke:C.target,"stroke-width":4.5,"stroke-linecap":"round"}));
+      if(phase>=PH.DONE){
+        root.appendChild(el("circle",{cx:xval,cy:LINE_Y,r:9,fill:"#fff",stroke:C.target,"stroke-width":4.5}));
+        const g=el("g",{});
+        const yLab=LBL_Y+dropY;
+        let x=xval;
+        g.appendChild(svgFrac(x, yLab, v.S, v.D, 22, C.target));
+        if(v.g>1 && v.S!==0){
+          const w1=fracW(v.S,v.D,22)+(v.S<0?14:0);
+          const w2=v.sd===1 ? 20 : fracW(v.sn,v.sd,22)+(v.sn<0?14:0);
+          g.appendChild(txt(x+w1/2+16, yLab+8, "=", {size:20, fill:C.target}));
+          if(v.sd===1) g.appendChild(txt(x+w1/2+32+w2/2, yLab+8, String(v.sn), {size:22, fill:"#9d174d"}));
+          else g.appendChild(svgFrac(x+w1/2+32+w2/2, yLab, v.sn, v.sd, 22, "#9d174d"));
+        }
+        root.appendChild(g);
+      }else{
+        root.appendChild(txt(xval,LBL_Y+6+dropY,"?",{size:28,fill:C.target,weight:"900"}));
+      }
+    }
+
+    /* ---- the estimate marker ---- */
+    if(phase<=PH.HELD && estimate!=null){
+      const px=X(estimate);
+      const g=el("g",{});
+      g.appendChild(el("line",{x1:px,y1:LINE_Y-16,x2:px,y2:LINE_Y+16,stroke:C.predict,"stroke-width":3.5,"stroke-linecap":"round"}));
+      g.appendChild(el("path",{ d:"M "+px+" "+(LINE_Y+8)+" l -11 20 l 22 0 Z", fill:C.predict, stroke:"#fff","stroke-width":2,"stroke-linejoin":"round"}));
+      g.appendChild(txt(px, LINE_Y+52, estimateMoved ? "your estimate" : "drag me", {size:16, fill:C.predict, weight:"900", family:"var(--uiFont)"}));
+      root.appendChild(g);
+    }
+
+    svg.setAttribute("aria-label", phase<=PH.HELD
+      ? "Number line. Drag the marker to estimate where "+q.a+" over "+q.b+(add?" plus ":" minus ")+q.c+" over "+q.d+" lands."
+      : "Fraction bars showing "+q.a+" over "+q.b+(add?" plus ":" minus ")+q.c+" over "+q.d+" above a number line.");
+  }
+
+  /* ===================== state ===================== */
+  let levelKey=null, bank=[], qIndex=0, score=0;
+  let phase=PH.ESTIMATE, estimate=null, estimateMoved=false, answered=false, usedReveal=false;
+  let pendingAnim=null, animBusy=false;   // the falling-pieces transition
+  const typeTags=new Set();
+
+  const qLead=$("qLead"), qHint=$("qHint"), answerInput=$("answerInput");
+  const enterBtn=$("enterBtn"), modelBtn=$("modelBtn"), nextBtn=$("nextBtn");
+  const fbOk=$("feedbackOk"), fbBad=$("feedbackBad"), fbInfo=$("feedbackInfo");
+  const workArea=$("workArea"), modelCol=$("modelCol"), levelBanner=$("levelBanner");
+  const progressFill=$("progressFill"), qCounter=$("qCounter");
+  const levelModalBack=$("levelModalBack"), certModalBack=$("certModalBack"), certText=$("certText");
+
+  function q(){ return bank[qIndex]; }
+
+  /* ===================== the answer box =====================
+     Two interchangeable faces: the plain typed input (always in the page), and
+     a MathLive fraction editor swapped in when the library loads (below). All
+     reads/writes go through these helpers so the quiz never cares which one is
+     live. */
+  let mf=null, mfReady=false;
+  const mathWrap=$("mathWrap"), fracBtn=$("fracBtn");
+  // \frac{a}{b} LaTeX -> the same plain text the typed input produces
+  function latexToEntry(latex){
+    let s=String(latex||"");
+    s=s.replace(/\\left|\\right|\\,|\\;|\\!/g,"");
+    s=s.replace(/\\placeholder\{([^{}]*)\}/g,"$1");
+    let prev;
+    // MathLive serialises single-digit fractions WITHOUT braces (\frac44),
+    // so all four brace patterns are handled
+    do{
+      prev=s;
+      s=s.replace(/\\frac\{([^{}]*)\}\{([^{}]*)\}/g," $1/$2 ");
+      s=s.replace(/\\frac\{([^{}]*)\}(\d)/g," $1/$2 ");
+      s=s.replace(/\\frac(\d)\{([^{}]*)\}/g," $1/$2 ");
+      s=s.replace(/\\frac(\d)(\d)/g," $1/$2 ");
+    }while(s!==prev);
+    s=s.replace(/[{}]/g,"");
+    s=s.replace(/\s+/g," ").trim();
+    return s;
+  }
+  function readAnswerRaw(){
+    if(!mfReady) return answerInput.value;
+    // always via LaTeX: MathLive's ascii-math flattens a mixed number
+    // ("1 3/20" comes back as "13/20"), which would mark it wrong
+    try{ return latexToEntry(typeof mf.getValue==="function" ? mf.getValue("latex") : mf.value); }
+    catch(e){ return ""; }
+  }
+  function clearAnswerBox(){
+    answerInput.value="";
+    if(mfReady){ try{ mf.value=""; }catch(e){} }
+  }
+  function markAnswerBox(cls){
+    answerInput.classList.remove("ok","bad");
+    if(cls) answerInput.classList.add(cls);
+    if(mfReady){ mf.classList.remove("ok","bad"); if(cls) mf.classList.add(cls); }
+  }
+  function setAnswerDisabled(dis){
+    answerInput.disabled=dis;
+    if(mfReady){
+      try{ mf.readOnly=dis; }catch(e){}
+      mathWrap.classList.toggle("dim",dis);
+      fracBtn.disabled=dis;
+      $("fracBarRow").style.opacity = dis ? ".45" : "";
+    }
+  }
+  function focusAnswer(){ try{ (mfReady? mf : answerInput).focus(); }catch(e){} }
+  function usesModel(){ return !!(levelKey && LEVELS[levelKey].model); }
+  function opHTML(cur){ return '<span class="op">'+(cur.op==="add"?"+":"&minus;")+'</span>'; }
+
+  function hideFeedback(){ [fbOk,fbBad,fbInfo].forEach(e=>e.classList.remove("show")); }
+  function say(kind,html){
+    hideFeedback();
+    const e = kind==="ok"?fbOk : kind==="bad"?fbBad : fbInfo;
+    e.innerHTML = html; e.classList.add("show");
+  }
+
+  function setProgress(){
+    qCounter.innerHTML = one(UI.qCounter,{n:Math.min(QUIZ_LEN,qIndex+1),t:QUIZ_LEN});
+    progressFill.style.width = ((qIndex/QUIZ_LEN)*100)+"%";
+  }
+
+  function showAnswerGroup(on){
+    document.querySelectorAll(".ansGroup").forEach(e=>e.classList.toggle("hide", !on));
+  }
+
+  function render(){
+    const cur=q();
+    if(!cur) return;
+    setProgress();
+
+    const model=usesModel();
+    workArea.classList.toggle("noModel", !model);
+    modelCol.style.display = model ? "" : "none";
+
+    const estimating = model && phase<=PH.HELD;
+    showAnswerGroup(!estimating);
+
+    const exprH='<span style="display:inline-flex;align-items:center;gap:8px;">'+fracHTML(cur.a,cur.b)+opHTML(cur)+fracHTML(cur.c,cur.d)+'</span>';
+    if(estimating){
+      qLead.innerHTML = '<span class="biWrap">'+L(UI.estimateQ,{expr:exprH})+'</span>';
+      qHint.innerHTML = phase===PH.ESTIMATE ? L(UI.estHint) : "";
+    } else {
+      qLead.innerHTML = exprH;
+      qHint.innerHTML = L(cur.negative ? UI.hintNegative : UI.hintDefault);
+    }
+
+    setAnswerDisabled(answered || estimating);
+    enterBtn.disabled    = answered || estimating;
+    nextBtn.classList.toggle("show", answered);
+    nextBtn.innerHTML  = L(qIndex >= QUIZ_LEN-1 ? UI.finish : UI.next);
+
+    // the model's own control sits under the picture, away from the answer
+    let label=null, disabled=false;
+    if(model && !answered){
+      if(phase===PH.ESTIMATE){ label=UI.lockEstimate; disabled=!estimateMoved; }
+      else if(phase===PH.HELD){ label=UI.next; }
+      /* WORK/SPLIT are handled by the step arrows below */
+    }
+    if(label==null){ modelBtn.classList.remove("show"); }
+    else { modelBtn.innerHTML=L(label); modelBtn.disabled=disabled; modelBtn.classList.add("show"); }
+
+    // the back/forward step arrows (Sweet and Mild only)
+    const nav=$("stepNav");
+    const navOn = model && !answered && LEVELS[levelKey].reveal && (phase===PH.WORK || phase===PH.SPLIT);
+    nav.hidden = !navOn;
+    if(navOn){
+      $("stepBackBtn").disabled = animBusy || phase===PH.WORK;
+      $("stepFwdBtn").disabled  = animBusy || phase===PH.SPLIT;
+      const tFwd = derived(cur).sameDen ? UI.showPieces : UI.showRenaming;
+      $("stepFwdBtn").setAttribute("title", tFwd[LANG]||tFwd.en);
+      $("stepFwdBtn").setAttribute("aria-label", tFwd[LANG]||tFwd.en);
+      $("stepBackBtn").setAttribute("title", UI.stepBackTitle[LANG]||UI.stepBackTitle.en);
+      $("stepBackBtn").setAttribute("aria-label", UI.stepBackTitle[LANG]||UI.stepBackTitle.en);
+    }
+
+    if(model){ drawModel(cur, phase, estimate, pendingAnim); pendingAnim=null; }
+    if(!estimating && !answered) setTimeout(focusAnswer, 40);
+  }
+
+  function startQuestion(){
+    const cur=bank[qIndex];
+    phase = usesModel() ? PH.ESTIMATE : PH.WORK;
+    const ax=cur ? axisFor(cur) : {amin:0,amax:1};
+    estimate = usesModel() ? (ax.amin+ax.amax)/2 : null;
+    estimateMoved=false; answered=false; usedReveal=false;
+    markAnswerBox(null);
+    clearAnswerBox();
+    hideFeedback();
+    render();
+  }
+
+  function lockEstimate(){
+    const cur=q();
+    if(estimate==null || !estimateMoved) return;
+    const v=derived(cur);
+    const off=Math.abs(estimate-v.value);
+    const band = off<0.04 ? 0 : (off<0.1 ? 1 : (off<0.2 ? 2 : 3));
+    typeTags.add("estimate:"+(off<0.1?"close":off<0.2?"near":"far"));
+    phase=PH.HELD;
+    render();
+    say("info", L(UI.estFb[band],{v:Math.round(estimate*100)/100}));
+  }
+
+  function showWork(){ phase=PH.WORK; hideFeedback(); render(); }
+
+  // no words for these — the picture says it. Forward drops the pieces into
+  // place; back lifts them out again, smoothly, then re-renders the bare bars.
+  function stepForward(){
+    if(animBusy || answered || phase!==PH.WORK || !LEVELS[levelKey].reveal) return;
+    usedReveal=true;
+    typeTags.add("usedRenameReveal");
+    phase=PH.SPLIT; pendingAnim="in"; hideFeedback(); render();
+  }
+  function stepBack(){
+    if(animBusy || answered || phase!==PH.SPLIT) return;
+    animBusy=true;
+    $("stepBackBtn").disabled=true; $("stepFwdBtn").disabled=true;
+    drawModel(q(), PH.SPLIT, null, "out");
+    setTimeout(function(){
+      animBusy=false;
+      phase=PH.WORK; hideFeedback(); render();
+    }, 470);
+  }
+
+  function finishQuestion(correct){
+    answered=true;
+    if(correct) score++;
+    const cur=q();
+    typeTags.add("op:"+cur.op);
+    typeTags.add("den:"+cur.den);
+    if(cur.improper) typeTags.add("improper");
+    if(cur.negative) typeTags.add("negative");
+    setAnswerDisabled(true); enterBtn.disabled=true;
+    modelBtn.classList.remove("show");
+    nextBtn.classList.add("show");
+    nextBtn.innerHTML = L(qIndex >= QUIZ_LEN-1 ? UI.finish : UI.next);
+    if(usesModel()){ phase=PH.DONE; drawModel(cur, PH.DONE, null); }
+    setTimeout(()=>{ try{ nextBtn.focus(); }catch(e){} }, 40);
+  }
+
+  // one attempt per question — right or wrong, the quiz moves on, so the score is out of 15
+  function submitAnswer(){
+    if(answered || answerInput.disabled) return;
+    const cur=q();
+    const val=parseFrac(readAnswerRaw());
+    if(val==null){
+      markAnswerBox("bad");
+      say("bad", L(UI.parseErr));
+      return;                       // an empty or unreadable box is not an attempt
+    }
+    const ok=isCorrect(cur,val);
+    markAnswerBox(ok?"ok":"bad");
+    const simplifiable = ok && derived(cur).g>1 && !(val.n===derived(cur).sn && val.d===derived(cur).sd) && derived(cur).S!==0;
+    say(ok?"ok":"bad",
+      L(ok?UI.correct:UI.notquite)
+      + '<div style="margin-top:4px">'+fracHTML(cur.a,cur.b)+" "+(cur.op==="add"?"+":"&minus;")+" "+fracHTML(cur.c,cur.d)+" = "+chainHTML(cur)+'</div>'
+      + (simplifiable ? L(UI.simplestNote) : ""));
+    finishQuestion(ok);
+  }
+
+  function nextQuestion(){
+    if(qIndex >= QUIZ_LEN-1){ showCertificate(); return; }
+    qIndex++;
+    startQuestion();
+  }
+
+  function showCertificate(){
+    const cfg=LEVELS[levelKey];
+    progressFill.style.width="100%";
+    qCounter.innerHTML=one(UI.qCounter,{n:QUIZ_LEN,t:QUIZ_LEN});
+    certText.innerHTML = L(UI.certText,{lvl:cfg.name,s:score,t:QUIZ_LEN});
+    certModalBack.classList.add("show");
+    const tags=["level:"+levelKey].concat(Array.from(typeTags));
+    if(LANG!=="en") tags.push("lang:"+LANG);
+    if(window.MMTSave) window.MMTSave({
+      tool:"adding-subtracting-fractions-student-quiz", topic:"fdp",
+      level:cfg.name, levelKey, score, total:QUIZ_LEN,
+      percent:Math.round((score/QUIZ_LEN)*100), masteryTopic:"adding-subtracting-fractions",
+      types:tags,
+      certificateText:"Adding and Subtracting Fractions — "+cfg.name+": "+score+"/"+QUIZ_LEN
+    });
+  }
+
+  function startLevel(key){
+    levelKey=key;
+    bank=buildBank(key);
+    qIndex=0; score=0; typeTags.clear();
+    levelBanner.innerHTML=one(UI.levelWord,{n:LEVELS[key].name});
+    levelModalBack.classList.remove("show");
+    certModalBack.classList.remove("show");
+    startQuestion();
+  }
+
+  /* ===================== estimate dragging ===================== */
+  function valueFromEvent(e){
+    const svg=$("nline"), r=svg.getBoundingClientRect();
+    const cx = (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX;
+    const vx = (cx-r.left)/r.width*1000;
+    const cur=q(); if(!cur) return 0;
+    const ax=axisFor(cur);
+    let v = ax.amin + ((vx-LEFT)/W)*(ax.amax-ax.amin);
+    if(v<ax.amin) v=ax.amin; if(v>ax.amax) v=ax.amax;
+    return v;
+  }
+  $("nline").addEventListener("pointerdown", function(e){
+    if(!usesModel() || phase!==PH.ESTIMATE || !q()) return;
+    e.preventDefault();
+    estimate = valueFromEvent(e); estimateMoved=true;
+    drawModel(q(),PH.ESTIMATE,estimate);
+    modelBtn.disabled=false;
+    const move = ev => { ev.preventDefault(); estimate = valueFromEvent(ev); drawModel(q(),PH.ESTIMATE,estimate); };
+    const up = () => { window.removeEventListener("pointermove",move); window.removeEventListener("pointerup",up); };
+    window.addEventListener("pointermove",move,{passive:false});
+    window.addEventListener("pointerup",up);
+  });
+
+  /* ===================== wiring ===================== */
+  document.querySelectorAll(".startBtn").forEach(b => b.addEventListener("click", () => startLevel(b.dataset.level)));
+  enterBtn.addEventListener("click", submitAnswer);
+  nextBtn.addEventListener("click", nextQuestion);
+  modelBtn.addEventListener("click", () => {
+    if(phase===PH.ESTIMATE) lockEstimate();
+    else if(phase===PH.HELD) showWork();
+  });
+  $("stepFwdBtn").addEventListener("click", stepForward);
+  $("stepBackBtn").addEventListener("click", stepBack);
+  answerInput.addEventListener("keydown", e => {
+    if(e.key!=="Enter") return;
+    e.preventDefault();
+    // submitting disables the box, which moves focus — without this the same
+    // keypress would bubble to the document handler and skip the feedback
+    e.stopPropagation();
+    if(answered) nextQuestion(); else submitAnswer();
+  });
+  document.addEventListener("keydown", e => {
+    if(e.key!=="Enter") return;
+    if(levelModalBack.classList.contains("show") || certModalBack.classList.contains("show")) return;
+    if(document.activeElement===answerInput) return;
+    if(mfReady && document.activeElement===mf) return;
+    e.preventDefault();
+    if(answered){ nextQuestion(); return; }
+    if(modelBtn.classList.contains("show") && !modelBtn.disabled){ modelBtn.click(); return; }
+    if(!$("stepNav").hidden && !$("stepFwdBtn").disabled){ stepForward(); return; }
+    submitAnswer();
+  });
+  // Back goes to the level menu, not out of the quiz
+  $("backBtn").addEventListener("click", () => { certModalBack.classList.remove("show"); levelModalBack.classList.add("show"); });
+  $("resetBtn").addEventListener("click", () => { certModalBack.classList.remove("show"); levelModalBack.classList.add("show"); });
+  $("levelsBtn").addEventListener("click", () => { certModalBack.classList.remove("show"); levelModalBack.classList.add("show"); });
+  $("sameLevelBtn").addEventListener("click", () => certModalBack.classList.remove("show"));
+  $("copyBtn").addEventListener("click", async () => {
+    const cfg=LEVELS[levelKey]||{name:"—"};
+    const certEn=fillPlain(UI.certText.en,{lvl:cfg.name,s:score,t:QUIZ_LEN});
+    const text="🏆 Mills Maths Tools – Adding and Subtracting Fractions\nLevel: "+cfg.name+"\nScore: "+score+" / "+QUIZ_LEN+"\n\n"+certEn;
+    try{ await navigator.clipboard.writeText(text); $("copyBtn").innerHTML=L(UI.copied);
+      setTimeout(()=>$("copyBtn").innerHTML=L(UI.copy),1200); }
+    catch(e){ window.prompt("Copy this text:", text); }
+  });
+
+  /* ===================== the MathLive fraction editor =====================
+     Same library and pattern as the Adventure's MathAnswerInput, trimmed to the
+     ONE structure this quiz needs: a fraction template button beside the field.
+     Loaded from the CDN; if that fails (offline, blocked network) the typed
+     input simply stays — nothing else changes. */
+  function initMathField(){
+    try{
+      if(!window.customElements || !customElements.get("math-field")) return;
+      const ME=window.MathfieldElement || (window.MathLive && window.MathLive.MathfieldElement);
+      if(ME){ try{ ME.soundsDirectory=null; }catch(e){} }
+      mf=$("mathField");
+      if(!mf) return;
+      // touch devices get MathLive's own on-screen maths keyboard on focus;
+      // on desktop the physical keyboard + the fraction button are enough
+      const touch=!!(window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
+      try{ mf.mathVirtualKeyboardPolicy = touch ? "onfocus" : "manual"; }catch(e){}
+      // capture Enter so MathLive never acts on it — same trick as the game
+      mf.addEventListener("keydown", function(e){
+        if(e.key!=="Enter") return;
+        e.preventDefault(); e.stopPropagation();
+        if(answered) nextQuestion(); else submitAnswer();
+      }, true);
+      fracBtn.addEventListener("click", function(){
+        if(fracBtn.disabled) return;
+        try{
+          // empty placeholders (not #@): a typed whole number must stay OUTSIDE
+          // the fraction, so "1" + [fraction] 3/20 builds the mixed number 1 3/20
+          if(typeof mf.insert==="function") mf.insert("\\frac{#?}{#?}",{focus:true});
+          else if(mf.executeCommand) mf.executeCommand(["insert","\\frac{#?}{#?}"]);
+          mf.focus();
+        }catch(e){}
+      });
+      mfReady=true;
+      answerInput.hidden=true;
+      mathWrap.hidden=false;
+      $("fracBarRow").hidden=false;
+      render();                     // re-sync enabled state onto the new field
+    }catch(e){ /* fall back to the typed input */ }
+  }
+  (function loadMathLive(){
+    const s=document.createElement("script");
+    s.src="https://cdn.jsdelivr.net/npm/mathlive@0.101.2/dist/mathlive.min.js";
+    s.async=true;
+    s.onload=initMathField;
+    s.onerror=function(){ /* offline or blocked — the typed input stays */ };
+    document.head.appendChild(s);
+  })();
+
+  /* ===================== static UI translation ===================== */
+  function applyLang(){
+    try{ localStorage.setItem("mmt-asf-lang",LANG); }catch(_){ }
+    document.querySelectorAll(".langTog button").forEach(b=>b.classList.toggle("on",b.dataset.lang===LANG));
+    $("backBtn").innerHTML=L(UI.back);
+    $("resetBtn").innerHTML=L(UI.reset);
+    enterBtn.innerHTML=L(UI.enter);
+    $("levelModalHead").innerHTML=L(UI.chooseLevel);
+    $("certModalHead").innerHTML=L(UI.certHead);
+    $("copyBtn").innerHTML=L(UI.copy);
+    $("sameLevelBtn").innerHTML=L(UI.close);
+    $("levelsBtn").innerHTML=L(UI.backToLevels);
+    $("descSweet").innerHTML=L(UI.descSweet);
+    $("descMild").innerHTML=L(UI.descMild);
+    $("descMedium").innerHTML=L(UI.descMedium);
+    $("descSpicy").innerHTML=L(UI.descSpicy);
+    $("descXhot").innerHTML=L(UI.descXhot);
+    answerInput.setAttribute("placeholder", UI.placeholder[LANG]||UI.placeholder.en);
+    const fb=UI.fracBtn[LANG]||UI.fracBtn.en;
+    fracBtn.setAttribute("title",fb); fracBtn.setAttribute("aria-label",fb);
+    $("fracHint").innerHTML=one(UI.fracHint);
+    if(levelKey){ levelBanner.innerHTML=one(UI.levelWord,{n:LEVELS[levelKey].name}); render(); }
+    else levelBanner.innerHTML=one(UI.levelNone);
+  }
+  document.addEventListener("click", e => {
+    const b=e.target.closest(".langTog button"); if(!b) return;
+    LANG=b.dataset.lang; applyLang();
+  });
+  applyLang();
+
+  // expose for the headless checks
+  window.__ASF_QUIZ__ = { buildBank, PLANS, LEVELS, derived, parseFrac, isCorrect, makeQuestion, plainChain, QUIZ_LEN, startLevel, UI, setLang:(k)=>{ LANG=k; applyLang(); }, lang:()=>LANG, latexToEntry, readAnswerRaw, mathReady:()=>mfReady, stepForward, stepBack, phase:()=>phase, q:() => bank[qIndex], submit:(s)=>{ answerInput.value=s; submitAnswer(); }, next:nextQuestion, state:()=>({qIndex,score,phase,answered}) };
+})();
+</script>
+
+<!-- ===== MMT student-code login + secure save + sign-in banner ===== -->
+<div id="mmtLoginOverlay" style="position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(15,23,42,.55);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <div style="background:#fff;border-radius:22px;box-shadow:0 20px 60px rgba(0,0,0,.28);max-width:460px;width:100%;overflow:hidden;">
+    <div style="font-weight:1000;font-size:22px;padding:20px 22px 6px;color:#111827;">Student login</div>
+    <div style="padding:6px 22px 20px;">
+      <p style="color:#6b7280;font-weight:600;font-size:15px;line-height:1.45;margin:0 0 14px;">Enter your MMT student code so your result saves to your teacher&rsquo;s dashboard. No code? Press <b>Skip</b> to do the quiz without saving.</p>
+      <label for="mmtCodeInput" style="display:block;font-weight:900;color:#111827;margin-bottom:6px;">Student code</label>
+      <input id="mmtCodeInput" autocomplete="off" placeholder="enter code here" style="width:100%;height:52px;border:2px solid #e5e7eb;border-radius:14px;padding:0 14px;font-size:20px;font-weight:900;outline:none;text-transform:uppercase;box-sizing:border-box;" />
+      <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
+        <button id="mmtLoginBtn" type="button" style="flex:1;min-width:120px;border:none;border-radius:14px;padding:13px 18px;font-weight:1000;font-size:16px;cursor:pointer;background:#2563eb;color:#fff;">Start</button>
+        <button id="mmtSkipBtn" type="button" style="flex:1;min-width:120px;border:none;border-radius:14px;padding:13px 18px;font-weight:1000;font-size:16px;cursor:pointer;background:#f3f4f6;color:#111827;">Skip student code</button>
+      </div>
+      <div id="mmtLoginMsg" style="margin-top:10px;font-weight:900;font-size:14px;min-height:18px;"></div>
+    </div>
+  </div>
+</div>
+<div id="mmtSaveStatus" style="display:none;position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:2147483001;background:#111827;color:#fff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-weight:900;font-size:14px;padding:10px 18px;border-radius:999px;box-shadow:0 10px 30px rgba(0,0,0,.3);"></div>
+<script>
+/* MMT student-code login + secure achievement save + sign-in banner.
+   Self-contained: shows a login overlay on load (above the quiz's own menu),
+   dynamically imports the shared secure quiz client so the page still runs
+   offline/locally (demo mode = no save), and exposes window.MMTSave(payload)
+   for the quiz to call when a student finishes. Never stores typed answers.
+
+   It also paints a status chip — "Signed in as NAME", or "Guest mode" with a
+   Sign in button — into #mmtAuthSlot if the page provides one, otherwise pinned
+   top-right; and it keeps every .certSub line honest, so the certificate only
+   mentions Google Classroom when the result is NOT going to a dashboard. */
+(function(){
+  "use strict";
+  var MMT=null, tried=false, mode="pending", student=null;
+  var UIFONT="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
+  function normalise(c){ return String(c||"").trim().toUpperCase().replace(/[^A-Z0-9-]/g,""); }
+  function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  async function load(){
+    if(tried) return MMT; tried=true;
+    try{ var mod=await import("/portal/shared/quizClient.js"); MMT=mod.MMTQuiz; MMT.init(); }
+    catch(e){ MMT=null; console.warn("MMT quiz client unavailable — demo mode only:", e&&e.message); }
+    return MMT;
+  }
+  var overlay=document.getElementById("mmtLoginOverlay");
+  var codeInput=document.getElementById("mmtCodeInput");
+  var loginBtn=document.getElementById("mmtLoginBtn");
+  var skipBtn=document.getElementById("mmtSkipBtn");
+  var msg=document.getElementById("mmtLoginMsg");
+  var statusEl=document.getElementById("mmtSaveStatus");
+  function hideOverlay(){ if(overlay) overlay.style.display="none"; }
+  function openOverlay(){
+    if(!overlay) return;
+    if(msg){ msg.textContent=""; }
+    overlay.style.display="flex";
+    setTimeout(function(){ try{ codeInput.focus(); codeInput.select(); }catch(e){} }, 60);
+  }
+  function showStatus(t){ if(!statusEl) return; statusEl.textContent=t; statusEl.style.display="block"; }
+
+  /* ---- who am I: the chip in the banner ---- */
+  var chip=null;
+  function studentName(){
+    if(!student) return "";
+    return student.name || [student.firstName,student.surname].filter(Boolean).join(" ") || student.studentCode || "";
+  }
+  function ensureChip(){
+    if(chip) return chip;
+    var slot=document.getElementById("mmtAuthSlot");
+    chip=document.createElement("div");
+    chip.id="mmtAuthChip";
+    // a slotted chip sits in the page's own flow, so it stays behind the quiz's
+    // modals rather than bleeding over them; the unslotted fallback pins itself
+    // top-right at a z-index below the usual modal layer
+    chip.style.cssText="display:inline-flex;align-items:center;gap:8px;font-family:"+UIFONT
+      +";font-weight:900;font-size:13px;line-height:1;white-space:nowrap;"
+      + (slot ? "" : "position:fixed;top:10px;right:10px;z-index:40;");
+    (slot||document.body).appendChild(chip);
+    return chip;
+  }
+  function paintChip(){
+    var c=ensureChip();
+    if(mode==="pending"){ c.innerHTML=""; return; }
+    if(mode==="registered"){
+      c.innerHTML='<span style="display:inline-flex;align-items:center;gap:7px;background:#dcfce7;color:#166534;'
+        +'border:1px solid #86efac;border-radius:999px;padding:7px 13px;">'
+        +'<span aria-hidden="true" style="font-size:9px;">&#9679;</span>Signed in as '+esc(studentName())+'</span>';
+      return;
+    }
+    c.innerHTML='<span style="display:inline-flex;align-items:center;gap:7px;background:#f3f4f6;color:#4b5563;'
+      +'border:1px solid #e5e7eb;border-radius:999px;padding:7px 13px;">'
+      +'<span aria-hidden="true" style="font-size:9px;">&#9675;</span>Guest mode</span>'
+      +'<button type="button" id="mmtChipSignIn" style="border:none;border-radius:999px;padding:7px 14px;'
+      +'font-family:inherit;font-weight:900;font-size:13px;cursor:pointer;background:#2563eb;color:#fff;">Sign in</button>';
+    var b=document.getElementById("mmtChipSignIn");
+    if(b) b.addEventListener("click", openOverlay);
+  }
+
+  /* ---- the certificate line: Google Classroom only when nothing is being saved ---- */
+  function paintCert(text){
+    var els=document.querySelectorAll(".certSub");
+    for(var i=0;i<els.length;i++) els[i].textContent=text;
+  }
+  function certResting(){
+    paintCert(mode==="registered"
+      ? "This result saves to "+studentName()+"'s dashboard."
+      : "Screenshot this and paste into Google Classroom.");
+  }
+  function setMode(m, profile){
+    mode=m; student=profile||null;
+    paintChip(); certResting();
+  }
+
+  async function doLogin(){
+    msg.style.color="#6b7280"; msg.textContent="Checking…";
+    var code=normalise(codeInput.value); codeInput.value=code;
+    if(!code){ msg.style.color="#dc2626"; msg.textContent="Please type your student code, or press Skip."; return; }
+    await load();
+    if(!MMT){ msg.style.color="#dc2626"; msg.textContent="Login isn’t available here — press Skip to do the quiz."; return; }
+    try{
+      var r=await MMT.signIn(code);
+      if(r&&r.ok){ setMode("registered", r.profile); msg.style.color="#16a34a";
+        msg.textContent="Signed in as "+(studentName()||code); setTimeout(hideOverlay,450); }
+      else { msg.style.color="#dc2626"; msg.textContent=(r&&r.error)||"Could not sign in."; }
+    }catch(e){ msg.style.color="#dc2626"; msg.textContent="Could not sign in. You can Skip to continue."; }
+  }
+  if(loginBtn) loginBtn.addEventListener("click", doLogin);
+  if(skipBtn) skipBtn.addEventListener("click", function(){
+    setMode("skip", null);
+    if(MMT){ try{MMT.skipDemo();}catch(e){} }
+    hideOverlay();
+  });
+  if(codeInput){
+    codeInput.addEventListener("keydown", function(e){ if(e.key==="Enter"){ e.preventDefault(); e.stopPropagation(); doLogin(); } });
+    setTimeout(function(){ try{ codeInput.focus(); }catch(e){} }, 60);
+  }
+
+  window.MMTSave=async function(payload){
+    payload=payload||{};
+    if(mode!=="registered"){
+      paintCert("Screenshot this and paste into Google Classroom.");
+      showStatus("Not saved — no student code"); return {skipped:true};
+    }
+    showStatus("Saving…");
+    paintCert("Saving to "+studentName()+"'s dashboard…");
+    try{
+      await load();
+      if(MMT&&MMT.getMode&&MMT.getMode()==="registered"){
+        var r=await MMT.saveAchievement(payload);
+        var ok=!!(r&&r.saved);
+        showStatus(ok ? "Saved to your dashboard ✓" : "Not saved");
+        paintCert(ok ? "Saved to "+studentName()+"'s dashboard ✓ — your teacher can see this result."
+                     : "Could not save this one — screenshot it and send it to your teacher.");
+        return r;
+      }
+      showStatus("Not saved");
+      paintCert("Could not save this one — screenshot it and send it to your teacher.");
+      return {skipped:true};
+    }catch(e){
+      showStatus("Save failed (your result still counts locally)");
+      paintCert("Could not save this one — screenshot it and send it to your teacher.");
+      return {error:true};
+    }
+  };
+  window.MMTMode=function(){ return mode; };
+  // helpers so a quiz's own certificate / clipboard text can drop the Google
+  // Classroom instruction when the result is already going to a dashboard
+  function certTail(){ return mode==="registered" ? "" : " Paste a screenshot into Google Classroom."; }
+  function shareLine(){
+    return mode==="registered"
+      ? "Saved to "+studentName()+"'s dashboard — your teacher can see this result."
+      : "Submit a screenshot or paste this into Google Classroom.";
+  }
+  window.MMTAuth={ mode:function(){ return mode; }, student:function(){ return student; },
+                   name:studentName, signedIn:function(){ return mode==="registered"; },
+                   signIn:openOverlay, certTail:certTail, shareLine:shareLine };
+  paintChip();
+  load(); /* warm up so sign-in is instant */
+})();
+</script>
+
+</body>
+</html>

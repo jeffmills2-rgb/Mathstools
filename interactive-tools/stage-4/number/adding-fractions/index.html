@@ -1,0 +1,1326 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Adding and Subtracting Fractions | Mills Maths Tools</title>
+
+  <style>
+    :root{
+      --bg:#f8fafc;
+      --card:#ffffff;
+      --ink:#0f172a;
+      --muted:#64748b;
+      --border:#e2e8f0;
+      --shadow:0 18px 45px rgba(15,23,42,.13);
+      --blue:#2563eb;
+      --blue-dark:#1d4ed8;
+      --green:#22c55e;
+      --purple:#7c3aed;
+      --orange:#f97316;
+      --red:#dc2626;
+      --line:#334155;
+      --line-soft:#94a3b8;
+      --pink:#db2777;
+      --pink-soft:#fce7f3;
+      --uiFont:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      --mathFont:"STIX Two Math","Cambria Math","Latin Modern Math","Times New Roman",Georgia,serif;
+      --mono:ui-monospace,"SF Mono","SFMono-Regular",Menlo,Consolas,"Roboto Mono",monospace;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ min-height:100%; }
+    body{
+      margin:0;
+      font-family:var(--uiFont);
+      color:var(--ink);
+      background:
+        radial-gradient(circle at top left,rgba(37,99,235,.14),transparent 32rem),
+        radial-gradient(circle at top right,rgba(124,58,237,.12),transparent 34rem),
+        var(--bg);
+      overflow-x:hidden;
+    }
+    button,input{ font:inherit; }
+    [hidden]{ display:none !important; }
+
+    .app{ min-height:100dvh; display:flex; flex-direction:column; min-width:0; }
+
+    /* ---------- topbar ---------- */
+    .mmtTopbar{
+      position:relative; z-index:40;
+      background:linear-gradient(135deg,#0f172a,#123b7a 55%,#2563eb);
+      color:white; padding:14px 24px;
+      display:grid; grid-template-columns:minmax(220px,1fr) auto minmax(320px,1fr);
+      align-items:center; gap:18px;
+      box-shadow:0 10px 28px rgba(15,23,42,.22);
+    }
+    .mmtBrand{
+      display:flex; align-items:center; gap:12px; justify-self:start;
+      text-decoration:none; color:white; border-radius:14px; padding:8px 12px;
+      margin-left:-12px; font-weight:900;
+      transition:background .18s ease,transform .18s ease,box-shadow .18s ease;
+    }
+    .mmtBrand:hover{ background:rgba(255,255,255,.12); transform:translateY(-1px);
+      box-shadow:0 0 10px rgba(124,58,237,.6),0 0 18px rgba(37,99,235,.4); }
+    .mmtBrandLogo{
+      width:44px; height:44px; border-radius:9px; background:white; color:#1d4ed8;
+      display:grid; place-items:center; font-weight:1000; letter-spacing:-.08em;
+      box-shadow:inset 0 -2px 0 rgba(15,23,42,.08); flex:0 0 auto;
+    }
+    .mmtBrandText strong{ display:block; font-size:1.18rem; line-height:1; letter-spacing:-.03em; color:white; }
+    .mmtBrandText span{ display:block; font-size:.78rem; opacity:.82; font-weight:650; color:white; }
+    .mmtTopTitle{
+      font-weight:850; font-size:clamp(1.1rem,2vw,1.6rem); letter-spacing:-.04em;
+      text-align:center; color:white; white-space:nowrap;
+    }
+    .topActions{ justify-self:end; display:flex; align-items:center; justify-content:flex-end; gap:10px; flex-wrap:wrap; }
+
+    .btn{
+      appearance:none; border:1px solid rgba(255,255,255,.28); background:rgba(255,255,255,.14);
+      color:white; padding:11px 15px; border-radius:14px; font-weight:900; font-size:15px;
+      cursor:pointer; transition:.18s ease; user-select:none;
+    }
+    .btn:hover:not(:disabled){ background:rgba(255,255,255,.22); transform:translateY(-1px); }
+    .btn:active{ transform:translateY(0); }
+    .btn:focus-visible{ outline:none; box-shadow:0 0 0 4px rgba(255,255,255,.23); }
+    .btn-primary{ background:white; color:#1d4ed8; border-color:white; }
+    .btn-primary:hover:not(:disabled){ background:#eef2ff; color:#1d4ed8; }
+    .btn:disabled{ opacity:.45; cursor:not-allowed; transform:none; }
+
+    .menuWrap{ position:relative; display:inline-flex; }
+    .dropMenu{ position:absolute; top:calc(100% + 8px); right:0; min-width:240px; background:#fff; color:var(--ink);
+      border:1px solid rgba(226,232,240,.95); border-radius:14px; box-shadow:0 18px 45px rgba(15,23,42,.22);
+      padding:7px; display:none; z-index:120; text-align:left; }
+    .dropMenu.open{ display:grid; gap:4px; }
+
+    .settingsMenu.open{ gap:14px; padding:16px 18px; min-width:308px; }
+    .toolLink{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border-radius:10px;
+      color:var(--ink); text-decoration:none; font-weight:900; font-size:.9rem; }
+    .toolLink::after{ content:'\203A'; color:var(--blue); font-weight:1000; font-size:1.1rem; line-height:1; }
+    .toolLink:hover,.toolLink:focus-visible{ background:#eef2ff; color:#1d4ed8; outline:none; }
+    .toolLink small{ display:block; font-weight:650; font-size:.74rem; color:var(--muted); }
+    .settingsHead{ font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; font-weight:950; color:var(--muted); }
+    .settingsNote{ margin:0; font-size:.76rem; font-weight:650; color:var(--muted); line-height:1.4; }
+    .settingsRule{ height:1px; background:var(--border); margin:1px 0; }
+
+    /* submenus — open on hover, and on click for touch */
+    .subWrap{ position:relative; }
+    .subRow{
+      display:flex; align-items:center; justify-content:space-between; gap:10px; width:100%;
+      appearance:none; border:1px solid transparent; background:transparent; cursor:pointer;
+      padding:9px 11px; border-radius:11px; font:inherit; font-weight:900; font-size:.92rem;
+      color:var(--ink); text-align:left; transition:background .16s ease; white-space:nowrap;
+    }
+    .subRow:hover,.subRow:focus-visible,.subWrap.open .subRow{ background:#eef2ff; color:#1d4ed8; outline:none; }
+    .subRow .val{ display:inline-flex; align-items:center; gap:6px; font-weight:800; font-size:.84rem; color:var(--muted); }
+    .subRow .val::after{ content:'\2039'; font-size:1.05rem; font-weight:1000; color:var(--blue); }
+    .subWrap.open .subRow .val{ color:var(--blue-dark); }
+
+    .subMenu{
+      position:absolute; top:-8px; right:calc(100% + 10px); min-width:252px;
+      background:#fff; border:1px solid rgba(226,232,240,.95); border-radius:14px;
+      box-shadow:0 18px 45px rgba(15,23,42,.22); padding:7px; display:none; z-index:130;
+    }
+    .subWrap:hover .subMenu, .subWrap.open .subMenu{ display:grid; gap:3px; }
+    .subOpt{
+      appearance:none; border:0; background:transparent; cursor:pointer; width:100%;
+      display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
+      padding:9px 11px; border-radius:10px; font:inherit; text-align:left;
+      font-weight:900; font-size:.9rem; color:var(--ink);
+    }
+    .subOpt small{ display:block; font-weight:650; font-size:.74rem; color:var(--muted); margin-top:2px; }
+    .subOpt:hover:not(:disabled),.subOpt:focus-visible{ background:#eef2ff; color:#1d4ed8; outline:none; }
+    .subOpt .tick{ color:var(--green); font-weight:1000; opacity:0; flex:0 0 auto; font-size:1.05rem; }
+    .subOpt.on .tick{ opacity:1; }
+    .subOpt:disabled{ opacity:.4; cursor:not-allowed; }
+
+    .layout{
+      width:min(1200px, calc(100vw - 48px));
+      margin:22px auto 14px;
+      background:rgba(255,255,255,.94);
+      border:1px solid rgba(226,232,240,.9);
+      border-radius:26px; box-shadow:var(--shadow); overflow:hidden;
+      display:block; position:relative;
+    }
+    .stage{ padding:18px clamp(14px,3vw,34px) 24px; display:flex; flex-direction:column; gap:13px; min-width:0; }
+
+    /* ---------- the compact control card ---------- */
+    .eqCard{
+      position:relative;
+      background:white; border:1px solid var(--border); border-radius:20px;
+      padding:14px 20px 16px; display:flex; flex-direction:column; align-items:center; gap:10px;
+    }
+    .eqEyebrow{ font-size:.7rem; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:950; text-align:center; }
+
+    .controlsGrid{ display:flex; flex-direction:column; align-items:center; gap:9px; width:100%; }
+
+    .fracEditor{ display:flex; align-items:center; gap:16px; justify-content:center; flex-wrap:wrap; }
+    .fracStack{ display:flex; flex-direction:column; align-items:center; gap:6px; }
+    .fracStack .barSep{ width:80px; height:4px; background:var(--line); border-radius:2px; }
+    .numBox{
+      width:84px; text-align:center; border:2px solid var(--border); border-radius:13px;
+      padding:2px 8px; background:#fff; color:var(--ink); font-family:var(--mathFont);
+      font-weight:700; font-size:clamp(1.5rem,3vw,2rem); line-height:1.15; outline:none;
+      transition:border-color .18s ease, box-shadow .18s ease;
+    }
+    .numBox:hover{ border-color:var(--line-soft); }
+    .numBox:focus{ border-color:var(--blue); box-shadow:0 0 0 4px rgba(37,99,235,.16); }
+    .opSign{
+      font-family:var(--mathFont); font-weight:800; font-size:clamp(1.6rem,3vw,2.2rem);
+      color:var(--line); padding:0 2px; user-select:none;
+    }
+
+    .enterBtn{
+      appearance:none; border:1px solid var(--blue); background:var(--blue); color:#fff;
+      font-weight:900; font-size:.98rem; padding:10px 18px; border-radius:12px; cursor:pointer;
+      box-shadow:0 8px 20px rgba(37,99,235,.22); transition:.16s ease;
+    }
+    .enterBtn:hover{ background:var(--blue-dark); transform:translateY(-1px); }
+    .enterBtn:focus-visible{ outline:none; box-shadow:0 0 0 4px rgba(37,99,235,.3); }
+
+    .inputMsg{ min-height:15px; margin:0; font-size:.84rem; font-weight:750; color:var(--pink); text-align:center; max-width:640px; }
+
+    .genBtn{
+      position:absolute; top:14px; right:16px; z-index:2;
+      appearance:none; border:1px solid #ddd6fe; background:#f5f3ff; color:#5b21b6;
+      font-weight:850; font-size:.82rem; padding:6px 13px; border-radius:999px; cursor:pointer;
+      transition:.16s ease; white-space:nowrap; display:inline-flex; align-items:center; gap:7px;
+    }
+    .genBtn:hover{ background:#ede9fe; border-color:#c4b5fd; }
+    .genBtn:focus-visible{ outline:none; box-shadow:0 0 0 4px rgba(124,58,237,.22); }
+    .genBtn .dice{ font-size:.95rem; line-height:1; }
+    .genBtn .tierTag{ color:var(--muted); font-weight:750; }
+
+    /* mode segmented control */
+    .segWrap{ display:inline-flex; background:#eef2f7; border:1px solid var(--border); border-radius:14px; padding:4px; gap:4px; }
+    .seg{
+      appearance:none; border:0; background:transparent; color:var(--muted);
+      font-weight:900; font-size:.9rem; padding:9px 14px; border-radius:11px; cursor:pointer; white-space:nowrap;
+      transition:.16s ease; font-family:var(--uiFont);
+    }
+    .seg.on{ background:#fff; color:var(--blue-dark); box-shadow:0 4px 12px rgba(15,23,42,.12); }
+
+    /* switches */
+    .sw{ display:inline-flex; align-items:center; gap:11px; cursor:pointer; user-select:none; font-weight:850; color:var(--line); font-size:.95rem; white-space:nowrap; }
+    .sw input{ position:absolute; opacity:0; width:0; height:0; }
+    .sw .track{ position:relative; width:50px; height:29px; border-radius:999px; background:#cbd5e1; transition:.18s ease; flex:0 0 auto; box-shadow:inset 0 1px 3px rgba(15,23,42,.18); }
+    .sw .track::after{ content:""; position:absolute; top:3px; left:3px; width:23px; height:23px; border-radius:50%; background:#fff; box-shadow:0 2px 6px rgba(15,23,42,.3); transition:.18s ease; }
+    .sw input:checked + .track{ background:var(--green); }
+    .sw input:checked + .track::after{ transform:translateX(21px); }
+    .sw input:focus-visible + .track{ box-shadow:0 0 0 4px rgba(37,99,235,.28); }
+
+    /* the diagram */
+    .svgCard{ background:white; border:1px solid var(--border); border-radius:22px; padding:10px clamp(8px,2vw,18px) 6px; }
+    .nline{ width:100%; height:auto; max-height:52vh; display:block; margin:0 auto; touch-action:none; user-select:none; -webkit-user-select:none; }
+    .nline text{ font-family:var(--mathFont); }
+    .nline.predicting{ cursor:ew-resize; }
+
+    /* narration */
+    .narrate{
+      background:white; border:1px solid var(--border); border-radius:20px;
+      padding:13px 18px; display:flex; flex-direction:column; gap:5px; align-items:center; text-align:center;
+    }
+    .stepCount{ font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; font-weight:950; color:var(--muted); }
+    .stepPrompt{ font-size:clamp(1rem,2vw,1.16rem); font-weight:800; color:var(--line); line-height:1.35; min-height:1.3em; }
+    .stepMaths{
+      font-family:var(--mathFont); font-size:clamp(1.22rem,2.6vw,1.75rem); font-weight:800; color:var(--purple);
+      line-height:1.25; min-height:1.3em; display:flex; align-items:center; justify-content:center; gap:.35em; flex-wrap:wrap;
+    }
+    .stepMaths.answer{ color:var(--pink); }
+    .stepMaths.wrongMaths{ color:var(--red); }
+
+    .navRow{ display:flex; gap:10px; justify-content:center; align-items:center; flex-wrap:wrap; padding-bottom:4px; }
+    .navBtn{
+      appearance:none; border:1px solid var(--border); background:#fff; color:var(--line);
+      font-weight:900; font-size:.94rem; padding:10px 16px; border-radius:13px; cursor:pointer;
+      transition:.16s ease; box-shadow:0 6px 16px rgba(15,23,42,.08);
+    }
+    .navBtn:hover:not(:disabled){ transform:translateY(-1px); background:#f8fafc; }
+    .navBtn:disabled{ opacity:.4; cursor:not-allowed; transform:none; }
+    .navBtn.next{ background:var(--purple); border-color:var(--purple); color:#fff; box-shadow:0 8px 20px rgba(124,58,237,.24); min-width:148px; }
+    .navBtn.next:hover:not(:disabled){ background:#6d28d9; }
+    .navBtn.lock{ background:var(--orange); border-color:var(--orange); color:#fff; box-shadow:0 8px 20px rgba(249,115,22,.24); }
+    .navBtn.lock:hover:not(:disabled){ background:#ea580c; }
+
+    .hint{ text-align:center; font-size:.8rem; font-weight:700; color:var(--muted); margin:0; }
+
+    /* stacked fraction in HTML text */
+    .frac{ display:inline-flex; flex-direction:column; align-items:center; vertical-align:middle; line-height:1; font-size:.82em; }
+    .frac .n{ padding:0 .3em .05em; }
+    .frac .d{ padding:.06em .3em 0; border-top:.09em solid currentColor; }
+    .mixed{ display:inline-flex; align-items:center; gap:.1em; }
+    .neg{ display:inline; margin-right:.06em; }
+
+    @keyframes dashDraw{ from{ stroke-dashoffset:var(--dashLen);} to{ stroke-dashoffset:0;} }
+    .hopArc{ animation:dashDraw .42s ease both; }
+    @keyframes tickGrow{ from{ opacity:0; transform:scaleY(.1);} to{ opacity:1; transform:scaleY(1);} }
+    .tickIn{ animation:tickGrow .22s ease-out both; transform-box:view-box; }
+    @keyframes popIn{
+      0%{ opacity:0; transform:scale(.45); }
+      62%{ opacity:1; transform:scale(1.14); }
+      100%{ opacity:1; transform:scale(1); }
+    }
+    .popIn{ animation:popIn .44s cubic-bezier(.2,.75,.3,1.25) both; transform-box:view-box; }
+    @keyframes fadeIn{ from{ opacity:0; } to{ opacity:1; } }
+    .fadeIn{ animation:fadeIn .44s ease both; }
+    /* reverse animations, so Back lifts the pieces out instead of snapping */
+    @keyframes fadeOutK{ to{ opacity:0; } }
+    .fadeOut{ animation:fadeOutK .34s ease both; }
+    @keyframes slideTo{ to{ transform:translate(var(--sx),var(--sy)); opacity:0; } }
+    .slideOut{ animation:slideTo .5s cubic-bezier(.55,.06,.68,.19) both; }
+    @keyframes tickShrink{ to{ transform:scaleY(0); opacity:0; } }
+    .tickOut{ animation:tickShrink .22s ease-in both; transform-box:view-box; }
+    @keyframes popOut{ to{ transform:scale(.4); opacity:0; } }
+    .popOut{ animation:popOut .3s ease-in both; transform-box:view-box; }
+    @keyframes slideFrom{ from{ transform:translate(var(--sx),var(--sy)); opacity:.55; } to{ transform:translate(0,0); opacity:1; } }
+    .slideIn{ animation:slideFrom .62s cubic-bezier(.25,.8,.3,1) both; }
+
+    @media (max-width:980px){
+      .mmtTopbar{ grid-template-columns:1fr; justify-items:center; padding:12px 14px; }
+      .mmtBrand{ margin-left:0; } .topActions{ justify-self:center; justify-content:center; }
+      .dropMenu{ right:auto; left:50%; transform:translateX(-50%); }
+      .layout{ width:calc(100vw - 24px); }
+      .numBox{ width:72px; }
+      .controlsGrid{ gap:16px; }
+      .genBtn{ position:static; margin-top:2px; }
+    }
+    @media (prefers-reduced-motion:reduce){
+      *{ animation-duration:.001ms !important; animation-delay:.001ms !important; transition-duration:.001ms !important; }
+    }
+  </style>
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "c7e5713b5e4f4993907eb285797dc89b"}'></script><!-- End Cloudflare Web Analytics -->
+</head>
+<body>
+  <div class="app">
+    <header class="mmtTopbar">
+      <a class="mmtBrand" href="https://www.millsmathstools.au" target="_self" aria-label="Back to Mills Maths Tools">
+        <span class="mmtBrandLogo" aria-hidden="true">MMT</span>
+        <span class="mmtBrandText"><strong>MMT</strong><span>Mills Maths Tools</span></span>
+      </a>
+      <div class="mmtTopTitle">Adding and Subtracting Fractions</div>
+      <div class="topActions">
+        <div class="menuWrap">
+          <button class="btn" id="toolsBtn" type="button" aria-haspopup="true" aria-expanded="false">Tools &#9662;</button>
+          <nav class="dropMenu" id="toolsMenu" aria-label="Related tools">
+            <a class="toolLink" href="/worksheet-creators/stage-4/number/adding-subtracting-fractions.html">Worksheet creator<small>Printable A4 questions, with or without the model</small></a>
+            <a class="toolLink" href="/online-quizzes/stage-4/number/adding-subtracting-fractions.html">Student Quiz<small>Four levels, secure login, saves to the dashboard</small></a>
+          </nav>
+        </div>
+        <div class="menuWrap">
+          <button class="btn" id="settingsBtn" type="button" aria-haspopup="true" aria-expanded="false">Settings &#9662;</button>
+          <nav class="dropMenu settingsMenu" id="settingsMenu" aria-label="Settings">
+            <div class="settingsHead">Display</div>
+            <label class="sw"><input type="checkbox" id="predictToggle"><span class="track"></span><span>Predict mode</span></label>
+            <label class="sw"><input type="checkbox" id="misconToggle"><span class="track"></span><span>Misconception step</span></label>
+            <p class="settingsNote">Predict mode hides the answer while a marker is dragged, so the class estimates first. The misconception step plots &ldquo;add the tops, add the bottoms&rdquo; so everyone can see it is wrong (adding only).</p>
+            <div class="settingsRule" role="separator"></div>
+            <div class="settingsHead">Common denominator</div>
+            <div class="subWrap" id="denWrap">
+              <button class="subRow" id="denRow" type="button" aria-haspopup="true" aria-expanded="false">
+                <span>Rename using</span>
+                <span class="val" id="denVal">Smallest</span>
+              </button>
+              <div class="subMenu" id="denMenu" role="menu" aria-label="Common denominator setting">
+                <button class="subOpt on" type="button" role="menuitemradio" data-den="lcm">
+                  <span>Smallest common denominator<small>Fewest new pieces &mdash; 1/2 + 1/6 becomes sixths</small></span>
+                  <span class="tick" aria-hidden="true">&#10003;</span>
+                </button>
+                <button class="subOpt" type="button" role="menuitemradio" data-den="prod">
+                  <span>Multiply the denominators<small>Each piece split by the other bar &mdash; 1/2 + 1/6 becomes twelfths</small></span>
+                  <span class="tick" aria-hidden="true">&#10003;</span>
+                </button>
+              </div>
+            </div>
+            <div class="settingsRule" role="separator"></div>
+            <div class="settingsHead">Randomiser</div>
+            <div class="subWrap" id="tierWrap">
+              <button class="subRow" id="tierRow" type="button" aria-haspopup="true" aria-expanded="false">
+                <span>Random pair</span>
+                <span class="val" id="tierVal">Unrelated</span>
+              </button>
+              <div class="subMenu" id="tierMenu" role="menu" aria-label="Random pair setting">
+                <button class="subOpt" type="button" role="menuitemradio" data-tier="same">
+                  <span>Same denominators<small>Count like parts &mdash; no renaming needed</small></span>
+                  <span class="tick" aria-hidden="true">&#10003;</span>
+                </button>
+                <button class="subOpt" type="button" role="menuitemradio" data-tier="related">
+                  <span>Related<small>One denominator divides the other &mdash; only one bar splits</small></span>
+                  <span class="tick" aria-hidden="true">&#10003;</span>
+                </button>
+                <button class="subOpt on" type="button" role="menuitemradio" data-tier="any">
+                  <span>Unrelated<small>Both bars must be re-split &mdash; like 1/2 + 1/3</small></span>
+                  <span class="tick" aria-hidden="true">&#10003;</span>
+                </button>
+              </div>
+            </div>
+          </nav>
+        </div>
+        <button class="btn btn-primary" id="resetBtn" type="button">Reset</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="stage" id="stage">
+
+        <div class="eqCard">
+          <button class="genBtn" id="genBtn" type="button" title="Change the kind under Settings &rsaquo; Random pair">
+            <span class="dice" aria-hidden="true">&#9860;</span>
+            <span>Generate random pair</span>
+            <span class="tierTag" id="tierTag">&middot; Unrelated</span>
+          </button>
+
+          <div class="segWrap" role="tablist" aria-label="Operation">
+            <button class="seg on" id="modeAdd" type="button" role="tab" aria-selected="true">Adding</button>
+            <button class="seg" id="modeSub" type="button" role="tab" aria-selected="false">Subtracting</button>
+          </div>
+
+          <div class="controlsGrid">
+            <div class="eqEyebrow" id="inputEyebrow">Type two fractions</div>
+            <div class="fracEditor" id="fracEditor">
+              <div class="fracStack">
+                <input class="numBox" id="aInput" inputmode="numeric" autocomplete="off" value="1" aria-label="First numerator" />
+                <span class="barSep" aria-hidden="true"></span>
+                <input class="numBox" id="bInput" inputmode="numeric" autocomplete="off" value="2" aria-label="First denominator" />
+              </div>
+              <span class="opSign" id="opSign">+</span>
+              <div class="fracStack">
+                <input class="numBox" id="cInput" inputmode="numeric" autocomplete="off" value="1" aria-label="Second numerator" />
+                <span class="barSep" aria-hidden="true"></span>
+                <input class="numBox" id="dInput" inputmode="numeric" autocomplete="off" value="3" aria-label="Second denominator" />
+              </div>
+              <button class="enterBtn" id="useBtn" type="button">Enter</button>
+            </div>
+          </div>
+
+          <p class="inputMsg" id="inputMsg"></p>
+        </div>
+
+        <div class="svgCard">
+          <svg class="nline" id="nline" viewBox="0 0 1000 436" role="img" aria-label="Two fraction bars joining on a number line"></svg>
+        </div>
+
+        <div class="narrate">
+          <div class="navRow">
+            <button class="navBtn" id="backBtn" type="button">&#9664; Back</button>
+            <button class="navBtn next" id="nextBtn" type="button">Next &#9654;</button>
+            <button class="navBtn lock" id="lockBtn" type="button" hidden>Lock in estimate</button>
+            <button class="navBtn" id="revealBtn" type="button">Reveal all</button>
+            <button class="navBtn" id="restartBtn" type="button">Start again</button>
+          </div>
+          <div class="stepCount" id="stepCount">Step 1 of 6</div>
+          <div class="stepPrompt" id="stepPrompt"></div>
+          <div class="stepMaths" id="stepMaths"></div>
+          <p class="hint" id="hint">Space or &rarr; for the next step, &larr; to go back.</p>
+        </div>
+
+      </section>
+    </main>
+  </div>
+
+<script>
+(function(){
+  "use strict";
+  const NS="http://www.w3.org/2000/svg";
+  const $=function(id){ return document.getElementById(id); };
+
+  /* ===================== number helpers ===================== */
+  function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ const t=a%b; a=b; b=t; } return a; }
+  function lcm(a,b){ return a/(gcd(a,b)||1)*b; }
+
+  /* ===================== state ===================== */
+  const state={
+    mode:"add",              // add | sub
+    a:1, b:2, c:1, d:3,
+    step:0,
+    predict:false, predictValue:null, predictLocked:false,
+    miscon:false,
+    denKind:"lcm",           // lcm | prod
+    tier:"any",              // same | related | any
+    animJoin:false, animSplit:false, animCount:false, animWrong:false,
+    animExit:null            // step id currently animating OUT (smooth Back)
+  };
+
+  // everything derived from the current problem
+  function derived(){
+    const a=state.a, b=state.b, c=state.c, d=state.d;
+    const D = (b===d) ? b : (state.denKind==="lcm" ? lcm(b,d) : b*d);
+    const A = a*D/b, C = c*D/d;
+    const S = state.mode==="add" ? A+C : A-C;
+    const g = gcd(S,D)||1;
+    return {
+      a:a,b:b,c:c,d:d, D:D, A:A, C:C, S:S,
+      va:a/b, vc:c/d, value:S/D,
+      sn:S/g, sd:D/g, g:g,
+      sameDen:(b===d)
+    };
+  }
+  function axisMax(){ return derived().value>1 ? 2 : 1; }
+  function axisMin(){ return derived().value<0 ? -1 : 0; }
+
+  /* ===================== HTML fraction bits ===================== */
+  function htmlFrac(n,d){
+    if(n<0) return '<span class="neg">&minus;</span>'+htmlFrac(-n,d);
+    return '<span class="frac"><span class="n">'+n+'</span><span class="d">'+d+'</span></span>';
+  }
+  function htmlMixed(n,d){
+    if(n<0) return '<span class="neg">&minus;</span>'+htmlMixed(-n,d);
+    if(d===1) return String(n);
+    if(n<=d) return htmlFrac(n,d);
+    const w=Math.floor(n/d), r=n-w*d;
+    if(r===0) return String(w);
+    return '<span class="mixed"><span>'+w+'</span>'+htmlFrac(r,d)+'</span>';
+  }
+  // the full answer chain: S/D [= sn/sd] [= mixed]
+  function htmlAnswerChain(){
+    const v=derived();
+    if(v.S===0) return htmlFrac(0,v.D)+" = 0";
+    let s=htmlFrac(v.S,v.D);
+    if(v.g>1) s+=" = "+htmlFrac(v.sn,v.sd);
+    if(Math.abs(v.sn)>=v.sd && v.sd>1) s+=" = "+htmlMixed(v.sn,v.sd);
+    else if(v.sd===1 && v.g>1){ /* already shown as whole number by htmlFrac chain */ }
+    if(v.sd===1 && v.g>1) s=htmlFrac(v.S,v.D)+" = "+v.sn;
+    return s;
+  }
+
+  /* ===================== SVG helpers ===================== */
+  function el(tag,attrs,text){
+    const e=document.createElementNS(NS,tag);
+    for(const k in attrs) e.setAttribute(k,attrs[k]);
+    if(text!=null) e.textContent=text;
+    return e;
+  }
+  const HALO={ stroke:"#fff", "stroke-width":"4.5", "paint-order":"stroke", "stroke-linejoin":"round" };
+  function txt(x,y,str,opts){
+    opts=opts||{};
+    const a=Object.assign({
+      x:x, y:y, "text-anchor":opts.anchor||"middle",
+      "font-weight":opts.weight||"800",
+      "font-size":opts.size||22,
+      fill:opts.fill||"#334155"
+    },HALO);
+    if(opts.family) a["font-family"]=opts.family;
+    return el("text",a,str);
+  }
+  function svgFrac(cx,cy,n,d,fs,fill){
+    if(n<0){
+      const gn=el("g",{});
+      const w=svgFracWidth(-n,d,fs);
+      gn.appendChild(txt(cx-w/2-fs*0.34, cy+fs*0.36, "\u2212", {size:fs*0.92, fill:fill}));
+      gn.appendChild(svgFrac(cx,cy,-n,d,fs,fill));
+      return gn;
+    }
+    const g=el("g",{});
+    const cw=fs*0.58;
+    const barW=Math.max(String(n).length,String(d).length)*cw+8;
+    g.appendChild(txt(cx, cy-fs*0.30, String(n), {size:fs, fill:fill}));
+    g.appendChild(el("line",{x1:cx-barW/2, y1:cy+fs*0.06, x2:cx+barW/2, y2:cy+fs*0.06,
+      stroke:fill||"#334155", "stroke-width":Math.max(2,fs*0.09), "stroke-linecap":"round"}));
+    g.appendChild(txt(cx, cy+fs*1.02, String(d), {size:fs, fill:fill}));
+    return g;
+  }
+  function svgFracWidth(n,d,fs){
+    return Math.max(String(n).length,String(d).length)*fs*0.58+8;
+  }
+  // whole number, fraction, or mixed number centred at (cx,cy)
+  function svgMixed(cx,cy,n,d,fs,fill){
+    if(n<0){
+      const gn=el("g",{});
+      const w=labelWidthMixed(-n,d,fs);
+      gn.appendChild(txt(cx-w/2-fs*0.30, cy+fs*0.36, "\u2212", {size:fs*0.92, fill:fill}));
+      gn.appendChild(svgMixed(cx,cy,-n,d,fs,fill));
+      return gn;
+    }
+    if(d===1 || n===0){ const g=el("g",{}); g.appendChild(txt(cx,cy+fs*0.35, d===1? String(n): "0", {size:fs, fill:fill})); return g; }
+    if(n<d) return svgFrac(cx,cy,n,d,fs,fill);
+    const w=Math.floor(n/d), r=n-w*d;
+    if(r===0){ const g=el("g",{}); g.appendChild(txt(cx,cy+fs*0.35,String(w),{size:fs,fill:fill})); return g; }
+    const g=el("g",{});
+    const cw=fs*0.58;
+    const wholeW=String(w).length*cw+4;
+    const fracFs=fs*0.82;
+    const fracW=svgFracWidth(r,d,fracFs)+4;
+    let x=cx-(wholeW+fracW)/2;
+    g.appendChild(txt(x+wholeW/2, cy+fs*0.35, String(w), {size:fs, fill:fill}));
+    x+=wholeW;
+    g.appendChild(svgFrac(x+fracW/2, cy, r, d, fracFs, fill));
+    return g;
+  }
+  function labelWidthFrac(n,d,fs){ const pad=n<0?fs*0.6:0; return svgFracWidth(Math.abs(n),d,fs)+10+pad; }
+  function labelWidthMixed(n,d,fs){
+    const pad=n<0?fs*0.6:0; n=Math.abs(n);
+    if(d===1||n===0||n%d===0) return String(Math.max(1,Math.round(n/Math.max(1,d)))).length*fs*0.6+10+pad;
+    if(n<d) return labelWidthFrac(n,d,fs)+pad;
+    const w=Math.floor(n/d), r=n-w*d;
+    return String(w).length*fs*0.58+4 + svgFracWidth(r,d,fs*0.82)+14+pad;
+  }
+  function rowAgainst(x,w,reserved){
+    for(let i=0;i<reserved.length;i++){
+      if(Math.abs(reserved[i].x-x) < (reserved[i].w+w)/2 + 5) return 1;
+    }
+    return 0;
+  }
+
+  /* ===================== geometry ===================== */
+  const LEFT=150, RIGHT=930, W=RIGHT-LEFT;
+  const BAR_H=38;
+  const Y_A=34;                 // top of the first fraction's row
+  const Y_B=98;                 // top of the second fraction's row
+  const Y_S=178;                // top of the joined row
+  const LINE_Y=306;
+  const EQ_Y=252;            // centre of the equivalent-fraction band
+  const LBL_Y=LINE_Y+50;        // centre of below-line fraction labels (clear of the landing tick)
+  const LBL_ROW=34;             // second-row offset below the line
+  const ARC_Y=LINE_Y+13;
+  const TICK_SWEEP=1200;        // ms for the re-partition sweep
+  const POP_AFTER=1320;
+
+  const C={
+    segA:"#7c3aed", segB:"#2563eb",
+    take:"#db2777",
+    frame:"#e2e8f0", faintTick:"#cbd5e1",
+    line:"#1e293b", whole:"#0f172a",
+    target:"#db2777", muted:"#64748b",
+    predict:"#f97316", wrong:"#dc2626"
+  };
+
+  function X(v){ const lo=axisMin(), hi=axisMax(); return LEFT + ((v-lo)/(hi-lo))*W; }
+  function vFromX(x){ const lo=axisMin(), hi=axisMax(); return lo + ((x-LEFT)/W)*(hi-lo); }
+
+  /* ===================== step model ===================== */
+  function buildSteps(){
+    const v=derived();
+    const steps=[{id:"see"},{id:"join"}];
+    if(!v.sameDen){
+      if(state.miscon && state.mode==="add") steps.push({id:"wrong"});
+      steps.push({id:"split"});
+    }
+    steps.push({id:"count"});
+    steps.push({id:"answer"});
+    return steps;
+  }
+  let STEPS=buildSteps();
+  function stepId(){ return STEPS[state.step] ? STEPS[state.step].id : "see"; }
+  function indexOfId(id){ for(let i=0;i<STEPS.length;i++){ if(STEPS[i].id===id) return i; } return -1; }
+  function reached(id){ const i=indexOfId(id); return i>=0 && state.step>=i; }
+
+  /* ===================== rendering ===================== */
+  function hatchDefs(svg){
+    const defs=el("defs",{});
+    const p=el("pattern",{id:"mmtHatch", width:"8", height:"8", patternUnits:"userSpaceOnUse", patternTransform:"rotate(45)"});
+    p.appendChild(el("rect",{width:"8",height:"8",fill:"rgba(219,39,119,.14)"}));
+    p.appendChild(el("line",{x1:"0",y1:"0",x2:"0",y2:"8",stroke:"#db2777","stroke-width":"3"}));
+    defs.appendChild(p);
+    svg.appendChild(defs);
+  }
+
+  // one addend row: the whole (0..1) framed and partitioned, with the fraction shaded
+  function drawAddendRow(root,y,den,count,color,ghost){
+    const g=el("g",{});
+    const x0=X(0), x1=X(1);
+    g.appendChild(el("rect",{x:x0,y:y,width:x1-x0,height:BAR_H,rx:7,fill:"#fff",stroke:C.frame,"stroke-width":2}));
+    for(let k=1;k<den;k++){
+      const x=x0+(x1-x0)*k/den;
+      g.appendChild(el("line",{x1:x,y1:y+2,x2:x,y2:y+BAR_H-2,stroke:C.faintTick,"stroke-width":2}));
+    }
+    const wShade=(x1-x0)*count/den;
+    if(!ghost){
+      g.appendChild(el("rect",{x:x0,y:y,width:wShade,height:BAR_H,rx:7,fill:color,"fill-opacity":.82}));
+      for(let k=1;k<count;k++){
+        const x=x0+(x1-x0)*k/den;
+        g.appendChild(el("line",{x1:x,y1:y+3,x2:x,y2:y+BAR_H-3,stroke:"#fff","stroke-width":2.5,"stroke-linecap":"round"}));
+      }
+    }else{
+      g.appendChild(el("rect",{x:x0,y:y,width:wShade,height:BAR_H,rx:7,fill:color,"fill-opacity":.08,
+        stroke:color,"stroke-width":2,"stroke-dasharray":"7 6","stroke-opacity":.45}));
+    }
+    root.appendChild(g);
+    return g;
+  }
+
+  // a joined segment: a plain length with internal ticks
+  function drawSegment(root,x0,x1,y,color,den,valueSpan,anim,animSplitTicks,tickDen){
+    // den ticks across the segment's own span (valueSpan = length in number-line units)
+    const g=el("g",{});
+    g.appendChild(el("rect",{x:x0,y:y,width:Math.max(0,x1-x0),height:BAR_H,rx:7,fill:color,"fill-opacity":.82}));
+    const parts=Math.round(valueSpan*tickDen);
+    let idx=0, total=Math.max(1,parts-1);
+    for(let k=1;k<parts;k++){
+      const x=x0+(x1-x0)*k/parts;
+      const t=el("line",{x1:x,y1:y+3,x2:x,y2:y+BAR_H-3,stroke:"#fff","stroke-width":2.5,"stroke-linecap":"round"});
+      if(animSplitTicks==="in" || animSplitTicks===true){
+        t.setAttribute("class","tickIn");
+        t.style.transformOrigin=x+"px "+(y+BAR_H/2)+"px";
+        t.style.animationDelay=((idx/total)*TICK_SWEEP).toFixed(1)+"ms";
+      }else if(animSplitTicks==="out"){
+        // reverse sweep: last tick leaves first
+        t.setAttribute("class","tickOut");
+        t.style.transformOrigin=x+"px "+(y+BAR_H/2)+"px";
+        t.style.animationDelay=(((total-idx)/total)*320).toFixed(1)+"ms";
+      }
+      g.appendChild(t);
+      idx++;
+    }
+    if(anim){
+      g.setAttribute("class", anim.out ? "slideOut" : "slideIn");
+      g.style.setProperty("--sx",anim.dx+"px");
+      g.style.setProperty("--sy",anim.dy+"px");
+    }
+    root.appendChild(g);
+    return g;
+  }
+
+  function render(){
+    const svg=$("nline");
+    while(svg.firstChild) svg.removeChild(svg.firstChild);
+    hatchDefs(svg);
+    const root=el("g",{});
+    svg.appendChild(root);
+
+    const v=derived();
+    const amax=axisMax();
+    const amin=axisMin();
+    const id=stepId();
+    const joined=reached("join");
+    const didSplit=!v.sameDen && reached("split");
+    const counted=reached("count");
+    const isAnswer=(id==="answer");
+    const tickDenA = didSplit ? v.D : v.b;
+    const tickDenB = didSplit ? v.D : v.d;
+    const xva=X(v.va), xval=X(v.value), x1=X(1);
+
+    /* ---- the two addend rows ---- */
+    drawAddendRow(root,Y_A,v.b,v.a,C.segA,joined);
+    drawAddendRow(root,Y_B,v.d,v.c,C.segB,joined);
+
+    // fraction labels + operation sign at the left of the rows
+    root.appendChild(svgFrac(96, Y_A+BAR_H/2-6, v.a, v.b, 24, C.segA));
+    root.appendChild(svgFrac(96, Y_B+BAR_H/2-6, v.c, v.d, 24, C.segB));
+    root.appendChild(txt(44,(Y_A+Y_B+BAR_H)/2+9, state.mode==="add"?"+":"−", {size:32, fill:C.line}));
+
+    /* ---- the joined row ---- */
+    if(joined){
+      // faint whole frames behind the joined row, so "1 whole" stays readable
+      const gFrames=el("g",{});
+      gFrames.appendChild(el("rect",{x:X(0),y:Y_S,width:x1-X(0),height:BAR_H,rx:7,fill:"none",stroke:C.frame,"stroke-width":2}));
+      if(amax===2) gFrames.appendChild(el("rect",{x:x1,y:Y_S,width:X(2)-x1,height:BAR_H,rx:7,fill:"none",stroke:C.frame,"stroke-width":2,"stroke-dasharray":"3 5"}));
+      if(amin===-1) gFrames.appendChild(el("rect",{x:X(-1),y:Y_S,width:X(0)-X(-1),height:BAR_H,rx:7,fill:"none",stroke:C.frame,"stroke-width":2,"stroke-dasharray":"3 5"}));
+      if(state.animExit==="join") gFrames.setAttribute("class","fadeOut");
+      root.appendChild(gFrames);
+
+      const exitJoin=(state.animExit==="join");
+      const tickMode = state.animSplit ? "in" : (state.animExit==="split" ? "out" : null);
+      const animA=state.animJoin? {dx:0, dy:Y_A-Y_S} : (exitJoin? {dx:0, dy:Y_A-Y_S, out:true} : null);
+      drawSegment(root,X(0),xva,Y_S,C.segA,v.b,v.va,animA,tickMode,tickDenA);
+
+      if(state.mode==="add"){
+        const animB=state.animJoin? {dx:X(0)-xva, dy:Y_B-Y_S} : (exitJoin? {dx:X(0)-xva, dy:Y_B-Y_S, out:true} : null);
+        drawSegment(root,xva,xval,Y_S,C.segB,v.d,v.vc,animB,tickMode,tickDenB);
+      }else{
+        // the take-away overlays the end of the first length, pointing back
+        const gT=el("g",{});
+        gT.appendChild(el("rect",{x:xval,y:Y_S,width:Math.max(0,xva-xval),height:BAR_H,rx:7,
+          fill:"url(#mmtHatch)",stroke:C.take,"stroke-width":2.5}));
+        const parts=Math.round(v.vc*tickDenB);
+        let idx=0, total=Math.max(1,parts-1);
+        for(let k=1;k<parts;k++){
+          const x=xval+(xva-xval)*k/parts;
+          const t=el("line",{x1:x,y1:Y_S+3,x2:x,y2:Y_S+BAR_H-3,stroke:C.take,"stroke-width":1.6,"stroke-opacity":.6});
+          if(state.animSplit){
+            t.setAttribute("class","tickIn");
+            t.style.transformOrigin=x+"px "+(Y_S+BAR_H/2)+"px";
+            t.style.animationDelay=((idx/total)*TICK_SWEEP).toFixed(1)+"ms";
+          }else if(state.animExit==="split"){
+            t.setAttribute("class","tickOut");
+            t.style.transformOrigin=x+"px "+(Y_S+BAR_H/2)+"px";
+            t.style.animationDelay=(((total-idx)/total)*320).toFixed(1)+"ms";
+          }
+          gT.appendChild(t); idx++;
+        }
+        // the take-away arrow
+        const ay=Y_S-11;
+        gT.appendChild(el("line",{x1:xva,y1:ay,x2:xval+12,y2:ay,stroke:C.take,"stroke-width":3,"stroke-linecap":"round"}));
+        gT.appendChild(el("path",{d:"M "+(xval+2)+" "+ay+" l 13 -6 l 0 12 Z",fill:C.take}));
+        if(state.animJoin || state.animExit==="join"){
+          gT.setAttribute("class", state.animJoin ? "slideIn" : "slideOut");
+          gT.style.setProperty("--sx",(X(0)-xval)+"px");
+          gT.style.setProperty("--sy",(Y_B-Y_S)+"px");
+        }
+        root.appendChild(gT);
+      }
+    }
+
+    /* ---- equivalent fractions between the bar and the line ---- */
+    if(joined && didSplit){
+      const eqDelay=(state.animSplit? TICK_SWEEP*0.7 : 0);
+      const eqExit=(state.animExit==="split" || state.animExit==="join");
+      const eqLabel=function(x,n,d,fill){
+        const g=svgFrac(x,EQ_Y,n,d,21,fill);
+        if(state.animSplit){ g.setAttribute("class","fadeIn"); g.style.animationDelay=eqDelay+"ms"; }
+        else if(eqExit){ g.setAttribute("class","fadeOut"); }
+        root.appendChild(g);
+      };
+      if(state.mode==="add"){
+        const wA=xva-X(0), wB=xval-xva;
+        if(v.A>0) eqLabel(X(0)+wA/2, v.A, v.D, C.segA);
+        if(v.C>0){
+          if(wA>44 && wB>44){
+            const plus=txt(xva, EQ_Y+9, "+", {size:24, fill:C.line});
+            if(state.animSplit){ plus.setAttribute("class","fadeIn"); plus.style.animationDelay=eqDelay+"ms"; }
+            else if(eqExit){ plus.setAttribute("class","fadeOut"); }
+            root.appendChild(plus);
+          }
+          eqLabel(xva+wB/2, v.C, v.D, C.segB);
+        }
+      }else{
+        if(v.A>0) eqLabel(X(0)+(xva-X(0))/2, v.A, v.D, C.segA);
+        if(v.C>0 && xva-xval>52){
+          const gTk=el("g",{});
+          const wT=labelWidthFrac(v.C,v.D,18);
+          gTk.appendChild(txt((xval+xva)/2-wT/2-4, Y_S+BAR_H/2+7, "\u2212", {size:17, fill:C.take}));
+          gTk.appendChild(svgFrac((xval+xva)/2+7, Y_S+BAR_H/2-3, v.C, v.D, 18, C.take));
+          if(state.animSplit){ gTk.setAttribute("class","fadeIn"); gTk.style.animationDelay=eqDelay+"ms"; }
+          else if(eqExit){ gTk.setAttribute("class","fadeOut"); }
+          root.appendChild(gTk);
+        }
+      }
+    }
+
+    /* ---- the number line ---- */
+    root.appendChild(el("line",{x1:LEFT,y1:LINE_Y,x2:RIGHT,y2:LINE_Y,stroke:C.line,"stroke-width":4,"stroke-linecap":"round"}));
+    function endTick(x){ return el("line",{x1:x,y1:LINE_Y-20,x2:x,y2:LINE_Y+20,stroke:C.line,"stroke-width":5,"stroke-linecap":"round"}); }
+    root.appendChild(endTick(LEFT));
+    if(amin===-1){
+      root.appendChild(txt(LEFT,LINE_Y+42,"\u22121",{size:24,fill:C.line}));
+      root.appendChild(endTick(X(0)));
+      root.appendChild(txt(X(0),LINE_Y+42,"0",{size:24,fill:C.line}));
+    }else{
+      root.appendChild(txt(LEFT,LINE_Y+42,"0",{size:24,fill:C.line}));
+    }
+    root.appendChild(endTick(x1));
+    root.appendChild(txt(x1,LINE_Y+42,"1 whole",{size:21,fill:C.whole,family:"var(--uiFont)",weight:"900"}));
+    if(amax===2){
+      root.appendChild(endTick(X(2)));
+      root.appendChild(txt(X(2),LINE_Y+42,"2 wholes",{size:21,fill:C.whole,family:"var(--uiFont)",weight:"900"}));
+    }
+    const reserved=[{x:LEFT,w:46},{x:x1,w:104}];
+    if(amax===2) reserved.push({x:X(2),w:110});
+    if(amin===-1) reserved.push({x:X(0),w:46});
+
+    /* ---- seam + landing marks ---- */
+    if(joined){
+      // seam: where the first length ends
+      const gMarks=el("g",{});
+      if(Math.abs(v.va-v.value)>1e-9){
+        gMarks.appendChild(el("line",{x1:xva,y1:LINE_Y-13,x2:xva,y2:LINE_Y+13,stroke:C.segA,"stroke-width":3.5,"stroke-linecap":"round"}));
+        const wS=labelWidthFrac(v.a,v.b,20);
+        const rS=rowAgainst(xva,wS,reserved);
+        gMarks.appendChild(svgFrac(xva,LBL_Y-8+rS*LBL_ROW,v.a,v.b,20,C.segA));
+        reserved.push({x:xva,w:wS,row:rS});
+      }
+      // landing point
+      gMarks.appendChild(el("line",{x1:xval,y1:LINE_Y-18,x2:xval,y2:LINE_Y+12,stroke:C.target,"stroke-width":4.5,"stroke-linecap":"round"}));
+      if(state.animExit==="join") gMarks.setAttribute("class","fadeOut");
+      root.appendChild(gMarks);
+      if(!counted){
+        const qm=txt(xval,LBL_Y,"?",{size:30,fill:C.target,weight:"900"});
+        if(state.animExit==="join") qm.setAttribute("class","fadeOut");
+        root.appendChild(qm);
+      }else{
+        // at the answer, the raw name and the simplest name sit side by side: 9/6 = 1 1/2
+        const renamed = isAnswer && v.S!==0 && (v.g>1 || Math.abs(v.sn)>=v.sd);
+        const wRaw=labelWidthFrac(v.S,v.D,24);
+        const wL = renamed ? wRaw+30+labelWidthMixed(v.sn,v.sd,24) : wRaw;
+        const resHere=[];
+        for(let i=0;i<reserved.length;i++){ if(!reserved[i].row) resHere.push(reserved[i]); }
+        const rL=rowAgainst(xval,wL,resHere);
+        const yL=LBL_Y-8+rL*LBL_ROW;
+        let lab;
+        if(v.S===0){
+          lab=el("g",{});
+          lab.appendChild(txt(xval,yL+8,"0",{size:24,fill:C.target}));
+        }else if(renamed){
+          lab=el("g",{});
+          let x=xval-wL/2;
+          lab.appendChild(svgFrac(x+wRaw/2,yL,v.S,v.D,24,C.target)); x+=wRaw;
+          lab.appendChild(txt(x+15,yL+8,"=",{size:22,fill:C.target})); x+=30;
+          lab.appendChild(svgMixed(x+(wL-wRaw-30)/2,yL,v.sn,v.sd,24,"#9d174d"));
+        }else{
+          lab=svgFrac(xval,yL,v.S,v.D,24,C.target);
+        }
+        if(state.animCount){
+          lab.setAttribute("class","popIn");
+          lab.style.transformOrigin=xval+"px "+yL+"px";
+          lab.style.animationDelay=(countHops()*150+220)+"ms";
+        }else if(state.animExit==="count"){
+          lab.setAttribute("class","fadeOut");
+        }
+        root.appendChild(lab);
+      }
+      if(isAnswer){
+        const circ=el("circle",{cx:xval,cy:LINE_Y,r:10,fill:"#fff",stroke:C.target,"stroke-width":4.5});
+        if(state.animExit==="answer") circ.setAttribute("class","fadeOut");
+        root.appendChild(circ);
+      }
+    }
+
+    /* ---- counting hops ---- */
+    if(state.animCount){
+      const hops=countHops();
+      const den=v.sameDen? v.b : v.D;
+      const stepV=1/den;
+      const dir = state.mode==="add" ? 1 : -1;
+      const startV = v.va;
+      for(let k=1;k<=hops;k++){
+        const v1=startV+dir*(k-1)*stepV*hopSize();
+        const v2=startV+dir*k*stepV*hopSize();
+        const p1=X(v1), p2=X(v2);
+        const r=Math.abs(p2-p1)/2;
+        const sweep = dir===1 ? 0 : 1;
+        const path=el("path",{
+          d:"M "+p1+" "+ARC_Y+" A "+r+" "+Math.min(24,r*1.4)+" 0 0 "+sweep+" "+p2+" "+ARC_Y,
+          fill:"none", stroke:state.mode==="add"?C.segB:C.take, "stroke-width":3, "stroke-linecap":"round", opacity:.85
+        });
+        const len=Math.max(24,Math.abs(p2-p1)*1.6);
+        path.setAttribute("stroke-dasharray",len);
+        path.style.setProperty("--dashLen",len);
+        path.setAttribute("class","hopArc");
+        path.style.animationDelay=((k-1)*150)+"ms";
+        root.appendChild(path);
+      }
+    }
+
+    /* ---- the misconception marker ---- */
+    if(id==="wrong" && state.mode==="add"){
+      const wv=(v.a+v.c)/(v.b+v.d);
+      const wx=X(wv);
+      const g=el("g",{});
+      g.appendChild(el("line",{x1:wx,y1:LINE_Y-16,x2:wx,y2:LINE_Y+16,stroke:C.wrong,"stroke-width":3.5,"stroke-linecap":"round"}));
+      g.appendChild(el("path",{d:"M "+wx+" "+(LINE_Y-8)+" l -11 -20 l 22 0 Z",fill:C.wrong,stroke:"#fff","stroke-width":2,"stroke-linejoin":"round"}));
+      const wW=labelWidthFrac(v.a+v.c,v.b+v.d,22);
+      const resHere=[];
+      for(let i=0;i<reserved.length;i++){ if(!reserved[i].row) resHere.push(reserved[i]); }
+      const rW=rowAgainst(wx,wW,resHere);
+      g.appendChild(svgFrac(wx,LBL_Y-8+rW*LBL_ROW,v.a+v.c,v.b+v.d,22,C.wrong));
+      // cross it out
+      const cy=LBL_Y-8+rW*LBL_ROW+8;
+      g.appendChild(el("line",{x1:wx-wW/2-2,y1:cy+12,x2:wx+wW/2+2,y2:cy-16,stroke:C.wrong,"stroke-width":2.5,"stroke-linecap":"round",opacity:.65}));
+      if(state.animWrong){
+        g.setAttribute("class","popIn");
+        g.style.transformOrigin=wx+"px "+LINE_Y+"px";
+      }else if(state.animExit==="wrong"){
+        g.setAttribute("class","popOut");
+        g.style.transformOrigin=wx+"px "+LINE_Y+"px";
+      }
+      root.appendChild(g);
+    }
+
+    /* ---- predict marker ---- */
+    if(state.predictValue!=null){
+      const px=X(state.predictValue);
+      const g=el("g",{});
+      g.appendChild(el("line",{x1:px,y1:LINE_Y-16,x2:px,y2:LINE_Y+16,stroke:C.predict,"stroke-width":3.5,"stroke-linecap":"round"}));
+      g.appendChild(el("path",{d:"M "+px+" "+(LINE_Y-8)+" l -11 -20 l 22 0 Z",
+        fill:C.predict, stroke:"#fff", "stroke-width":2, "stroke-linejoin":"round"}));
+      g.appendChild(txt(px, LINE_Y-38, state.predictLocked? "estimate" : "drag me",
+        {size:16, fill:C.predict, weight:"900", family:"var(--uiFont)"}));
+      root.appendChild(g);
+    }
+
+    svg.classList.toggle("predicting", predictDraggable());
+    svg.setAttribute("aria-label", describe());
+  }
+
+  function countHops(){
+    const v=derived();
+    const den=v.sameDen? v.b : v.D;
+    const n=v.sameDen? v.c : v.C;
+    return n>14 ? 1 : n;
+  }
+  function hopSize(){
+    const v=derived();
+    const den=v.sameDen? v.b : v.D;
+    const n=v.sameDen? v.c : v.C;
+    return n>14 ? n : 1;
+  }
+
+  function describe(){
+    const v=derived();
+    const op=state.mode==="add"?"plus":"minus";
+    return "Fraction bars showing "+v.a+" over "+v.b+" "+op+" "+v.c+" over "+v.d+" joined on a number line.";
+  }
+
+  /* ===================== narration ===================== */
+  function narrate(){
+    const v=derived();
+    const id=stepId();
+    let prompt="", maths="";
+    const add=(state.mode==="add");
+    const fa=htmlFrac(v.a,v.b), fc=htmlFrac(v.c,v.d);
+    const opSym=add?" + ":" &minus; ";
+
+    switch(id){
+      case "see":
+        if(state.predict && !state.predictLocked){
+          prompt="Drag the orange marker to where you think the "+(add?"total":"answer")+" sits, then lock it in.";
+        }else{
+          prompt= add
+            ? "Two lengths, each marked on its own whole. Together, will they make more or less than one whole?"
+            : "Start with "+fa+", then take away "+fc+". "+(v.value<0? "The take-away is bigger than the start &mdash; will we pass zero?" : "Roughly how much will be left?");
+        }
+        maths=fa+opSym+fc+" = ?";
+        break;
+      case "join":
+        if(v.sameDen){
+          prompt= add
+            ? "Slide the second length on to the end of the first. Every piece is the same size &mdash; so just count them."
+            : "The take-away sits over the end of the length"+(v.value<0? ", reaching past zero" : "")+". Every piece is the same size &mdash; so just count back.";
+          maths="All pieces are "+htmlFrac(1,v.b)+"s";
+        }else{
+          prompt= add
+            ? "Slide the second length on to the end of the first. The total is a point on the line &mdash; but "+ordinal(v.b)+"s and "+ordinal(v.d)+"s are different sizes, so it has no name yet."
+            : "The take-away sits over the end of the length, pointing back"+(v.value<0? " &mdash; past zero, because it is longer than what we started with" : "")+". It ends at a point &mdash; but "+ordinal(v.b)+"s and "+ordinal(v.d)+"s are different sizes, so it has no name yet.";
+          maths=fa+opSym+fc+" = ?";
+        }
+        break;
+      case "wrong":
+        prompt="&ldquo;Add the tops, add the bottoms&rdquo; lands <em>here</em> &mdash; between the two fractions we started with. Joining two lengths cannot make something shorter than the longer one.";
+        maths=fa+" + "+fc+" &ne; "+htmlFrac(v.a+v.c,v.b+v.d);
+        break;
+      case "split":{
+        const kb=v.D/v.b, kd=v.D/v.d;
+        if(kb===1){
+          prompt="The "+ordinal(v.b)+"s already fit &mdash; only the "+(add?"second":"take-away")+" length needs splitting. Cut each "+ordinal(v.d)+" into "+kd+". Nothing moves, nothing grows.";
+        }else if(kd===1){
+          prompt="The "+ordinal(v.d)+"s already fit &mdash; only the first length needs splitting. Cut each "+ordinal(v.b)+" into "+kb+". Nothing moves, nothing grows.";
+        }else{
+          prompt="Rename both lengths in the same unit: "+ordinal(v.D)+"s. Cut each "+ordinal(v.b)+" into "+kb+" and each "+ordinal(v.d)+" into "+kd+". Nothing moves, nothing grows.";
+        }
+        maths=fa+" = "+htmlFrac(v.A,v.D)+"&ensp;and&ensp;"+fc+" = "+htmlFrac(v.C,v.D);
+        break;
+      }
+      case "count":{
+        const den=v.sameDen? v.b : v.D;
+        const An=v.sameDen? v.a : v.A;
+        const Cn=v.sameDen? v.c : v.C;
+        prompt= add
+          ? "Now every jump is "+htmlFrac(1,den)+". Count on from "+htmlFrac(An,den)+"."
+          : "Now every jump is "+htmlFrac(1,den)+". Count back from "+htmlFrac(An,den)+(v.value<0? " &mdash; straight past zero." : ".");
+        maths=htmlFrac(An,den)+opSym+htmlFrac(Cn,den)+" = "+(v.S===0?"0":htmlFrac(v.S,v.D));
+        break;
+      }
+      case "answer":
+        prompt= v.value<0
+          ? "The count passed zero, so the answer is negative &mdash; a point to the left of 0. The lengths never changed &mdash; only what we called the pieces."
+          : "One point, one name. The lengths never changed &mdash; only what we called the pieces.";
+        maths=fa+opSym+fc+" = "+htmlAnswerChain();
+        break;
+    }
+
+    if(id==="answer" && state.predictLocked && state.predictValue!=null){
+      const off=Math.abs(state.predictValue-v.value);
+      const word = off<0.02 ? "spot on" : (off<0.06 ? "very close" : (off<0.15 ? "in the right area" : "worth a rethink"));
+      prompt += " The orange estimate was "+word+".";
+    }
+
+    $("stepPrompt").innerHTML=prompt;
+    const m=$("stepMaths");
+    m.innerHTML=maths;
+    m.classList.toggle("answer", id==="answer");
+    m.classList.toggle("wrongMaths", id==="wrong");
+    $("stepCount").textContent="Step "+(state.step+1)+" of "+STEPS.length;
+  }
+
+  const ORD={2:"half",3:"third",4:"quarter",5:"fifth",6:"sixth",7:"seventh",8:"eighth",9:"ninth",10:"tenth",11:"eleventh",12:"twelfth"};
+  function ordinal(d){
+    if(ORD[d]) return ORD[d];
+    return d+"th";
+  }
+
+  /* ===================== predict ===================== */
+  function predictDraggable(){ return state.predict && state.step===0 && !state.predictLocked; }
+  function updatePredictUI(){
+    const on=predictDraggable();
+    $("lockBtn").hidden=!on;
+    $("lockBtn").disabled=(state.predictValue==null);
+    $("nextBtn").disabled = on && !state.predictLocked;
+    $("hint").innerHTML = on
+      ? "Drag on the line to place the estimate. The answer stays hidden until it is locked in."
+      : "Space or &rarr; for the next step, &larr; to go back.";
+  }
+  function pointerToValue(evt){
+    const svg=$("nline");
+    const r=svg.getBoundingClientRect();
+    const cx=(evt.touches&&evt.touches[0]? evt.touches[0].clientX : evt.clientX);
+    const vx=(cx-r.left)/r.width*1000;
+    let v=vFromX(vx);
+    const amax=axisMax(), amin=axisMin();
+    if(v<amin) v=amin; if(v>amax) v=amax;
+    return v;
+  }
+  function onPointerDown(e){
+    if(!predictDraggable()) return;
+    e.preventDefault();
+    state.predictValue=pointerToValue(e);
+    render(); narrate(); updatePredictUI();
+    const move=function(ev){ ev.preventDefault(); state.predictValue=pointerToValue(ev); render(); };
+    const up=function(){
+      window.removeEventListener("pointermove",move);
+      window.removeEventListener("pointerup",up);
+      updatePredictUI();
+    };
+    window.addEventListener("pointermove",move,{passive:false});
+    window.addEventListener("pointerup",up);
+  }
+
+  /* ===================== navigation ===================== */
+  let animTimer=null;
+  function clearAnims(){
+    if(animTimer){ clearTimeout(animTimer); animTimer=null; }
+    state.animJoin=false; state.animSplit=false; state.animCount=false; state.animWrong=false;
+    state.animExit=null;
+  }
+  function goto(i){
+    const prev=state.step;
+    const target=Math.max(0,Math.min(STEPS.length-1,i));
+    // one step back: play the current step's EXIT (pieces lift out) first,
+    // then land on the earlier step
+    if(target===prev-1 && !state.animExit){
+      clearAnims();
+      state.animExit=stepId();
+      render();
+      const wait = state.animExit==="split" ? 620 : (state.animExit==="join" ? 540 : 380);
+      animTimer=setTimeout(function(){
+        animTimer=null;
+        state.animExit=null;
+        state.step=target;
+        render(); narrate(); syncNav();
+      },wait);
+      return;
+    }
+    clearAnims();
+    state.step=target;
+    const single=(state.step===prev+1);
+    const id=stepId();
+    let after=0;
+    if(single && id==="join"){ state.animJoin=true; after=700; }
+    if(single && id==="split"){ state.animSplit=true; after=POP_AFTER+400; }
+    if(single && id==="count"){ state.animCount=true; after=countHops()*150+900; }
+    if(single && id==="wrong"){ state.animWrong=true; after=520; }
+    render(); narrate(); syncNav();
+    if(after>0){
+      animTimer=setTimeout(function(){ clearAnims(); animTimer=null; render(); },after);
+    }
+  }
+  function syncNav(){
+    $("backBtn").disabled=(state.step===0);
+    $("revealBtn").disabled=(state.step===STEPS.length-1);
+    updatePredictUI();
+    if(!predictDraggable()) $("nextBtn").disabled=(state.step===STEPS.length-1);
+  }
+  function resetSteps(){
+    clearAnims();
+    STEPS=buildSteps();
+    state.step=0;
+    state.predictValue=null;
+    state.predictLocked=false;
+    render(); narrate(); syncNav();
+  }
+
+  /* ===================== input ===================== */
+  function msg(s){ $("inputMsg").innerHTML=s||""; }
+  function setProblem(a,b,c,d,quiet){
+    if(![a,b,c,d].every(function(x){ return Number.isFinite(x) && x===Math.floor(x); })){
+      if(!quiet) msg("Whole numbers only, please."); return false;
+    }
+    if(!(b>=2&&b<=12) || !(d>=2&&d<=12)){
+      if(!quiet) msg("Keep both denominators between 2 and 12 so the pieces stay readable."); return false;
+    }
+    if(!(a>=1&&a<b) || !(c>=1&&c<d)){
+      if(!quiet) msg("Keep both fractions proper &mdash; tops at least 1 and smaller than their bottoms."); return false;
+    }
+    state.a=a; state.b=b; state.c=c; state.d=d;
+    $("aInput").value=a; $("bInput").value=b; $("cInput").value=c; $("dInput").value=d;
+    msg("");
+    resetSteps();
+    return true;
+  }
+  function readInputs(){
+    return setProblem(
+      parseInt($("aInput").value,10), parseInt($("bInput").value,10),
+      parseInt($("cInput").value,10), parseInt($("dInput").value,10)
+    );
+  }
+
+  /* ===================== the randomiser ===================== */
+  const RELATED_PAIRS=[[2,4],[2,6],[2,8],[2,10],[2,12],[3,6],[3,9],[3,12],[4,8],[4,12],[5,10],[6,12]];
+  const ANY_PAIRS=[[2,3],[2,5],[2,7],[2,9],[3,4],[3,5],[3,7],[3,8],[4,5],[4,6],[4,10],[6,8],[6,9],[8,12]];
+  const TIER_LABEL={ same:"Same", related:"Related", any:"Unrelated" };
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+  function rnd(lo,hi){ return lo+Math.floor(Math.random()*(hi-lo+1)); }
+
+  function randomPair(){
+    const prev=state.a+"/"+state.b+"|"+state.c+"/"+state.d;
+    for(let attempt=0; attempt<500; attempt++){
+      let b,d;
+      if(state.tier==="same"){ b=d=rnd(3,12); }
+      else{
+        const pool=(state.tier==="related")? RELATED_PAIRS : ANY_PAIRS;
+        let pr=pick(pool);
+        if(state.denKind==="prod" && pr[0]*pr[1]>36) continue;
+        if(Math.random()<0.5) pr=[pr[1],pr[0]];
+        b=pr[0]; d=pr[1];
+      }
+      let a=rnd(1,b-1), c=rnd(1,d-1);
+      if(state.mode==="sub" && Math.abs(a/b-c/d)<1e-9 && Math.random()<0.8) continue; // zero answers only occasionally
+      if(a+"/"+b+"|"+c+"/"+d===prev) continue;
+      return {a:a,b:b,c:c,d:d};
+    }
+    return {a:1,b:2,c:1,d:3};
+  }
+  function generate(){
+    const f=randomPair();
+    setProblem(f.a,f.b,f.c,f.d);
+  }
+  function setTier(t){
+    state.tier=t;
+    const opts=document.querySelectorAll("#tierMenu .subOpt");
+    for(let i=0;i<opts.length;i++){
+      const on=(opts[i].dataset.tier===t);
+      opts[i].classList.toggle("on", on);
+      opts[i].setAttribute("aria-checked", String(on));
+    }
+    $("tierVal").textContent=TIER_LABEL[t];
+    $("tierTag").innerHTML="&middot; "+TIER_LABEL[t];
+  }
+  function setDenKind(k){
+    state.denKind=k;
+    const opts=document.querySelectorAll("#denMenu .subOpt");
+    for(let i=0;i<opts.length;i++){
+      const on=(opts[i].dataset.den===k);
+      opts[i].classList.toggle("on", on);
+      opts[i].setAttribute("aria-checked", String(on));
+    }
+    $("denVal").textContent = k==="lcm" ? "Smallest" : "Multiply";
+    resetSteps();
+  }
+
+  /* ===================== mode ===================== */
+  function setMode(m){
+    state.mode=m;
+    $("modeAdd").classList.toggle("on",m==="add");
+    $("modeSub").classList.toggle("on",m==="sub");
+    $("modeAdd").setAttribute("aria-selected",String(m==="add"));
+    $("modeSub").setAttribute("aria-selected",String(m==="sub"));
+    $("opSign").textContent = m==="add" ? "+" : "−";
+    msg("");
+    resetSteps();
+  }
+
+  /* ===================== wiring ===================== */
+  function closeMenus(){
+    $("settingsMenu").classList.remove("open");
+    $("settingsBtn").setAttribute("aria-expanded","false");
+    $("toolsMenu").classList.remove("open");
+    $("toolsBtn").setAttribute("aria-expanded","false");
+    ["tierWrap","denWrap"].forEach(function(id){ $(id).classList.remove("open"); });
+    ["tierRow","denRow"].forEach(function(id){ $(id).setAttribute("aria-expanded","false"); });
+  }
+  function wireMenu(btnId,menuId){
+    $(btnId).addEventListener("click",function(e){
+      e.stopPropagation();
+      const m=$(menuId), wasOpen=m.classList.contains("open");
+      closeMenus();
+      if(!wasOpen){ m.classList.add("open"); $(btnId).setAttribute("aria-expanded","true"); }
+    });
+    $(menuId).addEventListener("click",function(e){ e.stopPropagation(); });
+  }
+  function wireSub(wrapId,rowId,menuSel,dataKey,apply){
+    $(rowId).addEventListener("click",function(e){
+      e.stopPropagation();
+      const w=$(wrapId), open=w.classList.toggle("open");
+      $(rowId).setAttribute("aria-expanded",String(open));
+    });
+    const opts=document.querySelectorAll(menuSel+" .subOpt");
+    for(let i=0;i<opts.length;i++){
+      opts[i].addEventListener("click",function(e){
+        e.stopPropagation();
+        if(this.disabled) return;
+        apply(this.dataset[dataKey]);
+        $(wrapId).classList.remove("open");
+        $(rowId).setAttribute("aria-expanded","false");
+      });
+    }
+  }
+
+  function wire(){
+    wireMenu("settingsBtn","settingsMenu");
+    wireMenu("toolsBtn","toolsMenu");
+    document.addEventListener("click",closeMenus);
+
+    $("modeAdd").addEventListener("click",function(){ setMode("add"); });
+    $("modeSub").addEventListener("click",function(){ setMode("sub"); });
+
+    $("useBtn").addEventListener("click",readInputs);
+    ["aInput","bInput","cInput","dInput"].forEach(function(idd){
+      $(idd).addEventListener("keydown",function(e){ if(e.key==="Enter") readInputs(); });
+    });
+
+    wireSub("tierWrap","tierRow","#tierMenu","tier",setTier);
+    wireSub("denWrap","denRow","#denMenu","den",setDenKind);
+    $("genBtn").addEventListener("click",generate);
+
+    $("predictToggle").addEventListener("change",function(e){
+      state.predict=e.target.checked;
+      if(!state.predict){ state.predictValue=null; state.predictLocked=false; }
+      render(); narrate(); syncNav();
+    });
+    $("misconToggle").addEventListener("change",function(e){
+      state.miscon=e.target.checked;
+      resetSteps();
+    });
+
+    $("nextBtn").addEventListener("click",function(){ goto(state.step+1); });
+    $("backBtn").addEventListener("click",function(){ goto(state.step-1); });
+    $("revealBtn").addEventListener("click",function(){ goto(STEPS.length-1); });
+    $("restartBtn").addEventListener("click",function(){ resetSteps(); });
+    $("lockBtn").addEventListener("click",function(){
+      if(state.predictValue==null) return;
+      state.predictLocked=true;
+      render(); narrate(); syncNav();
+    });
+
+    $("resetBtn").addEventListener("click",function(){
+      $("predictToggle").checked=false; state.predict=false;
+      $("misconToggle").checked=false; state.miscon=false;
+      setDenKind("lcm");
+      setTier("any");
+      state.mode="add";
+      $("modeAdd").classList.add("on"); $("modeSub").classList.remove("on");
+      $("opSign").textContent="+";
+      setProblem(1,2,1,3);
+    });
+
+    $("nline").addEventListener("pointerdown",onPointerDown);
+
+    document.addEventListener("keydown",function(e){
+      const t=e.target;
+      if(t && (t.tagName==="INPUT"||t.tagName==="TEXTAREA")) return;
+      if(e.key===" "||e.key==="ArrowRight"){ e.preventDefault(); if(!$("nextBtn").disabled) goto(state.step+1); }
+      else if(e.key==="ArrowLeft"){ e.preventDefault(); goto(state.step-1); }
+      else if(e.key==="g"||e.key==="G"){ generate(); }
+    });
+  }
+
+  /* ===================== boot ===================== */
+  wire();
+  setTier("any");
+  setDenKind("lcm");
+  setProblem(1,2,1,3);
+
+  window.__ADDFRAC__={ gcd:gcd, lcm:lcm, state:state, derived:derived, buildSteps:buildSteps,
+                       setProblem:setProblem, setMode:setMode, setTier:setTier, setDenKind:setDenKind,
+                       randomPair:randomPair, axisMax:axisMax, X:X, goto:goto, render:render, narrate:narrate };
+})();
+</script>
+</body>
+</html>

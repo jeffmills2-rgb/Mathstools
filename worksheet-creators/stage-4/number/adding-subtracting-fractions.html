@@ -1,0 +1,824 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Adding and Subtracting Fractions — Worksheet Generator</title>
+
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --ink:#111827;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --shadow:0 14px 40px rgba(0,0,0,.10);
+      --radius:18px;
+
+      --blue:#2563eb;
+      --green:#16a34a;
+      --red:#dc2626;
+
+      --friendly1:#4ade80; --friendly2:#16a34a;
+      --mild1:#60a5fa;     --mild2:#2563eb;
+      --medium1:#facc15;   --medium2:#d97706;
+      --spicy1:#fb923c;    --spicy2:#ea580c;
+      --xhot1:#f87171;     --xhot2:#b91c1c;
+
+      --footer-h:44px;
+      --mathFont:"Cambria Math","STIX Two Math","STIXGeneral","Times New Roman",serif;
+      --uiFont:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--ink);
+      font-family:var(--uiFont);
+      padding-bottom:var(--footer-h);
+    }
+
+    .wrap{ max-width:1280px; margin:14px auto 32px; padding:0 14px; }
+
+    .card{
+      background:var(--card);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:16px;
+    }
+
+    .title{ margin:0 0 4px; font-size:28px; font-weight:1000; letter-spacing:.2px; }
+
+    .subtitle{
+      margin:0 0 14px; color:var(--muted); font-weight:850;
+      font-size:15px; line-height:1.35;
+    }
+
+    .controls{
+      display:flex; align-items:flex-end; justify-content:space-between;
+      gap:12px; flex-wrap:wrap; padding:12px;
+      border:1px solid var(--border); border-radius:18px;
+      background:linear-gradient(180deg,#ffffff,#f9fafb);
+    }
+
+    .fieldRow{ display:flex; gap:16px; flex-wrap:wrap; align-items:flex-end; }
+
+    label{ display:block; margin:0 0 7px; font-size:15px; font-weight:950; }
+
+    select, input[type="number"]{
+      border:2px solid #e5e7eb; border-radius:14px; padding:12px 13px;
+      font-weight:950; font-size:17px; background:#fff; min-width:220px; outline:none;
+    }
+    input[type="number"]{ min-width:180px; }
+
+    .toggles{
+      display:flex; flex-direction:column; gap:9px;
+      padding:4px 2px 2px;
+    }
+
+    .sw{
+      display:inline-flex; align-items:center; gap:10px; cursor:pointer;
+      user-select:none; font-weight:950; font-size:14.5px; color:#111827; white-space:nowrap;
+    }
+    .sw input{ position:absolute; opacity:0; width:0; height:0; }
+    .sw .track{
+      position:relative; width:46px; height:26px; border-radius:999px; background:#cbd5e1;
+      transition:.18s ease; flex:0 0 auto; box-shadow:inset 0 1px 3px rgba(15,23,42,.18);
+    }
+    .sw .track::after{
+      content:""; position:absolute; top:3px; left:3px; width:20px; height:20px;
+      border-radius:50%; background:#fff; box-shadow:0 2px 6px rgba(15,23,42,.3); transition:.18s ease;
+    }
+    .sw input:checked + .track{ background:var(--green); }
+    .sw input:checked + .track::after{ transform:translateX(20px); }
+    .sw input:focus-visible + .track{ box-shadow:0 0 0 4px rgba(37,99,235,.28); }
+    .sw input:disabled + .track{ opacity:.45; }
+
+    .btnRow{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end; }
+
+    button{
+      border:none; border-radius:14px; padding:12px 16px; font-weight:1000; cursor:pointer;
+      background:#f3f4f6; color:#111827;
+      transition:transform .04s ease, filter .15s ease, opacity .2s ease;
+      user-select:none; font-size:16px;
+    }
+    button:active{ transform:scale(.98); }
+    button.primary{ background:#2563eb; color:#fff; }
+    button.ghost{ background:#eef2ff; color:#1d4ed8; }
+    button.danger{ background:#fee2e2; color:#991b1b; }
+
+    .outWrap{ margin-top:14px; }
+
+    .page{
+      margin-top:14px; background:#fff; border:1px solid var(--border);
+      border-radius:18px; box-shadow:0 10px 26px rgba(15,23,42,.08); overflow:hidden;
+    }
+
+    .pageHeader{
+      padding:10px 14px 8px; border-bottom:1px solid rgba(229,231,235,.95);
+      display:flex; align-items:flex-start; justify-content:space-between;
+      gap:10px; flex-wrap:wrap;
+    }
+
+    .hdrTitle{ font-weight:1000; font-size:15px; line-height:1.12; }
+    .hdrSub{ color:var(--muted); font-weight:850; font-size:12px; margin-top:2px; }
+
+    .nameDate{
+      display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;
+      justify-content:flex-end; margin-left:auto;
+    }
+    .lineField{ display:flex; flex-direction:column; gap:4px; min-width:126px; }
+    .lineLabel{ font-size:11px; font-weight:950; color:var(--muted); }
+    .lineBox{ height:22px; border:1.8px solid #111827; border-radius:9px; background:#fff; }
+
+    .grid{
+      padding:16px 16px 18px; display:grid;
+      grid-template-columns:repeat(3, 1fr);
+      grid-template-rows:repeat(6, minmax(0, 1fr));
+      gap:12px 14px; min-height:1120px; align-content:stretch;
+    }
+    /* with the model the card needs room to breathe — two across, four down */
+    .grid.withModel{
+      grid-template-columns:repeat(2, 1fr);
+      grid-template-rows:repeat(4, minmax(0, 1fr));
+      gap:12px 14px;
+    }
+
+    .qCard{
+      border:1px solid rgba(229,231,235,.95); border-radius:14px;
+      padding:12px 12px 10px; background:#fff; break-inside:avoid;
+      display:flex; flex-direction:column; justify-content:space-between;
+      min-height:0; height:100%; position:relative; overflow:hidden;
+    }
+
+    .qBadge{
+      position:absolute; top:8px; right:8px; min-width:28px; height:28px;
+      border-radius:999px; display:flex; align-items:center; justify-content:center;
+      font-size:12px; font-weight:1000; color:#fff; box-shadow:0 4px 10px rgba(0,0,0,.08);
+    }
+    .qBadge.friendly{ background:linear-gradient(180deg,var(--friendly1),var(--friendly2)); }
+    .qBadge.mild{ background:linear-gradient(180deg,var(--mild1),var(--mild2)); }
+    .qBadge.spicy{ background:linear-gradient(180deg,var(--spicy1),var(--spicy2)); }
+    .qBadge.xhot{ background:linear-gradient(180deg,var(--xhot1),var(--xhot2)); }
+
+    .prompt{ text-align:center; margin:2px 0 0; padding:0 8px; }
+
+    .promptSmall{
+      font-weight:900; font-size:10px; color:var(--muted); margin-bottom:6px;
+      line-height:1.15; min-height:12px; letter-spacing:.15px; padding-right:24px;
+    }
+
+    .questionLine{
+      display:flex; justify-content:center; align-items:center; gap:8px; flex-wrap:wrap;
+      font-family:var(--mathFont); font-weight:1000; color:#0f172a;
+      line-height:1.15; text-align:center; font-size:29px; min-height:78px;
+    }
+    .withModel .questionLine{ min-height:0; font-size:22px; }
+
+    .questionLine .eq{ color:#111827; }
+    .questionLine .op{ color:#334155; }
+
+    .fraction{
+      display:inline-flex; flex-direction:column; align-items:center; justify-content:center;
+      line-height:1; vertical-align:middle; min-width:24px; transform:translateY(1px);
+    }
+    .fraction .top, .fraction .bottom{ display:block; text-align:center; line-height:1; }
+    .fraction .bar{
+      width:100%; min-width:18px; height:2.8px; background:#111;
+      border-radius:999px; margin:2px 0;
+    }
+    .mixedNum{ display:inline-flex; align-items:center; gap:.14em; }
+    .negSign{ margin-right:.1em; }
+
+    /* bilingual lines: target language on top, English beneath (numerals stay Western) */
+    .tl{ display:block; }
+    .tl[lang="ar"], .tl[lang="fa"]{ font-size:1.06em; }
+    .el{ display:block; font-size:.82em; opacity:.72; font-weight:700; margin-top:1px; }
+    bdi{ unicode-bidi:isolate; }
+
+    .modelWrap{ margin:2px 0 0; }
+    .modelWrap svg{ width:100%; height:auto; display:block; }
+    .modelWrap svg text{ font-family:var(--mathFont); }
+
+    .ansRow{
+      margin-top:12px; display:flex; align-items:center; justify-content:center;
+      gap:8px; flex-wrap:wrap;
+    }
+    .ansLabel{ font-weight:950; font-size:15px; font-family:var(--mathFont); line-height:1; }
+    .ansBox{ width:110px; height:30px; border:1.8px solid #111827; border-radius:999px; background:#fff; }
+    .ansBox.key{
+      display:flex; align-items:center; justify-content:center; font-weight:1000;
+      font-size:16px; font-family:var(--mathFont); color:var(--green);
+      border-color:var(--green); background:rgba(22,163,74,.08); padding:0 8px;
+      width:auto; min-width:110px;
+    }
+    .ansBox.key .fraction .bar{ background:var(--green); }
+
+    .pageFooter{
+      padding:7px 14px; border-top:1px solid rgba(229,231,235,.95);
+      display:flex; align-items:center; justify-content:center; gap:10px;
+      font-weight:950; color:#111827; font-size:12px; background:rgba(255,255,255,.96);
+    }
+    .pageFooter a{ color:#2563eb; text-decoration:none; font-weight:1000; }
+    .pageFooter a:hover{ text-decoration:underline; }
+
+    .mmtFooter{
+      position:fixed; left:0; right:0; bottom:0; height:var(--footer-h);
+      display:flex; align-items:center; justify-content:center; padding:0 12px;
+      background:rgba(255,255,255,.92); border-top:1px solid rgba(229,231,235,.95);
+      backdrop-filter:blur(8px); z-index:500; font-weight:900; color:#111827;
+      text-align:center; font-size:13px;
+    }
+    .mmtFooter a{ color:#2563eb; text-decoration:none; font-weight:950; }
+    .mmtFooter a:hover{ text-decoration:underline; }
+
+    @media print{
+      @page{ size:A4; margin:7mm; }
+
+      html, body{ width:210mm; height:auto; }
+
+      body{
+        background:#fff; padding-bottom:0;
+        -webkit-print-color-adjust:exact; print-color-adjust:exact;
+      }
+
+      .wrap{ max-width:none; margin:0; padding:0; }
+      .card{ box-shadow:none; border-radius:0; padding:0; }
+      .controls, .title, .subtitle, .mmtFooter{ display:none !important; }
+
+      .page{
+        margin:0; border:none; border-radius:0; box-shadow:none; page-break-after:always;
+      }
+      .page:last-child{ page-break-after:auto; }
+
+      .pageHeader{ padding:2.4mm 3.2mm 2mm; }
+      .hdrTitle{ font-size:10px; }
+      .hdrSub{ font-size:8.4px; }
+
+      .nameDate{ gap:6px; }
+      .lineField{ min-width:86px; gap:2px; }
+      .lineLabel{ font-size:8px; }
+      .lineBox{ height:15px; border-width:1.2px; border-radius:7px; }
+
+      .grid{ padding:3.6mm 3.2mm 3.2mm; gap:2.2mm 2.5mm; min-height:221mm; }
+      .grid.withModel{ gap:3mm 3.2mm; min-height:243mm; }
+
+      .qCard{ padding:3.2mm 2.2mm 2.4mm; border-radius:10px; border-color:#d5dae1; }
+
+      .qBadge{ top:2mm; right:2mm; min-width:6.2mm; height:6.2mm; font-size:8px; }
+
+      .prompt{ padding:0 2mm; }
+      .promptSmall{ font-size:7px; min-height:3mm; margin-bottom:1.2mm; padding-right:6.5mm; }
+
+      .questionLine{ font-size:17px; min-height:22mm; gap:4px; }
+      .withModel .questionLine{ font-size:13px; min-height:0; margin-bottom:1mm; }
+
+      .fraction{ min-width:14px; }
+      .fraction .bar{ min-width:12px; height:2px; margin:1px 0; }
+
+      .ansRow{ margin-top:2.4mm; gap:3px; }
+      .ansLabel{ font-size:9px; }
+      .ansBox{ width:18mm; height:4.8mm; border-width:1.2px; }
+      .ansBox.key{ font-size:10px; min-width:18mm; }
+
+      .pageFooter{ padding:1.8mm 3.2mm 1.3mm; font-size:7.8px; }
+    }
+  </style>
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "c7e5713b5e4f4993907eb285797dc89b"}'></script><!-- End Cloudflare Web Analytics -->
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1 class="title">Adding and Subtracting Fractions — Worksheet Generator</h1>
+      <p class="subtitle">Printable A4 worksheets built from the <strong>Adding and Subtracting Fractions</strong> teaching tool. The levels are the tool's own ladder: same denominators (count the pieces), related (one fraction renames), unrelated (both rename), and Extra hot — non-related (coprime) denominators up to 10, where the new unit is the denominators multiplied. With <em>Show the model</em> on, each question prints the two fraction bars and a number line already cut into the common unit, with the starting fraction marked — students count on or back. <em>Fade the model</em> scaffolds the first half only, so support is withdrawn on the same paper. Worksheet language prints every instruction bilingually — Arabic or Farsi on top, English beneath — for EAL/D students; the maths stays in Western numerals.</p>
+
+      <div class="controls">
+        <div class="fieldRow">
+          <div>
+            <label for="levelSel">Level</label>
+            <select id="levelSel">
+              <option value="same">Sweet — same denominators</option>
+              <option value="related">Mild — related denominators</option>
+              <option value="unrelated">Medium — unrelated denominators</option>
+              <option value="coprime">Extra hot — non-related (coprime) denominators</option>
+              <option value="mixed">Mixed spice — a ladder of all four</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="opSel">Operation</label>
+            <select id="opSel">
+              <option value="both">Adding and subtracting</option>
+              <option value="add">Adding only</option>
+              <option value="sub">Subtracting only</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="countInp">Number of questions (1&ndash;60)</label>
+            <input id="countInp" type="number" min="1" max="60" value="18" />
+          </div>
+
+          <div>
+            <label for="langSel">Worksheet language</label>
+            <select id="langSel">
+              <option value="en">English only</option>
+              <option value="ar">العربية + English</option>
+              <option value="fa">فارسی + English</option>
+            </select>
+          </div>
+
+          <div class="toggles">
+            <label class="sw"><input type="checkbox" id="modelToggle" /><span class="track"></span><span>Show the model</span></label>
+            <label class="sw"><input type="checkbox" id="fadeToggle" /><span class="track"></span><span>Fade the model (first half only)</span></label>
+            <label class="sw"><input type="checkbox" id="improperToggle" /><span class="track"></span><span>Include answers past 1 whole</span></label>
+            <label class="sw"><input type="checkbox" id="negativeToggle" /><span class="track"></span><span>Allow take-aways past zero</span></label>
+            <label class="sw"><input type="checkbox" id="keyToggle" checked /><span class="track"></span><span>Answer key pages</span></label>
+          </div>
+        </div>
+
+        <div class="btnRow">
+          <button id="genBtn" class="primary">Generate worksheet</button>
+          <button id="printBtn" class="ghost">Print (Ctrl+P)</button>
+          <button id="resetBtn" class="danger">Reset</button>
+        </div>
+      </div>
+
+      <div id="out" class="outWrap"></div>
+    </div>
+  </div>
+
+  <div class="mmtFooter">
+    This tool and more can be found at&nbsp;
+    <a href="https://www.millsmathstools.au">www.millsmathstools.au</a>
+  </div>
+
+<script>
+(() => {
+  "use strict";
+
+  const SITE = "https://www.millsmathstools.au";
+
+  /* ===================== worksheet language (EN / Arabic / Farsi) =====================
+     Same convention as the trilingual quizzes: the selected language on top,
+     English beneath; the maths and all numerals stay LTR/Western.               */
+  let LANG = "en";
+  try{ LANG = localStorage.getItem("mmt-asf-ws-lang") || "en"; }catch(_){ }
+  function TR(o){ if(o==null) return ""; if(typeof o==="string") o={en:o};
+    if(LANG==="en"||!o[LANG]) return o.en||"";
+    return '<span class="tl" dir="rtl" lang="'+LANG+'">'+o[LANG]+'</span><span class="el">'+(o.en||"")+'</span>'; }
+
+  const WS = {
+    addModel:{en:"Add the fractions. Count along the number line, mark the answer, then write it. Simplest form if you can.",
+      ar:"اجمع الكسرين. عُدَّ على خط الأعداد، وحدّد الإجابة، ثم اكتبها. بأبسط صورة إن استطعت.",
+      fa:"کسرها را جمع کن. روی خط اعداد بشمار، جای پاسخ را علامت بزن، سپس آن را بنویس. اگر می‌توانی به ساده‌ترین صورت."},
+    subModel:{en:"Subtract the fractions. Count along the number line, mark the answer, then write it. Simplest form if you can.",
+      ar:"اطرح الكسرين. عُدَّ على خط الأعداد، وحدّد الإجابة، ثم اكتبها. بأبسط صورة إن استطعت.",
+      fa:"کسرها را تفریق کن. روی خط اعداد بشمار، جای پاسخ را علامت بزن، سپس آن را بنویس. اگر می‌توانی به ساده‌ترین صورت."},
+    addPlain:{en:"Add the fractions. Give your answer in simplest form.",
+      ar:"اجمع الكسرين. اكتب إجابتك في أبسط صورة.",
+      fa:"کسرها را جمع کن. پاسخ را به ساده‌ترین صورت بنویس."},
+    subPlain:{en:"Subtract the fractions. Give your answer in simplest form.",
+      ar:"اطرح الكسرين. اكتب إجابتك في أبسط صورة.",
+      fa:"کسرها را تفریق کن. پاسخ را به ساده‌ترین صورت بنویس."},
+    answer:{en:"Answer:",ar:"الإجابة:",fa:"پاسخ:"},
+    name:{en:"Name",ar:"الاسم",fa:"نام"},
+    date:{en:"Date",ar:"التاريخ",fa:"تاریخ"}
+  };
+
+  /* ===================== number helpers (ported from the teaching tool) ===================== */
+  function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ const t=a%b; a=b; b=t; } return a; }
+  function lcm(a,b){ return a/(gcd(a,b)||1)*b; }
+
+  function derived(q){
+    const D=lcm(q.b,q.d);
+    const A=q.a*D/q.b, C=q.c*D/q.d;
+    const S=q.op==="add" ? A+C : A-C;
+    const g=gcd(S,D)||1;
+    return { D, A, C, S, g, sn:S/g, sd:D/g, va:q.a/q.b, value:S/D };
+  }
+
+  /* ===================== HTML fraction bits (sign-aware) ===================== */
+  function fractionHTML(num, den){
+    if(num<0) return '<span class="negSign">&minus;</span>'+fractionHTML(-num,den);
+    return '<span class="fraction"><span class="top">'+num+'</span><span class="bar"></span><span class="bottom">'+den+'</span></span>';
+  }
+  function mixedHTML(n,d){
+    if(n<0) return '<span class="negSign">&minus;</span>'+mixedHTML(-n,d);
+    if(d===1) return String(n);
+    if(n<d) return fractionHTML(n,d);
+    const w=Math.floor(n/d), r=n-w*d;
+    if(r===0) return String(w);
+    return '<span class="mixedNum"><span>'+w+'</span>'+fractionHTML(r,d)+'</span>';
+  }
+  // the answer chain the key prints: S/D [= simplest] [= mixed]
+  function answerHTML(q){
+    const v=derived(q);
+    if(v.S===0) return "0";
+    let s=fractionHTML(v.S,v.D);
+    if(v.g>1) s+=' <span class="eq">=</span> '+(v.sd===1 ? String(v.sn) : fractionHTML(v.sn,v.sd));
+    if(Math.abs(v.sn)>v.sd && v.sd>1) s+=' <span class="eq">=</span> '+mixedHTML(v.sn,v.sd);
+    return s;
+  }
+
+  /* ===================== the model =====================
+     The teaching tool's scaffold at the moment the thinking happens: the two
+     bars in their OWN units, and a number line already cut into the COMMON
+     unit with the starting fraction marked. The student counts on (or back)
+     and marks the answer — the line does not give it away.                    */
+
+  const SVG_W = 520, SVG_H = 168;
+  const L = 46, R = 480;
+  const BAR_H = 15, Y_A = 5, Y_B = 26;
+  const LINE_Y = 106;
+
+  const C = {
+    segA:"#7c3aed", segB:"#2563eb", take:"#db2777",
+    frame:"#d7dde5", faint:"#cbd5e1",
+    line:"#1e293b", whole:"#0f172a", muted:"#64748b"
+  };
+
+  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+  function svgText(x,y,str,o){
+    o = o || {};
+    return '<text x="'+x+'" y="'+y+'" text-anchor="'+(o.anchor||"middle")+'"'
+      + ' font-size="'+(o.size||15)+'" font-weight="'+(o.weight||"800")+'"'
+      + ' fill="'+(o.fill||C.line)+'"'
+      + (o.family? ' font-family="'+o.family+'"' : '')
+      + ' stroke="#fff" stroke-width="3.4" paint-order="stroke" stroke-linejoin="round"'
+      + '>'+esc(str)+'</text>';
+  }
+  function svgLine(x1,y1,x2,y2,stroke,w,dash){
+    return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+stroke+'" stroke-width="'+w+'" stroke-linecap="round"'+(dash?' stroke-dasharray="'+dash+'"':'')+'/>';
+  }
+  function fracWidth(n,d,fs){ return Math.max(String(Math.abs(n)).length,String(d).length)*fs*0.58+8; }
+  function svgFrac(cx,cy,n,d,fs,fill){
+    const barW = fracWidth(n,d,fs);
+    return '<g>'
+      + svgText(cx, cy-fs*0.30, String(n), {size:fs, fill:fill})
+      + svgLine(cx-barW/2, cy+fs*0.06, cx+barW/2, cy+fs*0.06, fill, Math.max(1.8,fs*0.09))
+      + svgText(cx, cy+fs*1.02, String(d), {size:fs, fill:fill})
+      + '</g>';
+  }
+
+  function modelSVG(q){
+    const v=derived(q);
+    const amax = v.value>1 ? 2 : 1;
+    const amin = v.value<0 ? -1 : 0;
+    const X = u => L + ((u-amin)/(amax-amin))*(R-L);
+    const x0=X(0), x1=X(1), xva=X(v.va);
+    const add=(q.op==="add");
+
+    let s = '<svg viewBox="0 0 '+SVG_W+' '+SVG_H+'" role="img" aria-label="'
+      + esc('Fraction bars for '+q.a+'/'+q.b+(add?' plus ':' minus ')+q.c+'/'+q.d
+        +' above a number line cut into '+v.D+' equal parts')+'">';
+
+    // ---- the two bars, each in its own unit ----
+    function bar(y,den,count,color){
+      let b='<rect x="'+x0+'" y="'+y+'" width="'+(x1-x0)+'" height="'+BAR_H+'" rx="4" fill="#fff" stroke="'+C.frame+'" stroke-width="1.6"/>';
+      for(let k=1;k<den;k++){
+        const x=x0+(x1-x0)*k/den;
+        b+=svgLine(x,y+1.5,x,y+BAR_H-1.5,C.faint,1.4);
+      }
+      b+='<rect x="'+x0+'" y="'+y+'" width="'+((x1-x0)*count/den)+'" height="'+BAR_H+'" rx="4" fill="'+color+'" fill-opacity="0.78"/>';
+      for(let k=1;k<count;k++){
+        const x=x0+(x1-x0)*k/den;
+        b+=svgLine(x,y+2,x,y+BAR_H-2,"#fff",1.8);
+      }
+      return b;
+    }
+    // the printed equation sits directly above the card, so the bars carry no
+    // side labels — first fraction on top in purple, second below in blue/pink
+    s += bar(Y_A,q.b,q.a,C.segA);
+    s += bar(Y_B,q.d,q.c, add?C.segB:C.take);
+
+    // ---- the number line, already cut into the common unit ----
+    s += svgLine(L, LINE_Y, R, LINE_Y, C.line, 2.6);
+    const endTick=(x)=>svgLine(x,LINE_Y-13,x,LINE_Y+13,C.line,3);
+    s += endTick(L);
+    if(amin===-1){
+      s += svgText(L, LINE_Y+30, "−1", {size:15});
+      s += endTick(x0);
+      s += svgText(x0, LINE_Y+30, "0", {size:15});
+    }else{
+      s += svgText(L, LINE_Y+30, "0", {size:15});
+    }
+    s += endTick(x1);
+    s += svgText(x1, LINE_Y+30, "1 whole", {size:13, fill:C.whole, family:"var(--uiFont)", weight:"900"});
+    if(amax===2){
+      s += endTick(X(2));
+      s += svgText(X(2), LINE_Y+30, "2", {size:15});
+    }
+    const from=Math.round(amin*v.D), to=Math.round(amax*v.D);
+    for(let k=from+1;k<to;k++){
+      if(k % v.D === 0) continue;
+      s += svgLine(X(k/v.D), LINE_Y-7, X(k/v.D), LINE_Y+7, C.faint, 1.5);
+    }
+    // the start is marked; the answer is not — that is the work
+    s += svgLine(xva, LINE_Y-11, xva, LINE_Y+11, C.segA, 3);
+    s += svgFrac(xva, LINE_Y+28, q.a, q.b, 13, C.segA);
+
+    s += '</svg>';
+    return s;
+  }
+
+  /* ===================== the question banks =====================
+     The ladder mirrors the teaching tool and quiz:
+       same      — count like parts, no renaming (Sweet)
+       related   — one denominator divides the other, one bar renames (Mild)
+       unrelated — both rename into a genuinely new unit (Medium)
+     Mixed spice deals the three tiers in a repeating ladder, so one paper
+     differentiates across a whole class.                                       */
+
+  const RELATED_PAIRS=[[2,4],[2,6],[2,8],[2,10],[2,12],[3,6],[3,9],[3,12],[4,8],[4,12],[5,10],[6,12]];
+  const UNREL_MODEL=[[2,3],[2,5],[2,7],[2,9],[3,4],[3,5],[4,5],[4,6],[4,10],[6,9]];   // lcm <= 20 keeps ticks printable
+  const UNREL_PLAIN=UNREL_MODEL.concat([[3,7],[3,8],[6,8],[8,12]]);
+  // Extra hot: coprime pairs, denominators <= 10 — the new unit is always the
+  // denominators multiplied. The plain pool keeps the products substantial;
+  // with the model on, products cap at 20 so the printed ticks stay readable.
+  const COPRIME_PLAIN=[[2,9],[3,7],[3,8],[3,10],[4,5],[4,7],[4,9],[5,6],[5,7],[5,8],[5,9],[6,7],[7,8],[7,9],[7,10],[8,9],[9,10]];
+  const COPRIME_MODEL=[[2,3],[2,5],[2,7],[2,9],[3,4],[3,5],[4,5]];
+
+  const TIER_LABEL = { same:"Sweet — same denominators", related:"Mild — related denominators",
+                       unrelated:"Medium — unrelated denominators",
+                       coprime:"Extra hot — non-related denominators", mixed:"Mixed spice" };
+  const TIER_BADGE = { same:"friendly", related:"mild", unrelated:"spicy", coprime:"xhot" };
+  const TIERS = ["same","related","unrelated","coprime"];
+
+  function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+  function choice(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  function buildQuestion(tier, op, opts, seen){
+    for(let tries=0; tries<700; tries++){
+      let b,d;
+      if(tier==="same"){ b=d=randInt(3,12); }
+      else{
+        const pool = tier==="related" ? RELATED_PAIRS
+                   : tier==="coprime" ? (opts.model ? COPRIME_MODEL : COPRIME_PLAIN)
+                   : (opts.model ? UNREL_MODEL : UNREL_PLAIN);
+        let pr=choice(pool);
+        if(Math.random()<0.5) pr=[pr[1],pr[0]];
+        b=pr[0]; d=pr[1];
+      }
+      const D=lcm(b,d);
+      const a=randInt(1,b-1), c=randInt(1,d-1);
+      // Extra hot: both fractions in simplest form (2/6 would reduce to 1/3)
+      if(tier==="coprime" && (gcd(a,b)!==1 || gcd(c,d)!==1)) continue;
+      const A=a*D/b, Cc=c*D/d;
+      const S = op==="add" ? A+Cc : A-Cc;
+      if(op==="add"){
+        const improper = opts.improper && Math.random()<0.3;
+        if(improper ? S<=D : S>D) continue;
+        if(S>D && opts.model && D>12) continue;      // a 0..2 line stays readable
+      }else{
+        const negative = opts.negative && Math.random()<0.35;
+        if(negative ? S>=0 : S<=0) continue;         // no zero answers
+      }
+      const key=a+"/"+b+op+c+"/"+d;
+      if(seen.has(key)) continue;
+      seen.add(key);
+      return { a,b,c,d, op, tier };
+    }
+    // fall back rather than loop for ever — a repeat is better than a blank card
+    return op==="add" ? { a:1,b:4,c:2,d:4, op:"add", tier:"same" }
+                      : { a:3,b:4,c:1,d:4, op:"sub", tier:"same" };
+  }
+
+  function buildQuestions(levelKey, count, opts){
+    const seen = new Set();
+    const list = [];
+    for(let i=0;i<count;i++){
+      if(seen.size > 110) seen.clear();
+      const tier = (levelKey==="mixed") ? TIERS[i % TIERS.length] : levelKey;
+      const op = opts.op==="both" ? (i%2===0 ? "add" : "sub") : opts.op;
+      list.push(buildQuestion(tier, op, opts, seen));
+    }
+    return list;
+  }
+
+  /* ===================== page building ===================== */
+  function pageHeaderHTML(levelName, pageLabel, showNameDate){
+    return '<div class="pageHeader">'
+      + '<div>'
+      +   '<div class="hdrTitle">Adding and Subtracting Fractions &mdash; Worksheet ('+levelName+')</div>'
+      +   '<div class="hdrSub">'+pageLabel+'</div>'
+      + '</div>'
+      + (showNameDate
+          ? '<div class="nameDate">'
+            + '<div class="lineField"><div class="lineLabel">'+TR(WS.name)+'</div><div class="lineBox"></div></div>'
+            + '<div class="lineField"><div class="lineLabel">'+TR(WS.date)+'</div><div class="lineBox"></div></div>'
+            + '</div>'
+          : '')
+      + '</div>';
+  }
+
+  function pageFooterHTML(){
+    return '<div class="pageFooter">This tool and more can be found at <a href="'+SITE+'">www.millsmathstools.au</a></div>';
+  }
+
+  function makeQuestionCard(q, qNumber, showAnswer, withModel){
+    const card = document.createElement("div");
+    card.className = "qCard";
+
+    const badge = document.createElement("div");
+    badge.className = "qBadge " + TIER_BADGE[q.tier];
+    badge.textContent = qNumber;
+    card.appendChild(badge);
+
+    const prompt = document.createElement("div");
+    prompt.className = "prompt";
+
+    const instruction = withModel
+      ? TR(q.op==="add" ? WS.addModel : WS.subModel)
+      : TR(q.op==="add" ? WS.addPlain : WS.subPlain);
+
+    const qLine = '<div class="questionLine">'
+      + fractionHTML(q.a,q.b)
+      + '<span class="op">'+(q.op==="add"?"+":"&minus;")+'</span>'
+      + fractionHTML(q.c,q.d)
+      + '<span class="eq">=</span></div>';
+
+    let body = qLine;
+    if(withModel) body += '<div class="modelWrap">'+modelSVG(q)+'</div>';
+
+    prompt.innerHTML = '<div class="promptSmall">'+instruction+'</div>' + body;
+    card.appendChild(prompt);
+
+    const ansRow = document.createElement("div");
+    ansRow.className = "ansRow";
+    ansRow.innerHTML = '<div class="ansLabel">'+TR(WS.answer)+'</div>'
+      + '<div class="ansBox '+(showAnswer?"key":"")+'">'+(showAnswer? answerHTML(q) : "")+'</div>';
+    card.appendChild(ansRow);
+
+    return card;
+  }
+
+  // one run of pages in ONE layout; numbering continues from startNum
+  function buildPages(questions, levelName, titleLabel, showAnswers, withModel, perPage, startNum, pageOffset, totalPages){
+    const pages = [];
+    const n = Math.ceil(questions.length / perPage);
+    for(let p=0; p<n; p++){
+      const page = document.createElement("div");
+      page.className = "page";
+      page.innerHTML = pageHeaderHTML(levelName, titleLabel+" &mdash; Page "+(pageOffset+p+1)+" of "+totalPages, !showAnswers);
+
+      const grid = document.createElement("div");
+      grid.className = "grid" + (withModel ? " withModel" : "");
+
+      const start = p*perPage;
+      questions.slice(start, start+perPage).forEach((q,i) => {
+        grid.appendChild(makeQuestionCard(q, startNum+start+i, showAnswers, withModel));
+      });
+      page.appendChild(grid);
+
+      const fw = document.createElement("div");
+      fw.innerHTML = pageFooterHTML();
+      page.appendChild(fw.firstElementChild);
+
+      pages.push(page);
+    }
+    return pages;
+  }
+
+  // split the run into a scaffolded half and a plain half when fading
+  function buildAllPages(questions, levelName, titleLabel, showAnswers, layout){
+    const out = [];
+    const runs = [];
+    if(layout.mode==="model"){ runs.push({ qs:questions, model:true }); }
+    else if(layout.mode==="plain"){ runs.push({ qs:questions, model:false }); }
+    else{ // fade — the first half carries the model, the second stands alone
+      const cut = Math.ceil(questions.length/2);
+      runs.push({ qs:questions.slice(0,cut), model:true });
+      runs.push({ qs:questions.slice(cut), model:false });
+    }
+    let totalPages = 0;
+    runs.forEach(r => { r.per = r.model ? 8 : 18; totalPages += Math.ceil(r.qs.length/r.per); });
+    let pageOffset=0, startNum=1;
+    runs.forEach(r => {
+      if(!r.qs.length) return;
+      const label = titleLabel + (layout.mode==="fade" ? (r.model ? " · scaffolded" : " · on your own") : "");
+      buildPages(r.qs, levelName, label, showAnswers, r.model, r.per, startNum, pageOffset, totalPages)
+        .forEach(pg => out.push(pg));
+      pageOffset += Math.ceil(r.qs.length/r.per);
+      startNum += r.qs.length;
+    });
+    return out;
+  }
+
+  /* ===================== wiring ===================== */
+  const levelSel       = document.getElementById("levelSel");
+  const langSel        = document.getElementById("langSel");
+  const opSel          = document.getElementById("opSel");
+  const countInp       = document.getElementById("countInp");
+  const modelToggle    = document.getElementById("modelToggle");
+  const fadeToggle     = document.getElementById("fadeToggle");
+  const improperToggle = document.getElementById("improperToggle");
+  const negativeToggle = document.getElementById("negativeToggle");
+  const keyToggle      = document.getElementById("keyToggle");
+  const genBtn         = document.getElementById("genBtn");
+  const printBtn       = document.getElementById("printBtn");
+  const resetBtn       = document.getElementById("resetBtn");
+  const out            = document.getElementById("out");
+
+  function layoutMode(){
+    if(modelToggle.checked && fadeToggle.checked) return "fade";
+    if(modelToggle.checked) return "model";
+    return "plain";
+  }
+
+  function syncToggles(){
+    // fading only means something when the model is on
+    fadeToggle.disabled = !modelToggle.checked;
+    if(!modelToggle.checked) fadeToggle.checked = false;
+    // negatives only exist when subtraction is in play
+    const noSub = (opSel.value==="add");
+    negativeToggle.disabled = noSub;
+    if(noSub) negativeToggle.checked = false;
+  }
+
+  function syncCountForLayout(){
+    const mode = layoutMode();
+    countInp.value = String(mode==="plain" ? 18 : (mode==="model" ? 8 : 16));
+  }
+
+  // the last generated paper, so a language change re-renders the SAME questions
+  let lastGen = null;
+
+  function renderOut(scroll){
+    if(!lastGen) return;
+    out.innerHTML = "";
+    buildAllPages(lastGen.questions, lastGen.levelName, "Worksheet", false, {mode:lastGen.mode}).forEach(pg => out.appendChild(pg));
+    if(lastGen.showKey){
+      buildAllPages(lastGen.questions, lastGen.levelName, "Answer key", true, {mode:lastGen.mode}).forEach(pg => out.appendChild(pg));
+    }
+    if(scroll && out.firstElementChild){
+      out.firstElementChild.scrollIntoView({ behavior:"smooth", block:"start" });
+    }
+  }
+
+  function generate(){
+    const levelKey = levelSel.value;
+    const mode = layoutMode();
+
+    let n = Number(countInp.value);
+    if(!Number.isFinite(n)) n = 18;
+    n = Math.max(1, Math.min(60, Math.round(n)));
+    countInp.value = String(n);
+
+    const opts = {
+      op: opSel.value,
+      model: modelToggle.checked,
+      improper: improperToggle.checked,
+      negative: negativeToggle.checked && !negativeToggle.disabled
+    };
+
+    lastGen = {
+      questions: buildQuestions(levelKey, n, opts),
+      levelName: TIER_LABEL[levelKey],
+      mode,
+      showKey: keyToggle.checked
+    };
+    renderOut(true);
+  }
+
+  function resetAll(){
+    out.innerHTML = "";
+    lastGen = null;
+    levelSel.value = "same";
+    langSel.value = LANG;
+    opSel.value = "both";
+    modelToggle.checked = false;
+    fadeToggle.checked = false;
+    improperToggle.checked = false;
+    negativeToggle.checked = false;
+    keyToggle.checked = true;
+    syncToggles();
+    syncCountForLayout();
+  }
+
+  levelSel.addEventListener("change", syncToggles);
+  opSel.addEventListener("change", syncToggles);
+  langSel.addEventListener("change", () => {
+    LANG = langSel.value;
+    try{ localStorage.setItem("mmt-asf-ws-lang",LANG); }catch(_){ }
+    renderOut(false);              // same questions, new language
+  });
+  modelToggle.addEventListener("change", () => { syncToggles(); syncCountForLayout(); });
+  fadeToggle.addEventListener("change", syncCountForLayout);
+  genBtn.addEventListener("click", generate);
+  printBtn.addEventListener("click", () => window.print());
+  resetBtn.addEventListener("click", resetAll);
+
+  langSel.value = LANG;
+  syncToggles();
+  syncCountForLayout();
+
+  // expose the maths for the headless check
+  window.__ASF_WS__ = { derived, buildQuestions, buildQuestion, modelSVG, gcd, lcm, TR, WS, setLang:(k)=>{ LANG=k; langSel.value=k; renderOut(false); }, lang:()=>LANG };
+})();
+</script>
+</body>
+</html>

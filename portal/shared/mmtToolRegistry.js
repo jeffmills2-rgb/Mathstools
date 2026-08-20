@@ -170,6 +170,14 @@ export const MMT_TOOLS = Object.freeze([
     notes: "Sweet/Mild/Medium/Spicy, 15 questions, built on the Fraction to Percentage double number line. Each question opens with an ESTIMATE (drag the marker), which clears on the first reveal; the second reveal names ONE part (100 ÷ d) and the student counts on. No unit fractions in any bank — 1/d would be the answer. Sweet = friendly only; Mild = 7 friendly then 8 terminating (improper in both); Medium = 5 friendly / 5 terminating / 5 recurring; Spicy = Medium's bank with NO model. Secure student-code login + achievements save; masteryTopic 'fraction-to-percentage'; types[] carry level/kind/improper/estimate-accuracy flags. No typed answers stored.",
   },
   {
+    toolId: "adding-subtracting-fractions-quiz", title: "Adding and Subtracting Fractions — Student Quiz", category: "Quiz",
+    enabled: true, resultCollection: "achievements", richCollection: null,
+    achievementToolName: "adding-subtracting-fractions-student-quiz", topics: ["fdp"], stage: "Stage 4",   // five levels: sweet/mild/medium/spicy/extrahot (extrahot = coprime denominators <= 10, no model)
+    launchUrl: "/online-quizzes/stage-4/number/adding-subtracting-fractions.html",
+    supportsAdventureAttempts: false, supportsSkillBreakdown: false,
+    notes: "Sweet/Mild/Medium/Spicy, 15 questions, built on the Adding and Subtracting Fractions bar + number-line tool. The ladder raises the RENAMING demand while the model stays: Sweet = same denominators, Mild = related (one bar re-splits), Medium = unrelated (both re-split, improper sums, simplifying); Spicy = Medium's bank with NO model and take-aways that pass zero (negative answers). Each model question runs estimate (drag the marker) → bars in their own units; every modelled level (Sweet/Mild/Medium) offers an optional reveal via back/forward arrows ('Show the pieces' / 'Show the renaming', tagged usedRenameReveal), with the pieces animating into and out of place. Answers are entered in a MathLive fraction editor (same library as the Adventure's MathAnswerInput, trimmed to ONE fraction-template button; CDN-loaded, falls back to the plain typed input offline). Answers accept any equivalent form — 10/12, 5/6 or 1 3/20 — matched as exact rationals; one attempt per question, so the score is a true /15. Secure student-code login + achievements save; masteryTopic 'adding-subtracting-fractions'; types[] carry level/op/den/improper/negative/estimate flags. No typed answers stored. Trilingual EN/AR/FA (selected language on top, English beneath; maths and numerals stay Western/LTR); non-English attempts tagged lang:ar / lang:fa in types[].",
+  },
+  {
     toolId: "fraction-of-amount-quiz", title: "Fraction of an Amount — Student Quiz", category: "Quiz",
     enabled: true, resultCollection: "achievements", richCollection: null,
     achievementToolName: "fraction-of-amount-student-quiz", topics: ["fdp"], stage: "Stage 4",
