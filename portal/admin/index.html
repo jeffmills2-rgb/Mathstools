@@ -170,6 +170,29 @@
   .delta.up{color:var(--good);background:var(--good-soft)}
   .delta.down{color:var(--bad);background:var(--bad-soft)}
   .delta.flat{color:var(--muted);background:#eef2f7}
+
+  /* growth */
+  .filter-bar{display:flex;flex-wrap:wrap;gap:12px;align-items:end}
+  .filter-bar .f-field{display:flex;flex-direction:column;gap:5px;flex:1 1 170px;min-width:150px}
+  .filter-bar label{font-size:.74rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:800}
+  .filter-bar select{width:100%}
+  .ladder-key{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:12px}
+  .ladder-key span{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;font-weight:700;color:var(--ink-soft)}
+  .ladder-key i{width:11px;height:11px;border-radius:3px;display:inline-block}
+  .ladder-key .key-note{color:var(--muted);font-weight:500;font-size:.78rem;margin-left:auto}
+  .rung-badge{display:inline-flex;align-items:center;gap:5px;font-size:.75rem;font-weight:800;padding:2px 9px;border-radius:999px;color:#fff;white-space:nowrap}
+  .rung-badge.r1{background:#f4c95d;color:#4a3405}.rung-badge.r2{background:#eda23a;color:#43290a}
+  .rung-badge.r3{background:#e2711d}.rung-badge.r4{background:#cc3f18}.rung-badge.r5{background:#96170f}
+  #grTable th[data-sort]{cursor:pointer;user-select:none;white-space:nowrap}
+  #grTable th[data-sort]:hover{color:var(--brand-dark)}
+  #grTable th[data-sort].sorted::after{content:" ▾";color:var(--brand)}
+  #grTable th[data-sort].sorted.asc::after{content:" ▴"}
+  #grTable td{font-variant-numeric:tabular-nums}
+  .gain{font-weight:800;padding:2px 8px;border-radius:999px;font-size:.8rem;white-space:nowrap}
+  .gain.up{color:var(--good);background:var(--good-soft)}
+  .gain.down{color:var(--bad);background:var(--bad-soft)}
+  .gain.flat{color:var(--muted);background:#eef2f7}
+
   @media(max-width:920px){
     .app{grid-template-columns:1fr}
     .sidebar{position:static;height:auto;flex-direction:row;flex-wrap:wrap;gap:6px}
@@ -220,6 +243,7 @@
     <button class="nav-item" data-view="students"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><path d="M16.5 8.2A3 3 0 0 1 19 13"/><path d="M17.5 14.5c2 .6 3.5 2.2 3.5 4.5"/></svg>Students<span class="pill" id="navStudents">0</span></button>
     <button class="nav-item" data-view="classes"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v12H4z"/><path d="M4 21h16"/><path d="M8 9h8M8 13h5"/></svg>Classes<span class="pill" id="navClasses">0</span></button>
     <button class="nav-item" data-view="analytics"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V4"/><path d="M4 20h16"/><path d="M8 16l4-5 3 3 4-6"/></svg>Analytics</button>
+    <button class="nav-item" data-view="growth"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17.5 9 11l4 3.5L21 6"/><path d="M15.5 6H21v5.5"/></svg>Growth</button>
     <button class="nav-item" data-view="settings"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.2.61.76 1.05 1.42 1.09H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>Settings</button>
     <div class="side-foot">
       <div class="who" id="whoAmI">—</div>
@@ -430,6 +454,74 @@
       </div>
     </section>
 
+    <!-- GROWTH -->
+    <section class="view" id="view-growth">
+      <div class="page-head">
+        <div><h2>Growth</h2><p>Are students getting better, and are they taking on harder work? Scores and spice levels over time, for any class, teacher or topic.</p></div>
+        <div class="row-actions">
+          <div class="an-filter" id="grFilter">
+            <button type="button" data-win="28">4 weeks</button>
+            <button type="button" data-win="91" class="active">Term</button>
+            <button type="button" data-win="182">Semester</button>
+            <button type="button" data-win="365">Year</button>
+          </div>
+          <button class="btn-soft" id="grRefresh">↻ Refresh</button>
+        </div>
+      </div>
+
+      <div id="grUnavailable" class="callout" style="display:none"><strong>Task history isn't readable yet.</strong> Publish the updated Firestore rules (the admin <em>achievements</em> read rule) in the Firebase Console to light up Growth.</div>
+
+      <div class="card filter-bar">
+        <div class="f-field"><label for="grClass">Class</label><select id="grClass"></select></div>
+        <div class="f-field"><label for="grTeacher">Teacher</label><select id="grTeacher"></select></div>
+        <div class="f-field"><label for="grTopic">Topic</label><select id="grTopic"></select></div>
+        <div class="f-field"><label for="grTool">Tool</label><select id="grTool"></select></div>
+        <button class="btn-neutral" id="grReset" style="align-self:end">Clear filters</button>
+      </div>
+
+      <div class="stats" id="grKpis"></div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="page-head" style="margin-bottom:8px"><div><h3>Average score over time</h3><p style="margin-top:2px" class="hint">Mean percent per bucket. Read it alongside the level mix — a class moving up a rung will dip here.</p></div></div>
+          <div class="chart-box"><canvas id="grScoreChart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="page-head" style="margin-bottom:8px"><div><h3>Difficulty-weighted score</h3><p style="margin-top:2px" class="hint">Percent × spice rung. Rises when students score better <em>or</em> take on harder work, so it doesn't punish climbing.</p></div></div>
+          <div class="chart-box"><canvas id="grWeightedChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="page-head" style="margin-bottom:8px"><div><h3>Level mix</h3><p style="margin-top:2px" class="hint">Share of attempts at each spice level. Warm colours rising over time means the ladder is being climbed.</p></div></div>
+        <div class="chart-box"><canvas id="grMixChart"></canvas></div>
+        <div class="ladder-key" id="grLadderKey"></div>
+      </div>
+
+      <div class="card">
+        <div class="page-head" style="margin-bottom:8px">
+          <div><h3>Student growth</h3><p style="margin-top:2px" class="hint">Like-for-like gain compares a student's first and latest attempt on the <strong>same topic at the same level</strong>, so difficulty is held constant. Students with only one attempt per topic show “—”.</p></div>
+          <div class="row-actions"><button class="btn-soft" id="grCsv">⤓ Export CSV</button></div>
+        </div>
+        <div class="table-wrap">
+          <table id="grTable">
+            <thead><tr>
+              <th data-sort="name">Student</th>
+              <th data-sort="className">Class</th>
+              <th data-sort="attempts">Attempts</th>
+              <th data-sort="first">First %</th>
+              <th data-sort="latest">Latest %</th>
+              <th data-sort="gain">Like-for-like</th>
+              <th data-sort="rung">Highest level</th>
+              <th data-sort="climb">Climb</th>
+            </tr></thead>
+            <tbody id="grBody"></tbody>
+          </table>
+        </div>
+        <div class="empty" id="grEmpty">No completed tasks match these filters in this window.</div>
+      </div>
+    </section>
+
     <!-- SETTINGS -->
     <section class="view" id="view-settings">
       <div class="page-head">
@@ -566,6 +658,31 @@
   function recTime(r){ const c=r.createdAt; if(c&&typeof c.toMillis==="function"){ try{ return c.toMillis(); }catch{} } if(c&&typeof c.seconds==="number") return c.seconds*1000; const s=r.createdAtClient||r.dateISO||r.date||r.timestamp; const t=s?Date.parse(s):NaN; return Number.isFinite(t)?t:0; }
   function hexA(h,a){ const n=parseInt(h.slice(1),16); return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`; }
 
+  /* ============ THE SPICE LADDER ============
+     19 of the 26 quizzes write a `levelKey` from one shared five-rung ladder, so
+     "attempting harder work" is already a number — it just needs a lookup. The
+     keys drifted over time (extrahot / extraHot; "hot" is labelled Very Hot in
+     the double-number-line quizzes; integer-combined-signs writes the LABEL and
+     negatives-on-the-number-line writes a digit), so normalise on READ rather
+     than rewriting history. Anything unrecognised — including every Mills Maths
+     Adventure record, where levelKey is a missionId — returns null and is left
+     out of the ladder maths while still counting for score growth. */
+  const LEVEL_RUNGS=["Sweet","Mild","Medium","Spicy","Extra hot"];
+  const LEVEL_COLOURS=["#f4c95d","#eda23a","#e2711d","#cc3f18","#96170f"];
+  const LEVEL_RANK={ sweet:1, mild:2, medium:3, spicy:4, hot:5, veryhot:5, extrahot:5,
+                     1:1, 2:2, 3:3, 4:4, 5:5 };
+  function levelRankOf(x, tool){
+    if(/adventure/i.test(String(tool||""))) return null;   // missionId, not a rung
+    const raw = x.levelKey!=null && x.levelKey!=="" ? x.levelKey : x.level;
+    let key = String(raw??"").trim().toLowerCase().replace(/[\s_-]/g,"");
+    if(!key){ // last resort: quizzes tag the rung into types[] as "level:spicy"
+      const tag=(Array.isArray(x.types)?x.types:[]).find(t=>/^level:/i.test(String(t)));
+      if(tag) key=String(tag).slice(6).trim().toLowerCase().replace(/[\s_-]/g,"");
+    }
+    return LEVEL_RANK[key] || null;
+  }
+  const rungName = r => LEVEL_RUNGS[r-1] || "—";
+
   function teacherStats(code){
     const list=students.filter(s=>s.teacherCode===code);
     const active=list.filter(s=>s.active!==false);
@@ -600,7 +717,17 @@
     // read rule hasn't been published yet — degrade to "—" rather than error.
     achCount={}; totalTasks=0; achAvailable = aSnap!==null; achRecords=[];
     if(aSnap){ aSnap.docs.forEach(d=>{ const x=d.data(); const sc=normCode(x.studentCode||x.student||x.code||"");
-      achRecords.push({ time:recTime(x), studentCode:sc, studentName:(x.studentName||x.name||""), className:normClass(x.className||""), teacherCode:normCode(x.teacherCode||""), teacherName:(x.teacherName||x.teacher||""), tool:(x.tool||x.toolName||x.toolId||"(unknown tool)"), topic:(x.topic||x.masteryTopic||"(untagged)"), xp:Number(x.xpEarned)||0 });
+      const tool=(x.tool||x.toolName||x.toolId||"(unknown tool)");
+      const total=Number(x.total)||0, score=Number(x.score)||0;
+      const percent = x.percent!=null && Number.isFinite(Number(x.percent)) ? Number(x.percent)
+                    : (total ? Math.round(score/total*100) : null);
+      achRecords.push({ time:recTime(x), studentCode:sc, studentName:(x.studentName||x.name||""), className:normClass(x.className||""), teacherCode:normCode(x.teacherCode||""), teacherName:(x.teacherName||x.teacher||""), tool, topic:(x.topic||x.masteryTopic||"(untagged)"), xp:Number(x.xpEarned)||0,
+        // --- attainment (Growth view). The records always carried these; the
+        // mapper simply never kept them. Nothing new is written to Firestore.
+        score, total, percent,
+        masteryTopic:(x.masteryTopic||x.topic||"(untagged)"),
+        levelRank: levelRankOf(x, tool),
+        types: Array.isArray(x.types) ? x.types : [] });
       if(sc) achCount[sc]=(achCount[sc]||0)+1;
     }); totalTasks=achRecords.length; }
     try{ const capSnap=await getDoc(doc(db,"admin","limits")); if(capSnap.exists()){ const c=capSnap.data(); caps={ teachers:+c.teachers||0, classes:+c.classes||0, students:+c.students||0 }; } }catch{ /* rules may not include admin/limits yet */ }
@@ -615,6 +742,8 @@
     renderClasses();
     fillCapsForm();
     if($("view-analytics").classList.contains("active")) renderAnalytics();
+    fillGrowthFilters();
+    if($("view-growth").classList.contains("active")) renderGrowth();
     $("navTeachers").textContent=teachers.length;
     $("navStudents").textContent=students.length;
     $("navClasses").textContent=classes.length;
@@ -835,6 +964,7 @@
     document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id===`view-${view}`));
     if(opts.open){ const el=$(opts.open); if(el){ el.scrollIntoView({behavior:"smooth",block:"start"}); const focusFirst=el.querySelector("input,textarea,select"); if(focusFirst) setTimeout(()=>focusFirst.focus(),250); } }
     if(view==="analytics") renderAnalytics();
+    if(view==="growth") renderGrowth();
     window.scrollTo({top:0,behavior:"smooth"});
   }
   document.querySelectorAll(".qa").forEach(b=>b.addEventListener("click",()=>gotoView(b.dataset.goto,{open:b.dataset.open})));
@@ -1058,6 +1188,249 @@
       caps=next; renderOverview(); msg($("capsMsg"),"Caps saved.","ok"); toast("Caps saved","ok");
     }catch(e){ msg($("capsMsg"),writeErr(e)+" (If this fails, the admin/limits rule may not be deployed yet.)","bad"); }
     finally{ setLoading($("saveCapsBtn"),false); }
+  });
+
+  /* =====================================================================
+     GROWTH — attainment over time, not volume.
+
+     Everything here reads the SAME `achRecords` array Analytics uses; the only
+     change was keeping percent / score / total / levelKey / masteryTopic when
+     the docs are mapped. No new Firestore reads, no rules change, no change to
+     any quiz.
+
+     The one trap this view is designed around: a student who moves UP a spice
+     rung normally scores LOWER, so a raw average-percent line reads as decline
+     for exactly the students growing fastest. Two answers sit side by side —
+     the difficulty-weighted score (percent x rung), which rises either way, and
+     the like-for-like gain in the table, which holds topic AND rung constant.
+     ===================================================================== */
+  let growthWin=91;
+  let grSort={ key:"gain", asc:false };
+  const grCharts={};
+  const grFilters=()=>({ className:$("grClass").value, teacherCode:$("grTeacher").value, topic:$("grTopic").value, tool:$("grTool").value });
+
+  function growthRecs(win=growthWin){
+    const f=grFilters(); const now=Date.now(); const from=now-win*86400000;
+    return achRecords.filter(r=>
+      r.time>=from && r.time<=now+1 && r.percent!=null &&
+      (!f.className   || r.className===f.className) &&
+      (!f.teacherCode || r.teacherCode===f.teacherCode) &&
+      (!f.topic       || r.masteryTopic===f.topic) &&
+      (!f.tool        || r.tool===f.tool));
+  }
+  function growthPrevRecs(){
+    const f=grFilters(); const now=Date.now(); const span=growthWin*86400000;
+    return achRecords.filter(r=>
+      r.time>=now-2*span && r.time<now-span && r.percent!=null &&
+      (!f.className   || r.className===f.className) &&
+      (!f.teacherCode || r.teacherCode===f.teacherCode) &&
+      (!f.topic       || r.masteryTopic===f.topic) &&
+      (!f.tool        || r.tool===f.tool));
+  }
+  const mean = a => a.length ? a.reduce((x,y)=>x+y,0)/a.length : null;
+
+  /* Buckets: daily up to ~5 weeks, weekly up to a semester, monthly beyond. */
+  function grBuckets(recs){
+    const mode = growthWin<=35 ? "day" : (growthWin<=200 ? "week" : "month");
+    const keyOf=t=>{ const d=new Date(t);
+      if(mode==="month") return new Date(d.getFullYear(),d.getMonth(),1).getTime();
+      d.setHours(0,0,0,0);
+      if(mode==="week") d.setDate(d.getDate()-((d.getDay()+6)%7));   // Monday
+      return d.getTime(); };
+    const labelOf=t=>{ const d=new Date(t);
+      if(mode==="month") return d.toLocaleDateString(undefined,{month:"short",year:"2-digit"});
+      return d.toLocaleDateString(undefined,{month:"short",day:"numeric"}); };
+    const buckets=new Map(); const now=Date.now();
+    const step = mode==="day" ? 86400000 : (mode==="week" ? 604800000 : null);
+    if(step){ for(let t=now-(growthWin-1)*86400000; t<=now; t+=step) buckets.set(keyOf(t),[]); buckets.set(keyOf(now),buckets.get(keyOf(now))||[]); }
+    else { const b=new Date(); b.setDate(1); b.setHours(0,0,0,0);
+      const months=Math.ceil(growthWin/30);
+      for(let i=months-1;i>=0;i--){ const d=new Date(b.getFullYear(),b.getMonth()-i,1); buckets.set(d.getTime(),[]); } }
+    recs.forEach(r=>{ const k=keyOf(r.time); if(buckets.has(k)) buckets.get(k).push(r); });
+    const keys=[...buckets.keys()].sort((a,b)=>a-b);
+    return { labels:keys.map(labelOf), groups:keys.map(k=>buckets.get(k)) };
+  }
+
+  /* Per-student rollup. `gain` is the LIKE-FOR-LIKE figure: within each
+     (masteryTopic, levelRank) pair the student has attempted more than once,
+     latest percent minus first percent, then averaged across those pairs. That
+     is the only comparison where the difficulty is guaranteed identical. */
+  function growthByStudent(recs){
+    const byStu=new Map();
+    recs.forEach(r=>{ const k=r.studentCode||r.studentName||"?";
+      if(!byStu.has(k)) byStu.set(k,[]); byStu.get(k).push(r); });
+    const rows=[];
+    for(const [code,items] of byStu){
+      items.sort((a,b)=>a.time-b.time);
+      const pcts=items.map(r=>r.percent);
+      const pairs=new Map();
+      items.forEach(r=>{ if(r.levelRank==null) return;
+        const k=`${r.masteryTopic}@${r.levelRank}`;
+        if(!pairs.has(k)) pairs.set(k,[]); pairs.get(k).push(r); });
+      const gains=[...pairs.values()].filter(a=>a.length>1).map(a=>a[a.length-1].percent-a[0].percent);
+      // Climb: highest rung in the student's later half minus their earlier
+      // half. Only levelled records count on BOTH sides — a half made up
+      // entirely of Adventure or unlevelled attempts yields no comparison
+      // rather than a phantom drop to zero.
+      const levelled=items.filter(r=>r.levelRank!=null);
+      const ranks=levelled.map(r=>r.levelRank);
+      const half=Math.floor(levelled.length/2);
+      const earlyRanks=levelled.slice(0,half).map(r=>r.levelRank);
+      const lateRanks =levelled.slice(half).map(r=>r.levelRank);
+      const early=earlyRanks.length && lateRanks.length ? Math.max(...earlyRanks) : null;
+      const late =earlyRanks.length && lateRanks.length ? Math.max(...lateRanks)  : null;
+      const first=items[0];
+      rows.push({
+        code, name:first.studentName||code, className:first.className||"—",
+        attempts:items.length,
+        first:pcts[0], latest:pcts[pcts.length-1],
+        average:Math.round(mean(pcts)),
+        gain: gains.length ? Math.round(mean(gains)) : null,
+        rung: ranks.length ? Math.max(...ranks) : null,
+        climb: (early!=null && late!=null) ? late-early : null,
+      });
+    }
+    return rows;
+  }
+
+  function grLineChart(canvasId,labels,data,color,label,maxHint){
+    if(grCharts[canvasId]){ grCharts[canvasId].destroy(); delete grCharts[canvasId]; }
+    if(typeof Chart==="undefined") return;
+    grCharts[canvasId]=new Chart($(canvasId).getContext("2d"),{ type:"line",
+      data:{ labels, datasets:[{ label, data, borderColor:color, backgroundColor:hexA(color,.12), borderWidth:2, fill:true, tension:.3, spanGaps:true, pointRadius:0, pointHoverRadius:5, pointHoverBackgroundColor:color, pointHoverBorderColor:"#fff", pointHoverBorderWidth:2 }] },
+      options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:"index", intersect:false },
+        plugins:{ legend:{ display:false }, tooltip:{ backgroundColor:"#0f1b33", padding:10, cornerRadius:8, displayColors:false, titleFont:{weight:"700"},
+          callbacks:{ label:c=>c.parsed.y==null?"No attempts":`${label}: ${c.parsed.y}` } } },
+        scales:{ x:{ grid:{display:false}, ticks:{ color:"#64748b", maxRotation:0, autoSkip:true, maxTicksLimit:8, font:{size:11} } },
+                 y:{ beginAtZero:true, suggestedMax:maxHint, grid:{ color:"#eef2f7" }, border:{display:false}, ticks:{ color:"#64748b", precision:0, font:{size:11} } } } } });
+  }
+
+  function grMixChart(labels,groups){
+    const id="grMixChart";
+    if(grCharts[id]){ grCharts[id].destroy(); delete grCharts[id]; }
+    if(typeof Chart==="undefined") return;
+    const datasets=LEVEL_RUNGS.map((name,i)=>({
+      label:name, backgroundColor:LEVEL_COLOURS[i], borderWidth:0, borderRadius:3,
+      data:groups.map(g=>{ const withRung=g.filter(r=>r.levelRank!=null);
+        if(!withRung.length) return 0;
+        return Math.round(withRung.filter(r=>r.levelRank===i+1).length/withRung.length*100); }),
+    }));
+    grCharts[id]=new Chart($(id).getContext("2d"),{ type:"bar", data:{ labels, datasets },
+      options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:"index", intersect:false },
+        plugins:{ legend:{ display:false }, tooltip:{ backgroundColor:"#0f1b33", padding:10, cornerRadius:8,
+          callbacks:{ label:c=>`${c.dataset.label}: ${c.parsed.y}%` } } },
+        scales:{ x:{ stacked:true, grid:{display:false}, ticks:{ color:"#64748b", maxRotation:0, autoSkip:true, maxTicksLimit:8, font:{size:11} } },
+                 y:{ stacked:true, beginAtZero:true, max:100, grid:{ color:"#eef2f7" }, border:{display:false}, ticks:{ color:"#64748b", callback:v=>v+"%", font:{size:11} } } } } });
+  }
+
+  function fillGrowthFilters(){
+    const keep=id=>$(id)?$(id).value:"";
+    const kC=keep("grClass"), kT=keep("grTeacher"), kTop=keep("grTopic"), kTool=keep("grTool");
+    const clsNames=[...new Set([...classes.map(c=>c.name),...students.map(s=>s.className)].filter(Boolean))].sort();
+    $("grClass").innerHTML='<option value="">All classes</option>'+clsNames.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join("");
+    $("grTeacher").innerHTML=teacherOptions(true,"All teachers",true);
+    const topics=[...new Set(achRecords.map(r=>r.masteryTopic).filter(t=>t&&t!=="(untagged)"))].sort();
+    $("grTopic").innerHTML='<option value="">All topics</option>'+topics.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join("");
+    const tools=[...new Set(achRecords.map(r=>r.tool).filter(Boolean))].sort();
+    $("grTool").innerHTML='<option value="">All tools</option>'+tools.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join("");
+    const restore=(id,v)=>{ if(v&&[...$(id).options].some(o=>o.value===v)) $(id).value=v; };
+    restore("grClass",kC); restore("grTeacher",kT); restore("grTopic",kTop); restore("grTool",kTool);
+  }
+
+  function renderGrowth(){
+    $("grUnavailable").style.display = achAvailable ? "none" : "block";
+    if(!achAvailable){
+      ["grKpis","grBody","grLadderKey"].forEach(id=>$(id).innerHTML="");
+      Object.keys(grCharts).forEach(c=>{ grCharts[c].destroy(); delete grCharts[c]; });
+      return;
+    }
+    const recs=growthRecs(), prev=growthPrevRecs();
+
+    // ---- KPIs ----
+    const avg=mean(recs.map(r=>r.percent)), avgPrev=mean(prev.map(r=>r.percent));
+    const ranked=recs.filter(r=>r.levelRank!=null), rankedPrev=prev.filter(r=>r.levelRank!=null);
+    const wtd=mean(ranked.map(r=>r.percent*r.levelRank/5)), wtdPrev=mean(rankedPrev.map(r=>r.percent*r.levelRank/5));
+    const rows=growthByStudent(recs);
+    const withGain=rows.filter(r=>r.gain!=null);
+    const improving=withGain.filter(r=>r.gain>0).length;
+    const climbers=rows.filter(r=>r.climb!=null&&r.climb>0).length;
+    const avgRung=mean(ranked.map(r=>r.levelRank)), avgRungPrev=mean(rankedPrev.map(r=>r.levelRank));
+    const pt=(cur,prv,suffix="")=>{ if(cur==null) return `<span class="delta flat">—</span>`;
+      if(prv==null) return `<span class="delta up">▲ new</span>`;
+      const d=Math.round((cur-prv)*10)/10; const cls=d>0?"up":(d<0?"down":"flat"); const ar=d>0?"▲":(d<0?"▼":"—");
+      return `<span class="delta ${cls}">${ar} ${Math.abs(d)}${suffix}</span>`; };
+    $("grKpis").innerHTML=`
+      <div class="stat"><div class="k">Average score</div><div class="v">${avg==null?"—":Math.round(avg)+"%"}</div><div class="d">vs prev period ${pt(avg,avgPrev,"pt")}</div></div>
+      <div class="stat"><div class="k">Difficulty-weighted</div><div class="v">${wtd==null?"—":Math.round(wtd)}</div><div class="d">percent × rung ${pt(wtd,wtdPrev)}</div></div>
+      <div class="stat"><div class="k">Improving</div><div class="v">${improving}</div><div class="d">of ${withGain.length} with a like-for-like pair</div></div>
+      <div class="stat"><div class="k">Moved up a level</div><div class="v">${climbers}</div><div class="d">of ${rows.length} active students</div></div>
+      <div class="stat"><div class="k">Average level</div><div class="v">${avgRung==null?"—":avgRung.toFixed(1)}</div><div class="d">${avgRung==null?"no levelled attempts":rungName(Math.round(avgRung))} ${pt(avgRung,avgRungPrev)}</div></div>`;
+
+    // ---- charts ----
+    const { labels, groups } = grBuckets(recs);
+    grLineChart("grScoreChart", labels, groups.map(g=>g.length?Math.round(mean(g.map(r=>r.percent))):null), "#2563eb", "Average", 100);
+    grLineChart("grWeightedChart", labels, groups.map(g=>{ const w=g.filter(r=>r.levelRank!=null); return w.length?Math.round(mean(w.map(r=>r.percent*r.levelRank/5))):null; }), "#e2711d", "Weighted", 100);
+    grMixChart(labels, groups);
+    $("grLadderKey").innerHTML=LEVEL_RUNGS.map((n,i)=>`<span><i style="background:${LEVEL_COLOURS[i]}"></i>${esc(n)}</span>`).join("")
+      +`<span class="key-note">Adventure missions and the quizzes that don't set a level are left out of the level maths.</span>`;
+
+    // ---- table ----
+    renderGrowthTable(rows);
+  }
+
+  function renderGrowthTable(rows){
+    const dir=grSort.asc?1:-1;
+    const val=(r,k)=>{ const v=r[k]; if(k==="name"||k==="className") return String(v||"").toLowerCase(); return v==null?-Infinity:v; };
+    rows=rows.slice().sort((a,b)=>{ const x=val(a,grSort.key), y=val(b,grSort.key);
+      if(x<y) return -1*dir; if(x>y) return 1*dir;
+      return String(a.name).localeCompare(String(b.name)); });
+    $("grEmpty").classList.toggle("show",rows.length===0);
+    document.querySelectorAll("#grTable th[data-sort]").forEach(th=>{
+      th.classList.toggle("sorted",th.dataset.sort===grSort.key);
+      th.classList.toggle("asc",th.dataset.sort===grSort.key && grSort.asc); });
+    const gainCell=g=>{ if(g==null) return `<span class="gain flat">—</span>`;
+      const cls=g>0?"up":(g<0?"down":"flat"); return `<span class="gain ${cls}">${g>0?"+":""}${g} pt</span>`; };
+    $("grBody").innerHTML=rows.map(r=>`<tr>
+      <td><strong>${esc(r.name)}</strong><br><span class="code">${esc(r.code)}</span></td>
+      <td>${esc(r.className)}</td>
+      <td>${r.attempts}</td>
+      <td>${r.first}%</td>
+      <td>${r.latest}%</td>
+      <td>${gainCell(r.gain)}</td>
+      <td>${r.rung?`<span class="rung-badge r${r.rung}">${esc(rungName(r.rung))}</span>`:"—"}</td>
+      <td>${r.climb==null?"—":(r.climb>0?`<span class="gain up">▲ ${r.climb}</span>`:(r.climb<0?`<span class="gain down">▼ ${Math.abs(r.climb)}</span>`:`<span class="gain flat">—</span>`))}</td>
+    </tr>`).join("");
+  }
+
+  function growthCsv(){
+    const rows=growthByStudent(growthRecs());
+    const cols=["name","code","className","attempts","first","latest","average","gain","rung","climb"];
+    const head=["Student","Code","Class","Attempts","First %","Latest %","Average %","Like-for-like gain (pt)","Highest level","Levels climbed"];
+    const esc2=v=>{ const s=v==null?"":String(v); return /[",\n]/.test(s)?`"${s.replace(/"/g,'""')}"`:s; };
+    const body=rows.map(r=>cols.map(c=>esc2(c==="rung"?(r.rung?rungName(r.rung):""):r[c])).join(","));
+    return [head.join(","),...body].join("\n");
+  }
+
+  // ---- growth wiring ----
+  $("grFilter").addEventListener("click",e=>{ const b=e.target.closest("button[data-win]"); if(!b) return;
+    growthWin=+b.dataset.win; [...$("grFilter").children].forEach(x=>x.classList.toggle("active",x===b)); renderGrowth(); });
+  ["grClass","grTeacher","grTopic","grTool"].forEach(id=>$(id).addEventListener("change",renderGrowth));
+  $("grReset").addEventListener("click",()=>{ ["grClass","grTeacher","grTopic","grTool"].forEach(id=>$(id).value=""); renderGrowth(); });
+  $("grRefresh").addEventListener("click",()=>doRefresh($("grRefresh")));
+  document.querySelectorAll("#grTable th[data-sort]").forEach(th=>th.addEventListener("click",()=>{
+    const k=th.dataset.sort;
+    if(grSort.key===k) grSort.asc=!grSort.asc; else grSort={ key:k, asc:(k==="name"||k==="className") };
+    renderGrowthTable(growthByStudent(growthRecs()));
+  }));
+  $("grCsv").addEventListener("click",async()=>{
+    const csv=growthCsv();
+    if(!csv.split("\n").length>1) return toast("Nothing to export","warn");
+    const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
+    const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+    a.download=`mmt-growth-${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+    toast("Growth CSV downloaded","ok");
   });
 
   // ---- error prettifier: distinguish permission (rules) errors ----
