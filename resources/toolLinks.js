@@ -607,6 +607,13 @@ window.MMT_TOOL_LINKS = {
       tags: ["rounding", "decimals", "number line", "zoom", "place value"]
     },
     {
+      title: "Fraction Grid to Number Line",
+      kind: "Teacher tool",
+      url: "/interactive-tools/stage-4/number/fraction-grid-number-line/",
+      note: "The hundred flat (or any area grid) is shaded, then its parts lift off and rearrange into the whole journey from 0 to 1 \u2014 so a part-whole count becomes ONE point on a number line. Estimate-first, benchmark ghosts, regroup-and-rename, decimal, percentage and a second fraction to compare.",
+      tags: ["fractions", "decimals", "percentages", "number line", "area model", "hundred grid", "MAB", "part-whole", "equivalent fractions", "estimation", "density", "comparing fractions", "recurring"]
+    },
+    {
       title: "Fraction Bar + Number Line",
       kind: "Teacher tool",
       url: "/interactive-tools/stage-4/number/fraction-bar-number-line/",
