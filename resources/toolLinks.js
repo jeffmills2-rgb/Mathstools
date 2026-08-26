@@ -614,6 +614,13 @@ window.MMT_TOOL_LINKS = {
       tags: ["fractions", "decimals", "percentages", "number line", "area model", "hundred grid", "MAB", "part-whole", "equivalent fractions", "estimation", "density", "comparing fractions", "recurring"]
     },
     {
+      title: "Fraction Grid to Number Line",
+      kind: "Worksheet maker",
+      url: "/worksheet-creators/stage-4/number/fraction-grid-number-line.html",
+      note: "Every card carries the area grid AND a number line, so the fraction has to travel between them. Four question kinds \u2014 shade then place the point, place then shade, name it four ways, and compare two \u2014 plus a full-width misconception prompt on each page. The ladder raises the demand on the LINE: matching parts, then tenths, then a different unit, then only 0, \u00bd and 1.",
+      tags: ["worksheet", "fractions", "decimals", "percentages", "number line", "area model", "hundred grid", "equivalent fractions", "simplest form", "comparing fractions", "reasoning", "misconceptions"]
+    },
+    {
       title: "Fraction Bar + Number Line",
       kind: "Teacher tool",
       url: "/interactive-tools/stage-4/number/fraction-bar-number-line/",

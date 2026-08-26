@@ -99,6 +99,11 @@
     .toolLink::after{ content:'\203A'; color:var(--blue); font-weight:1000; font-size:1.1rem; line-height:1; }
     .toolLink:hover,.toolLink:focus-visible{ background:#eef2ff; color:#1d4ed8; outline:none; }
     .toolLink small{ display:block; font-weight:650; font-size:.74rem; color:var(--muted); }
+    #toolsMenu{ min-width:316px; }
+    .toolLink.is-disabled{ color:var(--line-soft); cursor:not-allowed; }
+    .toolLink.is-disabled::after{ content:'\2022'; color:var(--line-soft); font-size:.9rem; }
+    .toolLink.is-disabled:hover{ background:transparent; color:var(--line-soft); }
+    .toolLink.is-disabled small{ color:var(--line-soft); }
 
     .settingsMenu.open{ gap:13px; padding:16px 18px; min-width:308px; max-height:min(74vh,620px); overflow:auto; }
     .settingsHead{ font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; font-weight:950; color:var(--muted); }
@@ -327,9 +332,8 @@
         <div class="menuWrap">
           <button class="btn" id="toolsBtn" type="button" aria-haspopup="true" aria-expanded="false">Tools &#9662;</button>
           <nav class="dropMenu" id="toolsMenu" aria-label="Related tools">
-            <a class="toolLink" href="/interactive-tools/stage-4/number/fraction-bar-number-line/">Fraction Bar + Number Line<small>One fraction as a bar, a point and a division</small></a>
-            <a class="toolLink" href="/interactive-tools/stage-4/number/fraction-to-percentage/">Fraction to Percentage<small>Find one part of 100, then count on</small></a>
-            <a class="toolLink" href="/interactive-tools/stage-4/number/adding-fractions/">Adding and Subtracting Fractions<small>Two bars joined, renamed and counted</small></a>
+            <a class="toolLink" href="/worksheet-creators/stage-4/number/fraction-grid-number-line.html">Worksheet creator<small>Printable A4 &mdash; shade it, place it, name it</small></a>
+            <span class="toolLink is-disabled" aria-disabled="true">Student Quiz<small>Coming soon</small></span>
           </nav>
         </div>
         <button class="btn btn-primary" id="resetBtn" type="button">Reset</button>
@@ -831,14 +835,18 @@
     if(reached("point") && n>0){
       const x=X(v);
       const gp=el("g",{class:indexOfId("point")===state.step?"popIn":""});
-      gp.appendChild(el("line",{x1:x,y1:LINE_Y-BAND_H-8,x2:x,y2:LINE_Y+22,
+      // a close estimate would sit under the name — lift the name clear of it
+      const estNear = state.predictValue!=null && state.step<=indexOfId("point")
+                      && Math.abs(X(state.predictValue)-x)<54;
+      const labY = FR_LABEL_Y-(estNear?24:0);
+      gp.appendChild(el("line",{x1:x,y1:Math.min(LINE_Y-BAND_H-8,labY+34),x2:x,y2:LINE_Y+22,
         stroke:C.target,"stroke-width":3.6,"stroke-linecap":"round"}));
       gp.appendChild(el("circle",{cx:x,cy:LINE_Y,r:7,fill:C.target,stroke:"#fff","stroke-width":2.4}));
       const label = grouped ? r : {n:n,d:d};
-      gp.appendChild(svgFrac(x,FR_LABEL_Y,label.n,label.d,30,C.target));
+      gp.appendChild(svgFrac(x,labY,label.n,label.d,30,C.target));
       if(grouped){
         // keep the original name alongside, faded — same point, two names
-        gp.appendChild(txt(x, FR_LABEL_Y-46, "= "+n+"/"+d, {size:18,fill:C.muted}));
+        gp.appendChild(txt(x, labY-46, "= "+n+"/"+d, {size:18,fill:C.muted}));
       }
       gOver.appendChild(gp);
 

@@ -1,0 +1,808 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Fraction Grid to Number Line — Worksheet Generator</title>
+
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --ink:#111827;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --shadow:0 14px 40px rgba(0,0,0,.10);
+      --radius:18px;
+
+      --blue:#2563eb;
+      --green:#16a34a;
+      --red:#dc2626;
+
+      --sweet1:#4ade80;  --sweet2:#16a34a;
+      --mild1:#facc15;   --mild2:#d97706;
+      --medium1:#fb923c; --medium2:#ea580c;
+      --spicy1:#f87171;  --spicy2:#b91c1c;
+
+      --footer-h:44px;
+      --mathFont:"Cambria Math","STIX Two Math","STIXGeneral","Times New Roman",serif;
+      --uiFont:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0; background:var(--bg); color:var(--ink);
+      font-family:var(--uiFont); padding-bottom:var(--footer-h);
+    }
+
+    .wrap{ max-width:1280px; margin:14px auto 32px; padding:0 14px; }
+    .card{ background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px; }
+
+    .title{ margin:0 0 4px; font-size:28px; font-weight:1000; letter-spacing:.2px; }
+    .subtitle{ margin:0 0 14px; color:var(--muted); font-weight:850; font-size:15px; line-height:1.35; }
+
+    /* ---- the control panel, laid out in full-width bands ---- */
+    .controls{ display:grid; gap:10px; }
+    .band{
+      border:1px solid var(--border); border-radius:18px; padding:12px 14px;
+      background:linear-gradient(180deg,#ffffff,#f9fafb);
+    }
+    .bandHead{
+      font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+      font-weight:1000; color:var(--muted); margin:0 0 9px;
+    }
+    .bandGrid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; align-items:end; }
+    .bandRow{ display:flex; gap:18px 22px; flex-wrap:wrap; align-items:center; }
+
+    label{ display:block; margin:0 0 7px; font-size:15px; font-weight:950; }
+    select, input[type="number"]{
+      border:2px solid #e5e7eb; border-radius:14px; padding:12px 13px;
+      font-weight:950; font-size:17px; background:#fff; width:100%; outline:none;
+    }
+
+    .sw{
+      display:inline-flex; align-items:center; gap:10px; cursor:pointer;
+      user-select:none; font-weight:950; font-size:14.5px; color:#111827; white-space:nowrap;
+    }
+    .sw input{ position:absolute; opacity:0; width:0; height:0; }
+    .sw .track{
+      position:relative; width:46px; height:26px; border-radius:999px; background:#cbd5e1;
+      transition:.18s ease; flex:0 0 auto; box-shadow:inset 0 1px 3px rgba(15,23,42,.18);
+    }
+    .sw .track::after{
+      content:""; position:absolute; top:3px; left:3px; width:20px; height:20px;
+      border-radius:50%; background:#fff; box-shadow:0 2px 6px rgba(15,23,42,.3); transition:.18s ease;
+    }
+    .sw input:checked + .track{ background:var(--green); }
+    .sw input:checked + .track::after{ transform:translateX(20px); }
+    .sw input:focus-visible + .track{ box-shadow:0 0 0 4px rgba(37,99,235,.28); }
+
+    .note{ margin:9px 0 0; font-size:12.5px; font-weight:800; color:var(--muted); line-height:1.45; }
+    .warn{ color:var(--red); }
+
+    .btnRow{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end; }
+    button{
+      border:none; border-radius:14px; padding:12px 16px; font-weight:1000; cursor:pointer;
+      background:#f3f4f6; color:#111827; font-size:16px; user-select:none;
+      transition:transform .04s ease, filter .15s ease, opacity .2s ease;
+    }
+    button:active{ transform:scale(.98); }
+    button.primary{ background:#2563eb; color:#fff; }
+    button.ghost{ background:#eef2ff; color:#1d4ed8; }
+    button.danger{ background:#fee2e2; color:#991b1b; }
+
+    .outWrap{ margin-top:14px; }
+
+    /* =====================================================================
+       THE PAPER
+       A worksheet, not a deck of cards: questions run as full-width rows
+       under one instruction per section, so the number line gets the whole
+       page to be marked on and the prompt is written once, not twelve times.
+       ===================================================================== */
+    .page{
+      margin:14px auto 0; background:#fff; border:1px solid var(--border);
+      border-radius:18px; box-shadow:0 10px 26px rgba(15,23,42,.08); overflow:hidden;
+      width:210mm; max-width:100%; height:297mm;
+      display:flex; flex-direction:column;
+    }
+    .pageHeader{
+      padding:9px 13px 7px; border-bottom:2px solid #111827;
+      display:flex; align-items:flex-end; justify-content:space-between; gap:10px;
+    }
+    .hdrTitle{ font-weight:1000; font-size:14px; line-height:1.1; }
+    .hdrSub{ color:var(--muted); font-weight:850; font-size:10.5px; margin-top:2px; }
+
+    .nameDate{ display:flex; gap:8px; align-items:flex-end; }
+    .lineField{ display:flex; flex-direction:column; gap:3px; width:112px; }
+    .lineLabel{ font-size:9.5px; font-weight:950; color:var(--muted); }
+    .lineBox{ height:18px; border-bottom:1.6px solid #111827; }
+
+    .sheet{ padding:8px 13px 10px; flex:1 1 auto; display:flex; flex-direction:column; min-height:0; }
+
+    .section{ margin-bottom:9px; }
+    .secHead{
+      display:flex; align-items:baseline; gap:9px;
+      border-bottom:1.6px solid #111827; padding-bottom:2px; margin-bottom:5px;
+    }
+    .secLetter{
+      font-weight:1000; font-size:12.5px; letter-spacing:.02em;
+      background:#111827; color:#fff; border-radius:5px; padding:1px 6px; flex:0 0 auto;
+    }
+    .secText{ font-weight:900; font-size:11.5px; color:#111827; line-height:1.25; }
+    .secText em{ font-style:normal; color:var(--muted); font-weight:800; }
+    .secCont{ margin-left:auto; font-size:10px; font-weight:900; color:var(--muted); flex:0 0 auto; }
+
+    /* --- a question row --- */
+    .qRow{
+      display:grid; align-items:center; gap:0 10px;
+      grid-template-columns:20px 92px 104px 1fr;
+      padding:var(--rowPad,3px) 0; break-inside:avoid; page-break-inside:avoid;
+      border-bottom:1px dashed #e8ebef;
+    }
+    .qRow:last-child{ border-bottom:none; }
+    .qRow.cmp{ grid-template-columns:20px 76px 76px 86px 1fr; }
+    .measure{ position:absolute; left:-10000px; top:0; width:210mm; visibility:hidden; }
+
+    .qNum{
+      width:19px; height:19px; border-radius:999px; color:#fff;
+      display:flex; align-items:center; justify-content:center;
+      font-size:10.5px; font-weight:1000; flex:0 0 auto;
+    }
+    .qNum.sweet{ background:linear-gradient(180deg,var(--sweet1),var(--sweet2)); }
+    .qNum.mild{ background:linear-gradient(180deg,var(--mild1),var(--mild2)); }
+    .qNum.medium{ background:linear-gradient(180deg,var(--medium1),var(--medium2)); }
+    .qNum.spicy{ background:linear-gradient(180deg,var(--spicy1),var(--spicy2)); }
+
+    .cellGrid{ display:flex; flex-direction:column; align-items:center; gap:1px; }
+    .cellGrid svg{ display:block; height:auto; }
+    .gridTag{ font-size:9px; font-weight:1000; color:var(--muted); }
+
+    .cellAns{ display:flex; align-items:center; justify-content:flex-start; gap:6px; }
+    .ansLabel{ font-weight:950; font-size:11px; font-family:var(--mathFont); white-space:nowrap; }
+    .ansBox{ flex:1 1 auto; min-width:44px; height:22px; border:1.5px solid #111827; border-radius:999px; background:#fff; }
+    .ansBox.sm{ flex:0 0 auto; width:34px; }
+    .ansBox.key{
+      display:flex; align-items:center; justify-content:center; padding:0 6px;
+      font-weight:1000; font-size:12.5px; font-family:var(--mathFont);
+      color:var(--green); border-color:var(--green); background:rgba(22,163,74,.08);
+    }
+
+    .cellLine{ min-width:0; }
+    .cellLine svg{ width:100%; height:auto; display:block; }
+    .cellLine svg text{ font-family:var(--mathFont); }
+
+    /* --- the four-names table --- */
+    .nameTable{ width:100%; border-collapse:collapse; table-layout:fixed; }
+    .nameTable th{
+      font-size:10px; font-weight:1000; color:#111827; text-transform:uppercase;
+      letter-spacing:.06em; padding:3px 4px; border:1.2px solid #cbd5e1; background:#f1f5f9;
+    }
+    .nameTable td{ border:1.2px solid #cbd5e1; padding:2px 4px; height:52px; }
+    .nameTable td.numCell{ width:26px; text-align:center; }
+    .nameTable td.gridCell{ width:74px; }
+    .nameTable td.gridCell > div{ display:flex; justify-content:center; }
+    .nameTable td.val{ font-family:var(--mathFont); font-weight:1000; font-size:15px; text-align:center; }
+    .nameTable td.val.key{ color:var(--green); background:rgba(22,163,74,.08); }
+
+    /* --- the reasoning block --- */
+    /* the box soaks up whatever the sections leave behind, so the slack at the
+       foot of a page becomes writing room instead of white space */
+    .explainBox{
+      border:1.6px solid #4f46e5; border-radius:10px; padding:7px 10px 8px;
+      background:rgba(79,70,229,.035); break-inside:avoid; page-break-inside:avoid;
+      flex:1 1 auto; max-height:88mm; display:flex; flex-direction:column; min-height:0;
+    }
+    .exHead{
+      font-size:10px; font-weight:1000; letter-spacing:.1em; text-transform:uppercase;
+      color:#4338ca; margin-bottom:3px;
+    }
+    .exText{ font-size:11.5px; font-weight:850; line-height:1.35; color:#111827; }
+    .exText b{ font-weight:1000; }
+    .exLine{ margin:3px auto 1px; width:74%; }
+    .exLine svg{ width:100%; height:auto; display:block; }
+    .exLine svg text{ font-family:var(--mathFont); }
+    .ruled{ display:flex; flex-direction:column; justify-content:space-evenly; flex:1 1 auto; gap:15px; margin-top:6px; min-height:52px; }
+    .ruled span{ display:block; border-bottom:1.2px solid #a5b4c4; height:0; }
+    /* on a key page there is nothing to write, so the box stays compact */
+    .page.isKey .explainBox{ flex:0 0 auto; }
+    .exKey{
+      margin-top:auto; font-size:10.5px; font-weight:850; line-height:1.35;
+      color:var(--green); background:rgba(22,163,74,.08);
+      border:1.2px solid rgba(22,163,74,.35); border-radius:8px; padding:5px 7px;
+    }
+
+    .pageFooter{
+      padding:5px 13px 6px; border-top:1px solid rgba(229,231,235,.95);
+      display:flex; align-items:center; justify-content:space-between;
+      font-weight:900; color:var(--muted); font-size:9.5px;
+    }
+    .pageFooter a{ color:#2563eb; text-decoration:none; font-weight:1000; }
+
+    .mmtFooter{
+      position:fixed; left:0; right:0; bottom:0; height:var(--footer-h);
+      display:flex; align-items:center; justify-content:center; padding:0 12px;
+      background:rgba(255,255,255,.92); border-top:1px solid rgba(229,231,235,.95);
+      backdrop-filter:blur(8px); z-index:500; font-weight:900; color:#111827;
+      text-align:center; font-size:13px;
+    }
+    .mmtFooter a{ color:#2563eb; text-decoration:none; font-weight:950; }
+
+    @media print{
+      @page{ size:A4; margin:8mm 7mm; }
+      html, body{ width:210mm; height:auto; }
+      body{ background:#fff; padding-bottom:0; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+
+      .wrap{ max-width:none; margin:0; padding:0; }
+      .card{ box-shadow:none; border-radius:0; padding:0; }
+      .controls, .title, .subtitle, .mmtFooter{ display:none !important; }
+
+      .page{
+        margin:0; border:none; border-radius:0; box-shadow:none;
+        width:auto; height:281mm; page-break-after:always;
+      }
+      .page:last-child{ page-break-after:auto; }
+
+      .pageHeader{ padding:0 0 1.6mm; }
+      .sheet{ padding:2.4mm 0 0; }
+      .pageFooter{ padding:1.4mm 0 0; }
+    }
+  </style>
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "c7e5713b5e4f4993907eb285797dc89b"}'></script><!-- End Cloudflare Web Analytics -->
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1 class="title">Fraction Grid to Number Line — Worksheet Generator</h1>
+      <p class="subtitle">Printable A4 worksheets built from the <strong>Fraction Grid to Number Line</strong> teaching tool. Every question puts the area model and the number line side by side, so the fraction has to travel between them &mdash; it is never just a conversion to recite. Questions are grouped into lettered sections with <strong>one instruction each</strong>, and the number line runs the full width of the page so a point can actually be marked accurately. The ladder raises the demand on the <em>line</em> while the grid stays: Sweet's line is cut into the same parts as the grid, Mild's into tenths, Medium's into a different unit again, and Spicy gives only 0, &frac12; and 1.</p>
+
+      <div class="controls">
+        <div class="band">
+          <p class="bandHead">The paper</p>
+          <div class="bandGrid">
+            <div>
+              <label for="levelSel">Level</label>
+              <select id="levelSel">
+                <option value="sweet">Sweet — the line matches the grid</option>
+                <option value="mild">Mild — the grid is in hundredths, the line in tenths</option>
+                <option value="medium">Medium — the line is cut into a different unit</option>
+                <option value="spicy">Spicy — a bare line (0, ½, 1) and decimals that never stop</option>
+                <option value="mixed" selected>Mixed — a ladder of all four</option>
+              </select>
+            </div>
+            <div>
+              <label for="countInp">Number of questions (4&ndash;60)</label>
+              <input id="countInp" type="number" min="4" max="60" value="16" />
+            </div>
+            <div>
+              <label for="densitySel">Spacing</label>
+              <select id="densitySel">
+                <option value="roomy">Roomy — bigger grids, fewer per page</option>
+                <option value="normal" selected>Normal</option>
+                <option value="tight">Tight — fit the most on a page</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="band">
+          <p class="bandHead">Sections</p>
+          <div class="bandRow">
+            <label class="sw"><input type="checkbox" id="kPlace" checked /><span class="track"></span><span>Shade &rarr; place the point</span></label>
+            <label class="sw"><input type="checkbox" id="kReverse" checked /><span class="track"></span><span>Point &rarr; shade the grid</span></label>
+            <label class="sw"><input type="checkbox" id="kName" checked /><span class="track"></span><span>Name it four ways</span></label>
+            <label class="sw"><input type="checkbox" id="kCompare" checked /><span class="track"></span><span>Compare two</span></label>
+          </div>
+          <p class="note" id="kindNote">Each kind becomes its own lettered section, so the instruction is written once and the questions inside it climb the level ladder.</p>
+        </div>
+
+        <div class="band">
+          <p class="bandHead">Options</p>
+          <div class="bandRow">
+            <label class="sw"><input type="checkbox" id="reasonToggle" checked /><span class="track"></span><span>Reasoning prompt on each page</span></label>
+            <label class="sw"><input type="checkbox" id="simplifyToggle" checked /><span class="track"></span><span>Simplest-form column</span></label>
+            <label class="sw"><input type="checkbox" id="pctToggle" checked /><span class="track"></span><span>Percentage column</span></label>
+            <label class="sw"><input type="checkbox" id="keyToggle" checked /><span class="track"></span><span>Answer key pages</span></label>
+          </div>
+          <p class="note">The reasoning prompt sits in a box at the foot of each page — a misconception to argue with, using the line as the evidence. It is the item worth marking properly.</p>
+        </div>
+
+        <div class="btnRow">
+          <button id="genBtn" class="primary">Generate worksheet</button>
+          <button id="printBtn" class="ghost">Print (Ctrl+P)</button>
+          <button id="resetBtn" class="danger">Reset</button>
+        </div>
+      </div>
+
+      <div id="out" class="outWrap"></div>
+    </div>
+  </div>
+
+  <div class="mmtFooter">
+    This tool and more can be found at&nbsp;
+    <a href="https://www.millsmathstools.au">www.millsmathstools.au</a>
+  </div>
+
+<script>
+(() => {
+  "use strict";
+
+  const SITE = "https://www.millsmathstools.au";
+  const $ = id => document.getElementById(id);
+
+  /* ===================== number helpers (ported from the teaching tool) ===================== */
+  function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ const t=a%b; a=b; b=t; } return a; }
+  function reduce(n,d){ const g=gcd(n,d)||1; return { n:n/g, d:d/g }; }
+  function isTerminating(d){ let x=d; while(x%2===0) x/=2; while(x%5===0) x/=5; return x===1; }
+  function fmtNum(x){ return String(Number(x.toFixed(10))); }
+  function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+  function pctOf(n,d){
+    const g=gcd(100*n,d)||1;
+    const rn=(100*n)/g, rd=d/g;
+    const whole=Math.floor(rn/rd), rem=rn-whole*rd;
+    let kind='rec';
+    if(rd===1) kind='int'; else if(isTerminating(rd)) kind='dec';
+    return { rn, rd, whole, rem, kind, value:(100*n)/d };
+  }
+  function decParts(n,d){
+    const int=Math.floor(n/d);
+    let rem=n%d;
+    const seen={}, digits=[];
+    let repStart=-1, guard=0;
+    while(rem!==0 && guard++<64){
+      if(seen[rem]!==undefined){ repStart=seen[rem]; break; }
+      seen[rem]=digits.length;
+      rem*=10; digits.push(Math.floor(rem/d)); rem=rem%d;
+    }
+    if(repStart<0) return { int, pre:digits.join(""), rep:"" };
+    return { int, pre:digits.slice(0,repStart).join(""), rep:digits.slice(repStart).join("") };
+  }
+
+  /* ===================== HTML fraction bits ===================== */
+  function fracHTML(n,d){
+    return '<span style="display:inline-flex;flex-direction:column;align-items:center;line-height:1;vertical-align:middle;font-size:.88em">'
+      + '<span style="padding:0 .3em .04em">'+n+'</span>'
+      + '<span style="padding:.05em .3em 0;border-top:.09em solid currentColor">'+d+'</span></span>';
+  }
+  function decHTML(n,d){
+    const p=decParts(n,d);
+    let s=p.int+"."+(p.pre||(p.rep?"":"0"));
+    if(p.rep) s+='<span style="border-top:.09em solid currentColor">'+p.rep+'</span>&hellip;';
+    return s;
+  }
+  function pctHTML(n,d){
+    const p=pctOf(n,d);
+    if(p.kind==='int') return p.whole+"%";
+    if(p.kind==='dec') return fmtNum(p.value)+"%";
+    let s='<span style="display:inline-flex;align-items:center;gap:.1em">';
+    if(p.whole>0) s+='<span>'+p.whole+'</span>';
+    s+=fracHTML(p.rem,p.rd);
+    return s+'</span>%';
+  }
+
+  /* ===================== the grid ===================== */
+  function gridDims(d){
+    let r=1;
+    for(let k=1;k*k<=d;k++){ if(d%k===0) r=k; }
+    return { r, c:d/r };
+  }
+  const MAB="#e0a12c", PALE="#fbeccb", EDGE="#1f2937";
+
+  function gridSVG(d, shaded, box, keyFill){
+    const dim=gridDims(d);
+    const cell=Math.min(box/dim.c, box/dim.r);
+    const w=cell*dim.c, h=cell*dim.r;
+    const sw=Math.max(0.3, Math.min(1.2, cell*0.13));
+    let s='<svg viewBox="-2 -2 '+(w+4)+' '+(h+4)+'" width="'+w+'" role="img" aria-label="'
+      + esc(shaded>0 ? shaded+" of "+d+" equal parts shaded" : "a grid of "+d+" equal parts, none shaded")+'">';
+    for(let i=0;i<d;i++){
+      const row=Math.floor(i/dim.c), col=i%dim.c;
+      s+='<rect x="'+(col*cell)+'" y="'+(row*cell)+'" width="'+cell+'" height="'+cell+'"'
+        + ' fill="'+(i<shaded ? (keyFill||MAB) : PALE)+'" stroke="'+EDGE+'" stroke-width="'+sw+'"/>';
+    }
+    s+='<rect x="-1.3" y="-1.3" width="'+(w+2.6)+'" height="'+(h+2.6)+'" fill="none" stroke="'+EDGE+'" stroke-width="1.7"/>';
+    return s+'</svg>';
+  }
+
+  /* ===================== the number line =====================
+     It now runs the full width of the page, so the tick spacing is generous
+     enough to actually mark a point on — the single biggest gain from
+     dropping the two-column card layout.                                   */
+  const LW=900, LH=74, LL=26, LR=874, LY=30;
+  const C={ ink:"#0f172a", line:"#334155", target:"#db2777", teal:"#0d9488",
+            green:"#16a34a", muted:"#64748b" };
+
+  function sTxt(x,y,str,o){
+    o=o||{};
+    return '<text x="'+x+'" y="'+y+'" text-anchor="middle" font-size="'+(o.size||15)+'"'
+      + ' font-weight="'+(o.weight||"800")+'" fill="'+(o.fill||C.ink)+'"'
+      + (o.family?' font-family="'+o.family+'"':'')
+      + ' stroke="#fff" stroke-width="3" paint-order="stroke" stroke-linejoin="round">'+esc(str)+'</text>';
+  }
+  function sLine(x1,y1,x2,y2,st,w,dash){
+    return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+st+'" stroke-width="'+w
+      + '" stroke-linecap="round"'+(dash?' stroke-dasharray="'+dash+'"':'')+'/>';
+  }
+  function sFrac(cx,cy,n,d,fs,fill){
+    const bw=Math.max(String(n).length,String(d).length)*fs*0.58+5;
+    return sTxt(cx, cy-fs*0.30, String(n), {size:fs, fill})
+      + sLine(cx-bw/2, cy+fs*0.06, cx+bw/2, cy+fs*0.06, fill, Math.max(1.3,fs*0.09))
+      + sTxt(cx, cy+fs*1.02, String(d), {size:fs, fill});
+  }
+  const LX = v => LL + v*(LR-LL);
+
+  function lineSVG(lineDen, marks){
+    const L=lineDen;
+    let s='<svg viewBox="0 0 '+LW+' '+LH+'" preserveAspectRatio="none" role="img" aria-label="'
+      + esc("A number line from 0 to 1"+(L>2?" cut into "+L+" equal parts":" showing a half"))+'">'
+      + '</svg>';
+    // (rebuilt below with a uniform aspect — kept explicit for clarity)
+    s='<svg viewBox="0 0 '+LW+' '+LH+'" role="img" aria-label="'
+      + esc("A number line from 0 to 1"+(L>2?" cut into "+L+" equal parts":" showing a half"))+'">';
+
+    s+=sLine(LL-18, LY, LR+18, LY, C.line, 2.6);
+    s+='<path d="M '+(LL-18)+' '+LY+' l 8 -4.5 l 0 9 z" fill="'+C.line+'"/>';
+    s+='<path d="M '+(LR+18)+' '+LY+' l -8 -4.5 l 0 9 z" fill="'+C.line+'"/>';
+
+    for(let k=1;k<L;k++){
+      const x=LX(k/L);
+      s+=sLine(x, LY-7, x, LY+7, C.line, 1.5);
+    }
+    [[0,"0"],[1,"1"]].forEach(p=>{
+      const x=LX(p[0]);
+      s+=sLine(x, LY-12, x, LY+12, C.ink, 2.6);
+      s+=sTxt(x, LY+27, p[1], {size:15, fill:C.ink});
+    });
+    if(L<=12 && L>1){
+      for(let k=1;k<L;k++) s+=sFrac(LX(k/L), LY+26, k, L, 11, C.muted);
+    }
+
+    (marks||[]).forEach(m=>{
+      const x=LX(m.v);
+      s+=sLine(x, LY-21, x, LY+13, m.colour, 2.6, m.dashed?"5 4":null);
+      s+='<path d="M '+(x-6)+' '+(LY-21)+' L '+(x+6)+' '+(LY-21)+' L '+x+' '+(LY-9)+' z" fill="'+m.colour+'" stroke="#fff" stroke-width="1"/>';
+      s+='<circle cx="'+x+'" cy="'+LY+'" r="4" fill="'+m.colour+'" stroke="#fff" stroke-width="1.4"/>';
+      if(m.label) s+=sTxt(x, LY-25, m.label, {size:13, fill:m.colour, family:"var(--uiFont)", weight:"1000"});
+    });
+    return s+'</svg>';
+  }
+
+  /* ===================== the level ladder ===================== */
+  const LEVELS = {
+    sweet:  { label:"Sweet",  badge:"sweet",  grids:[4,5,8,10,12,16,20], line:d=>d },
+    mild:   { label:"Mild",   badge:"mild",   grids:[20,50,100],         line:()=>10 },
+    medium: { label:"Medium", badge:"medium", grids:[20,25,50,100],      line:d=>pick([4,5,10].filter(L=>L!==d)) },
+    spicy:  { label:"Spicy",  badge:"spicy",  grids:[3,6,8,9,12,16],     line:()=>2 }
+  };
+  const ORDER=["sweet","mild","medium","spicy"];
+
+  function pickNum(d, level){
+    const lo = (level==="sweet") ? 2 : 1;
+    let n = lo + Math.floor(Math.random()*(d-lo));
+    if(n>=d) n=d-1;
+    return n;
+  }
+
+  function makeQ(level, kind){
+    const L=LEVELS[level];
+    const d=pick(L.grids);
+    const n=pickNum(d, level);
+    const q={ level, badge:L.badge, kind, d, n, lineDen:L.line(d) };
+    if(kind==="compare"){
+      let d2=pick(L.grids.filter(x=>x!==d)); if(d2===undefined) d2=d;
+      let n2=pickNum(d2, level), guard=0;
+      while(guard++<30 && Math.abs(n2/d2 - n/d) < 0.06) n2=pickNum(d2, level);
+      q.d2=d2; q.n2=n2;
+    }
+    return q;
+  }
+
+  /* ===================== the misconceptions ===================== */
+  const REASONS = [
+    { den:4, text:"Ari says <b>25/100 is bigger than 1/4</b>, because 25 is bigger than 1. Mark both on the number line. Is Ari right? Explain what Ari has misunderstood.",
+      key:"They are the SAME number — one point. 25/100 regroups into 4 equal groups of 25, so it is 1/4. Ari compared the counts of pieces instead of the size of the pieces." },
+    { den:5, text:"Bo says <b>a fraction is a piece of a shape</b>, so it cannot be a number on a number line. Use a grid and the line to argue against Bo.",
+      key:"The shaded parts of the grid can be laid end to end to make a length — a distance from 0. That distance is one point on the line, so the fraction IS a number." },
+    { den:10, text:"Cass shaded <b>3 squares of a 10-grid</b> and <b>3 squares of a 100-grid</b> and said both are the same fraction. Mark both on the line. Is Cass right?",
+      key:"No. 3/10 and 3/100 have the same COUNT but different sized parts, so they land at different points. 3/100 is much closer to 0." },
+    { den:10, text:"Dev says there is <b>no number between 4/10 and 5/10</b>, because the ticks are next to each other. Is Dev right? Give a number that is between them.",
+      key:"Dev is wrong. Cutting the whole into more parts finds numbers in between — e.g. 45/100 (0.45) sits exactly halfway. Between any two fractions there are infinitely many more." },
+    { den:3, text:"Eve says <b>1/3 is not really a number</b>, because its decimal 0.333… never stops. Mark 1/3 on the line. Is Eve right?",
+      key:"Eve is wrong. 1/3 is one exact point — one third of the way from 0 to 1. It is only the DECIMAL NAME that never stops, not the number." },
+    { den:8, text:"Fin says <b>the bigger the denominator, the smaller the fraction</b>. Is Fin always right? Test it with 3/4 and 5/8 on the line.",
+      key:"Not always. The rule only holds when the NUMERATORS match (1/4 > 1/8). Here 3/4 = 0.75 is bigger than 5/8 = 0.625, even though 8 > 4." },
+    { den:10, text:"Gia says <b>0.7 and 7/100 are the same</b>, because they both have a 7. Mark both on the line. What has Gia missed?",
+      key:"0.7 is 7 TENTHS = 70/100; 7/100 is seven hundredths. They land far apart. The digit matters less than the size of the part it counts." },
+    { den:10, text:"Hal shaded <b>half of a 100-grid</b> and wrote 50/100. His partner wrote 1/2. Their teacher marked <b>both correct</b>. Explain how both can be right.",
+      key:"They are two names for one point. 50/100 counts hundredths; 1/2 counts halves; both measure the same distance from 0, so both are correct." }
+  ];
+
+  /* ===================== section copy ===================== */
+  const SECTIONS = {
+    place:   { title:"Write the fraction that is shaded, then <b>mark that number</b> on the number line.",
+               hint:"Watch the line — it is not always cut into the same parts as the grid." },
+    reverse: { title:"The point is already marked. <b>Shade the grid</b> to match it, then write the fraction.",
+               hint:"Count the parts on the line first, then work out how many grid squares that is." },
+    name:    { title:"One number, four names. Read the grid, then <b>complete every column</b>.",
+               hint:"" },
+    compare: { title:"Mark <b>A</b> and <b>B</b> on the line, then write &lt;, &gt; or = in the box.",
+               hint:"Whichever sits further right is the larger number." }
+  };
+  const SEC_LETTER = ["A","B","C","D","E","F"];
+
+  /* ===================== spacing presets ===================== */
+  const DENSITY = {
+    roomy:  { grid:82, cmpGrid:64, nameGrid:70, nameRowH:66, rowPad:7 },
+    normal: { grid:66, cmpGrid:52, nameGrid:58, nameRowH:54, rowPad:4 },
+    tight:  { grid:52, cmpGrid:42, nameGrid:46, nameRowH:44, rowPad:1 }
+  };
+  const MM = 96/25.4;                       // css px per mm
+  const A4_CONTENT_PX = (297-16)*MM;        // A4 height less the 8mm print margins
+
+  /* ===================== rendering ===================== */
+  function rowHTML(q, key, D){
+    const num='<span class="qNum '+q.badge+'">'+q.idx+'</span>';
+
+    if(q.kind==="compare"){
+      const v1=q.n/q.d, v2=q.n2/q.d2;
+      const sym = Math.abs(v1-v2)<1e-12 ? "=" : (v1>v2 ? "&gt;" : "&lt;");
+      const marks = key ? [ {v:v1,colour:C.target,label:"A"}, {v:v2,colour:C.teal,label:"B",dashed:true} ] : [];
+      return '<div class="qRow cmp">'+num
+        + '<div class="cellGrid">'+gridSVG(q.d,q.n,D.cmpGrid)+'<span class="gridTag">A</span></div>'
+        + '<div class="cellGrid">'+gridSVG(q.d2,q.n2,D.cmpGrid)+'<span class="gridTag">B</span></div>'
+        + '<div class="cellAns"><span class="ansLabel">A</span>'
+        +   (key?'<span class="ansBox sm key">'+sym+'</span>':'<span class="ansBox sm"></span>')
+        +   '<span class="ansLabel">B</span></div>'
+        + '<div class="cellLine">'+lineSVG(q.lineDen,marks)+'</div>'
+        + '</div>';
+    }
+
+    if(q.kind==="reverse"){
+      const marks=[{ v:q.n/q.d, colour:C.target }];
+      return '<div class="qRow">'+num
+        + '<div class="cellGrid">'+gridSVG(q.d, key?q.n:0, D.grid, key?"#86efac":null)+'</div>'
+        + '<div class="cellAns"><span class="ansLabel">=</span>'
+        +   (key?'<span class="ansBox key">'+fracHTML(q.n,q.d)+'</span>':'<span class="ansBox"></span>')
+        +   '</div>'
+        + '<div class="cellLine">'+lineSVG(q.lineDen,marks)+'</div>'
+        + '</div>';
+    }
+
+    // place
+    const marks = key ? [{ v:q.n/q.d, colour:C.green }] : [];
+    return '<div class="qRow">'+num
+      + '<div class="cellGrid">'+gridSVG(q.d,q.n,D.grid)+'</div>'
+      + '<div class="cellAns"><span class="ansLabel">=</span>'
+      +   (key?'<span class="ansBox key">'+fracHTML(q.n,q.d)+'</span>':'<span class="ansBox"></span>')
+      +   '</div>'
+      + '<div class="cellLine">'+lineSVG(q.lineDen,marks)+'</div>'
+      + '</div>';
+  }
+
+  function nameTableHTML(qs, key, D){
+    const simp=$("simplifyToggle").checked, pct=$("pctToggle").checked;
+    let cols='<tr><th></th><th>Grid</th><th>Fraction shaded</th>';
+    if(simp) cols+='<th>Simplest form</th>';
+    cols+='<th>Decimal</th>';
+    if(pct)  cols+='<th>Percentage</th>';
+    cols+='</tr>';
+    const cell=html=>key?'<td class="val key">'+html+'</td>':'<td class="val"></td>';
+    let body='';
+    qs.forEach(q=>{
+      const r=reduce(q.n,q.d);
+      body+='<tr><td class="numCell"><span class="qNum '+q.badge+'" style="display:inline-flex">'+q.idx+'</span></td>'
+        + '<td class="gridCell"><div>'+gridSVG(q.d,q.n,D.nameGrid)+'</div></td>'
+        + cell(fracHTML(q.n,q.d));
+      if(simp) body+=cell(fracHTML(r.n,r.d));
+      body+=cell(decHTML(q.n,q.d));
+      if(pct)  body+=cell(pctHTML(q.n,q.d));
+      body+='</tr>';
+    });
+    return '<table class="nameTable">'+cols+body+'</table>';
+  }
+
+  function sectionHTML(block, key, D){
+    const S=SECTIONS[block.kind];
+    const head='<div class="secHead"><span class="secLetter">'+block.letter+'</span>'
+      + '<span class="secText">'+S.title+(S.hint?' <em>'+S.hint+'</em>':'')+'</span>'
+      + (block.cont?'<span class="secCont">continued</span>':'')
+      + '</div>';
+    const body = block.kind==="name"
+      ? nameTableHTML(block.qs, key, D)
+      : block.qs.map(q=>rowHTML(q,key,D)).join("");
+    return '<section class="section">'+head+body+'</section>';
+  }
+
+  function explainHTML(r, key){
+    return '<div class="explainBox">'
+      + '<div class="exHead">&#9998; Explain your thinking</div>'
+      + '<div class="exText">'+r.text+'</div>'
+      + '<div class="exLine">'+lineSVG(r.den,[])+'</div>'
+      + (key ? '<div class="exKey"><b>Looking for:</b> '+r.key+'</div>'
+             : '<div class="ruled"><span></span><span></span><span></span></div>')
+      + '</div>';
+  }
+
+  /* ===================== packing pages =====================
+     Costs are MEASURED, not guessed: every row is rendered once into a hidden
+     210mm-wide column, its real height read back, and pages filled to the A4
+     content height. That is what stops a page ending two-thirds of the way
+     down, and it adapts automatically to density, grid shape and level.   */
+  function measure(html){
+    const m=document.createElement("div");
+    m.className="measure";
+    m.innerHTML='<div class="sheet">'+html+'</div>';
+    document.body.appendChild(m);
+    return m;
+  }
+
+  function buildPages(){
+    const level=$("levelSel").value;
+    const count=Math.max(4, Math.min(60, parseInt($("countInp").value,10)||16));
+    const D=DENSITY[$("densitySel").value];
+    const kinds=[];
+    if($("kPlace").checked)   kinds.push("place");
+    if($("kReverse").checked) kinds.push("reverse");
+    if($("kName").checked)    kinds.push("name");
+    if($("kCompare").checked) kinds.push("compare");
+    if(!kinds.length) return { error:"Choose at least one section." };
+
+    // deal the questions, then GROUP by kind so one instruction serves many
+    const raw=[];
+    for(let i=0;i<count;i++){
+      const lv = (level==="mixed") ? (ORDER[Math.floor(i/Math.max(1,count/ORDER.length))] || "spicy") : level;
+      raw.push(makeQ(lv, kinds[i%kinds.length]));
+    }
+    const groups=kinds.map(k=>({
+      kind:k,
+      qs:raw.filter(q=>q.kind===k).sort((a,b)=>ORDER.indexOf(a.level)-ORDER.indexOf(b.level))
+    })).filter(g=>g.qs.length);
+
+    let n=1;
+    groups.forEach(g=>g.qs.forEach(q=>{ q.idx=n++; }));
+    groups.forEach((g,i)=>{ g.letter=SEC_LETTER[i]; });
+
+    const withReason=$("reasonToggle").checked;
+    const reasons=REASONS.slice().sort(()=>Math.random()-0.5);
+
+    /* ---- pass 1: render everything once and measure it ---- */
+    const probe=groups.map(g=>sectionHTML({kind:g.kind,letter:g.letter,cont:false,qs:g.qs},false,D)).join("")
+              + (withReason?explainHTML(reasons[0],false):"");
+    const m=measure(probe);
+    m.style.setProperty("--rowPad", D.rowPad+"px");
+
+    const secs=[...m.querySelectorAll(".section")];
+    const H=groups.map((g,i)=>{
+      const sec=secs[i];
+      const headEl=sec.querySelector(".secHead");
+      const head=headEl.getBoundingClientRect().height
+               + parseFloat(getComputedStyle(headEl).marginBottom);
+      const rows=g.kind==="name"
+        ? [...sec.querySelectorAll("tr")].slice(1).map(r=>r.getBoundingClientRect().height)
+        : [...sec.querySelectorAll(".qRow")].map(r=>r.getBoundingClientRect().height);
+      const tableHead=g.kind==="name"
+        ? (sec.querySelector("tr")||{getBoundingClientRect:()=>({height:0})}).getBoundingClientRect().height
+        : 0;
+      const gap=parseFloat(getComputedStyle(sec).marginBottom);
+      return { head:head+tableHead, rows, gap };
+    });
+    const explainH = withReason
+      ? m.querySelector(".explainBox").getBoundingClientRect().height + 6
+      : 0;
+    // header + footer + sheet padding come off the A4 content height
+    const sheetPad = parseFloat(getComputedStyle(m.querySelector(".sheet")).paddingTop)
+                   + parseFloat(getComputedStyle(m.querySelector(".sheet")).paddingBottom);
+    m.remove();
+
+    const CHROME = 46 + 22;                          // page header + page footer, measured once
+    const budget = A4_CONTENT_PX - CHROME - sheetPad - explainH;
+
+    /* ---- pass 2: fill pages to a budget ---- */
+    function pack(cap){
+      const pages=[]; let page=[], used=0;
+      const flush=()=>{ if(page.length){ pages.push(page); } page=[]; used=0; };
+      groups.forEach((g,gi)=>{
+        const h=H[gi];
+        let i=0, first=true;
+        while(i<g.qs.length){
+          let room=cap-used;
+          const twoRows=(h.rows[i]||0)+(h.rows[i+1]||h.rows[i]||0);
+          if(room < h.head + twoRows){ flush(); room=cap; }
+          let taken=0, acc=h.head;
+          while(i+taken < g.qs.length && acc + h.rows[i+taken] <= room){ acc+=h.rows[i+taken]; taken++; }
+          if(taken===0) taken=1;
+          page.push({ type:"section", kind:g.kind, letter:g.letter, cont:!first, qs:g.qs.slice(i,i+taken) });
+          used += acc + h.gap;
+          i+=taken; first=false;
+          if(i<g.qs.length) flush();
+        }
+      });
+      flush();
+      return pages;
+    }
+
+    /* Greedy filling leaves a proud first page and a stranded last one. Once we
+       know how many pages the paper really needs, re-pack to an even share so
+       every page carries about the same amount — it reads as designed, not
+       as run-off. */
+    let pages=pack(budget);
+    if(pages.length>1){
+      const total=H.reduce((t,h,i)=>t+h.head+h.gap+h.rows.reduce((a,b)=>a+b,0),0);
+      const target=total/pages.length;
+      for(let bump=1.0; bump<=1.5; bump+=0.04){
+        const tryPages=pack(Math.min(budget, target*bump));
+        if(tryPages.length<=pages.length){ pages=tryPages; break; }
+      }
+    }
+
+    if(withReason) pages.forEach((p,i)=>p.push({ type:"explain", reason:reasons[i%reasons.length] }));
+    return { pages, level, D, count };
+  }
+
+  const LEVEL_LABEL = {
+    sweet:"Sweet — the line matches the grid",
+    mild:"Mild — hundredths on the grid, tenths on the line",
+    medium:"Medium — the line is cut into a different unit",
+    spicy:"Spicy — a bare line, and decimals that never stop",
+    mixed:"Mixed — a ladder of all four levels"
+  };
+
+  function pageHTML(blocks, meta, key, pageNo, total){
+    const body=blocks.map(b=> b.type==="explain"
+      ? explainHTML(b.reason, key)
+      : sectionHTML(b, key, meta.D)).join("");
+    return '<section class="page'+(key?' isKey':'')+'" style="--rowPad:'+meta.D.rowPad+'px">'
+      + '<div class="pageHeader">'
+      +   '<div><div class="hdrTitle">Fraction Grid to Number Line'+(key?" &mdash; ANSWERS":"")+'</div>'
+      +   '<div class="hdrSub">'+(key?"Answer key &middot; ":"")+meta.levelLabel+'</div></div>'
+      +   (key?'':'<div class="nameDate">'
+      +     '<div class="lineField"><span class="lineLabel">Name</span><span class="lineBox"></span></div>'
+      +     '<div class="lineField"><span class="lineLabel">Class</span><span class="lineBox"></span></div>'
+      +     '<div class="lineField"><span class="lineLabel">Date</span><span class="lineBox"></span></div>'
+      +   '</div>')
+      + '</div>'
+      + '<div class="sheet">'+body+'</div>'
+      + '<div class="pageFooter"><span>Fraction Grid to Number Line &middot; <a href="'+SITE+'">www.millsmathstools.au</a></span>'
+      +   '<span>Page '+pageNo+' of '+total+'</span></div>'
+      + '</section>';
+  }
+
+  function generate(){
+    const built=buildPages();
+    const note=$("kindNote");
+    if(built.error){ note.textContent=built.error; note.classList.add("warn"); return; }
+    note.textContent="Each kind becomes its own lettered section, so the instruction is written once and the questions inside it climb the level ladder.";
+    note.classList.remove("warn");
+
+    const meta={ levelLabel:LEVEL_LABEL[built.level], D:built.D };
+    const key=$("keyToggle").checked;
+    const total=built.pages.length*(key?2:1);
+    let html=built.pages.map((p,i)=>pageHTML(p,meta,false,i+1,total)).join("");
+    if(key) html+=built.pages.map((p,i)=>pageHTML(p,meta,true,built.pages.length+i+1,total)).join("");
+    $("out").innerHTML=html;
+    window.scrollTo({ top:$("out").offsetTop-10, behavior:"smooth" });
+  }
+
+  function reset(){
+    $("levelSel").value="mixed";
+    $("countInp").value=16;
+    $("densitySel").value="normal";
+    ["kPlace","kReverse","kName","kCompare","reasonToggle","simplifyToggle","pctToggle","keyToggle"]
+      .forEach(id=>{ $(id).checked=true; });
+    generate();
+  }
+
+  $("genBtn").addEventListener("click", generate);
+  $("printBtn").addEventListener("click", ()=>window.print());
+  $("resetBtn").addEventListener("click", reset);
+  ["levelSel","densitySel"].forEach(id=>$(id).addEventListener("change", generate));
+
+  generate();
+
+  window.__MMTWs={ generate, buildPages, LEVELS, REASONS, DENSITY };
+})();
+</script>
+</body>
+</html>
