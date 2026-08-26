@@ -1,0 +1,1205 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Multiplying Fractions — Area Model | Mills Maths Tools</title>
+
+  <style>
+    :root{
+      --bg:#f8fafc;
+      --card:#ffffff;
+      --ink:#0f172a;
+      --muted:#64748b;
+      --border:#e2e8f0;
+      --shadow:0 18px 45px rgba(15,23,42,.13);
+      --blue:#2563eb;
+      --blue-dark:#1d4ed8;
+      --green:#22c55e;
+      --purple:#7c3aed;
+      --orange:#f97316;
+      --line:#334155;
+      --line-soft:#94a3b8;
+      --pink:#db2777;
+
+      /* the model: shaded once = light, shaded twice = dark */
+      --shade1:#dbeafe;
+      --shade2:#93c5fd;
+      --edge:#2563eb;
+      --deep:#1e3a8a;
+
+      --uiFont:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      --mathFont:"STIX Two Math","Cambria Math","Latin Modern Math","Times New Roman",Georgia,serif;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ min-height:100%; }
+    body{
+      margin:0;
+      font-family:var(--uiFont);
+      color:var(--ink);
+      background:
+        radial-gradient(circle at top left,rgba(37,99,235,.14),transparent 32rem),
+        radial-gradient(circle at top right,rgba(124,58,237,.12),transparent 34rem),
+        var(--bg);
+      overflow-x:hidden;
+    }
+    button,input{ font:inherit; }
+    [hidden]{ display:none !important; }
+
+    .app{ min-height:100dvh; display:flex; flex-direction:column; min-width:0; }
+
+    /* ---------- topbar ---------- */
+    .mmtTopbar{
+      position:relative; z-index:40;
+      background:linear-gradient(135deg,#0f172a,#123b7a 55%,#2563eb);
+      color:white; padding:14px 24px;
+      display:grid; grid-template-columns:minmax(220px,1fr) auto minmax(320px,1fr);
+      align-items:center; gap:18px;
+      box-shadow:0 10px 28px rgba(15,23,42,.22);
+    }
+    .mmtBrand{
+      display:flex; align-items:center; gap:12px; justify-self:start;
+      text-decoration:none; color:white; border-radius:14px; padding:8px 12px;
+      margin-left:-12px; font-weight:900;
+      transition:background .18s ease,transform .18s ease,box-shadow .18s ease;
+    }
+    .mmtBrand:hover{ background:rgba(255,255,255,.12); transform:translateY(-1px);
+      box-shadow:0 0 10px rgba(124,58,237,.6),0 0 18px rgba(37,99,235,.4); }
+    .mmtBrandLogo{
+      width:44px; height:44px; border-radius:9px; background:white; color:#1d4ed8;
+      display:grid; place-items:center; font-weight:1000; letter-spacing:-.08em;
+      box-shadow:inset 0 -2px 0 rgba(15,23,42,.08); flex:0 0 auto;
+    }
+    .mmtBrandText strong{ display:block; font-size:1.18rem; line-height:1; letter-spacing:-.03em; color:white; }
+    .mmtBrandText span{ display:block; font-size:.78rem; opacity:.82; font-weight:650; color:white; }
+    .mmtTopTitle{
+      font-weight:850; font-size:clamp(1.1rem,2vw,1.6rem); letter-spacing:-.04em;
+      text-align:center; color:white; white-space:nowrap;
+    }
+    .topActions{ justify-self:end; display:flex; align-items:center; justify-content:flex-end; gap:10px; flex-wrap:wrap; }
+
+    .btn{
+      appearance:none; border:1px solid rgba(255,255,255,.28); background:rgba(255,255,255,.14);
+      color:white; padding:11px 15px; border-radius:14px; font-weight:900; font-size:15px;
+      cursor:pointer; transition:.18s ease; user-select:none;
+    }
+    .btn:hover:not(:disabled){ background:rgba(255,255,255,.22); transform:translateY(-1px); }
+    .btn:active{ transform:translateY(0); }
+    .btn:focus-visible{ outline:none; box-shadow:0 0 0 4px rgba(255,255,255,.23); }
+    .btn-primary{ background:white; color:#1d4ed8; border-color:white; }
+    .btn-primary:hover:not(:disabled){ background:#eef2ff; color:#1d4ed8; }
+    .btn:disabled{ opacity:.45; cursor:not-allowed; transform:none; }
+
+    .menuWrap{ position:relative; display:inline-flex; }
+    .dropMenu{ position:absolute; top:calc(100% + 8px); right:0; min-width:240px; background:#fff; color:var(--ink);
+      border:1px solid rgba(226,232,240,.95); border-radius:14px; box-shadow:0 18px 45px rgba(15,23,42,.22);
+      padding:7px; display:none; z-index:120; text-align:left; }
+    .dropMenu.open{ display:grid; gap:4px; }
+    .toolLink{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border-radius:10px;
+      color:var(--ink); text-decoration:none; font-weight:900; font-size:.9rem; }
+    .toolLink::after{ content:'\203A'; color:var(--blue); font-weight:1000; font-size:1.1rem; line-height:1; }
+    .toolLink:hover,.toolLink:focus-visible{ background:#eef2ff; color:#1d4ed8; outline:none; }
+    .toolLink small{ display:block; font-weight:650; font-size:.74rem; color:var(--muted); }
+    #toolsMenu{ min-width:334px; }
+    .toolLink.is-disabled{ color:var(--line-soft); cursor:not-allowed; }
+    .toolLink.is-disabled::after{ content:'\2022'; color:var(--line-soft); font-size:.9rem; }
+    .toolLink.is-disabled:hover{ background:transparent; color:var(--line-soft); }
+    .toolLink.is-disabled small{ color:var(--line-soft); }
+
+    .settingsMenu.open{ gap:13px; padding:16px 18px; min-width:300px; max-height:min(74vh,620px); overflow:auto; }
+    .settingsHead{ font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; font-weight:950; color:var(--muted); }
+    .settingsRule{ height:1px; background:var(--border); margin:1px 0; }
+
+    .subWrap{ position:relative; }
+    .subRow{
+      display:flex; align-items:center; justify-content:space-between; gap:10px; width:100%;
+      appearance:none; border:1px solid transparent; background:transparent; cursor:pointer;
+      padding:9px 11px; border-radius:11px; font:inherit; font-weight:900; font-size:.92rem;
+      color:var(--ink); text-align:left; transition:background .16s ease; white-space:nowrap;
+    }
+    .subRow:hover,.subRow:focus-visible,.subWrap.open .subRow{ background:#eef2ff; color:#1d4ed8; outline:none; }
+    .subRow .val{ display:inline-flex; align-items:center; gap:6px; font-weight:800; font-size:.84rem; color:var(--muted); }
+    .subRow .val::after{ content:'\2039'; font-size:1.05rem; font-weight:1000; color:var(--blue); }
+    .subWrap.open .subRow .val{ color:var(--blue-dark); }
+
+    .subMenu{
+      position:absolute; top:-8px; right:calc(100% + 10px); min-width:262px;
+      background:#fff; border:1px solid rgba(226,232,240,.95); border-radius:14px;
+      box-shadow:0 18px 45px rgba(15,23,42,.22); padding:7px; display:none; z-index:130;
+    }
+    .subWrap:hover .subMenu, .subWrap.open .subMenu{ display:grid; gap:3px; }
+    .subOpt{
+      appearance:none; border:0; background:transparent; cursor:pointer; width:100%;
+      display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
+      padding:9px 11px; border-radius:10px; font:inherit; text-align:left;
+      font-weight:900; font-size:.9rem; color:var(--ink);
+    }
+    .subOpt small{ display:block; font-weight:650; font-size:.74rem; color:var(--muted); margin-top:2px; }
+    .subOpt:hover:not(:disabled),.subOpt:focus-visible{ background:#eef2ff; color:#1d4ed8; outline:none; }
+    .subOpt .tick{ color:var(--green); font-weight:1000; opacity:0; flex:0 0 auto; font-size:1.05rem; }
+    .subOpt.on .tick{ opacity:1; }
+
+    /* ---------- shell ---------- */
+    .layout{
+      width:min(1200px, calc(100vw - 48px));
+      margin:22px auto 14px;
+      background:rgba(255,255,255,.94);
+      border:1px solid rgba(226,232,240,.9);
+      border-radius:26px; box-shadow:var(--shadow); overflow:hidden;
+      display:block; position:relative;
+    }
+    .stage{ padding:16px clamp(14px,3vw,34px) 20px; display:flex; flex-direction:column; gap:12px; min-width:0; }
+
+    /* ---------- the control card ---------- */
+    .eqCard{
+      position:relative;
+      background:white; border:1px solid var(--border); border-radius:20px;
+      padding:13px 20px 14px; display:flex; flex-direction:column; align-items:center; gap:9px;
+    }
+    .eqEyebrow{ font-size:.7rem; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:950; text-align:center; }
+
+    .fracEditor{ display:flex; align-items:center; gap:16px; justify-content:center; flex-wrap:wrap; }
+    .fracStack{ display:flex; flex-direction:column; align-items:center; gap:6px; }
+    .fracStack .barSep{ width:80px; height:4px; background:var(--edge); border-radius:2px; }
+    .numBox{
+      width:82px; text-align:center; border:2px solid var(--border); border-radius:13px;
+      padding:2px 8px; background:#fff; color:var(--ink); font-family:var(--mathFont);
+      font-weight:700; font-size:clamp(1.45rem,3vw,1.95rem); line-height:1.15; outline:none;
+      transition:border-color .18s ease, box-shadow .18s ease;
+    }
+    .numBox:hover{ border-color:var(--line-soft); }
+    .numBox:focus{ border-color:var(--blue); box-shadow:0 0 0 4px rgba(37,99,235,.16); }
+    .opSign{
+      font-family:var(--mathFont); font-weight:800; font-size:clamp(1.6rem,3vw,2.2rem);
+      color:var(--line); padding:0 2px; user-select:none;
+    }
+    .enterBtn{
+      appearance:none; border:1px solid var(--blue); background:var(--blue); color:#fff;
+      font-weight:900; font-size:.98rem; padding:10px 18px; border-radius:12px; cursor:pointer;
+      box-shadow:0 8px 20px rgba(37,99,235,.22); transition:.16s ease;
+    }
+    .enterBtn:hover{ background:var(--blue-dark); transform:translateY(-1px); }
+    .enterBtn:focus-visible{ outline:none; box-shadow:0 0 0 4px rgba(37,99,235,.3); }
+
+    .inputMsg{ min-height:14px; margin:0; font-size:.84rem; font-weight:750; color:var(--pink); text-align:center; max-width:640px; }
+
+    .wordsRow{ display:flex; align-items:center; justify-content:center; gap:11px; flex-wrap:wrap; }
+    .ofWords{
+      font-size:clamp(.98rem,2vw,1.18rem); font-weight:850; color:var(--line);
+      background:#f8fafc; border:1px solid var(--border); border-radius:999px;
+      padding:8px 18px; text-align:center;
+    }
+    .ofWords em{ font-style:normal; color:var(--blue-dark); }
+    .swapBtn{
+      appearance:none; border:1px solid var(--border); background:#fff; color:var(--line);
+      font-weight:850; font-size:.82rem; padding:8px 14px; border-radius:999px; cursor:pointer;
+      transition:.16s ease; display:inline-flex; align-items:center; gap:7px; white-space:nowrap;
+    }
+    .swapBtn:hover{ background:#f1f5f9; transform:translateY(-1px); }
+    .swapBtn:focus-visible{ outline:none; box-shadow:0 0 0 4px rgba(37,99,235,.22); }
+
+    .genBtn{
+      position:absolute; top:13px; right:16px; z-index:2;
+      appearance:none; border:1px solid #ddd6fe; background:#f5f3ff; color:#5b21b6;
+      font-weight:850; font-size:.82rem; padding:6px 13px; border-radius:999px; cursor:pointer;
+      transition:.16s ease; white-space:nowrap; display:inline-flex; align-items:center; gap:7px;
+    }
+    .genBtn:hover{ background:#ede9fe; border-color:#c4b5fd; }
+    .genBtn:focus-visible{ outline:none; box-shadow:0 0 0 4px rgba(124,58,237,.22); }
+    .genBtn .tierTag{ color:var(--muted); font-weight:750; }
+
+    /* switches */
+    .sw{ display:inline-flex; align-items:center; gap:11px; cursor:pointer; user-select:none; font-weight:850; color:var(--line); font-size:.95rem; white-space:nowrap; }
+    .sw input{ position:absolute; opacity:0; width:0; height:0; }
+    .sw .track{ position:relative; width:50px; height:29px; border-radius:999px; background:#cbd5e1; transition:.18s ease; flex:0 0 auto; box-shadow:inset 0 1px 3px rgba(15,23,42,.18); }
+    .sw .track::after{ content:""; position:absolute; top:3px; left:3px; width:23px; height:23px; border-radius:50%; background:#fff; box-shadow:0 2px 6px rgba(15,23,42,.3); transition:.18s ease; }
+    .sw input:checked + .track{ background:var(--green); }
+    .sw input:checked + .track::after{ transform:translateX(21px); }
+    .sw input:focus-visible + .track{ box-shadow:0 0 0 4px rgba(37,99,235,.28); }
+
+    /* the diagram */
+    .svgCard{ background:white; border:1px solid var(--border); border-radius:22px; padding:10px clamp(8px,2vw,18px) 8px; }
+    .model{ width:100%; height:auto; max-height:62vh; display:block; margin:0 auto; user-select:none; -webkit-user-select:none; }
+    .model text{ font-family:var(--mathFont); }
+
+    /* narration — a short cue, not an explanation */
+    .narrate{
+      background:white; border:1px solid var(--border); border-radius:20px;
+      padding:12px 18px; display:flex; flex-direction:column; gap:4px; align-items:center; text-align:center;
+    }
+    .stepCount{ font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; font-weight:950; color:var(--muted); }
+    .stepPrompt{ font-size:clamp(1rem,2vw,1.16rem); font-weight:800; color:var(--line); line-height:1.35; min-height:1.3em; }
+    .stepMaths{
+      font-family:var(--mathFont); font-size:clamp(1.25rem,2.7vw,1.8rem); font-weight:800; color:var(--blue-dark);
+      line-height:1.25; min-height:1.3em; display:flex; align-items:center; justify-content:center; gap:.35em; flex-wrap:wrap;
+    }
+    .navRow{ display:flex; gap:10px; justify-content:center; align-items:center; flex-wrap:wrap; padding-bottom:3px; }
+    .navBtn{
+      appearance:none; border:1px solid var(--border); background:#fff; color:var(--line);
+      font-weight:900; font-size:.94rem; padding:10px 16px; border-radius:13px; cursor:pointer;
+      transition:.16s ease; box-shadow:0 6px 16px rgba(15,23,42,.08);
+    }
+    .navBtn:hover:not(:disabled){ transform:translateY(-1px); background:#f8fafc; }
+    .navBtn:disabled{ opacity:.4; cursor:not-allowed; transform:none; }
+    .navBtn.next{ background:var(--purple); border-color:var(--purple); color:#fff; box-shadow:0 8px 20px rgba(124,58,237,.24); min-width:148px; }
+    .navBtn.next:hover:not(:disabled){ background:#6d28d9; }
+    .navBtn.simp{ background:var(--deep); border-color:var(--deep); color:#fff; box-shadow:0 8px 20px rgba(30,58,138,.26); min-width:132px; }
+    .navBtn.simp:hover:not(:disabled){ background:#172554; }
+    .navBtn.simp.undo{ background:#fff; color:var(--deep); border-color:var(--deep); box-shadow:0 6px 16px rgba(30,58,138,.14); }
+    .navBtn.simp.undo:hover:not(:disabled){ background:#eef2ff; }
+    .hint{ text-align:center; font-size:.8rem; font-weight:700; color:var(--muted); margin:0; }
+
+    /* stacked fraction in HTML text */
+    .frac{ display:inline-flex; flex-direction:column; align-items:center; vertical-align:middle; line-height:1; font-size:.82em; }
+    .frac .n{ padding:0 .3em .05em; }
+    .frac .d{ padding:.06em .3em 0; border-top:.09em solid currentColor; }
+
+    /* ---------- animations ---------- */
+    @keyframes fadeIn{ from{ opacity:0; } to{ opacity:1; } }
+    .fadeIn{ animation:fadeIn .40s ease both; }
+    @keyframes fadeOutK{ to{ opacity:0; } }
+    .fadeOut{ animation:fadeOutK .28s ease both; }
+    @keyframes wipeX{ from{ transform:scaleX(.001); } to{ transform:scaleX(1); } }
+    .wipeX{ animation:wipeX .55s cubic-bezier(.25,.8,.3,1) both; transform-box:view-box; }
+    @keyframes wipeY{ from{ transform:scaleY(.001); } to{ transform:scaleY(1); } }
+    .wipeY{ animation:wipeY .55s cubic-bezier(.25,.8,.3,1) both; transform-box:view-box; }
+    @keyframes wipeXOut{ to{ transform:scaleX(.001); opacity:0; } }
+    .wipeXOut{ animation:wipeXOut .3s ease-in both; transform-box:view-box; }
+    @keyframes wipeYOut{ to{ transform:scaleY(.001); opacity:0; } }
+    .wipeYOut{ animation:wipeYOut .3s ease-in both; transform-box:view-box; }
+    @keyframes dashDraw{ from{ stroke-dashoffset:var(--dashLen);} to{ stroke-dashoffset:0;} }
+    .cutIn{ animation:dashDraw .48s ease both; }
+    @keyframes popIn{
+      0%{ opacity:0; transform:scale(.5); }
+      64%{ opacity:1; transform:scale(1.09); }
+      100%{ opacity:1; transform:scale(1); }
+    }
+    .popIn{ animation:popIn .46s cubic-bezier(.2,.75,.3,1.25) both; transform-box:view-box; }
+    @keyframes popOut{ to{ transform:scale(.45); opacity:0; } }
+    .popOut{ animation:popOut .26s ease-in both; transform-box:view-box; }
+    /* a piece sliding from where it was to where it now belongs */
+    @keyframes slideFrom{
+      from{ transform:translate(var(--sx),var(--sy)); }
+      to  { transform:translate(0,0); }
+    }
+    .slideIn{ animation:slideFrom .62s cubic-bezier(.3,.85,.35,1) both; transform-box:view-box; }
+
+    @media (max-width:980px){
+      .mmtTopbar{ grid-template-columns:1fr; justify-items:center; padding:12px 14px; }
+      .mmtBrand{ margin-left:0; } .topActions{ justify-self:center; justify-content:center; }
+      .dropMenu{ right:auto; left:50%; transform:translateX(-50%); }
+      .subMenu{ position:static; right:auto; box-shadow:none; border:0; padding:0 0 0 8px; }
+      .layout{ width:calc(100vw - 24px); }
+      .numBox{ width:70px; }
+      .genBtn{ position:static; margin-top:2px; }
+      .model{ max-height:none; }
+    }
+    @media (prefers-reduced-motion:reduce){
+      *{ animation-duration:.001ms !important; animation-delay:.001ms !important; transition-duration:.001ms !important; }
+    }
+  </style>
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "c7e5713b5e4f4993907eb285797dc89b"}'></script><!-- End Cloudflare Web Analytics -->
+</head>
+<body>
+  <div class="app">
+    <header class="mmtTopbar">
+      <a class="mmtBrand" href="https://www.millsmathstools.au" target="_self" aria-label="Back to Mills Maths Tools">
+        <span class="mmtBrandLogo" aria-hidden="true">MMT</span>
+        <span class="mmtBrandText"><strong>MMT</strong><span>Mills Maths Tools</span></span>
+      </a>
+      <div class="mmtTopTitle">Multiplying Fractions &mdash; Area Model</div>
+      <div class="topActions">
+        <div class="menuWrap">
+          <button class="btn" id="toolsBtn" type="button" aria-haspopup="true" aria-expanded="false">Tools &#9662;</button>
+          <nav class="dropMenu" id="toolsMenu" aria-label="Related tools">
+            <a class="toolLink" href="/worksheet-creators/stage-4/number/multiplying-fractions.html">Worksheet Creator<small>Printable A4 &mdash; shade the model, finish it, read it, or work without one</small></a>
+            <span class="toolLink is-disabled" aria-disabled="true">Student Quiz<small>Coming soon</small></span>
+          </nav>
+        </div>
+        <div class="menuWrap">
+          <button class="btn" id="settingsBtn" type="button" aria-haspopup="true" aria-expanded="false">Settings &#9662;</button>
+          <nav class="dropMenu settingsMenu" id="settingsMenu" aria-label="Settings">
+            <div class="settingsHead">Display</div>
+            <label class="sw"><input type="checkbox" id="lineToggle"><span class="track"></span><span>Show number line</span></label>
+            <label class="sw"><input type="checkbox" id="decToggle"><span class="track"></span><span>Decimals and percentages</span></label>
+            <div class="settingsRule" role="separator"></div>
+            <div class="settingsHead">Randomiser</div>
+            <div class="subWrap" id="tierWrap">
+              <button class="subRow" id="tierRow" type="button" aria-haspopup="true" aria-expanded="false">
+                <span>Random pair</span>
+                <span class="val" id="tierVal">Simple</span>
+              </button>
+              <div class="subMenu" id="tierMenu" role="menu" aria-label="Random pair setting">
+                <button class="subOpt" type="button" role="menuitemradio" data-tier="unit">
+                  <span>Unit fractions<small>Tops both 1 &mdash; one piece of one piece</small></span>
+                  <span class="tick" aria-hidden="true">&#10003;</span>
+                </button>
+                <button class="subOpt on" type="button" role="menuitemradio" data-tier="simple">
+                  <span>Simple<small>Bottoms 2&ndash;6</small></span>
+                  <span class="tick" aria-hidden="true">&#10003;</span>
+                </button>
+                <button class="subOpt" type="button" role="menuitemradio" data-tier="any">
+                  <span>Any proper<small>Bottoms 2&ndash;12</small></span>
+                  <span class="tick" aria-hidden="true">&#10003;</span>
+                </button>
+                <button class="subOpt" type="button" role="menuitemradio" data-tier="simplify">
+                  <span>Answer simplifies<small>The pieces always re-group</small></span>
+                  <span class="tick" aria-hidden="true">&#10003;</span>
+                </button>
+                <button class="subOpt" type="button" role="menuitemradio" data-tier="tenths">
+                  <span>Tenths &mdash; decimals<small>Tenths &times; tenths = hundredths</small></span>
+                  <span class="tick" aria-hidden="true">&#10003;</span>
+                </button>
+              </div>
+            </div>
+          </nav>
+        </div>
+        <button class="btn btn-primary" id="resetBtn" type="button">Reset</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="stage" id="stage">
+
+        <div class="eqCard">
+          <button class="genBtn" id="genBtn" type="button" title="Change the kind under Settings &rsaquo; Random pair">
+            <span aria-hidden="true">&#9860;</span>
+            <span>Generate random pair</span>
+            <span class="tierTag" id="tierTag">&middot; Simple</span>
+          </button>
+
+          <div class="eqEyebrow">Type two proper fractions</div>
+          <div class="fracEditor">
+            <div class="fracStack">
+              <input class="numBox" id="aInput" inputmode="numeric" autocomplete="off" value="2" aria-label="First numerator" />
+              <span class="barSep" aria-hidden="true"></span>
+              <input class="numBox" id="bInput" inputmode="numeric" autocomplete="off" value="3" aria-label="First denominator" />
+            </div>
+            <span class="opSign">&times;</span>
+            <div class="fracStack">
+              <input class="numBox" id="cInput" inputmode="numeric" autocomplete="off" value="3" aria-label="Second numerator" />
+              <span class="barSep" aria-hidden="true"></span>
+              <input class="numBox" id="dInput" inputmode="numeric" autocomplete="off" value="4" aria-label="Second denominator" />
+            </div>
+            <button class="enterBtn" id="useBtn" type="button">Enter</button>
+          </div>
+
+          <div class="wordsRow">
+            <div class="ofWords" id="ofWords"></div>
+            <button class="swapBtn" id="swapBtn" type="button" title="Same rectangle, turned on its side.">
+              <span aria-hidden="true">&#8646;</span><span>Read it the other way</span>
+            </button>
+          </div>
+
+          <p class="inputMsg" id="inputMsg"></p>
+        </div>
+
+        <div class="svgCard">
+          <svg class="model" id="model" viewBox="104 0 612 610" role="img" aria-label="An area model for multiplying two fractions"></svg>
+        </div>
+
+        <div class="narrate">
+          <div class="navRow">
+            <button class="navBtn" id="backBtn" type="button">&#9664; Back</button>
+            <button class="navBtn next" id="nextBtn" type="button">Next &#9654;</button>
+            <button class="navBtn simp" id="simpBtn" type="button" hidden>Simplify</button>
+            <button class="navBtn" id="revealBtn" type="button">Reveal all</button>
+            <button class="navBtn" id="restartBtn" type="button">Start again</button>
+          </div>
+          <div class="stepCount" id="stepCount">Step 1 of 4</div>
+          <div class="stepPrompt" id="stepPrompt"></div>
+          <div class="stepMaths" id="stepMaths"></div>
+          <p class="hint" id="hint">Space or &rarr; for the next step, &larr; to go back.</p>
+        </div>
+
+      </section>
+    </main>
+  </div>
+
+<script>
+(function(){
+  "use strict";
+  const NS="http://www.w3.org/2000/svg";
+  const $=function(id){ return document.getElementById(id); };
+
+  function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ const t=a%b; a=b; b=t; } return a; }
+
+  /* ===================== state ===================== */
+  const state={
+    a:2, b:3, c:3, d:4,      // a/b  ×  c/d      read as "a/b of c/d"
+    step:0,
+    decimals:false,
+    showLine:false,
+    swapped:false,           // false: c/d runs ACROSS, a/b runs DOWN
+    tier:"simple",
+    simplified:false, simpAnim:null,   // the Simplify / Undo re-grouping
+    animAcross:false, animDown:false, animName:false, animAnswer:false,
+    animExit:null
+  };
+
+  /* ACROSS = the amount we take a part OF (columns).
+     DOWN   = the operator fraction (rows).                              */
+  function derived(){
+    const a=state.a, b=state.b, c=state.c, d=state.d;
+    const acrN = state.swapped ? a : c, acrD = state.swapped ? b : d;
+    const dwnN = state.swapped ? c : a, dwnD = state.swapped ? d : b;
+    const pn=a*c, pd=b*d, g=gcd(pn,pd)||1;
+    return {
+      a:a,b:b,c:c,d:d,
+      acrN:acrN, acrD:acrD, dwnN:dwnN, dwnD:dwnD,
+      cells:acrD*dwnD, shaded:acrN*dwnN,
+      pn:pn, pd:pd, sn:pn/g, sd:pd/g, g:g,
+      value:pn/pd, vAcr:acrN/acrD, vDwn:dwnN/dwnD
+    };
+  }
+
+  /* ===================== words ===================== */
+  const NUMWORD={1:"one",2:"two",3:"three",4:"four",5:"five",6:"six",7:"seven",8:"eight",
+                 9:"nine",10:"ten",11:"eleven",12:"twelve"};
+  const ORD={2:"half",3:"third",4:"quarter",5:"fifth",6:"sixth",7:"seventh",8:"eighth",
+             9:"ninth",10:"tenth",11:"eleventh",12:"twelfth"};
+  function ordinal(d){ return ORD[d] || (d+"th"); }
+  function ordinalPl(d){ const o=ordinal(d); return o==="half" ? "halves" : o+"s"; }
+  function wordFrac(n,d){
+    const w=NUMWORD[n]||String(n);
+    return n===1 ? ("one "+ordinal(d)) : (w+" "+ordinalPl(d));
+  }
+
+  /* ===================== decimal naming ===================== */
+  function decStr(n,d){
+    const g=gcd(n,d)||1; let t=d/g;
+    while(t%2===0) t/=2;
+    while(t%5===0) t/=5;
+    const val=n/d;
+    if(t===1) return val.toFixed(10).replace(/0+$/,"").replace(/\.$/,"");
+    return "≈"+String(Math.round(val*1000)/1000);
+  }
+  function pctStr(n,d){
+    const val=n/d*100;
+    if(Math.abs(val-Math.round(val))<1e-9) return Math.round(val)+"%";
+    const g=gcd(n*100,d)||1; let t=d/g;
+    while(t%2===0) t/=2;
+    while(t%5===0) t/=5;
+    if(t===1) return val.toFixed(10).replace(/0+$/,"").replace(/\.$/,"")+"%";
+    return "≈"+(Math.round(val*10)/10)+"%";
+  }
+
+  function htmlFrac(n,d){
+    return '<span class="frac"><span class="n">'+n+'</span><span class="d">'+d+'</span></span>';
+  }
+
+  /* ===================== SVG helpers ===================== */
+  function el(tag,attrs,text){
+    const e=document.createElementNS(NS,tag);
+    for(const k in attrs) if(attrs[k]!=null) e.setAttribute(k,attrs[k]);
+    if(text!=null) e.textContent=text;
+    return e;
+  }
+  const HALO={ stroke:"#fff", "stroke-width":"4.5", "paint-order":"stroke", "stroke-linejoin":"round" };
+  function txt(x,y,str,opts){
+    opts=opts||{};
+    const a=Object.assign({
+      x:x, y:y, "text-anchor":opts.anchor||"middle",
+      "font-weight":opts.weight||"800", "font-size":opts.size||22,
+      fill:opts.fill||"#334155"
+    },HALO);
+    if(opts.halo===false){ delete a.stroke; delete a["stroke-width"]; delete a["paint-order"]; }
+    else if(opts.haloW) a["stroke-width"]=opts.haloW;
+    const e=el("text",a,str);
+    // the stylesheet's `.model text` rule beats a font-family ATTRIBUTE,
+    // so UI-font labels must be set inline or they come out serif
+    if(opts.family) e.style.fontFamily=opts.family;
+    return e;
+  }
+  function fracW(n,d,fs){ return Math.max(String(n).length,String(d).length)*fs*0.58+8; }
+  function svgFrac(cx,cy,n,d,fs,fill,haloW){
+    const g=el("g",{});
+    const barW=Math.max(String(n).length,String(d).length)*fs*0.58+8;
+    g.appendChild(txt(cx, cy-fs*0.30, String(n), {size:fs, fill:fill, haloW:haloW}));
+    g.appendChild(el("line",{x1:cx-barW/2, y1:cy+fs*0.06, x2:cx+barW/2, y2:cy+fs*0.06,
+      stroke:fill||"#334155", "stroke-width":Math.max(1.4,fs*0.09), "stroke-linecap":"round"}));
+    g.appendChild(txt(cx, cy+fs*1.02, String(d), {size:fs, fill:fill, haloW:haloW}));
+    return g;
+  }
+
+  /* ===================== geometry =====================
+     The square shrinks when the number line is showing, so the two never
+     crowd each other. Everything below reads G, never a fixed constant.   */
+  const G={ x:190, y:88, s:470, r:660, b:558, ly:0 };
+  const VB_PLAIN="104 0 612 610";
+  const VB_LINE ="104 0 612 700";
+  function layout(){
+    if(state.showLine){ G.x=220; G.y=88; G.s=380; G.ly=596; }
+    else              { G.x=190; G.y=88; G.s=470; G.ly=0;   }
+    G.r=G.x+G.s; G.b=G.y+G.s;
+  }
+
+  const C={
+    shade1:"#dbeafe", shade2:"#93c5fd", edge:"#2563eb", deep:"#1e3a8a",
+    ink:"#334155", soft:"#94a3b8", faint:"#cbd5e1", pale:"#a9bdd6"
+  };
+
+  function colX(i,n){ return G.x+(i/n)*G.s; }
+  function rowY(j,n){ return G.y+(j/n)*G.s; }
+  function LX(v){ return G.x+v*G.s; }
+
+  /* ===================== steps ===================== */
+  /* 1 the blank whole · 2 second fraction · 3 first fraction (overlap darker) ·
+     4 every piece named · 5 the answer (then an optional Simplify)         */
+  function buildSteps(){
+    return [{id:"whole"},{id:"across"},{id:"down"},{id:"name"},{id:"answer"}];
+  }
+  let STEPS=buildSteps();
+  function stepId(){ return STEPS[state.step] ? STEPS[state.step].id : "whole"; }
+  function indexOfId(id){ for(let i=0;i<STEPS.length;i++) if(STEPS[i].id===id) return i; return -1; }
+  function reached(id){ const i=indexOfId(id); return i>=0 && state.step>=i; }
+
+  /* ===================== render ===================== */
+  function render(){
+    const svg=$("model");
+    while(svg.firstChild) svg.removeChild(svg.firstChild);
+    layout();
+    svg.setAttribute("viewBox", state.showLine ? VB_LINE : VB_PLAIN);
+    const v=derived();
+    const root=el("g",{});
+    svg.appendChild(root);
+    drawSquare(root,v);
+    drawEdges(root,v);
+    if(state.showLine) drawLine(root,v);
+    svg.setAttribute("aria-label", describe());
+  }
+
+  /* --------- how the small pieces re-group when we simplify ---------
+     Split sd into x·y with x | acrD and y | dwnD, so the square divides into
+     sd equal BLOCKS that are each a whole number of small pieces (g of them).
+     Such a split always exists because sd divides acrD·dwnD.               */
+  function blockSplit(v){
+    let n=v.sd, x=1, y=1;
+    for(let p=2;p*p<=n||p<=n;p++){
+      if(n%p) continue;
+      let e=0; while(n%p===0){ e++; n/=p; }
+      let ea=0, t=v.acrD; while(t%p===0){ ea++; t/=p; }
+      const xe=Math.min(e,ea);
+      x*=Math.pow(p,xe); y*=Math.pow(p,e-xe);
+      if(n===1) break;
+    }
+    if(v.acrD%x || v.dwnD%y || x*y!==v.sd) return null;   // never expected
+    return {x:x, y:y, cols:v.acrD/x, rows:v.dwnD/y};
+  }
+  /* where piece k sits once the pieces have re-grouped */
+  function targetCell(k,v,B){
+    const bi=Math.floor(k/v.g), wi=k%v.g;
+    const br=Math.floor(bi/B.x), bc=bi%B.x;
+    const wr=Math.floor(wi/B.cols), wc=wi%B.cols;
+    return { col:bc*B.cols+wc, row:br*B.rows+wr };
+  }
+  /* where piece k sits now — reading order inside the overlap */
+  function sourceCell(k,v){
+    return { col:k%v.acrN, row:Math.floor(k/v.acrN) };
+  }
+
+  function drawSquare(root,v){
+    const g=el("g",{});
+    const wA=(v.acrN/v.acrD)*G.s, hD=(v.dwnN/v.dwnD)*G.s;
+    const onAnswer=(stepId()==="answer" && state.animExit!=="answer");
+
+    g.appendChild(el("rect",{x:G.x,y:G.y,width:G.s,height:G.s,fill:"#fff",
+      stroke:C.ink,"stroke-width":3.5,rx:4}));
+
+    /* --- once simplified the picture is re-cut, so nothing else applies --- */
+    if(onAnswer && state.simplified){
+      drawRegrouped(g,v);
+      root.appendChild(g);
+      return;
+    }
+
+    /* 1 — the blank whole */
+    if(!reached("across")){
+      g.appendChild(el("path",{d:"M "+G.x+" "+(G.y-16)+" v -9 H "+G.r+" v 9",
+        fill:"none",stroke:C.soft,"stroke-width":2.2,"stroke-linejoin":"round"}));
+      g.appendChild(txt((G.x+G.r)/2, G.y-38, "1 whole",
+        {size:20,fill:C.soft,weight:"850",family:"var(--uiFont)"}));
+    }
+
+    /* 2 — the second fraction, across */
+    if(reached("across")){
+      const band=el("rect",{x:G.x,y:G.y,width:wA,height:G.s,fill:C.shade1});
+      if(state.animAcross){ band.setAttribute("class","wipeX"); band.style.transformOrigin=G.x+"px "+G.y+"px"; }
+      if(state.animExit==="across"){ band.setAttribute("class","wipeXOut"); band.style.transformOrigin=G.x+"px "+G.y+"px"; }
+      g.appendChild(band);
+    }
+
+    /* 2 — the first fraction, down; darker where the two agree */
+    if(reached("down") && state.animExit!=="down"){
+      const band=el("rect",{x:G.x,y:G.y,width:G.s,height:hD,fill:C.shade1});
+      if(state.animDown){ band.setAttribute("class","wipeY"); band.style.transformOrigin=G.x+"px "+G.y+"px"; }
+      g.appendChild(band);
+      const over=el("rect",{x:G.x,y:G.y,width:wA,height:hD,fill:C.shade2});
+      if(state.animDown){ over.setAttribute("class","wipeY"); over.style.transformOrigin=G.x+"px "+G.y+"px"; }
+      g.appendChild(over);
+    }else if(state.animExit==="down"){
+      const gg=el("g",{"class":"wipeYOut"});
+      gg.style.transformOrigin=G.x+"px "+G.y+"px";
+      gg.appendChild(el("rect",{x:G.x,y:G.y,width:G.s,height:hD,fill:C.shade1}));
+      gg.appendChild(el("rect",{x:G.x,y:G.y,width:wA,height:hD,fill:C.shade2}));
+      g.appendChild(gg);
+    }
+
+    /* the cuts — each factor cuts the WHOLE square */
+    if(reached("across")){
+      const gc=el("g",state.animExit==="across"?{"class":"fadeOut"}:{});
+      for(let i=1;i<v.acrD;i++){
+        const ln=el("line",{x1:colX(i,v.acrD),y1:G.y,x2:colX(i,v.acrD),y2:G.b,
+          stroke:C.edge,"stroke-width":1.6,opacity:.55});
+        if(state.animAcross){
+          ln.setAttribute("class","cutIn"); ln.setAttribute("stroke-dasharray",G.s);
+          ln.style.setProperty("--dashLen",G.s+"px");
+          ln.style.animationDelay=(0.10+i*0.04)+"s";
+        }
+        gc.appendChild(ln);
+      }
+      g.appendChild(gc);
+    }
+    if(reached("down")){
+      const gr=el("g",state.animExit==="down"?{"class":"fadeOut"}:{});
+      for(let j=1;j<v.dwnD;j++){
+        const ln=el("line",{x1:G.x,y1:rowY(j,v.dwnD),x2:G.r,y2:rowY(j,v.dwnD),
+          stroke:C.edge,"stroke-width":1.6,opacity:.55});
+        if(state.animDown){
+          ln.setAttribute("class","cutIn"); ln.setAttribute("stroke-dasharray",G.s);
+          ln.style.setProperty("--dashLen",G.s+"px");
+          ln.style.animationDelay=(0.10+j*0.04)+"s";
+        }
+        gr.appendChild(ln);
+      }
+      g.appendChild(gr);
+    }
+
+    /* 4 — every piece carries its own name. Only on ITS step: the answer step
+           clears them again so the answer has the square to itself. */
+    if(stepId()==="name" && state.animExit!=="name"){
+      const cw=G.s/v.acrD, ch=G.s/v.dwnD;
+      const fs=Math.max(8,Math.min(20,Math.min(cw,ch)*0.30));
+      const gn=el("g",state.animName?{"class":"fadeIn"}:{});
+      for(let j=0;j<v.dwnD;j++){
+        for(let i=0;i<v.acrD;i++){
+          const inOverlap=(i<v.acrN && j<v.dwnN);
+          gn.appendChild(svgFrac(G.x+(i+0.5)*cw, G.y+(j+0.5)*ch, 1, v.cells, fs,
+            inOverlap ? C.deep : C.pale, 3));
+        }
+      }
+      g.appendChild(gn);
+    }
+
+    /* 5 — the answer, in the middle of the overlap */
+    if(onAnswer){
+      // pieces flying back home from the re-grouped layout
+      if(state.simpAnim==="out") g.appendChild(flyingPieces(v,false));
+      g.appendChild(answerPlate(G.x+wA/2,G.y+hD/2,v,state.animAnswer));
+    }else if(state.animExit==="answer"){
+      const p=answerPlate(G.x+wA/2,G.y+hD/2,v,false);
+      p.setAttribute("class","popOut");
+      p.style.transformOrigin=(G.x+wA/2)+"px "+(G.y+hD/2)+"px";
+      g.appendChild(p);
+    }
+
+    root.appendChild(g);
+  }
+
+  /* --------- the simplified picture: the same pieces, re-grouped --------- */
+  function drawRegrouped(g,v){
+    const B=blockSplit(v);
+    if(!B){ g.appendChild(answerPlate(G.x+G.s/2,G.y+G.s/2,v,false)); return; }
+    const cw=G.s/v.acrD, ch=G.s/v.dwnD;
+
+    // the small cuts stay, faintly — the pieces have not changed size
+    const faint=el("g",{});
+    for(let i=1;i<v.acrD;i++)
+      faint.appendChild(el("line",{x1:colX(i,v.acrD),y1:G.y,x2:colX(i,v.acrD),y2:G.b,
+        stroke:C.edge,"stroke-width":1,opacity:.22}));
+    for(let j=1;j<v.dwnD;j++)
+      faint.appendChild(el("line",{x1:G.x,y1:rowY(j,v.dwnD),x2:G.r,y2:rowY(j,v.dwnD),
+        stroke:C.edge,"stroke-width":1,opacity:.22}));
+    g.appendChild(faint);
+
+    g.appendChild(flyingPieces(v,true));
+
+    // the new, bigger cuts — sd equal parts
+    const bold=el("g",{"class":"fadeIn"});
+    for(let i=1;i<B.x;i++){
+      const x=G.x+(i/B.x)*G.s;
+      bold.appendChild(el("line",{x1:x,y1:G.y,x2:x,y2:G.b,stroke:C.deep,"stroke-width":3.4}));
+    }
+    for(let j=1;j<B.y;j++){
+      const y=G.y+(j/B.y)*G.s;
+      bold.appendChild(el("line",{x1:G.x,y1:y,x2:G.r,y2:y,stroke:C.deep,"stroke-width":3.4}));
+    }
+    g.appendChild(bold);
+
+    // the plate, over the middle of the re-grouped part — unless that part is
+    // smaller than the plate, in which case it centres on the whole square
+    const full=Math.floor(v.sn/B.x), rem=v.sn%B.x;
+    const maxCol=(full>0? B.x : rem), maxRow=full+(rem>0?1:0);
+    const bw=(maxCol/B.x)*G.s, bh=(maxRow/B.y)*G.s;
+    const ps=plateSize(v);
+    g.appendChild(answerPlate(
+      bw>=ps.w ? G.x+bw/2 : G.x+G.s/2,
+      bh>=ps.h ? G.y+bh/2 : G.y+G.s/2, v, false));
+  }
+
+  /* the pn shaded pieces, drawn where they END UP and sliding in from where
+     they started (toBlocks), or the reverse on Undo (toBlocks=false)        */
+  function flyingPieces(v,toBlocks){
+    const B=blockSplit(v);
+    const gg=el("g",{});
+    if(!B) return gg;
+    const cw=G.s/v.acrD, ch=G.s/v.dwnD;
+    const per=Math.min(26,700/Math.max(1,v.pn));
+    for(let k=0;k<v.pn;k++){
+      const t=targetCell(k,v,B), s=sourceCell(k,v);
+      const here = toBlocks ? t : s, from = toBlocks ? s : t;
+      const r=el("rect",{x:G.x+here.col*cw+1,y:G.y+here.row*ch+1,
+        width:cw-2,height:ch-2,fill:C.shade2,rx:Math.min(4,cw*0.1)});
+      if(state.simpAnim){
+        r.setAttribute("class","slideIn");
+        r.style.setProperty("--sx",((from.col-here.col)*cw)+"px");
+        r.style.setProperty("--sy",((from.row-here.row)*ch)+"px");
+        r.style.animationDelay=(k*per/1000)+"s";
+      }
+      gg.appendChild(r);
+    }
+    return gg;
+  }
+
+  /* how much room the answer plate needs */
+  function plateSize(v){
+    const fs=G.s*0.08, GAP=fs*1.15;
+    let w=fracW(v.pn,v.pd,fs);
+    if(v.g>1 && state.simplified) w+=GAP+fracW(v.sn,v.sd,fs);
+    return { w:w+fs*1.16, h:fs*2.62 };
+  }
+
+  /* the answer sits on its own white plate so it reads over any shading */
+  function answerPlate(cx,cy,v,animate){
+    const fs=G.s*0.08;
+    // the product only. Its simpler name appears when Simplify is pressed.
+    const parts=[[v.pn,v.pd]];
+    if(v.g>1 && state.simplified) parts.push([v.sn,v.sd]);
+    let w=0;
+    const GAP=fs*1.15;
+    for(let i=0;i<parts.length;i++){ w+=fracW(parts[i][0],parts[i][1],fs); if(i) w+=GAP; }
+    const padX=fs*0.58, padY=fs*0.42, h=fs*2.2+padY;
+    let x0=cx-w/2;
+    // keep the plate inside the square where it can
+    if(x0-padX<G.x+4) x0=G.x+4+padX;
+    if(x0+w+padX>G.r-4) x0=G.r-4-padX-w;
+    let cyy=cy;
+    if(cyy-h/2<G.y+4) cyy=G.y+4+h/2;
+    if(cyy+h/2>G.b-4) cyy=G.b-4-h/2;
+
+    const g=el("g",{"data-role":"answer"});
+    g.appendChild(el("rect",{x:x0-padX,y:cyy-h/2,width:w+padX*2,height:h,rx:fs*0.42,
+      fill:"#ffffff",stroke:C.deep,"stroke-width":2.5}));
+    let x=x0;
+    for(let i=0;i<parts.length;i++){
+      if(i){ g.appendChild(txt(x+GAP/2,cyy+fs*0.34,"=",{size:fs*0.78,fill:C.deep,halo:false})); x+=GAP; }
+      const fw=fracW(parts[i][0],parts[i][1],fs);
+      g.appendChild(svgFrac(x+fw/2,cyy,parts[i][0],parts[i][1],fs,C.deep,0));
+      x+=fw;
+    }
+    if(animate){ g.setAttribute("class","popIn"); g.style.transformOrigin=cx+"px "+cy+"px"; }
+    return g;
+  }
+
+  /* ---------- edge labels ---------- */
+  function drawEdges(root,v){
+    const g=el("g",{});
+    const wA=(v.acrN/v.acrD)*G.s, hD=(v.dwnN/v.dwnD)*G.s;
+    // once the pieces have re-grouped the edges no longer measure those
+    // fractions, so the brackets come off
+    if(state.simplified && stepId()==="answer") return;
+
+    if(reached("across")){
+      const gA=el("g",state.animAcross?{"class":"fadeIn"}:{});
+      const cx=G.x+wA/2;
+      gA.appendChild(el("path",{d:"M "+G.x+" "+(G.y-14)+" v -8 H "+(G.x+wA)+" v 8",
+        fill:"none",stroke:C.edge,"stroke-width":2.4,"stroke-linejoin":"round"}));
+      gA.appendChild(svgFrac(cx,G.y-52,v.acrN,v.acrD,26,C.edge));
+      if(state.decimals){
+        gA.appendChild(txt(cx+fracW(v.acrN,v.acrD,26)/2+9,G.y-44,"= "+decStr(v.acrN,v.acrD),
+          {size:16,anchor:"start",fill:C.edge,weight:"800",family:"var(--uiFont)"}));
+      }
+      g.appendChild(gA);
+    }
+    if(reached("down")){
+      const gD=el("g",state.animDown?{"class":"fadeIn"}:{});
+      const cy=G.y+hD/2;
+      gD.appendChild(el("path",{d:"M "+(G.x-14)+" "+G.y+" h -8 V "+(G.y+hD)+" h 8",
+        fill:"none",stroke:C.edge,"stroke-width":2.4,"stroke-linejoin":"round"}));
+      gD.appendChild(svgFrac(G.x-52,cy,v.dwnN,v.dwnD,26,C.edge));
+      if(state.decimals){
+        gD.appendChild(txt(G.x-52,cy+48,"= "+decStr(v.dwnN,v.dwnD),
+          {size:15,fill:C.edge,weight:"800",family:"var(--uiFont)"}));
+      }
+      g.appendChild(gD);
+    }
+    root.appendChild(g);
+  }
+
+  /* ---------- the number line: the SAME story, one dimension ---------- */
+  function drawLine(root,v){
+    const g=el("g",{"data-role":"line"});
+    const y=G.ly, bH=20, bT=y-46;   // the shaded band sits above the axis
+
+    /* 1 — the second fraction: cut into acrD, shade acrN of them */
+    if(reached("across")){
+      const band=el("rect",{x:G.x,y:bT,width:v.vAcr*(G.r-G.x),height:bH,
+        fill:C.shade1,stroke:C.edge,"stroke-width":1.4,rx:3});
+      if(state.animAcross){ band.setAttribute("class","wipeX"); band.style.transformOrigin=G.x+"px "+bT+"px"; }
+      if(state.animExit==="across"){ band.setAttribute("class","wipeXOut"); band.style.transformOrigin=G.x+"px "+bT+"px"; }
+      g.appendChild(band);
+      const gt=el("g",state.animExit==="across"?{"class":"fadeOut"}:{});
+      for(let i=1;i<v.acrD;i++){
+        gt.appendChild(el("line",{x1:LX(i/v.acrD),y1:y-4,x2:LX(i/v.acrD),y2:y+9,
+          stroke:C.edge,"stroke-width":1.8,opacity:.7}));
+      }
+      g.appendChild(gt);
+      // its name, above the band
+      const gl=el("g",state.animAcross?{"class":"fadeIn"}:{});
+      gl.appendChild(svgFrac(LX(v.vAcr/2),bT-28,v.acrN,v.acrD,20,C.edge));
+      g.appendChild(gl);
+    }
+
+    /* 2 — break that shaded length into dwnD parts and take dwnN */
+    if(reached("down") && state.animExit!=="down"){
+      const dark=el("rect",{x:G.x,y:bT,width:v.value*(G.r-G.x),height:bH,
+        fill:C.shade2,stroke:C.edge,"stroke-width":1.4,rx:3});
+      if(state.animDown){ dark.setAttribute("class","wipeX"); dark.style.transformOrigin=G.x+"px "+bT+"px"; }
+      g.appendChild(dark);
+      const gs=el("g",state.animDown?{"class":"fadeIn"}:{});
+      for(let j=1;j<v.dwnD;j++){
+        const x=LX(v.vAcr*j/v.dwnD);
+        gs.appendChild(el("line",{x1:x,y1:bT,x2:x,y2:bT+bH,stroke:C.edge,"stroke-width":1.6,opacity:.75}));
+      }
+      g.appendChild(gs);
+    }
+
+    /* 3 — the same cut carried across the whole line: bd equal parts */
+    if(reached("name") && state.animExit!=="name" && !state.simplified && v.cells<=30){
+      // past ~30 the ticks turn into a hairbrush; the square carries it instead
+      const gn=el("g",state.animName?{"class":"fadeIn"}:{});
+      for(let i=1;i<v.cells;i++){
+        const x=LX(i/v.cells);
+        gn.appendChild(el("line",{x1:x,y1:y-4,x2:x,y2:y+7,stroke:C.soft,"stroke-width":1.2}));
+      }
+      g.appendChild(gn);
+    }
+    /* simplified: the line is re-cut into the same sd parts as the square */
+    if(state.simplified && stepId()==="answer"){
+      const gs=el("g",{"class":"fadeIn"});
+      for(let i=1;i<v.sd;i++){
+        const x=LX(i/v.sd);
+        gs.appendChild(el("line",{x1:x,y1:y-9,x2:x,y2:y+9,stroke:C.deep,"stroke-width":2.4}));
+      }
+      g.appendChild(gs);
+    }
+
+    /* the axis and its ends, drawn over the ticks */
+    g.appendChild(el("line",{x1:G.x,y1:y,x2:G.r,y2:y,stroke:C.ink,"stroke-width":3,"stroke-linecap":"round"}));
+    [0,1].forEach(function(t){
+      const x=LX(t);
+      g.appendChild(el("line",{x1:x,y1:y-13,x2:x,y2:y+13,stroke:C.ink,"stroke-width":3,"stroke-linecap":"round"}));
+      g.appendChild(txt(x,y+32,t===0?"0":"1",{size:21,fill:C.ink,weight:"850"}));
+    });
+
+    /* 4 — where the answer lands, and what it is called */
+    if(reached("answer") && state.animExit!=="answer"){
+      const x=LX(v.value);
+      const ga=el("g",{"class":state.animAnswer?"popIn":"fadeIn","data-role":"answer"});
+      if(state.animAnswer) ga.style.transformOrigin=x+"px "+y+"px";
+      ga.appendChild(el("line",{x1:x,y1:y+8,x2:x,y2:y+42,stroke:C.deep,"stroke-width":2.2,opacity:.7}));
+      ga.appendChild(el("circle",{cx:x,cy:y,r:8,fill:C.deep,stroke:"#fff","stroke-width":2.5}));
+      // named as it is written on the square: the product, or its simpler name
+      if(state.simplified) ga.appendChild(svgFrac(x,y+64,v.sn,v.sd,23,C.deep));
+      else                 ga.appendChild(svgFrac(x,y+64,v.pn,v.pd,23,C.deep));
+      g.appendChild(ga);
+    }
+
+    root.appendChild(g);
+  }
+
+  function describe(){
+    const v=derived();
+    return "A unit square with "+v.acrN+" of "+v.acrD+" columns shaded and "
+      +v.dwnN+" of "+v.dwnD+" rows shaded; the darker overlap is "
+      +v.a+" over "+v.b+" times "+v.c+" over "+v.d+".";
+  }
+
+  /* ===================== narration — short cues only ===================== */
+  function narrate(){
+    const v=derived();
+    const id=stepId();
+    const fA=htmlFrac(v.acrN,v.acrD), fD=htmlFrac(v.dwnN,v.dwnD);
+    let prompt="", maths="";
+
+    switch(id){
+      case "whole":
+        prompt="The square is one whole.";
+        maths=fD+" &times; "+fA+" = ?";
+        break;
+      case "across":
+        prompt="Shade "+wordFrac(v.acrN,v.acrD)+".";
+        maths=fA;
+        break;
+      case "down":
+        prompt="Now "+wordFrac(v.dwnN,v.dwnD)+" of that.";
+        maths=fD+" of "+fA;
+        break;
+      case "name":
+        prompt="Every piece is the same size.";
+        maths=v.dwnD+" &times; "+v.acrD+" = "+v.cells+" pieces";
+        break;
+      case "answer":
+        prompt = state.simplified
+          ? "The same pieces, re-grouped."
+          : v.shaded+(v.shaded===1?" piece":" pieces")+" out of "+v.cells+".";
+        maths=fD+" &times; "+fA+" = "+htmlFrac(v.pn,v.pd)
+             +(state.simplified ? " = "+htmlFrac(v.sn,v.sd) : "")
+             +(state.decimals ? " = "+decStr(v.sn,v.sd)+" = "+pctStr(v.sn,v.sd) : "");
+        break;
+    }
+    $("stepPrompt").innerHTML=prompt;
+    $("stepMaths").innerHTML=maths;
+    $("stepCount").textContent="Step "+(state.step+1)+" of "+STEPS.length;
+  }
+
+  function updateWords(){
+    const v=derived();
+    $("ofWords").innerHTML=wordFrac(v.dwnN,v.dwnD)+' <em>of</em> '+wordFrac(v.acrN,v.acrD);
+  }
+
+  /* ===================== navigation ===================== */
+  let animTimer=null;
+  function clearAnims(){
+    if(animTimer){ clearTimeout(animTimer); animTimer=null; }
+    state.animAcross=false; state.animDown=false; state.animName=false;
+    state.animAnswer=false; state.animExit=null;
+  }
+  /* leaving the answer step throws away any simplification */
+  function dropSimplify(){
+    if(simpTimer){ clearTimeout(simpTimer); simpTimer=null; }
+    state.simplified=false; state.simpAnim=null;
+  }
+  function goto(i){
+    const prev=state.step;
+    const target=Math.max(0,Math.min(STEPS.length-1,i));
+    if(target!==prev) dropSimplify();
+    if(target===prev-1 && !state.animExit){
+      clearAnims();
+      state.animExit=stepId();
+      render();
+      animTimer=setTimeout(function(){
+        animTimer=null; state.animExit=null; state.step=target;
+        render(); narrate(); syncNav();
+      },320);
+      return;
+    }
+    clearAnims();
+    state.step=target;
+    const single=(state.step===prev+1);
+    const id=stepId(), v=derived();
+    let after=0;
+    if(single && id==="across"){ state.animAcross=true; after=700+v.acrD*42; }
+    if(single && id==="down"){ state.animDown=true; after=700+v.dwnD*42; }
+    if(single && id==="name"){ state.animName=true; after=480; }
+    if(single && id==="answer"){ state.animAnswer=true; after=520; }
+    render(); narrate(); syncNav();
+    if(after>0) animTimer=setTimeout(function(){ clearAnims(); animTimer=null; render(); },after);
+  }
+  function syncNav(){
+    $("backBtn").disabled=(state.step===0);
+    $("nextBtn").disabled=(state.step===STEPS.length-1);
+    $("revealBtn").disabled=(state.step===STEPS.length-1);
+    // Simplify only exists on the answer step, and only if there is anything
+    // to simplify. Once pressed it becomes Undo.
+    const b=$("simpBtn");
+    const show=(stepId()==="answer" && derived().g>1);
+    b.hidden=!show;
+    b.textContent = state.simplified ? "Undo" : "Simplify";
+    b.classList.toggle("undo", state.simplified);
+  }
+
+  let simpTimer=null;
+  function toggleSimplify(){
+    if(derived().g<=1) return;
+    if(simpTimer){ clearTimeout(simpTimer); simpTimer=null; }
+    state.simplified=!state.simplified;
+    state.simpAnim = state.simplified ? "in" : "out";
+    render(); narrate(); syncNav();
+    simpTimer=setTimeout(function(){
+      simpTimer=null; state.simpAnim=null; render();
+    }, 900);
+  }
+
+  function resetSteps(){
+    clearAnims();
+    if(simpTimer){ clearTimeout(simpTimer); simpTimer=null; }
+    STEPS=buildSteps();
+    state.step=0;
+    state.simplified=false; state.simpAnim=null;
+    updateWords();
+    render(); narrate(); syncNav();
+  }
+
+  /* ===================== input ===================== */
+  function msg(s){ $("inputMsg").innerHTML=s||""; }
+  function setProblem(a,b,c,d,quiet){
+    if(![a,b,c,d].every(function(x){ return Number.isFinite(x) && x===Math.floor(x); })){
+      if(!quiet) msg("Whole numbers only, please."); return false;
+    }
+    if(!(b>=2&&b<=12) || !(d>=2&&d<=12)){
+      if(!quiet) msg("Keep both bottom numbers between 2 and 12 so the pieces stay countable."); return false;
+    }
+    if(!(a>=1&&a<b) || !(c>=1&&c<d)){
+      if(!quiet) msg("Keep both fractions proper &mdash; tops at least 1 and smaller than their bottoms."); return false;
+    }
+    state.a=a; state.b=b; state.c=c; state.d=d;
+    $("aInput").value=a; $("bInput").value=b; $("cInput").value=c; $("dInput").value=d;
+    msg(""); resetSteps();
+    return true;
+  }
+  function readInputs(){
+    return setProblem(parseInt($("aInput").value,10),parseInt($("bInput").value,10),
+                      parseInt($("cInput").value,10),parseInt($("dInput").value,10));
+  }
+
+  /* ===================== randomiser ===================== */
+  const TIER_LABEL={ unit:"Unit fractions", simple:"Simple", any:"Any proper",
+                     simplify:"Simplifies", tenths:"Tenths" };
+  function rnd(lo,hi){ return lo+Math.floor(Math.random()*(hi-lo+1)); }
+  function randomPair(){
+    const prev=state.a+"/"+state.b+"|"+state.c+"/"+state.d;
+    for(let t=0;t<800;t++){
+      let a,b,c,d;
+      if(state.tier==="unit"){ b=rnd(2,6); d=rnd(2,6); a=1; c=1; if(b===2&&d===2) continue; }
+      else if(state.tier==="simple"){ b=rnd(2,6); d=rnd(2,6); a=rnd(1,b-1); c=rnd(1,d-1); }
+      else if(state.tier==="tenths"){ b=10; d=10; a=rnd(1,9); c=rnd(1,9); }
+      else if(state.tier==="simplify"){ b=rnd(2,9); d=rnd(2,9); a=rnd(1,b-1); c=rnd(1,d-1);
+        if(gcd(a*c,b*d)===1) continue; }
+      else { b=rnd(2,12); d=rnd(2,12); a=rnd(1,b-1); c=rnd(1,d-1); }
+      if(a+"/"+b+"|"+c+"/"+d===prev) continue;
+      return {a:a,b:b,c:c,d:d};
+    }
+    return {a:2,b:3,c:3,d:4};
+  }
+  function generate(){ const f=randomPair(); setProblem(f.a,f.b,f.c,f.d); }
+  function setTier(t,quiet){
+    state.tier=t;
+    const opts=document.querySelectorAll("#tierMenu .subOpt");
+    for(let i=0;i<opts.length;i++){
+      const on=(opts[i].dataset.tier===t);
+      opts[i].classList.toggle("on",on);
+      opts[i].setAttribute("aria-checked",String(on));
+    }
+    $("tierVal").textContent=TIER_LABEL[t];
+    $("tierTag").innerHTML="&middot; "+TIER_LABEL[t];
+    if(t==="tenths" && !state.decimals){ state.decimals=true; $("decToggle").checked=true; }
+    if(!quiet) generate();
+  }
+
+  /* ===================== wiring ===================== */
+  function closeMenus(){
+    $("settingsMenu").classList.remove("open");
+    $("settingsBtn").setAttribute("aria-expanded","false");
+    $("toolsMenu").classList.remove("open");
+    $("toolsBtn").setAttribute("aria-expanded","false");
+    $("tierWrap").classList.remove("open");
+    $("tierRow").setAttribute("aria-expanded","false");
+  }
+  function wireMenu(btnId,menuId){
+    $(btnId).addEventListener("click",function(e){
+      e.stopPropagation();
+      const m=$(menuId), was=m.classList.contains("open");
+      closeMenus();
+      if(!was){ m.classList.add("open"); $(btnId).setAttribute("aria-expanded","true"); }
+    });
+    $(menuId).addEventListener("click",function(e){ e.stopPropagation(); });
+  }
+  function wire(){
+    wireMenu("settingsBtn","settingsMenu");
+    wireMenu("toolsBtn","toolsMenu");
+    document.addEventListener("click",closeMenus);
+
+    $("useBtn").addEventListener("click",readInputs);
+    ["aInput","bInput","cInput","dInput"].forEach(function(id){
+      $(id).addEventListener("keydown",function(e){ if(e.key==="Enter") readInputs(); });
+    });
+
+    $("tierRow").addEventListener("click",function(e){
+      e.stopPropagation();
+      const open=$("tierWrap").classList.toggle("open");
+      $("tierRow").setAttribute("aria-expanded",String(open));
+    });
+    const opts=document.querySelectorAll("#tierMenu .subOpt");
+    for(let i=0;i<opts.length;i++){
+      opts[i].addEventListener("click",function(e){
+        e.stopPropagation();
+        setTier(this.dataset.tier);
+        $("tierWrap").classList.remove("open");
+        $("tierRow").setAttribute("aria-expanded","false");
+      });
+    }
+    $("genBtn").addEventListener("click",generate);
+    $("swapBtn").addEventListener("click",function(){ state.swapped=!state.swapped; resetSteps(); });
+
+    $("lineToggle").addEventListener("change",function(e){
+      state.showLine=e.target.checked; render();
+    });
+    $("decToggle").addEventListener("change",function(e){
+      state.decimals=e.target.checked; render(); narrate();
+    });
+
+    $("nextBtn").addEventListener("click",function(){ goto(state.step+1); });
+    $("backBtn").addEventListener("click",function(){ goto(state.step-1); });
+    $("revealBtn").addEventListener("click",function(){ goto(STEPS.length-1); });
+    $("restartBtn").addEventListener("click",resetSteps);
+    $("simpBtn").addEventListener("click",toggleSimplify);
+
+    document.addEventListener("keydown",function(e){
+      const t=e.target;
+      if(t && (t.tagName==="INPUT"||t.tagName==="TEXTAREA")) return;
+      if(e.key===" "||e.key==="ArrowRight"){ e.preventDefault(); if(!$("nextBtn").disabled) goto(state.step+1); }
+      else if(e.key==="ArrowLeft"){ e.preventDefault(); goto(state.step-1); }
+      else if(e.key==="g"||e.key==="G"){ generate(); }
+      else if(e.key==="s"||e.key==="S"){ state.swapped=!state.swapped; resetSteps(); }
+      else if(e.key==="m"||e.key==="M"){ if(!$("simpBtn").hidden) toggleSimplify(); }
+      else if(e.key==="n"||e.key==="N"){
+        state.showLine=!state.showLine; $("lineToggle").checked=state.showLine; render();
+      }
+    });
+
+    $("resetBtn").addEventListener("click",function(){
+      $("lineToggle").checked=false; state.showLine=false;
+      $("decToggle").checked=false; state.decimals=false;
+      state.swapped=false;
+      setTier("simple",true);
+      setProblem(2,3,3,4);
+    });
+  }
+
+  /* ===================== boot ===================== */
+  wire();
+  setTier("simple",true);
+  setProblem(2,3,3,4);
+
+  window.__MULFRAC__={ gcd:gcd, state:state, derived:derived, buildSteps:buildSteps,
+                       setProblem:setProblem, setTier:setTier, randomPair:randomPair,
+                       decStr:decStr, pctStr:pctStr, wordFrac:wordFrac,
+                       blockSplit:blockSplit, targetCell:targetCell, sourceCell:sourceCell,
+                       toggleSimplify:toggleSimplify, syncNav:syncNav,
+                       goto:goto, render:render, narrate:narrate, LX:LX };
+})();
+</script>
+</body>
+</html>

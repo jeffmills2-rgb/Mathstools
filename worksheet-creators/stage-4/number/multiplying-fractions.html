@@ -1,0 +1,915 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Multiplying Fractions (Area Model) — Worksheet Generator</title>
+
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --ink:#111827;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --shadow:0 14px 40px rgba(0,0,0,.10);
+      --radius:18px;
+
+      --blue:#2563eb;
+      --green:#16a34a;
+      --red:#dc2626;
+
+      --sweet1:#4ade80;  --sweet2:#16a34a;
+      --mild1:#facc15;   --mild2:#d97706;
+      --medium1:#fb923c; --medium2:#ea580c;
+      --spicy1:#f87171;  --spicy2:#b91c1c;
+
+      --footer-h:44px;
+      --mathFont:"Cambria Math","STIX Two Math","STIXGeneral","Times New Roman",serif;
+      --uiFont:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0; background:var(--bg); color:var(--ink);
+      font-family:var(--uiFont); padding-bottom:var(--footer-h);
+    }
+
+    .wrap{ max-width:1280px; margin:14px auto 32px; padding:0 14px; }
+    .card{ background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px; }
+
+    .title{ margin:0 0 4px; font-size:28px; font-weight:1000; letter-spacing:.2px; }
+    .subtitle{ margin:0 0 14px; color:var(--muted); font-weight:850; font-size:15px; line-height:1.35; }
+    .subtitle a{ color:var(--blue); text-decoration:none; font-weight:1000; }
+
+    .controls{ display:grid; gap:10px; }
+    .band{
+      border:1px solid var(--border); border-radius:18px; padding:12px 14px;
+      background:linear-gradient(180deg,#ffffff,#f9fafb);
+    }
+    .bandHead{
+      font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+      font-weight:1000; color:var(--muted); margin:0 0 9px;
+    }
+    .bandGrid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; align-items:end; }
+    .bandRow{ display:flex; gap:16px 22px; flex-wrap:wrap; align-items:center; }
+
+    label{ display:block; margin:0 0 7px; font-size:15px; font-weight:950; }
+    select, input[type="number"]{
+      border:2px solid #e5e7eb; border-radius:14px; padding:12px 13px;
+      font-weight:950; font-size:17px; background:#fff; width:100%; outline:none;
+    }
+    select:focus, input[type="number"]:focus{ border-color:var(--blue); }
+
+    .sw{
+      display:inline-flex; align-items:center; gap:10px; cursor:pointer;
+      user-select:none; font-weight:950; font-size:14.5px; color:#111827; white-space:nowrap;
+    }
+    .sw input{ position:absolute; opacity:0; width:0; height:0; }
+    .sw .track{
+      position:relative; width:46px; height:26px; border-radius:999px; background:#cbd5e1;
+      transition:.18s ease; flex:0 0 auto; box-shadow:inset 0 1px 3px rgba(15,23,42,.18);
+    }
+    .sw .track::after{
+      content:""; position:absolute; top:3px; left:3px; width:20px; height:20px;
+      border-radius:50%; background:#fff; box-shadow:0 2px 6px rgba(15,23,42,.3); transition:.18s ease;
+    }
+    .sw input:checked + .track{ background:var(--green); }
+    .sw input:checked + .track::after{ transform:translateX(20px); }
+    .sw input:focus-visible + .track{ box-shadow:0 0 0 4px rgba(37,99,235,.28); }
+
+    .note{ margin:9px 0 0; font-size:12.5px; font-weight:800; color:var(--muted); line-height:1.45; }
+    .note.warn{ color:var(--red); }
+
+    /* one card per section: what it is, and how many of them */
+    .secGrid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(212px,1fr)); gap:10px; }
+    .secOpt{
+      border:1.5px solid var(--border); border-radius:15px; padding:11px 12px 12px;
+      background:#fff; display:grid; gap:10px; align-content:start;
+      transition:opacity .15s ease, background .15s ease, border-color .15s ease;
+    }
+    .secOpt.off{ opacity:.55; background:#f9fafb; }
+    .secOpt .sw{ white-space:normal; }
+    .cntRow{ display:flex; align-items:center; gap:9px; }
+    .cntRow label{ margin:0; font-size:12.5px; font-weight:900; color:var(--muted); white-space:nowrap; }
+    .cntRow input[type="number"]{ width:82px; padding:8px 6px; font-size:17px; text-align:center; }
+    .totalRow{
+      margin-top:11px; font-size:13.5px; font-weight:950; color:var(--ink);
+      display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    }
+    .totalRow .pill{
+      background:#eef2ff; color:#1d4ed8; border-radius:999px; padding:4px 12px; font-weight:1000;
+    }
+    .totalRow .pill.zero{ background:#fee2e2; color:#991b1b; }
+
+    .btnRow{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end; }
+    button{
+      border:none; border-radius:14px; padding:12px 16px; font-weight:1000; cursor:pointer;
+      background:#f3f4f6; color:#111827; font-size:16px; user-select:none;
+      transition:transform .04s ease, filter .15s ease, opacity .2s ease;
+    }
+    button:active{ transform:scale(.98); }
+    button.primary{ background:#2563eb; color:#fff; }
+    button.ghost{ background:#eef2ff; color:#1d4ed8; }
+    button.danger{ background:#fee2e2; color:#991b1b; }
+
+    .outWrap{ margin-top:14px; }
+
+    /* =====================================================================
+       THE PAPER
+       Three model cards per row, always — the square is the point, so it
+       gets the width. Density changes the SIZE of the square, not how many
+       fit across.
+       ===================================================================== */
+    .page{
+      margin:14px auto 0; background:#fff; border:1px solid var(--border);
+      border-radius:18px; box-shadow:0 10px 26px rgba(15,23,42,.08); overflow:hidden;
+      width:210mm; max-width:100%; height:297mm;
+      display:flex; flex-direction:column;
+    }
+    .pageHeader{
+      padding:9px 13px 7px; border-bottom:2px solid #111827;
+      display:flex; align-items:flex-end; justify-content:space-between; gap:10px;
+    }
+    .hdrTitle{ font-weight:1000; font-size:15px; line-height:1.1; }
+    .hdrSub{ color:var(--muted); font-weight:850; font-size:11px; margin-top:2px; }
+    .nameDate{ display:flex; gap:8px; align-items:flex-end; }
+    .lineField{ display:flex; flex-direction:column; gap:3px; width:116px; }
+    .lineLabel{ font-size:10px; font-weight:950; color:var(--muted); }
+    .lineBox{ height:19px; border-bottom:1.6px solid #111827; }
+
+    .sheet{ padding:8px 13px 10px; flex:1 1 auto; display:flex; flex-direction:column; min-height:0; }
+
+    .section{ margin-bottom:9px; }
+    .secHead{
+      display:flex; align-items:baseline; gap:9px;
+      border-bottom:1.6px solid #111827; padding-bottom:3px; margin-bottom:7px;
+    }
+    .secLetter{
+      font-weight:1000; font-size:14px; letter-spacing:.02em;
+      background:#111827; color:#fff; border-radius:5px; padding:1px 7px; flex:0 0 auto;
+    }
+    .secText{ font-weight:900; font-size:13.5px; color:#111827; line-height:1.3; }
+    .secText em{ font-style:normal; color:var(--muted); font-weight:800; }
+    .secCont{ margin-left:auto; font-size:11px; font-weight:900; color:var(--muted); flex:0 0 auto; }
+
+    /* bilingual lines: chosen language on top, English beneath.
+       Numerals and every piece of maths stay Western and LTR.            */
+    .tl{ display:block; }
+    .tl[lang="ar"], .tl[lang="fa"]{ font-size:1.05em; }
+    .el{ display:block; font-size:.84em; opacity:.72; font-weight:750; margin-top:1px; }
+    bdi{ unicode-bidi:isolate; }
+
+    /* --- the card grid --- */
+    .qGrid{ display:grid; gap:8px 9px; grid-template-columns:repeat(var(--cols,3),1fr); }
+    .qCard{
+      border:1.2px solid #d7dce3; border-radius:10px; padding:5px 6px 6px;
+      display:flex; flex-direction:column; align-items:center; gap:4px;
+      break-inside:avoid; page-break-inside:avoid; background:#fff;
+    }
+    .qCard.flat{ flex-direction:row; align-items:center; justify-content:center;
+      flex-wrap:wrap; gap:5px 7px; padding:7px 8px; min-width:0; }
+    .qTop{ display:flex; align-items:center; gap:6px; width:100%; }
+    .qNum{
+      width:20px; height:20px; border-radius:999px; color:#fff;
+      display:flex; align-items:center; justify-content:center;
+      font-size:11px; font-weight:1000; flex:0 0 auto;
+    }
+    .qNum.sweet{ background:linear-gradient(180deg,var(--sweet1),var(--sweet2)); }
+    .qNum.mild{ background:linear-gradient(180deg,var(--mild1),var(--mild2)); }
+    .qNum.medium{ background:linear-gradient(180deg,var(--medium1),var(--medium2)); }
+    .qNum.spicy{ background:linear-gradient(180deg,var(--spicy1),var(--spicy2)); }
+    .qExpr{
+      font-family:var(--mathFont); font-weight:1000; font-size:18px;
+      display:flex; align-items:center; gap:.2em; flex-wrap:nowrap; line-height:1;
+    }
+    .qModel{ width:var(--sq,46mm); }
+    .qModel svg{ display:block; width:100%; height:auto; }
+    .qFoot{ display:flex; align-items:center; justify-content:center; gap:6px; width:100%; flex-wrap:wrap; }
+    .qFoot .ansLine{ flex:1 1 auto; min-width:0; }
+    .qCard.flat .ansLine{ flex:1 1 auto; min-width:46px; }
+
+    /* stacked fraction in text */
+    .fr{ display:inline-flex; flex-direction:column; align-items:center; line-height:1; vertical-align:middle; font-size:.92em; }
+    .fr .n{ padding:0 .28em .04em; }
+    .fr .d{ padding:.05em .28em 0; border-top:.1em solid currentColor; }
+
+    /* Somewhere to write, and nothing more. Boxed numerator/denominator slots
+       invite "what goes in this box?" instead of thinking about the question,
+       so the student gets an equals sign and a ruled space.               */
+    .ansLine{
+      display:inline-block; vertical-align:bottom;
+      border-bottom:1.7px solid #111827; height:1.35em;
+      min-width:var(--ansW,62px); flex:0 1 auto;
+    }
+    .ansLine.long{ min-width:104px; }
+    .ansLine.full{ display:block; width:100%; min-width:0; height:1.5em; }
+    .ansKey{
+      font-family:var(--mathFont); font-weight:1000; font-size:15px; color:var(--green);
+      display:inline-flex; align-items:center; gap:.25em; flex-wrap:wrap;
+      justify-content:center; line-height:1.15;
+    }
+    .ansKey.full{ display:flex; width:100%; }
+    .eq{ font-family:var(--mathFont); font-weight:1000; font-size:18px; }
+
+    /* --- the reasoning block --- */
+    .explainBox{
+      border:1.6px solid #4f46e5; border-radius:10px; padding:8px 11px 9px;
+      background:rgba(79,70,229,.035); break-inside:avoid; page-break-inside:avoid;
+      flex:1 0 auto; max-height:96mm; display:flex; flex-direction:column; min-height:0;
+    }
+    .exHead{
+      font-size:11px; font-weight:1000; letter-spacing:.1em; text-transform:uppercase;
+      color:#4338ca; margin-bottom:4px;
+    }
+    .exText{ font-size:13px; font-weight:850; line-height:1.4; color:#111827; }
+    .exText b{ font-weight:1000; }
+    .exSq{ margin:5px auto 1px; width:26mm; }
+    .exSq svg{ width:100%; height:auto; display:block; }
+    .ruled{
+      flex:1 1 auto; min-height:30px; margin-top:8px;
+      background-image:repeating-linear-gradient(to bottom,
+        transparent 0, transparent 27px, #a5b4c4 27px, #a5b4c4 28.2px);
+    }
+    .page.isKey .explainBox{ flex:0 0 auto; }
+    .exKey{
+      margin-top:auto; font-size:11px; font-weight:850; line-height:1.35;
+      color:var(--green); background:rgba(22,163,74,.08);
+      border:1.2px solid rgba(22,163,74,.35); border-radius:8px; padding:5px 7px;
+    }
+
+    .pageFooter{
+      padding:5px 13px 6px; border-top:1px solid rgba(229,231,235,.95);
+      display:flex; align-items:center; justify-content:space-between;
+      font-weight:900; color:var(--muted); font-size:10px;
+    }
+    .pageFooter a{ color:#2563eb; text-decoration:none; font-weight:1000; }
+
+    .measure{ position:absolute; left:-10000px; top:0; width:210mm; visibility:hidden; }
+
+    .mmtFooter{
+      position:fixed; left:0; right:0; bottom:0; height:var(--footer-h);
+      display:flex; align-items:center; justify-content:center; padding:0 12px;
+      background:rgba(255,255,255,.92); border-top:1px solid rgba(229,231,235,.95);
+      backdrop-filter:blur(8px); z-index:500; font-weight:900; color:#111827;
+      text-align:center; font-size:13px;
+    }
+    .mmtFooter a{ color:#2563eb; text-decoration:none; font-weight:950; }
+
+    @media print{
+      @page{ size:A4; margin:8mm 7mm; }
+      html, body{ width:210mm; height:auto; }
+      body{ background:#fff; padding-bottom:0; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+
+      .wrap{ max-width:none; margin:0; padding:0; }
+      .card{ box-shadow:none; border-radius:0; padding:0; }
+      .controls, .title, .subtitle, .mmtFooter{ display:none !important; }
+
+      .page{
+        margin:0; border:none; border-radius:0; box-shadow:none;
+        width:auto; height:281mm; page-break-after:always;
+      }
+      .page:last-child{ page-break-after:auto; }
+
+      .pageHeader{ padding:0 0 1.6mm; }
+      .sheet{ padding:2.4mm 0 0; }
+      .pageFooter{ padding:1.4mm 0 0; }
+    }
+  </style>
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "c7e5713b5e4f4993907eb285797dc89b"}'></script><!-- End Cloudflare Web Analytics -->
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1 class="title">Multiplying Fractions (Area Model) — Worksheet Generator</h1>
+      <p class="subtitle">Printable A4 worksheets from the <a href="/interactive-tools/stage-4/number/multiplying-fractions-area-model/">Multiplying Fractions &mdash; Area Model</a> teaching tool. Each section hands over a different amount of the model &mdash; shade one, finish one, read one backwards, partition a blank one, or drop the picture entirely. Worksheet language prints every instruction bilingually for EAL/D students; the maths stays in Western numerals.</p>
+
+      <div class="controls">
+        <div class="band">
+          <p class="bandHead">The paper</p>
+          <div class="bandGrid">
+            <div>
+              <label for="levelSel">Level</label>
+              <select id="levelSel">
+                <option value="sweet">Sweet &mdash; unit fractions, small grids</option>
+                <option value="mild">Mild &mdash; bottoms to 6, answers already simplest</option>
+                <option value="medium">Medium &mdash; bottoms to 8, some answers simplify</option>
+                <option value="spicy">Spicy &mdash; bigger bottoms, every answer simplifies</option>
+                <option value="mixed" selected>Mixed &mdash; a ladder of all four</option>
+              </select>
+            </div>
+            <div>
+              <label for="densitySel">Model size</label>
+              <select id="densitySel">
+                <option value="roomy">Large</option>
+                <option value="normal" selected>Medium</option>
+                <option value="tight">Small &mdash; fit the most on a page</option>
+              </select>
+            </div>
+            <div>
+              <label for="langSel">Worksheet language</label>
+              <select id="langSel">
+                <option value="en">English only</option>
+                <option value="ar">Arabic + English (العربية)</option>
+                <option value="fa">Farsi / Persian + English (فارسی)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="band">
+          <p class="bandHead">Sections &mdash; and how many of each</p>
+          <div class="secGrid">
+            <div class="secOpt" data-for="kShade">
+              <label class="sw"><input type="checkbox" id="kShade" checked /><span class="track"></span><span>Shade the model</span></label>
+              <div class="cntRow"><label for="nShade">How many</label><input id="nShade" type="number" min="0" max="40" value="6" /></div>
+            </div>
+            <div class="secOpt" data-for="kFinish">
+              <label class="sw"><input type="checkbox" id="kFinish" checked /><span class="track"></span><span>Finish the model</span></label>
+              <div class="cntRow"><label for="nFinish">How many</label><input id="nFinish" type="number" min="0" max="40" value="6" /></div>
+            </div>
+            <div class="secOpt" data-for="kRead">
+              <label class="sw"><input type="checkbox" id="kRead" checked /><span class="track"></span><span>Read the model</span></label>
+              <div class="cntRow"><label for="nRead">How many</label><input id="nRead" type="number" min="0" max="40" value="6" /></div>
+            </div>
+            <div class="secOpt off" data-for="kNopart">
+              <label class="sw"><input type="checkbox" id="kNopart" /><span class="track"></span><span>No partitions</span></label>
+              <div class="cntRow"><label for="nNopart">How many</label><input id="nNopart" type="number" min="0" max="40" value="6" disabled /></div>
+            </div>
+            <div class="secOpt" data-for="kNomodel">
+              <label class="sw"><input type="checkbox" id="kNomodel" checked /><span class="track"></span><span>No model</span></label>
+              <div class="cntRow"><label for="nNomodel">How many</label><input id="nNomodel" type="number" min="0" max="40" value="8" /></div>
+            </div>
+          </div>
+          <div class="totalRow"><span>On the paper:</span><span class="pill" id="totalPill">0 questions</span></div>
+          <p class="note">The scaffold fades left to right. <b>Shade</b> gives a square already cut both ways. <b>Finish</b> gives only the second fraction, cut and shaded. <b>Read</b> runs backwards: a shaded model, write the multiplication. <b>No partitions</b> is a blank square to cut up. <b>No model</b> is plain fluency practice. Each section climbs its own spice ladder.</p>
+        </div>
+
+        <div class="band">
+          <p class="bandHead">Options</p>
+          <div class="bandRow">
+            <label class="sw"><input type="checkbox" id="simplifyToggle" checked /><span class="track"></span><span>Ask for simplest form</span></label>
+            <label class="sw"><input type="checkbox" id="reasonToggle" checked /><span class="track"></span><span>Reasoning prompt on each page</span></label>
+            <label class="sw"><input type="checkbox" id="keyToggle" checked /><span class="track"></span><span>Answer key pages</span></label>
+          </div>
+          <p class="note"><b>Simplest form</b> asks for the answer and its simplest form on the same line &mdash; nothing on the page gives away which ones simplify. The reasoning prompt is a misconception to argue with, using a square as the evidence.</p>
+        </div>
+
+        <div class="btnRow">
+          <button id="genBtn" class="primary">Generate worksheet</button>
+          <button id="printBtn" class="ghost">Print (Ctrl+P)</button>
+          <button id="resetBtn" class="danger">Reset</button>
+        </div>
+      </div>
+
+      <div id="out" class="outWrap"></div>
+    </div>
+  </div>
+
+  <div class="mmtFooter">
+    This tool and more can be found at&nbsp;
+    <a href="https://www.millsmathstools.au">www.millsmathstools.au</a>
+  </div>
+
+<script>
+(() => {
+  "use strict";
+
+  const SITE = "https://www.millsmathstools.au";
+  const $ = id => document.getElementById(id);
+
+  /* ===================== worksheet language (EN / Arabic / Farsi) =====================
+     Same convention as the other creators: the chosen language on top, English
+     beneath. Every numeral and every fraction stays Western and LTR, isolated
+     with <bdi> so it does not flip inside a right-to-left sentence.        */
+  let LANG = "en";
+  try{ LANG = localStorage.getItem("mmt-mulf-ws-lang") || "en"; }catch(_){ }
+  function TR(o){
+    if(o==null) return "";
+    if(typeof o==="string") o={en:o};
+    if(LANG==="en" || !o[LANG]) return o.en||"";
+    return '<span class="tl" dir="rtl" lang="'+LANG+'">'+o[LANG]+'</span>'
+         + '<span class="el">'+(o.en||"")+'</span>';
+  }
+
+  const WS = {
+    shade:{ en:"Shade the model. Write the product.",
+      ar:"ظلِّل النموذج. اكتب حاصل الضرب.",
+      fa:"مدل را رنگ کن. حاصل‌ضرب را بنویس." },
+    finish:{ en:"The second fraction is shaded. Cut the square the other way, shade it, and write the product.",
+      ar:"الكسر الثاني مظلَّل. قسِّم المربع في الاتجاه الآخر، ظلِّله، واكتب حاصل الضرب.",
+      fa:"کسر دوم رنگ شده است. مربع را در جهت دیگر تقسیم کن، رنگ کن و حاصل‌ضرب را بنویس." },
+    read:{ en:"Write the multiplication each model shows.",
+      ar:"اكتب عملية الضرب التي يمثّلها كل نموذج.",
+      fa:"ضربی را که هر مدل نشان می‌دهد بنویس." },
+    nopart:{ en:"Cut each square up yourself. Shade it, then write the product.",
+      ar:"قسِّم كل مربع بنفسك. ظلِّله، ثم اكتب حاصل الضرب.",
+      fa:"هر مربع را خودت تقسیم کن. رنگ کن، سپس حاصل‌ضرب را بنویس." },
+    nomodel:{ en:"Work these out.",
+      ar:"أوجد الناتج.",
+      fa:"این‌ها را حساب کن." },
+    simplest:{ en:"Answer, then simplest form.",
+      ar:"الإجابة، ثم أبسط صورة.",
+      fa:"پاسخ، سپس ساده‌ترین صورت." },
+    cont:{ en:"continued", ar:"تابع", fa:"ادامه" },
+    explain:{ en:"\u270E Explain your thinking",
+              ar:"\u270E اشرح تفكيرك",
+              fa:"\u270E فکرت را توضیح بده" },
+    name:{ en:"Name", ar:"الاسم", fa:"نام" },
+    date:{ en:"Date", ar:"التاريخ", fa:"تاریخ" }
+  };
+
+  /* ===================== helpers ===================== */
+  function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ const t=a%b; a=b; b=t; } return a; }
+  function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+  function rnd(lo,hi){ return lo+Math.floor(Math.random()*(hi-lo+1)); }
+  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  function frHTML(n,d){ return '<span class="fr"><span class="n">'+n+'</span><span class="d">'+d+'</span></span>'; }
+  function frBDI(n,d){ return '<bdi>'+frHTML(n,d)+'</bdi>'; }
+  /* A place to write. On a key, the answer written into that place. */
+  function ansHTML(key, q, wantSimplest, full){
+    const cls = full ? " full" : "";
+    if(!key) return '<span class="ansLine'+cls+(wantSimplest&&!full?" long":"")+'"></span>';
+    let s = frHTML(q.pn,q.pd);
+    if(wantSimplest && q.g>1) s += '<span class="eq">=</span>'+frHTML(q.sn,q.sd);
+    return '<span class="ansKey'+cls+'">'+s+'</span>';
+  }
+  /* the Read section: the student writes the whole multiplication */
+  function readAnsHTML(key, q, wantSimplest){
+    if(!key) return '<span class="ansLine full"></span>';
+    let s = frHTML(q.a,q.b)+'<span class="eq">&times;</span>'+frHTML(q.c,q.d)
+          + '<span class="eq">=</span>'+frHTML(q.pn,q.pd);
+    if(wantSimplest && q.g>1) s += '<span class="eq">=</span>'+frHTML(q.sn,q.sd);
+    return '<span class="ansKey full">'+s+'</span>';
+  }
+
+  /* ===================== the model =====================
+     One unit square. Columns come from the SECOND fraction (the amount we
+     take a part of), rows from the FIRST. Shaded once = light, twice = dark,
+     exactly as in the teaching tool.                                       */
+  const M = { shade1:"#dbeafe", shade2:"#93c5fd", edge:"#2563eb", ink:"#1f2937" };
+
+  /* mode: blank | cutBoth | halfDone | full   */
+  function modelSVG(q, mode){
+    const S=100, a=q.a, b=q.b, c=q.c, d=q.d;   // a/b (down, rows) × c/d (across, cols)
+    const wA=(c/d)*S, hD=(a/b)*S;
+    let s='<svg viewBox="-3 -3 '+(S+6)+' '+(S+6)+'" role="img" aria-label="'
+      + esc("A unit square area model for "+a+" over "+b+" times "+c+" over "+d)+'">';
+
+    if(mode==="full"){
+      s+='<rect x="0" y="0" width="'+wA+'" height="'+S+'" fill="'+M.shade1+'"/>';
+      s+='<rect x="0" y="0" width="'+S+'" height="'+hD+'" fill="'+M.shade1+'"/>';
+      s+='<rect x="0" y="0" width="'+wA+'" height="'+hD+'" fill="'+M.shade2+'"/>';
+    }else if(mode==="halfDone"){
+      s+='<rect x="0" y="0" width="'+wA+'" height="'+S+'" fill="'+M.shade1+'"/>';
+    }
+    if(mode!=="blank"){
+      for(let i=1;i<d;i++){
+        const x=(i/d)*S;
+        s+='<line x1="'+x+'" y1="0" x2="'+x+'" y2="'+S+'" stroke="'+M.edge+'" stroke-width="0.9" opacity="0.6"/>';
+      }
+      if(mode!=="halfDone"){
+        for(let j=1;j<b;j++){
+          const y=(j/b)*S;
+          s+='<line x1="0" y1="'+y+'" x2="'+S+'" y2="'+y+'" stroke="'+M.edge+'" stroke-width="0.9" opacity="0.6"/>';
+        }
+      }
+    }
+    s+='<rect x="0" y="0" width="'+S+'" height="'+S+'" fill="none" stroke="'+M.ink+'" stroke-width="2.2"/>';
+    return s+'</svg>';
+  }
+
+  function plainSquare(cols,rows){
+    const S=100;
+    let s='<svg viewBox="-3 -3 106 106" role="img" aria-label="A blank unit square">';
+    for(let i=1;i<cols;i++) s+='<line x1="'+(i/cols*S)+'" y1="0" x2="'+(i/cols*S)+'" y2="'+S+'" stroke="'+M.edge+'" stroke-width="0.9" opacity="0.45"/>';
+    for(let j=1;j<rows;j++) s+='<line x1="0" y1="'+(j/rows*S)+'" x2="'+S+'" y2="'+(j/rows*S)+'" stroke="'+M.edge+'" stroke-width="0.9" opacity="0.45"/>';
+    s+='<rect x="0" y="0" width="100" height="100" fill="none" stroke="'+M.ink+'" stroke-width="2.2"/>';
+    return s+'</svg>';
+  }
+
+  /* ===================== the level ladder ===================== */
+  const LEVELS = {
+    sweet:  { dens:[2,3,4],          bare:[2,3,4,5],              unitOnly:true },
+    mild:   { dens:[2,3,4,5,6],      bare:[2,3,4,5,6],            noSimplify:true },
+    medium: { dens:[2,3,4,5,6,8],    bare:[2,3,4,5,6,8,9,10] },
+    spicy:  { dens:[3,4,5,6,8],      bare:[3,4,5,6,7,8,9,10,12],  mustSimplify:true }
+  };
+  const ORDER = ["sweet","mild","medium","spicy"];
+  const SEC_LETTER = ["A","B","C","D","E","F"];
+  const MODEL_CAP = 48;     // b×d must stay shadeable by hand
+
+  /* ===================== the sections =====================
+     Every kind that shows a square gets THREE per row — the model is the
+     point, so it takes the width. Only the model-free fluency section packs
+     more across.                                                          */
+  const KINDS = {
+    shade:   { model:true,  mode:"cutBoth",  text:WS.shade,   cols:{roomy:3,normal:3,tight:3} },
+    finish:  { model:true,  mode:"halfDone", text:WS.finish,  cols:{roomy:3,normal:3,tight:3} },
+    read:    { model:true,  mode:"full",     text:WS.read,    cols:{roomy:3,normal:3,tight:3} },
+    nopart:  { model:true,  mode:"blank",    text:WS.nopart,  cols:{roomy:3,normal:3,tight:3} },
+    nomodel: { model:false, mode:null,       text:WS.nomodel, cols:{roomy:3,normal:4,tight:5} }
+  };
+  const KIND_IDS = ["shade","finish","read","nopart","nomodel"];
+  const TOGGLE_ID = { shade:"kShade", finish:"kFinish", read:"kRead",
+                      nopart:"kNopart", nomodel:"kNomodel" };
+  const COUNT_ID  = { shade:"nShade", finish:"nFinish", read:"nRead",
+                      nopart:"nNopart", nomodel:"nNomodel" };
+  const DEFAULT_N = { shade:6, finish:6, read:6, nopart:6, nomodel:8 };
+
+  /* how many of each section the teacher asked for */
+  function sectionCounts(){
+    const out={};
+    KIND_IDS.forEach(k=>{
+      const on=$(TOGGLE_ID[k]).checked;
+      const n=Math.max(0, Math.min(40, parseInt($(COUNT_ID[k]).value,10)||0));
+      out[k]= on ? n : 0;
+    });
+    return out;
+  }
+  function totalAsked(){
+    const c=sectionCounts();
+    return KIND_IDS.reduce((t,k)=>t+c[k],0);
+  }
+
+  const DENSITY = { roomy:{ sq:"52mm" }, normal:{ sq:"46mm" }, tight:{ sq:"38mm" } };
+
+  function makeQ(level, kind, preferSimplify){
+    const L=LEVELS[level] || LEVELS.mild;
+    const hasModel=KINDS[kind].model;
+    const pool = hasModel ? L.dens : (L.bare||L.dens);
+    let best=null;
+    for(let t=0;t<500;t++){
+      const b=pick(pool), d=pick(pool);
+      if(hasModel && b*d>MODEL_CAP) continue;
+      const a=L.unitOnly?1:rnd(1,b-1);
+      const c=L.unitOnly?1:rnd(1,d-1);
+      const g=gcd(a*c,b*d);
+      const q={ a,b,c,d, level, kind, g, pn:a*c, pd:b*d, sn:(a*c)/g, sd:(b*d)/g };
+      if(L.mustSimplify && g===1){ best=best||q; continue; }
+      if(L.noSimplify && g>1){ best=best||q; continue; }
+      if(preferSimplify && g===1 && t<300){ best=best||q; continue; }
+      return q;
+    }
+    if(best) return best;
+    return { a:1,b:2,c:1,d:3, level, kind, g:1, pn:1, pd:6, sn:1, sd:6 };
+  }
+
+  /* ===================== one card ===================== */
+  function cardHTML(q, key, wantSimplest){
+    const K=KINDS[q.kind];
+    // on a key the model is shaded in, so the teacher marks the picture too.
+    // The square is the same size either way, so pagination is unaffected.
+    const mode = (key && K.model && K.mode!=="full") ? "full" : K.mode;
+
+    if(!K.model){
+      // plain fluency: one line, no picture
+      return '<div class="qCard flat">'
+        + '<span class="qNum '+q.level+'">'+q.idx+'</span>'
+        + '<span class="qExpr">'+frHTML(q.a,q.b)+'<span>&times;</span>'+frHTML(q.c,q.d)+'</span>'
+        + '<span class="eq">=</span>'
+        + ansHTML(key,q,wantSimplest,false)
+        + '</div>';
+    }
+
+    if(q.kind==="read"){
+      return '<div class="qCard">'
+        + '<div class="qTop"><span class="qNum '+q.level+'">'+q.idx+'</span></div>'
+        + '<div class="qModel">'+modelSVG(q,mode)+'</div>'
+        + '<div class="qFoot">'+readAnsHTML(key,q,wantSimplest)+'</div>'
+        + '</div>';
+    }
+
+    return '<div class="qCard">'
+      + '<div class="qTop"><span class="qNum '+q.level+'">'+q.idx+'</span>'
+      +   '<span class="qExpr">'+frHTML(q.a,q.b)+'<span>&times;</span>'+frHTML(q.c,q.d)+'</span></div>'
+      + '<div class="qModel">'+modelSVG(q,mode)+'</div>'
+      + '<div class="qFoot"><span class="eq">=</span>'+ansHTML(key,q,wantSimplest,false)+'</div>'
+      + '</div>';
+  }
+
+  function sectionHTML(block, key, D, wantSimplest){
+    const K=KINDS[block.kind];
+    let cols=K.cols[block.density]||3;
+    // asking for the simplest form too means more to write on one line,
+    // so the model-free section drops a column to make room
+    if(!K.model && wantSimplest) cols=Math.max(2, cols-1);
+    const txt = wantSimplest ? {
+      en: K.text.en+" "+WS.simplest.en,
+      ar: K.text.ar+" "+WS.simplest.ar,
+      fa: K.text.fa+" "+WS.simplest.fa
+    } : K.text;
+    const head = TR(txt);
+    return '<div class="section">'
+      + '<div class="secHead"><span class="secLetter">'+block.letter+'</span>'
+      +   '<span class="secText">'+head+'</span>'
+      +   (block.cont?'<span class="secCont">'+TR(WS.cont)+'</span>':'')
+      + '</div>'
+      + '<div class="qGrid" style="--cols:'+cols+';--sq:'+D.sq+'">'
+      +   block.qs.map(q=>cardHTML(q,key,wantSimplest)).join("")
+      + '</div>'
+      + '</div>';
+  }
+
+  /* ===================== reasoning prompts =====================
+     {1} {2} {3} are filled with LTR fractions after translation.          */
+  const REASONS = [
+    { cols:4, rows:3, f:[[3,4],[2,3]],
+      t:{ en:"Mia says multiplying always makes a number bigger, so {1} × {2} must be more than {1}. Shade the square and explain what really happens.",
+          ar:"تقول ميا إن الضرب يجعل العدد أكبر دائمًا، لذا لا بد أن {1} × {2} أكبر من {1}. ظلِّل المربع واشرح ما يحدث حقًا.",
+          fa:"میا می‌گوید ضرب همیشه عدد را بزرگ‌تر می‌کند، پس {1} × {2} باید از {1} بیشتر باشد. مربع را رنگ کن و توضیح بده واقعاً چه اتفاقی می‌افتد." },
+      key:"The answer is 6/12 = 1/2, LESS than both 3/4 and 2/3. Taking a part OF a part can only make it smaller. Multiplying makes a number bigger only when you multiply by more than 1." },
+    { cols:3, rows:2, f:[[1,2],[1,3]],
+      t:{ en:"Sam says you need a common denominator to multiply, like adding. Use {1} × {2} to show why he does not.",
+          ar:"يقول سام إنك تحتاج مقامًا مشتركًا للضرب كما في الجمع. استخدم {1} × {2} لتبيّن أنه لا يحتاجه.",
+          fa:"سام می‌گوید برای ضرب مثل جمع به مخرج مشترک نیاز داری. با {1} × {2} نشان بده که نیازی نیست." },
+      key:"The two sets of cuts make the common unit by themselves — the square ends up in 2 × 3 = 6 equal sixths without anyone renaming anything. Adding needs matching pieces first; multiplying creates them." },
+    { cols:4, rows:3, f:[[2,3],[3,4],[5,12]],
+      t:{ en:"Ali shades 2 rows and 3 columns for {1} × {2} and answers {3}, because 2 + 3 = 5 strips are shaded. What has Ali counted?",
+          ar:"ظلَّل علي صفّين و3 أعمدة لـ {1} × {2} وأجاب {3}، لأن 2 + 3 = 5 شرائط مظلَّلة. ماذا عدَّ علي؟",
+          fa:"علی برای {1} × {2} تعداد 2 ردیف و 3 ستون را رنگ کرد و پاسخ داد {3}، چون 2 + 3 = 5 نوار رنگ شده است. علی چه چیزی را شمرده است؟" },
+      key:"Ali counted strips, not the rectangle where the two shadings CROSS. The answer is the double-shaded block: 2 rows × 3 columns = 6 pieces, so 6/12." },
+    { cols:2, rows:2, f:[[1,2],[2,4]],
+      t:{ en:"Kim works out {1} × {1} as {2} by adding the tops and the bottoms. Draw the square. What is the real answer?",
+          ar:"حسبت كيم {1} × {1} فحصلت على {2} بجمع البسوط والمقامات. ارسم المربع. ما الإجابة الصحيحة؟",
+          fa:"کیم {1} × {1} را با جمع کردن صورت‌ها و مخرج‌ها برابر {2} گرفت. مربع را رسم کن. پاسخ درست چیست؟" },
+      key:"The real answer is 1/4 — half of a half. 2/4 = 1/2 is the whole of one half, not half of it. Kim added instead of multiplying." },
+    { cols:5, rows:2, f:[[1,2],[1,5]],
+      t:{ en:"Using one square, explain why the two bottom numbers multiply. Why does cutting into {1}s one way and {2}s the other way give tenths?",
+          ar:"باستخدام مربع واحد، اشرح لماذا يُضرب المقامان. لماذا يعطي التقسيم إلى {1} في اتجاه وإلى {2} في الاتجاه الآخر أعشارًا؟",
+          fa:"با یک مربع توضیح بده چرا دو مخرج در هم ضرب می‌شوند. چرا تقسیم به {1} در یک جهت و {2} در جهت دیگر، دَه‌دهم می‌دهد؟" },
+      key:"Each cut goes right across the whole square, so the 2 rows are each cut into 5 — 2 × 5 = 10 equal pieces in the whole. The denominator counts the pieces the WHOLE is broken into." },
+    { cols:4, rows:3, f:[[3,4],[2,3]],
+      t:{ en:"Which is bigger: {1} of {2}, or {2} of {1}? Draw both squares, then say what you notice.",
+          ar:"أيهما أكبر: {1} من {2}، أم {2} من {1}؟ ارسم المربعين، ثم اذكر ما تلاحظه.",
+          fa:"کدام بزرگ‌تر است: {1} از {2} یا {2} از {1}؟ هر دو مربع را رسم کن، سپس بگو چه می‌بینی." },
+      key:"They are equal — 6/12 = 1/2 both times. The second square is the first turned on its side: the same rectangle, so the same area. That is why the order does not matter." },
+    { cols:5, rows:2, f:[[3,5],[1,2],[4,7]],
+      t:{ en:"A rectangle is {1} wide and {2} tall. Ben says it covers {3} of the square. Draw it. What has Ben done?",
+          ar:"مستطيل عرضه {1} وارتفاعه {2}. يقول بن إنه يغطي {3} من المربع. ارسمه. ماذا فعل بن؟",
+          fa:"مستطیلی به پهنای {1} و بلندی {2} است. بن می‌گوید {3} مربع را می‌پوشاند. آن را رسم کن. بن چه کاری کرده است؟" },
+      key:"Ben added across the tops and the bottoms. The square is cut into 5 × 2 = 10 pieces and the rectangle covers 3 × 1 = 3 of them, so 3/10 — less than a half, as the picture shows." },
+    { cols:6, rows:4, f:[[1,4],[2,3],[1,6]],
+      t:{ en:"Show with one square that {1} × {2} and {3} are the same amount.",
+          ar:"بيّن بمربع واحد أن {1} × {2} و{3} مقدار واحد.",
+          fa:"با یک مربع نشان بده که {1} × {2} و {3} یک مقدار هستند." },
+      key:"1/4 × 2/3 = 2/12, and 2 twelfths cover exactly the same area as 1 of 6 equal parts. Same amount, simpler name — the pieces just re-group." }
+  ];
+
+  function reasonText(r){
+    let s=TR(r.t);
+    r.f.forEach((fr,i)=>{ s=s.split("{"+(i+1)+"}").join(frBDI(fr[0],fr[1])); });
+    return s;
+  }
+  function explainHTML(r, key){
+    return '<div class="explainBox">'
+      + '<div class="exHead">'+TR(WS.explain)+'</div>'
+      + '<div class="exText">'+reasonText(r)+'</div>'
+      + '<div class="exSq">'+plainSquare(r.cols,r.rows)+'</div>'
+      + (key ? '<div class="exKey"><b>Looking for:</b> '+esc(r.key)+'</div>'
+             : '<div class="ruled"></div>')
+      + '</div>';
+  }
+
+  /* ===================== packing pages ===================== */
+  const A4_CONTENT_PX = (() => {
+    const p=document.createElement("div");
+    p.style.cssText="position:absolute;left:-10000px;height:281mm";
+    document.body.appendChild(p);
+    const h=p.getBoundingClientRect().height;
+    p.remove();
+    return h;
+  })();
+
+  function buildPages(){
+    const level=$("levelSel").value;
+    const density=$("densitySel").value;
+    const D=DENSITY[density];
+    const wantSimplest=$("simplifyToggle").checked;
+
+    const counts=sectionCounts();
+    const kinds=KIND_IDS.filter(k=>counts[k]>0);
+    if(!kinds.length) return { error:"Turn on at least one section and give it a number of questions." };
+    const count=kinds.reduce((t,k)=>t+counts[k],0);
+
+    // Each section climbs its OWN spice ladder, so a paper of 6 "shade" and
+    // 20 "no model" still runs sweet → spicy inside each one. A level's pool
+    // can be small (sweet has only a handful of unit-fraction pairs), so
+    // repeats are avoided where possible and tolerated where not.
+    const seen={}, byKind={};
+    kinds.forEach(k=>{
+      const n=counts[k], qs=[];
+      for(let i=0;i<n;i++){
+        const lv=(level==="mixed")
+          ? (ORDER[Math.min(ORDER.length-1, Math.floor(i/Math.max(1,n/ORDER.length)))])
+          : level;
+        let q=null;
+        for(let t=0;t<60;t++){
+          const cand=makeQ(lv,k,wantSimplest);
+          const key=cand.a+"/"+cand.b+"x"+cand.c+"/"+cand.d;
+          if(!seen[key]){ seen[key]=1; q=cand; break; }
+          q=q||cand;
+        }
+        qs.push(q);
+      }
+      byKind[k]=qs;
+    });
+
+    const groups=kinds.map(k=>({
+      kind:k,
+      qs:byKind[k].sort((x,y)=>ORDER.indexOf(x.level)-ORDER.indexOf(y.level))
+    })).filter(g=>g.qs.length);
+
+    let n=1;
+    groups.forEach(g=>g.qs.forEach(q=>{ q.idx=n++; }));
+    groups.forEach((g,i)=>{ g.letter=SEC_LETTER[i]; g.density=density; });
+
+    const withReason=$("reasonToggle").checked;
+    const reasons=REASONS.slice().sort(()=>Math.random()-0.5);
+
+    /* ---- pass 1: render one full-width probe and read the real heights ---- */
+    function probeFor(isKey){
+      const html=groups.map(g=>sectionHTML(
+          { kind:g.kind, letter:g.letter, cont:false, density:density,
+            qs:g.qs.slice(0, KINDS[g.kind].cols[density]||3) }, isKey, D, wantSimplest
+        )).join("") + (withReason?explainHTML(reasons[0],isKey):"");
+      const m=document.createElement("div");
+      m.className="measure";
+      m.innerHTML='<div class="sheet">'+html+'</div>';
+      document.body.appendChild(m);
+      return m;
+    }
+    // the answers can make a KEY card taller than the blank one it mirrors, and
+    // both halves share one pagination — so measure both and keep the larger
+    const mS=probeFor(false), mK=probeFor(true);
+    const secsS=[...mS.querySelectorAll(".section")], secsK=[...mK.querySelectorAll(".section")];
+    const H=groups.map((g,i)=>{
+      const sec=secsS[i], secK=secsK[i];
+      const headEl=sec.querySelector(".secHead");
+      const head=Math.max(
+        headEl.getBoundingClientRect().height,
+        secK.querySelector(".secHead").getBoundingClientRect().height
+      ) + parseFloat(getComputedStyle(headEl).marginBottom);
+      const gridGap=parseFloat(getComputedStyle(sec.querySelector(".qGrid")).rowGap)||8;
+      const cS=sec.querySelector(".qCard"), cK=secK.querySelector(".qCard");
+      const row=Math.max(cS?cS.getBoundingClientRect().height:60,
+                         cK?cK.getBoundingClientRect().height:60)+gridGap;
+      return { head, row, gap:parseFloat(getComputedStyle(sec).marginBottom)||9,
+               cols:KINDS[g.kind].cols[density]||3 };
+    });
+    const explainH = withReason
+      ? Math.max(mS.querySelector(".explainBox").getBoundingClientRect().height,
+                 mK.querySelector(".explainBox").getBoundingClientRect().height) + 6 : 0;
+    const sheetEl=mS.querySelector(".sheet");
+    const sheetPad=parseFloat(getComputedStyle(sheetEl).paddingTop)
+                 + parseFloat(getComputedStyle(sheetEl).paddingBottom);
+    mS.remove(); mK.remove();
+
+    const CHROME = 48 + 23;                       // page header + page footer
+    // never let a zero-layout environment produce a nonsense budget
+    const budget = Math.max(320, A4_CONTENT_PX - CHROME - sheetPad - explainH);
+
+    /* ---- pass 2: fill greedily, in whole card rows ----
+       An earlier version packed to the AVERAGE section cost to "even out" the
+       pages; with several small sections that average is barely one section,
+       so every page came out holding one section and two-thirds white. The
+       reasoning box stretches into whatever the last page leaves. */
+    function pack(cap){
+      const pages=[]; let page=[], used=0;
+      const flush=()=>{ if(page.length) pages.push(page); page=[]; used=0; };
+      groups.forEach((g,gi)=>{
+        const h=H[gi];
+        let i=0, first=true;
+        while(i<g.qs.length){
+          let room=cap-used;
+          if(room < h.head + h.row + h.gap){
+            if(used===0) room=cap;          // nothing there yet — force it
+            else { flush(); room=cap; }
+          }
+          const rows=Math.max(1, Math.floor((room - h.head - h.gap)/h.row));
+          const take=Math.min(g.qs.length-i, rows*h.cols);
+          const usedRows=Math.ceil(take/h.cols);
+          page.push({ type:"section", kind:g.kind, letter:g.letter, density:density,
+                      cont:!first, qs:g.qs.slice(i,i+take) });
+          used += h.head + usedRows*h.row + h.gap;
+          i+=take; first=false;
+        }
+      });
+      flush();
+      return pages;
+    }
+    const pages=pack(budget);
+    if(withReason) pages.forEach((p,i)=>p.push({ type:"explain", reason:reasons[i%reasons.length] }));
+    return { pages, level, D, count, wantSimplest };
+  }
+
+  const LEVEL_LABEL = {
+    sweet:"Sweet — unit fractions, small grids",
+    mild:"Mild — bottoms to 6, answers already simplest",
+    medium:"Medium — bottoms to 8, some answers simplify",
+    spicy:"Spicy — bigger bottoms, every answer simplifies",
+    mixed:"Mixed — a ladder of all four levels"
+  };
+
+  function pageHTML(blocks, meta, key, pageNo, total){
+    const body=blocks.map(b => b.type==="explain"
+      ? explainHTML(b.reason, key)
+      : sectionHTML(b, key, meta.D, meta.wantSimplest)).join("");
+    return '<section class="page'+(key?' isKey':'')+'">'
+      + '<div class="pageHeader">'
+      +   '<div><div class="hdrTitle">Multiplying Fractions &mdash; Area Model'+(key?" &mdash; ANSWERS":"")+'</div>'
+      +   '<div class="hdrSub">'+(key?"Answer key &middot; ":"")+esc(LEVEL_LABEL[meta.level])+'</div></div>'
+      +   (key?'':'<div class="nameDate">'
+      +     '<div class="lineField"><span class="lineLabel">'+TR(WS.name)+'</span><span class="lineBox"></span></div>'
+      +     '<div class="lineField"><span class="lineLabel">'+TR(WS.date)+'</span><span class="lineBox"></span></div>'
+      +   '</div>')
+      + '</div>'
+      + '<div class="sheet">'+body+'</div>'
+      + '<div class="pageFooter"><span>Page '+pageNo+' of '+total+'</span>'
+      +   '<span><a href="'+SITE+'">www.millsmathstools.au</a></span></div>'
+      + '</section>';
+  }
+
+  function generate(scroll){
+    const built=buildPages();
+    const out=$("out");
+    if(built.error){ out.innerHTML='<p class="note warn">'+esc(built.error)+'</p>'; return; }
+    const key=$("keyToggle").checked;
+    const n=built.pages.length;
+    const total=key ? n*2 : n;
+    let html="";
+    built.pages.forEach((p,i)=>{ html+=pageHTML(p,built,false,i+1,total); });
+    if(key) built.pages.forEach((p,i)=>{ html+=pageHTML(p,built,true,n+i+1,total); });
+    out.innerHTML=html;
+    if(scroll && out.scrollIntoView) out.scrollIntoView({behavior:"smooth",block:"start"});
+  }
+
+  function reset(){
+    $("levelSel").value="mixed";
+    $("densitySel").value="normal";
+    KIND_IDS.forEach(k=>{
+      $(TOGGLE_ID[k]).checked = (k!=="nopart");
+      $(COUNT_ID[k]).value = DEFAULT_N[k];
+    });
+    $("simplifyToggle").checked=true;
+    $("reasonToggle").checked=true;
+    $("keyToggle").checked=true;
+    LANG="en"; $("langSel").value="en";
+    try{ localStorage.setItem("mmt-mulf-ws-lang","en"); }catch(_){ }
+    syncSections();
+  }
+
+  /* keep each section card, its number box and the running total in step */
+  function syncSections(){
+    KIND_IDS.forEach(k=>{
+      const on=$(TOGGLE_ID[k]).checked;
+      const inp=$(COUNT_ID[k]);
+      inp.disabled=!on;
+      const cardEl=document.querySelector('.secOpt[data-for="'+TOGGLE_ID[k]+'"]');
+      if(cardEl) cardEl.classList.toggle("off",!on);
+    });
+    const n=totalAsked();
+    const pill=$("totalPill");
+    pill.textContent = n===1 ? "1 question" : n+" questions";
+    pill.classList.toggle("zero", n===0);
+  }
+
+  KIND_IDS.forEach(k=>{
+    $(TOGGLE_ID[k]).addEventListener("change",function(){
+      // turning a section on with nothing in the box is almost never meant
+      if(this.checked && (parseInt($(COUNT_ID[k]).value,10)||0)===0)
+        $(COUNT_ID[k]).value=DEFAULT_N[k];
+      syncSections(); generate(false);
+    });
+    $(COUNT_ID[k]).addEventListener("input",function(){
+      const v=parseInt(this.value,10)||0;
+      // typing 0 is the same as switching the section off, and vice versa
+      if(v>0 && !$(TOGGLE_ID[k]).checked) $(TOGGLE_ID[k]).checked=true;
+      if(v===0 && $(TOGGLE_ID[k]).checked) $(TOGGLE_ID[k]).checked=false;
+      syncSections();
+    });
+    $(COUNT_ID[k]).addEventListener("change",function(){ generate(false); });
+  });
+
+  $("genBtn").addEventListener("click",()=>generate(true));
+  $("printBtn").addEventListener("click",()=>window.print());
+  $("resetBtn").addEventListener("click",()=>{ reset(); generate(false); });
+  $("langSel").addEventListener("change",()=>{
+    LANG=$("langSel").value;
+    try{ localStorage.setItem("mmt-mulf-ws-lang",LANG); }catch(_){ }
+    generate(false);
+  });
+  $("langSel").value = LANG;
+  syncSections();
+  generate(false);
+
+  window.__MULFRACWS__={ gcd, makeQ, buildPages, modelSVG, LEVELS, KINDS, KIND_IDS,
+                         TOGGLE_ID, COUNT_ID, sectionCounts, totalAsked, syncSections,
+                         REASONS, WS, TR, generate,
+                         setLang:(k)=>{ LANG=k; $("langSel").value=k; generate(false); },
+                         lang:()=>LANG };
+})();
+</script>
+</body>
+</html>

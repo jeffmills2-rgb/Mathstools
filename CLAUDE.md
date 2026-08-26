@@ -16,6 +16,150 @@
 > §2 "TWO folders", §3 deploy paths and §5's `mathstools-main 2` heading below
 > describe the OLD layout — this block supersedes them.
 >
+> **NEW (2026-08-26, session — being pushed): MULTIPLYING FRACTIONS — AREA
+> MODEL.** A new Stage 4 teaching tool at
+> `interactive-tools/stage-4/number/multiplying-fractions-area-model/index.html`
+> (self-contained inline CSS/JS, same shell/tokens as the other Stage 4 fraction
+> tools). ONE unit square is cut into columns by one fraction and into rows by
+> the other; the answer is the rectangle where the two shadings cross.
+>
+> **Design rule for this tool: the SCREEN carries the picture, the TEACHER
+> carries the words.** A first build put a "what the picture says" receipt panel
+> beside the square and a paragraph of narration per step; both were cut on
+> teacher feedback (2026-08-26) as too busy. What is left is the square, the two
+> edge labels, a ≤48-character cue, and one line of maths. A headless check
+> ENFORCES the cue length — do not let explanation creep back in.
+>
+> * **Five reveals, and only five** (ids `whole,across,down,name,answer`):
+>   `whole` (the blank square under a "1 whole" bracket — the first click is
+>   deliberately the empty unit) → `across` (the SECOND fraction, light blue —
+>   cut into d columns, shade c) → `down` (the FIRST fraction, also light blue,
+>   **darker where the two overlap**) → `name` (every cell in the whole square
+>   carries its own unit fraction: dark inside the overlap, pale outside — this
+>   is where the denominator comes from) → `answer`. Shaded once = light,
+>   shaded twice = dark, so the picture explains itself without a legend.
+> * **The answer step CLEARS the piece names** and shows the product alone
+>   (a×c/b×d) on a white plate in the middle of the overlap. It does NOT
+>   simplify. If the answer simplifies, a **Simplify** button appears in the nav
+>   row (key `m`); pressing it re-groups the picture and the button becomes
+>   **Undo**. Simplifying is a THING THAT HAPPENS TO THE PIECES, never a line of
+>   text: the pn small pieces slide to new homes, the square is re-cut into sd
+>   bigger parts with bold rules, the edge brackets come off (they no longer
+>   measure those fractions), and the plate gains "= sn/sd". Leaving the step,
+>   changing the problem or Start again all drop it.
+> * **How the re-grouping is computed** (`blockSplit`): split sd into x·y with
+>   x | acrD and y | dwnD, giving sd equal BLOCKS each holding exactly g whole
+>   pieces. Such a split always exists because sd divides acrD·dwnD (distribute
+>   each prime's exponent between the two). `targetCell(k)` places piece k in
+>   block floor(k/g); `sourceCell(k)` is where it started inside the overlap;
+>   the difference drives a `slideIn` transform. Do NOT replace this with "shade
+>   the first sn columns" — the pieces do not tile a column unless sd | acrD.
+> * **The number line is OPT-IN** (Settings › Show number line, default OFF, or
+>   the `n` key) and it tells the SAME story one dimension down, in step with the
+>   square: at `across` the line is cut into d and c of them shaded, with its
+>   name above; at `down` that shaded length is broken into b parts and the
+>   answer's worth darkened; at `name` the cut is carried across the whole line
+>   (skipped past 30 pieces — it turns into a hairbrush); at `answer` the point
+>   is dotted and named below the axis, and Simplify re-cuts it into sd parts
+>   and renames the point. It never shows all three values at once. **When it is
+>   on the SQUARE SHRINKS** — `layout()` swaps a whole geometry set (`G`) and the
+>   viewBox (`VB_PLAIN` 610 tall / `VB_LINE` 700), which is the only reason the
+>   two never collide. Nothing in the draw code may use a fixed square constant;
+>   read `G.x/G.y/G.s/G.r/G.b/G.ly`.
+> * **"Read it the other way"** (button, or `s`) transposes the picture — same
+>   rectangle, factors swapped. Commutativity as a fact about a shape.
+> * **Decimal layer on the SAME model** (Settings › Decimals and percentages).
+>   The randomiser's **Tenths** tier forces both denominators to 10 and switches
+>   the labels on, so 0.4 × 0.6 is a 10×10 grid of hundredths. `decStr()` gives
+>   an EXACT terminating decimal where one exists and `≈` otherwise.
+> * **Randomiser tiers:** Unit fractions → Simple (bottoms 2–6) → Any proper
+>   (2–12) → Answer simplifies → Tenths.
+> * **Proper fractions only** (bottoms 2–12) so the square is exactly one whole.
+>   Mixed numbers would need a grid wider than 1 — a real extension, and the
+>   bridge to expanding brackets.
+> * **Predict mode was REMOVED** in the redesign (it hung off the old always-on
+>   number line). If it comes back it belongs as an extra step BEFORE the blank
+>   whole, shown only when the line is on.
+> * **Gotcha:** the stylesheet's `.model text{font-family:var(--mathFont)}` beats
+>   a `font-family` presentation ATTRIBUTE, so UI-font labels must set
+>   `e.style.fontFamily` inline or every label comes out serif.
+> * **Verified headlessly** (jsdom, ~336k checks): every a/b×c/d with bottoms
+>   2–12 re-derived independently, including that the picture's two counts ARE
+>   the numerator and denominator; the reveal is exactly five steps in that
+>   order; step 1 is a bare square; the piece names appear at step 4 and are
+>   GONE at step 5; **the answer never appears before step 5** and carries no
+>   "=" until Simplify (asserted via `[data-role="answer"]`, not string
+>   sniffing); for all 3145 simplifiable pairs the block split exists, blocks
+>   hold exactly g pieces, and every piece lands on its own cell inside the
+>   first sn blocks; the Simplify/Undo button states; swap = commutativity;
+>   decimal/percentage naming with exact round-trips; the number-line group
+>   (`[data-role="line"]`) only ever grows; the cue stays <= 48 characters.
+>   Screenshotted through Playwright at every step, including a real
+>   click-through of Simplify and Undo.
+> * **The WORKSHEET CREATOR** is
+>   `worksheet-creators/stage-4/number/multiplying-fractions.html`. Five lettered
+>   sections, each handing the student a different amount of the model, which is
+>   the whole design idea: `shade` (a square already cut both ways — shade it)
+>   → `finish` (only the SECOND fraction is cut and shaded; the student makes
+>   the other cuts) → `read` (a shaded model, write the multiplication —
+>   backwards) → `nopart` (a BLANK square; the student cuts it up) → `nomodel`
+>   (plain fluency, one line per question, no picture). A `count` section
+>   (fill in b×d and a×c) was built and then **removed on teacher feedback
+>   2026-08-26** — do not add it back without asking.
+>   Four spice levels (sweet = unit fractions; mild never simplifies; medium
+>   sometimes; spicy always), a simplest-form step, and a misconception to argue
+>   with at the foot of every page. **Model sections cap b×d at 48** (`MODEL_CAP`)
+>   so a square is still shadeable by hand; `nomodel` may go higher.
+>   - **THREE model cards per row, always.** The square is the point, so it gets
+>     the width; the size selector changes the SQUARE (52 / 46 / 38 mm), never
+>     the column count. Only `nomodel` packs more across — and it drops a column
+>     when the simplest-form box is on, because that adds a whole extra fraction
+>     to a one-line card. Its cards also `flex-wrap`, so they can never spill out
+>     of a column (they did, and got clipped, before that was added).
+>   - **Trilingual EN / AR / FA** (`langSel`, persisted as `mmt-mulf-ws-lang`),
+>     same convention as the other creators: chosen language on top, English
+>     beneath, numerals and fractions Western and LTR inside `<bdi>`. Two
+>     gotchas, both found in render: the simplest-form note must be joined to the
+>     instruction **per language** before `TR()`, or the heading prints four
+>     alternating lines; and the ✎ has to live inside each translation, or the
+>     block-level target-language line pushes it onto a row of its own.
+>   - **The answer key re-renders the models as `full`**, so the teacher marks
+>     the picture, not just the numbers. Same square size, so pagination is
+>     unaffected.
+>   - **There are NO boxed numerator/denominator slots.** The student gets an
+>     equals sign and a ruled line, nothing more. Boxed slots were built first
+>     and **removed on teacher feedback 2026-08-26**: they make children ask
+>     “what goes in this box?” instead of thinking about the question. Do not
+>     reintroduce them. The Read section gets one full-width line and the
+>     student writes the whole multiplication; on a key the line is replaced by
+>     the answer in green. Nothing on the page hints at which answers simplify.
+>   - **Question counts are PER SECTION** (`nShade`, `nFinish`, `nRead`,
+>     `nNopart`, `nNomodel`), not one global total — a teacher wanting 4 shaded
+>     models and 30 fluency questions can have exactly that. Each card's toggle
+>     and its number box stay in step (typing 0 switches the section off;
+>     switching a section on fills in a sensible default), and a live pill shows
+>     the total. **Every section climbs its OWN spice ladder**, so a short
+>     section still runs sweet → spicy inside itself.
+>   - **The probe is measured TWICE, student and key, and the larger kept.**
+>     Both halves share one pagination, and an answer written into a key card
+>     can make it taller than the blank one it mirrors.
+>   - **Packing is measured, then GREEDY.** An earlier version tried to even the
+>     pages out by packing to the average section cost; with five small sections
+>     that average is barely one section, so every page came out holding one
+>     section and two-thirds white. Pages now run 95–99% full. The reasoning box
+>     is `flex:1 0 auto` and STRETCHES into whatever the last page leaves (capped
+>     at 96mm so a light page does not become a full page of ruled paper), so its
+>     natural height — which the packer reserves — must stay modest: that is why
+>     `.exSq` is 26mm and `.ruled` is a repeating-gradient at a fixed handwriting
+>     pitch rather than a fixed number of `<span>` rules.
+> * **Wired in:** both are filed under **MA4-FRC-C-01** in
+>   `resources/toolLinks.js` (Teacher tool + Worksheet maker) with mini cards on
+>   the homepage. The teaching tool's **"Tools ▾" menu holds exactly two rows** —
+>   a live *Worksheet Creator* link and a greyed-out *Student Quiz* — and the
+>   headless harness asserts that shape. The four other Stage 4 fraction tools
+>   still link TO the teaching tool from their own menus. No student quiz yet;
+>   see §8.
+
 > **NEW (2026-08-20, session — being pushed): ADDING AND SUBTRACTING FRACTIONS
 > family.** The teaching tool
 > (`interactive-tools/stage-4/number/adding-fractions/index.html`, built the
@@ -203,7 +347,7 @@
 > `picker.mjs` which needs jsdom and skips without it), plus `layout-check.html`
 > which renders real questions in the browser and measures the boxes.
 >
-> Last reviewed: 2026-08-18. **All LIVE** — the Adventure now has **14 Stage 4
+> Last reviewed: 2026-08-26. **All LIVE** — the Adventure now has **14 Stage 4
 > topics** (deployed 2026-07-08, commit `aad2142`): the Phase 3A–3G expansion
 > (Ratios & Rates, Length, Equations, Probability, Indices, Linear) PLUS Angle
 > Relationships (3G), Properties of Geometrical Figures (3H) and Data
@@ -403,6 +547,15 @@ portal/PLACEMENT.md , portal/README.md   migration + structure notes
 - All Firebase quizzes were migrated to the secure exchange (via `quizClient.js`
   or inline). The decimal-zoom rounding quiz was converted from a public
   leaderboard to a secure achievements quiz.
+- **Multiplying Fractions — Area Model (2026-08-26):** teacher tool
+  `interactive-tools/stage-4/number/multiplying-fractions-area-model/`, filed
+  under **MA4-FRC-C-01**. Teaching tool ONLY so far (no worksheet, no quiz), and
+  it does not touch Firebase or the registry. Its “Tools ▾” menu holds the other
+  four Stage 4 fraction tools, and each of those now links back to it. FIVE
+  reveal steps, an opt-in number line, a Simplify/Undo re-grouping, and
+  deliberately almost no on-screen prose — read the 2026-08-26 header block
+  before adding anything to it. Its worksheet creator is
+  `worksheet-creators/stage-4/number/multiplying-fractions.html`.
 - **Fraction to Percentage family (2026-08-18):** teacher tool
   `interactive-tools/stage-4/number/fraction-to-percentage/` (double number line,
   fraction above / percentage below, step reveals, predict mode) +
@@ -497,6 +650,14 @@ portal/PLACEMENT.md , portal/README.md   migration + structure notes
   changed there; their "paste into Google Classroom" copy tips are about a
   celebration message, not a result, and were left alone (the trilingual one
   has AR/FA translations of that string too).
+- **Multiplying Fractions — Area Model siblings:** the teaching tool and the
+  **worksheet creator** shipped 2026-08-26 (see the header block). Still to
+  build: a **student quiz** (`online-quizzes/stage-4/number/multiplying-fractions.html`,
+  registry id `multiplying-fractions-quiz`) carrying the v2 login block and the
+  MathLive fraction box — a ladder that fades the model, then the counting, then
+  leaves only the rule. Also possible in the tool itself: **mixed numbers**
+  (needs a grid wider than one whole, and is the bridge to expanding brackets),
+  and **dividing** fractions on the same square.
 - **Revision Generator — Stage 3**: 6 of 8 topics built (Represents Numbers,
   Additive Relations, Multiplicative Relations, Fractions, 2D Space and Area,
   Geometric Measure). Each remaining topic needs a new diagram engine first:

@@ -642,6 +642,20 @@ window.MMT_TOOL_LINKS = {
       tags: ["fractions", "adding fractions", "subtracting fractions", "common denominator", "equivalent fractions", "number line", "bar model", "renaming", "negatives"]
     },
     {
+      title: "Multiplying Fractions \u2014 Area Model",
+      kind: "Teacher tool",
+      url: "/interactive-tools/stage-4/number/multiplying-fractions-area-model/",
+      note: "One unit square, cut into columns by one fraction and rows by the other. Five reveals: the blank whole, shade the second fraction, take the first fraction of it (the overlap goes darker), name every piece the whole is now cut into, then the answer appears in the middle of the overlap. A Simplify button then slides the pieces into their simplest grouping (and Undo puts them back). An opt-in number line replays the same steps in one dimension, a \"read it the other way\" swap shows commutativity, and decimal / percentage labels plus a tenths tier show why 0.4 \u00d7 0.6 has two decimal places. Deliberately almost no on-screen text \u2014 the talking is the teacher's.",
+      tags: ["fractions", "multiplying fractions", "area model", "unit square", "of", "product", "denominators multiply", "numerators multiply", "simplifying", "commutativity", "decimals", "percentages", "hundredths", "estimation", "misconceptions"]
+    },
+    {
+      title: "Multiplying Fractions \u2014 Area Model",
+      kind: "Worksheet maker",
+      url: "/worksheet-creators/stage-4/number/multiplying-fractions.html",
+      note: "Five lettered sections, each handing the student a different amount of the model: shade a square already cut both ways; finish one where only the second fraction is cut and shaded; read a shaded model backwards and write the multiplication; cut up a blank square yourself; or plain fluency with no model at all. Three models per row, four spice levels, a simplest-form step, an answer key with the models shaded in, and a misconception to argue with at the foot of every page. Trilingual EN / AR / FA \u2014 instructions print bilingually, the maths stays Western.",
+      tags: ["worksheet", "fractions", "multiplying fractions", "area model", "unit square", "shading", "of", "denominators multiply", "numerators multiply", "simplifying", "reasoning", "misconceptions", "answer key"]
+    },
+    {
       title: "Times Table Chart — Fractions of an Amount",
       kind: "Teacher tool",
       url: "/interactive-tools/stage-4/number/fraction-of-amount/",
