@@ -421,7 +421,24 @@ window.MMT_RESOURCES = {
           code: "MA4-RAT-C-01",
           path: "Core",
           statement: "solves problems involving ratios and rates, and analyses distance–time graphs",
-          resources: []
+          resources: [
+            {
+              title: "Rates with Year 8s — Speed, Distance and Time",
+              type: "pptx",
+              file: "rates-speed-stage-4.pptx",
+              note: "17-slide lesson deck — comparing rates, unpacking what 300 km/h means, then paired 'what else can you work out?' / 'now answer this' questions on speed, distance and time.",
+              year: "Year 8",
+              tags: ["lesson deck", "presentation", "rates", "speed", "distance", "time", "average speed", "unit rates", "discussion prompts", "worked examples"]
+            },
+            {
+              title: "Rates — Speed, Distance and Time",
+              type: "pdf",
+              file: "year-8-rates-speed-distance-time.pdf",
+              note: "2-page worksheet — 9 questions on average speed, distance and time, including part-hour travel, metres per second, and finding speed from distance and time.",
+              year: "Year 8",
+              tags: ["worksheet", "rates", "speed", "distance", "time", "average speed", "km/h", "unit conversion", "problem solving"]
+            }
+          ]
         }
       ]
     },
