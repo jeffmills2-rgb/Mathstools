@@ -925,6 +925,13 @@ window.MMT_TOOL_LINKS = {
       url: "/worksheet-creators/stage-4/measurement-space/perimeter-area-rectangle.html",
       note: "Generates printable perimeter and area worksheets.",
       tags: ["worksheet generator", "printable", "perimeter", "area", "rectangles"]
+    },
+    {
+      title: "Length",
+      kind: "Worksheet maker",
+      url: "/worksheet-creators/stage-4/measurement-space/length/",
+      note: "Basic and Expected papers: perimeter of quadrilaterals and composite figures, the parts of a circle, circumference, arc length and sector perimeter. Trilingual, with an answer key.",
+      tags: ["worksheet generator", "printable", "perimeter", "circumference", "arc length", "sector", "circle", "quadrilaterals", "composite figures", "pi"]
     }
   ],
 

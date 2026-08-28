@@ -1,0 +1,871 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Length — Worksheet Maker</title>
+  <style>
+    :root{
+      --bg:#f6f7fb; --card:#ffffff; --ink:#111827; --muted:#6b7280; --border:#e5e7eb;
+      --shadow:0 14px 40px rgba(0,0,0,.10); --radius:18px;
+      --blue:#2563eb; --blue-dark:#1d4ed8; --ans:#16a34a; --green:#16a34a; --orange:#f97316; --red:#ef4444;
+      --line:#111827; --footer-h:44px;
+      --mathFont:"Cambria Math", "STIX Two Math", "STIXGeneral", "Times New Roman", serif;
+      --uiFont:ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:var(--uiFont);background:radial-gradient(circle at top left,rgba(37,99,235,.10),transparent 30rem),radial-gradient(circle at top right,rgba(124,58,237,.09),transparent 30rem),var(--bg);color:var(--ink);padding-bottom:var(--footer-h)}
+    .topbar{position:sticky;top:0;z-index:20;background:linear-gradient(135deg,#0f172a,#123b7a 55%,#2563eb);color:white;padding:14px 24px;display:grid;grid-template-columns:minmax(180px,1fr) auto minmax(180px,1fr);align-items:center;gap:18px;box-shadow:0 10px 28px rgba(15,23,42,.22)}
+    .brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:white;justify-self:start;border-radius:14px;padding:8px 12px;margin-left:-12px;transition:background .18s ease,transform .18s ease,box-shadow .18s ease}
+    .brand:hover{background:rgba(255,255,255,.12);transform:translateY(-1px);box-shadow:0 0 10px rgba(124,58,237,.6),0 0 18px rgba(37,99,235,.4)}
+    .brand-logo{width:44px;height:44px;object-fit:contain;background:white;border-radius:6px;padding:3px}
+    .brand-text strong{display:block;font-size:1.18rem;line-height:1;letter-spacing:-.03em}.brand-text span{display:block;font-size:.78rem;opacity:.82;font-weight:650}
+    .top-title{font-weight:900;font-size:clamp(1.25rem,2vw,1.7rem);letter-spacing:-.04em;text-align:center}
+    .wrap{max-width:1280px;margin:14px auto 32px;padding:0 14px}
+    .card{background:rgba(255,255,255,.96);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;border:1px solid rgba(226,232,240,.9)}
+    .title{font-size:28px;font-weight:1000;letter-spacing:.2px;margin:0 0 4px}
+    .subtitle{margin:0 0 14px;color:var(--muted);font-weight:850;font-size:15px;line-height:1.35}
+    .band{padding:12px;border:1px solid var(--border);border-radius:18px;background:linear-gradient(180deg,#fff,#f9fafb);margin-bottom:12px}
+    .bandLabel{font-weight:1000;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+    .fieldGrid{display:grid;gap:14px 16px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+    label{display:block;font-weight:950;color:var(--ink);margin:0 0 7px;font-size:15px}
+    select,input[type="number"]{border:2px solid #e5e7eb;border-radius:14px;padding:12px 13px;font-weight:950;font-size:17px;background:#fff;width:100%;outline:none;font-family:var(--uiFont)}
+    .checks{display:flex;gap:9px 10px;flex-wrap:wrap;align-items:center}
+    .chk{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);background:#fff;border-radius:999px;padding:9px 12px;font-weight:950;font-size:14px;color:#111827;box-shadow:0 8px 18px rgba(0,0,0,.04);user-select:none;cursor:pointer}
+    .chk input{width:18px;height:18px;accent-color:var(--blue)}
+    .btnRow{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
+    button{border:none;border-radius:14px;padding:12px 16px;font-weight:1000;cursor:pointer;background:#f3f4f6;color:#111827;transition:transform .04s ease,filter .15s ease,opacity .2s ease;user-select:none;font-size:16px;font-family:var(--uiFont)}
+    button:active{transform:scale(.98)}button.primary{background:#2563eb;color:#fff}button.ghost{background:#eef2ff;color:#1d4ed8}button.danger{background:#fee2e2;color:#991b1b}
+    .pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:8px 13px;font-weight:1000;font-size:14px;background:#eef2ff;color:#1d4ed8;margin-right:auto}
+
+    .outWrap{margin-top:14px}
+    .page{margin-top:14px;background:#fff;border:1px solid var(--border);border-radius:18px;box-shadow:0 10px 26px rgba(15,23,42,.08);overflow:hidden}
+    .pageHeader{padding:10px 14px 8px;border-bottom:1px solid rgba(229,231,235,.95);display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap}
+    .hdrTitle{font-weight:1000;font-size:15px;line-height:1.12}.hdrSub{color:var(--muted);font-weight:850;font-size:12px;margin-top:2px}
+    .nameDate{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;justify-content:flex-end;margin-left:auto}
+    .lineField{display:flex;flex-direction:column;gap:4px;min-width:126px}.lineLabel{font-size:11px;font-weight:950;color:var(--muted)}.lineBox{height:22px;border:1.8px solid #111827;border-radius:9px;background:#fff}
+    .grid{padding:18px 16px;display:grid;gap:14px 16px;align-content:stretch;grid-template-columns:1fr 1fr}
+    .grid.rows-2{min-height:1120px;grid-template-rows:repeat(2,minmax(0,1fr))}
+    .grid.rows-3{min-height:1120px;grid-template-rows:repeat(3,minmax(0,1fr))}
+    .qCard{border:1px solid rgba(229,231,235,.95);border-radius:14px;padding:8px 10px;background:#fff;break-inside:avoid;display:flex;flex-direction:column;justify-content:flex-start;min-height:0;height:100%}
+    .prompt{text-align:center;margin-top:0}
+    .promptSmall{font-weight:900;font-size:11px;color:var(--muted);margin-bottom:2px;line-height:1.15;letter-spacing:.15px}
+    .promptSmall .supportEnglish{display:block;font-size:.82em;opacity:.78;margin-top:2px}
+    .promptSmall.rtlPrompt{direction:rtl}
+    .promptNote{display:block;font-weight:1000;color:#1d4ed8;margin-top:2px}
+    .ansLabel .supportEnglish{display:block;font-size:.78em;opacity:.78;margin-top:1px}
+    .lang-rtl .qCard{direction:rtl}.lang-rtl .vizWrap,.lang-rtl .ansRow,.lang-rtl .workBox{direction:ltr}
+    .lang-rtl .prompt{text-align:center}.lang-rtl .ansLabel{text-align:center}
+    .vizWrap{display:flex;justify-content:center;align-items:center;padding:0;margin-top:3px;flex:1 1 auto;min-height:120px}
+    .lenViz{width:100%;height:100%;min-height:110px;display:block;overflow:visible}
+    .workBox{margin-top:5px;border:1.4px dashed #cbd5e1;border-radius:10px;height:26mm;background-image:repeating-linear-gradient(to bottom,transparent 0,transparent 7.4mm,#e2e8f0 7.4mm,#e2e8f0 calc(7.4mm + 1px));background-position:0 1.6mm}
+    .workBox .workTag{font-size:9px;font-weight:950;color:#94a3b8;padding:2px 6px;display:block;letter-spacing:.08em;text-transform:uppercase}
+    .ansRow{margin-top:5px;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
+    .ansLabel{font-weight:950;font-size:15px;font-family:var(--mathFont);line-height:1}
+    .ansBox{width:min(180px,62%);height:25px;border:1.8px solid #111827;border-radius:12px;background:#fff}
+    .ansBox.key{display:flex;align-items:center;justify-content:center;font-weight:1000;font-size:14px;font-family:var(--mathFont);color:var(--ans);border-color:var(--ans);background:rgba(22,163,74,.08);height:auto;min-height:25px;padding:2px 6px;text-align:center;line-height:1.15}
+    .ansBox.key .supportEnglish{display:block;font-size:.78em;opacity:.8}
+    .pageFooter{padding:7px 14px;border-top:1px solid rgba(229,231,235,.95);display:flex;align-items:center;justify-content:center;gap:10px;font-weight:950;color:#111827;font-size:12px;background:rgba(255,255,255,.96)}
+    .pageFooter a{color:#2563eb;text-decoration:none;font-weight:1000}.pageFooter a:hover{text-decoration:underline}
+    .mmtFooter{position:fixed;left:0;right:0;bottom:0;height:var(--footer-h);display:flex;align-items:center;justify-content:center;padding:0 12px;background:rgba(255,255,255,.92);border-top:1px solid rgba(229,231,235,.95);backdrop-filter:blur(8px);z-index:500;font-weight:900;color:#111827;text-align:center;font-size:13px}
+    .mmtFooter a{color:#2563eb;text-decoration:none;font-weight:950}.mmtFooter a:hover{text-decoration:underline}
+    .warn{padding:12px;font-weight:950;color:#991b1b}
+
+    /* ---- figure ink ---- */
+    .shape{fill:rgba(37,99,235,.06);stroke:#111827;stroke-width:3.2;stroke-linejoin:round;stroke-linecap:round}
+    .shape.open{fill:none}
+    .thin{fill:none;stroke:#94a3b8;stroke-width:2;stroke-linecap:round}
+    .dashed{fill:none;stroke:#111827;stroke-width:2;stroke-dasharray:7 6;stroke-linecap:round}
+    .feature{fill:none;stroke:var(--blue);stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
+    .featureFill{fill:rgba(37,99,235,.16);stroke:var(--blue);stroke-width:5;stroke-linejoin:round}
+    .tickMark{stroke:#111827;stroke-width:2.6;stroke-linecap:round}
+    .rightMark{fill:none;stroke:#111827;stroke-width:2.2;stroke-linejoin:round}
+    .dot{fill:#111827}
+    .sideLabel{font-family:var(--mathFont);font-weight:1000;font-size:19px;fill:#111827;text-anchor:middle;dominant-baseline:middle;paint-order:stroke;stroke:#fff;stroke-width:4px;stroke-linejoin:round}
+    .angLabel{font-family:var(--mathFont);font-weight:1000;font-size:18px;fill:var(--blue);text-anchor:middle;dominant-baseline:middle;paint-order:stroke;stroke:#fff;stroke-width:4px;stroke-linejoin:round}
+    .qMark{font-family:var(--mathFont);font-weight:1000;font-size:20px;fill:#475569;text-anchor:middle;dominant-baseline:middle}
+    .givenLabel{font-family:var(--mathFont);font-weight:1000;font-size:20px;fill:#111827;text-anchor:middle;dominant-baseline:middle}
+
+    @media(max-width:780px){.topbar{grid-template-columns:1fr auto;gap:10px}.top-title{grid-column:1/-1;grid-row:2;text-align:center}.brand-text span{display:none}.btnRow{width:100%}.grid{grid-template-columns:1fr}}
+    @media print{
+      @page{size:A4;margin:7mm}
+      html,body{width:210mm;height:auto}
+      body{background:#fff;padding-bottom:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+      .wrap{max-width:none;margin:0;padding:0}.card{box-shadow:none;border-radius:0;padding:0;border:none;background:#fff}
+      .topbar,.band,.title,.subtitle,.mmtFooter{display:none!important}
+      .page{margin:0;border:none;border-radius:0;box-shadow:none;page-break-after:always}
+      .page:last-child{page-break-after:auto}
+      .pageHeader{padding:2.6mm 3.2mm 2mm}.hdrTitle{font-size:10px}.hdrSub{font-size:8.4px}
+      .nameDate{gap:6px}.lineField{min-width:86px;gap:2px}.lineLabel{font-size:8px}.lineBox{height:15px;border-width:1.2px;border-radius:7px}
+      .grid{padding:4mm 3.2mm 2.6mm;gap:2.8mm 3mm;grid-template-columns:1fr 1fr!important}
+      .grid.rows-2{min-height:253mm;grid-template-rows:repeat(2,minmax(0,1fr))}
+      .grid.rows-3{min-height:253mm;grid-template-rows:repeat(3,minmax(0,1fr))}
+      .qCard{padding:5px 6px 6px;border-radius:10px;min-height:0;border-color:#d5dae1}
+      .promptSmall{font-size:8.2px;margin-bottom:0}
+      .vizWrap{min-height:0}.lenViz{min-height:0}
+      .workBox{height:24mm}
+      .ansRow{margin-top:3px;gap:5px}.ansLabel{font-size:10px}
+      .ansBox{height:15px;border-width:1.2px;border-radius:7px;width:min(112px,54%)}
+      .ansBox.key{font-size:10.5px;height:auto;min-height:15px}
+      .pageFooter{padding:2mm 3.2mm 1.3mm;font-size:7.8px}
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="https://www.millsmathstools.au" aria-label="Back to Mills Maths Tools"><img src="../../../../assets/mmt.png" alt="Mills Maths Tools logo" class="brand-logo" onerror="this.style.visibility='hidden'"><div class="brand-text"><strong>MMT</strong><span>Mills Maths Tools</span></div></a>
+    <div class="top-title">Length</div><div></div>
+  </header>
+
+  <div class="wrap"><div class="card">
+    <h1 class="title">Length — Worksheet Maker</h1>
+    <p class="subtitle">Printable A4 worksheets plus a completed answer key. <strong>Basic</strong> covers the perimeter of quadrilaterals and simple composite figures, naming the parts of a circle, and circumference. <strong>Expected</strong> moves on to arc length, the perimeter of sectors, quadrants and semicircles, composite figures with curved edges, and working backwards from a circumference.</p>
+
+    <div class="band">
+      <p class="bandLabel">The paper</p>
+      <div class="fieldGrid">
+        <div><label for="levelSel">Level</label><select id="levelSel"><option value="basic" selected>Basic</option><option value="expected">Expected</option></select></div>
+        <div><label for="languageSel">Worksheet language</label><select id="languageSel"><option value="en" selected>English</option><option value="ar">Arabic (العربية)</option><option value="fa">Farsi / Persian (فارسی)</option></select></div>
+        <div><label for="countInp">Number of questions</label><input id="countInp" type="number" min="1" max="48" value="12"></div>
+        <div><label for="roundSel">Answers</label><select id="roundSel"><option value="1" selected>Round to 1 decimal place</option><option value="2">Round to 2 decimal places</option><option value="0">Round to the nearest whole number</option><option value="exact">Exact — in terms of π</option></select></div>
+      </div>
+    </div>
+
+    <div class="band">
+      <p class="bandLabel">Question types</p>
+      <div id="chkWrap" class="checks"></div>
+    </div>
+
+    <div class="band">
+      <p class="bandLabel">Options</p>
+      <div class="checks">
+        <label class="chk"><input id="toggleTicks" type="checkbox" checked> Mark equal sides</label>
+        <label class="chk"><input id="toggleRight" type="checkbox" checked> Show right-angle marks</label>
+        <label class="chk"><input id="toggleWorking" type="checkbox"> Working space under each question</label>
+        <label class="chk"><input id="toggleUnits" type="checkbox"> Mix units (mm / cm / m, some need converting)</label>
+      </div>
+    </div>
+
+    <div class="band">
+      <div class="btnRow">
+        <span class="pill" id="totalPill">12 questions · 2 pages</span>
+        <button id="selectBtn" class="ghost">Deselect all</button>
+        <button id="genBtn" class="primary">Generate worksheet</button>
+        <button id="printBtn" class="ghost">Print (Ctrl+P)</button>
+        <button id="resetBtn" class="danger">Reset</button>
+      </div>
+    </div>
+
+    <div id="out" class="outWrap"></div>
+  </div></div>
+
+  <div class="mmtFooter">This tool and more can be found at&nbsp;<a href="https://www.millsmathstools.au">www.millsmathstools.au</a></div>
+
+<script>
+(() => {
+  'use strict';
+  const SITE='https://www.millsmathstools.au';
+  const SVG_NS='http://www.w3.org/2000/svg';
+  const VIEW={w:420,h:270};
+  const LANG_KEY='mmt-len-ws-lang';
+
+  const levelSel=document.getElementById('levelSel'), languageSel=document.getElementById('languageSel'),
+        countInp=document.getElementById('countInp'), roundSel=document.getElementById('roundSel'),
+        chkWrap=document.getElementById('chkWrap'), out=document.getElementById('out'),
+        toggleTicks=document.getElementById('toggleTicks'), toggleRight=document.getElementById('toggleRight'),
+        toggleWorking=document.getElementById('toggleWorking'), toggleUnits=document.getElementById('toggleUnits'), totalPill=document.getElementById('totalPill'),
+        genBtn=document.getElementById('genBtn'), printBtn=document.getElementById('printBtn'),
+        resetBtn=document.getElementById('resetBtn'), selectBtn=document.getElementById('selectBtn');
+
+  /* ==================================================================
+     LANGUAGE
+     Convention (same as the other creators): the chosen language sits on
+     top and English underneath. Numerals, units and π stay Western / LTR.
+     ================================================================== */
+  const LANG={
+    en:{dir:'ltr',question:'Q',worksheet:'Worksheet',answerKey:'Answer key',page:'Page',name:'Name',date:'Date',answer:'Answer:',topic:'Length',
+      perim:'Find the perimeter of the shape.',
+      comp:'Find the perimeter of the composite figure.',
+      compMiss:'Find the perimeter. Not every side is labelled.',
+      circum:'Find the circumference of the circle.',
+      arc:'Find the length of the arc.',
+      sector:'Find the perimeter of the sector.',
+      namePart:'Name the part of the circle drawn in blue.',
+      findR:'The circumference is given. Find the radius.',
+      findD:'The circumference is given. Find the diameter.',
+      giveIn:'Give your answer in {u}.',
+      noteExact:'Give exact answers in terms of π.',
+      noteRound:'Round answers to {n} decimal {pl}.',
+      noteWhole:'Round answers to the nearest whole number.',
+      working:'Working',
+      noTypes:'Please tick at least one question type.',
+      parts:{radius:'Radius',diameter:'Diameter',chord:'Chord',arc:'Arc',sector:'Sector',segment:'Segment',tangent:'Tangent'}},
+    ar:{dir:'rtl',question:'سؤال',worksheet:'ورقة عمل',answerKey:'دليل الإجابات',page:'صفحة',name:'الاسم',date:'التاريخ',answer:'الإجابة:',topic:'الطول',
+      perim:'أوجد محيط الشكل.',
+      comp:'أوجد محيط الشكل المركّب.',
+      compMiss:'أوجد المحيط. ليست كل الأضلاع مكتوبة.',
+      circum:'أوجد محيط الدائرة.',
+      arc:'أوجد طول القوس.',
+      sector:'أوجد محيط القطاع الدائري.',
+      namePart:'سمِّ جزء الدائرة المرسوم باللون الأزرق.',
+      findR:'محيط الدائرة معطى. أوجد نصف القطر.',
+      findD:'محيط الدائرة معطى. أوجد القطر.',
+      giveIn:'اكتب إجابتك بوحدة {u}.',
+      noteExact:'اكتب الإجابات بصورة مضبوطة بدلالة π.',
+      noteRound:'قرِّب الإجابات إلى {n} منزلة عشرية.',
+      noteWhole:'قرِّب الإجابات إلى أقرب عدد صحيح.',
+      working:'الحل',
+      noTypes:'يرجى اختيار نوع سؤال واحد على الأقل.',
+      parts:{radius:'نصف القطر',diameter:'القطر',chord:'الوتر',arc:'القوس',sector:'القطاع الدائري',segment:'القطعة الدائرية',tangent:'المماس'}},
+    fa:{dir:'rtl',question:'سؤال',worksheet:'برگه تمرین',answerKey:'پاسخ‌نامه',page:'صفحه',name:'نام',date:'تاریخ',answer:'پاسخ:',topic:'طول',
+      perim:'محیط شکل را پیدا کنید.',
+      comp:'محیط شکل مرکب را پیدا کنید.',
+      compMiss:'محیط را پیدا کنید. اندازهٔ همهٔ ضلع‌ها نوشته نشده است.',
+      circum:'محیط دایره را پیدا کنید.',
+      arc:'طول کمان را پیدا کنید.',
+      sector:'محیط قطاع دایره را پیدا کنید.',
+      namePart:'نام بخشی از دایره را که با رنگ آبی کشیده شده بنویسید.',
+      findR:'محیط دایره داده شده است. شعاع را پیدا کنید.',
+      findD:'محیط دایره داده شده است. قطر را پیدا کنید.',
+      giveIn:'پاسخ را بر حسب {u} بنویسید.',
+      noteExact:'پاسخ‌ها را به‌صورت دقیق و بر حسب π بنویسید.',
+      noteRound:'پاسخ‌ها را تا {n} رقم اعشار گرد کنید.',
+      noteWhole:'پاسخ‌ها را به نزدیک‌ترین عدد صحیح گرد کنید.',
+      working:'راه حل',
+      noTypes:'لطفاً حداقل یک نوع پرسش را انتخاب کنید.',
+      parts:{radius:'شعاع',diameter:'قطر',chord:'وتر',arc:'کمان',sector:'قطاع',segment:'قطعه',tangent:'مماس'}}
+  };
+  function lang(){return languageSel.value}
+  function L(){return LANG[lang()]||LANG.en}
+  function isEn(){return lang()==='en'}
+  function fill(str,vals){return String(str).replace(/\{(\w+)\}/g,(m,k)=>vals[k]!=null?vals[k]:m)}
+
+  /* Chosen language on top, English beneath. Returns HTML. */
+  function TR(key,vals){
+    const en=fill(LANG.en[key],vals||{});
+    if(isEn())return en;
+    const loc=fill(L()[key],vals||{});
+    return `<span dir="${L().dir}">${loc}</span><span class="supportEnglish">${en}</span>`;
+  }
+  function TRword(en,loc){
+    if(isEn())return en;
+    return `<span dir="${L().dir}">${loc}</span><span class="supportEnglish">${en}</span>`;
+  }
+
+  /* ==================================================================
+     SMALL MATHS HELPERS
+     ================================================================== */
+  const randInt=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+  const choice=a=>a[randInt(0,a.length-1)];
+  const rad=d=>d*Math.PI/180;
+  const trim=v=>Number(Number(v).toFixed(4)).toString();
+
+  function roundMode(){const v=roundSel.value;return v==='exact'?{exact:true,dp:1}:{exact:false,dp:Number(v)}}
+
+  /* An answer of the form  coef·π + plus  (coef 0 => a plain length). */
+  function fmtLen(coef,plus,unit){
+    const R=roundMode();
+    if(!coef) return `${trim(plus)} ${unit}`;
+    if(R.exact){
+      const c=(coef===1)?'':trim(coef);
+      return plus?`${c}π + ${trim(plus)} ${unit}`:`${c}π ${unit}`;
+    }
+    return `${(coef*Math.PI+plus).toFixed(R.dp)} ${unit}`;
+  }
+  /* The way a GIVEN circumference is printed on the page. */
+  function givenLen(coef,plus,unit){
+    const R=roundMode();
+    if(R.exact){const c=(coef===1)?'':trim(coef);return plus?`${c}π + ${trim(plus)} ${unit}`:`${c}π ${unit}`}
+    return `${(coef*Math.PI+plus).toFixed(R.dp)} ${unit}`;
+  }
+  function fmtPlain(v,unit){const R=roundMode();const n=(Math.abs(v-Math.round(v))<1e-9)?String(Math.round(v)):v.toFixed(R.exact?2:R.dp);return `${n} ${unit}`}
+
+  const UNITS=['mm','cm','m'];
+  function unitsMixOn(){return toggleUnits.checked}
+  function pickUnit(){return unitsMixOn()?choice(UNITS):'cm'}
+  /* mm figures want bigger numbers than cm/m ones. */
+  function scaleFor(u){return u==='mm'?10:1}
+  function multipleIn(div,lo,hi){const o=[];for(let v=Math.ceil(lo/div)*div;v<=hi;v+=div)o.push(v);return o.length?choice(o):div*Math.max(1,Math.round(lo/div))}
+
+  /* ==================================================================
+     SVG HELPERS
+     ================================================================== */
+  function svgEl(tag,attrs){const e=document.createElementNS(SVG_NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);return e}
+  function makeSvg(){return svgEl('svg',{class:'lenViz',viewBox:`0 0 ${VIEW.w} ${VIEW.h}`,preserveAspectRatio:'xMidYMid meet'})}
+  const P=(x,y)=>({x,y});
+  function ptAng(cx,cy,deg,r){return{x:cx+r*Math.cos(rad(deg)),y:cy-r*Math.sin(rad(deg))}}
+  function polyPts(pts){return pts.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')}
+  function drawPoly(svg,pts,cls){svg.appendChild(svgEl('polygon',{class:cls||'shape',points:polyPts(pts)}))}
+  function drawLine(svg,a,b,cls){svg.appendChild(svgEl('line',{class:cls||'thin',x1:a.x.toFixed(1),y1:a.y.toFixed(1),x2:b.x.toFixed(1),y2:b.y.toFixed(1)}))}
+  function drawPath(svg,d,cls){svg.appendChild(svgEl('path',{class:cls||'thin',d}))}
+  function drawCircle(svg,c,r,cls){svg.appendChild(svgEl('circle',{class:cls||'thin',cx:c.x,cy:c.y,r}))}
+  function drawDot(svg,c,r){svg.appendChild(svgEl('circle',{class:'dot',cx:c.x,cy:c.y,r:r||4}))}
+  function drawText(svg,text,x,y,cls){const t=svgEl('text',{class:cls||'sideLabel',x:Number(x).toFixed(1),y:Number(y).toFixed(1)});t.textContent=text;svg.appendChild(t)}
+  /* Anticlockwise-on-screen arc from math angle a0 to a1. */
+  function arcD(cx,cy,r,a0,a1){
+    const s=ptAng(cx,cy,a0,r),e=ptAng(cx,cy,a1,r);
+    let sweep=((a1-a0)%360+360)%360;
+    if(sweep===0)sweep=360;
+    const large=sweep>180?1:0;
+    return `M ${s.x.toFixed(2)} ${s.y.toFixed(2)} A ${r} ${r} 0 ${large} 0 ${e.x.toFixed(2)} ${e.y.toFixed(2)}`;
+  }
+  /* Drop the leading "M x y" so an arc can be spliced into a longer path. */
+  function tail(d){return d.replace(/^M[^A]*/,'')}
+  function centroid(pts){let x=0,y=0;pts.forEach(p=>{x+=p.x;y+=p.y});return P(x/pts.length,y/pts.length)}
+  /* Label an edge, clear of the line it belongs to. The push is along the
+     edge's own normal and grows with how much of the label's box points that
+     way, so a steep edge gets the same visual gap as a flat one. */
+  function labelEdge(svg,a,b,c,text,gap){
+    const m=P((a.x+b.x)/2,(a.y+b.y)/2);
+    const dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy)||1;
+    let nx=dy/len,ny=-dx/len;
+    if((m.x+nx-c.x)*nx+(m.y+ny-c.y)*ny<0){nx=-nx;ny=-ny}   // point away from the centre
+    const halfW=4.9*String(text).length+5, halfH=11;
+    const d=(gap||9)+Math.abs(nx)*halfW+Math.abs(ny)*halfH;
+    drawText(svg,text,m.x+nx*d,m.y+ny*d);
+  }
+  function tickEdge(svg,a,b,n){
+    if(!toggleTicks.checked||!n)return;
+    const m=P((a.x+b.x)/2,(a.y+b.y)/2),dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy)||1;
+    const ux=dx/len,uy=dy/len,nx=dy/len,ny=-dx/len,half=8,gap=6;
+    for(let i=0;i<n;i++){
+      const off=(i-(n-1)/2)*gap,px=m.x+ux*off,py=m.y+uy*off;
+      drawLine(svg,P(px+nx*half,py+ny*half),P(px-nx*half,py-ny*half),'tickMark');
+    }
+  }
+  /* Right-angle square at vertex v, between the directions of p1 and p2. */
+  function rightMark(svg,v,p1,p2,s){
+    if(!toggleRight.checked)return;
+    s=s||13;
+    const u1={x:p1.x-v.x,y:p1.y-v.y},u2={x:p2.x-v.x,y:p2.y-v.y};
+    const l1=Math.hypot(u1.x,u1.y)||1,l2=Math.hypot(u2.x,u2.y)||1;
+    const a=P(v.x+u1.x/l1*s,v.y+u1.y/l1*s),b=P(v.x+u2.x/l2*s,v.y+u2.y/l2*s);
+    const cor=P(a.x+u2.x/l2*s,a.y+u2.y/l2*s);
+    svg.appendChild(svgEl('polyline',{class:'rightMark',points:polyPts([a,cor,b])}));
+  }
+
+  /* ==================================================================
+     QUESTION GENERATORS — BASIC
+     Every generator returns { type, unit, answer, ... } and the matching
+     DRAW[type] turns it into a figure. `hasPi` marks answers that need
+     the rounding note at the top of the page.
+     ================================================================== */
+
+  function qPara(){
+    const u=pickUnit(),s=scaleFor(u);
+    const ab=randInt(6,18),bb=randInt(3,Math.max(4,ab-2));
+    const a=ab*s,b=bb*s;
+    return{type:'para',unit:u,a,b,perim:2*(a+b),answer:fmtPlain(2*(a+b),u),promptKey:'perim'};
+  }
+  function drawPara(q){
+    const svg=makeSvg(),A=P(70,205),B=P(275,205),C=P(350,75),D=P(145,75),pts=[A,B,C,D],c=centroid(pts);
+    drawPoly(svg,pts);
+    labelEdge(svg,A,B,c,`${q.a} ${q.unit}`); labelEdge(svg,B,C,c,`${q.b} ${q.unit}`);
+    tickEdge(svg,A,B,1); tickEdge(svg,C,D,1); tickEdge(svg,B,C,2); tickEdge(svg,D,A,2);
+    return svg;
+  }
+
+  function qTrap(){
+    const u=pickUnit(),s=scaleFor(u);
+    const a=randInt(12,22)*s, b=randInt(5,9)*s, c=randInt(5,12)*s, d=randInt(5,12)*s;
+    const q={type:'trap',unit:u,a,b,c,d,perim:a+b+c+d,promptKey:'perim'};
+    maybeConvert(q,['a','b','c','d']);
+    q.answer=fmtPlain(q.perim,q.unit);
+    return q;
+  }
+  function drawTrap(q){
+    const svg=makeSvg(),A=P(55,205),B=P(370,205),C=P(300,75),D=P(130,75),pts=[A,B,C,D],c=centroid(pts);
+    drawPoly(svg,pts);
+    labelEdge(svg,A,B,c,sideText(q,'a')); labelEdge(svg,B,C,c,sideText(q,'c'));
+    labelEdge(svg,C,D,c,sideText(q,'b')); labelEdge(svg,D,A,c,sideText(q,'d'));
+    return svg;
+  }
+
+  function qRhombus(){
+    const u=pickUnit(),a=randInt(4,20)*scaleFor(u);
+    return{type:'rhombus',unit:u,a,perim:4*a,answer:fmtPlain(4*a,u),promptKey:'perim'};
+  }
+  function drawRhombus(q){
+    const svg=makeSvg(),A=P(210,50),B=P(345,150),C=P(210,250),D=P(75,150),pts=[A,B,C,D],c=centroid(pts);
+    drawPoly(svg,pts);
+    labelEdge(svg,A,B,c,`${q.a} ${q.unit}`);
+    [[A,B],[B,C],[C,D],[D,A]].forEach(([p,r])=>tickEdge(svg,p,r,1));
+    return svg;
+  }
+
+  function qKite(){
+    const u=pickUnit(),s=scaleFor(u);
+    const ab=randInt(3,10), bb=ab+randInt(3,10);
+    const a=ab*s,b=bb*s;
+    return{type:'kite',unit:u,a,b,perim:2*(a+b),answer:fmtPlain(2*(a+b),u),promptKey:'perim'};
+  }
+  function drawKite(q){
+    const svg=makeSvg(),A=P(210,40),B=P(322,132),C=P(210,252),D=P(98,132),pts=[A,B,C,D],c=centroid(pts);
+    drawPoly(svg,pts);
+    labelEdge(svg,A,B,c,`${q.a} ${q.unit}`); labelEdge(svg,B,C,c,`${q.b} ${q.unit}`);
+    tickEdge(svg,A,B,1); tickEdge(svg,D,A,1); tickEdge(svg,B,C,2); tickEdge(svg,C,D,2);
+    return svg;
+  }
+
+  /* L-shape. The perimeter is 2W + 2H — the same as the rectangle that
+     encloses it, which is the point of the "compare methods" box. */
+  function lShape(showAll){
+    const u=pickUnit(),s=scaleFor(u);
+    const W=randInt(10,22)*s,H=randInt(8,18)*s;
+    const nw=multipleIn(s,3*s,W-4*s);
+    const nh=multipleIn(s,2*s,H-3*s);
+    const q={type:'lshape',unit:u,W,H,nw,nh,showAll:!!showAll,perim:2*W+2*H,
+             answer:fmtPlain(2*W+2*H,u),promptKey:showAll?'comp':'compMiss'};
+    if(unitsMixOn()&&Math.random()<0.35){q.convertKey=choice(['W','H']);q.giveIn=u}
+    return q;
+  }
+  function qComposite(){return lShape(true)}
+  function qCompositeMissing(){return lShape(false)}
+  /* A labelled length, printed in a different unit when this question is a
+     conversion one. The answer is always in q.unit. */
+  function lbl(q,key,value){
+    if(q.convertKey===key){
+      if(q.unit==='cm')return `${value*10} mm`;
+      if(q.unit==='m')return `${value*100} cm`;
+      return `${value/10} cm`;
+    }
+    return `${value} ${q.unit}`;
+  }
+  /* Drawn to scale from its own measurements, so a tall shape looks tall. */
+  function drawLShape(q){
+    const svg=makeSvg();
+    const half=t=>4.9*String(t).length+5;
+    const bottom=lbl(q,'W',q.W), left=lbl(q,'H',q.H), top=lbl(q,'top',q.W-q.nw), inV=lbl(q,'nh',q.nh);
+    const rightTxt=q.showAll?lbl(q,'right',q.H-q.nh):'?', inHTxt=q.showAll?lbl(q,'nw',q.nw):'?';
+    // Leave the side labels room before choosing how big the shape can be.
+    const hMax=Math.max(half(left),half(rightTxt));
+    const k=Math.min(Math.min(290,386-4*hMax)/q.W,184/q.H);
+    const w=q.W*k,h=q.H*k,nw=q.nw*k,nh=q.nh*k;
+    const x0=(VIEW.w-w)/2, yB=(VIEW.h+h)/2-4, yT=yB-h, yStep=yB-(h-nh), xStep=x0+w-nw;
+    const P0=P(x0,yB),P1=P(x0+w,yB),P2=P(x0+w,yStep),P3=P(xStep,yStep),P4=P(xStep,yT),P5=P(x0,yT);
+    drawPoly(svg,[P0,P1,P2,P3,P4,P5]);
+    drawText(svg,bottom,x0+w/2,yB+24);                                  // bottom  W
+    drawText(svg,left,x0-11-half(left),(yT+yB)/2);                      // left    H
+    drawText(svg,top,x0+(w-nw)/2,yT-22);                                // top     W − nw
+    // The inner vertical label sits inside the tall part, or in the notch when
+    // the notch is the wider of the two.
+    const inVx=(xStep-16-2*half(inV)>x0+6)?xStep-12-half(inV):xStep+12+half(inV);
+    drawText(svg,inV,inVx,(yT+yStep)/2);                                // inner vertical nh
+    drawText(svg,rightTxt,x0+w+11+half(rightTxt),(yStep+yB)/2,q.showAll?'sideLabel':'qMark');
+    drawText(svg,inHTxt,(xStep+x0+w)/2,yStep+22,q.showAll?'sideLabel':'qMark');
+    // Right-angle marks on the five convex corners; the notch corner (P3) is
+    // reflex, so a square there would sit outside the shape.
+    [[P0,P1,P5],[P1,P2,P0],[P2,P3,P1],[P4,P5,P3],[P5,P0,P4]].forEach(([v,x,y])=>rightMark(svg,v,x,y,12));
+    return svg;
+  }
+
+  /* Naming the parts of a circle — the seven the syllabus lists. */
+  const PART_KEYS=['radius','diameter','chord','arc','sector','segment','tangent'];
+  function qCircleParts(){
+    const part=choice(PART_KEYS);
+    return{type:'circleParts',part,unit:'',promptKey:'namePart',
+           answer:LANG.en.parts[part],answerLocal:k=>LANG[k].parts[part],isWord:true};
+  }
+  function drawCircleParts(q){
+    const svg=makeSvg(),O=P(210,140),R=95;
+    drawCircle(svg,O,R,'thin');
+    const at=d=>ptAng(O.x,O.y,d,R);
+    switch(q.part){
+      case 'radius':   drawLine(svg,O,at(40),'feature'); drawDot(svg,O,4.5); break;
+      case 'diameter': drawLine(svg,at(200),at(20),'feature'); drawDot(svg,O,4.5); break;
+      case 'chord':    drawLine(svg,at(215),at(325),'feature'); break;
+      case 'arc':      drawPath(svg,arcD(O.x,O.y,R,25,125),'feature'); break;
+      case 'sector':   drawPath(svg,`M ${O.x} ${O.y} L ${at(20).x.toFixed(1)} ${at(20).y.toFixed(1)} ${tail(arcD(O.x,O.y,R,20,115))} Z`,'featureFill'); drawDot(svg,O,4.5); break;
+      case 'segment':  drawPath(svg,`${arcD(O.x,O.y,R,200,340)} Z`,'featureFill'); break;
+      case 'tangent':  {const t=ptAng(O.x,O.y,90,R);drawLine(svg,P(t.x-115,t.y),P(t.x+115,t.y),'feature');drawDot(svg,t,4.5);break}
+    }
+    return svg;
+  }
+
+  /* Circumference from r or d. */
+  function qCircum(){
+    const u=pickUnit(),base=randInt(2,14),v=base*scaleFor(u);
+    const useRadius=Math.random()<0.55;
+    const coef=useRadius?2*v:v;
+    return{type:'circum',unit:u,useRadius,v,coef,hasPi:true,promptKey:'circum',
+           answer:fmtLen(coef,0,u)};
+  }
+  function drawCircum(q){
+    const svg=makeSvg(),O=P(210,140),R=100;
+    drawCircle(svg,O,R,'shape open');
+    drawDot(svg,O,4.5);
+    if(q.useRadius){
+      const e=ptAng(O.x,O.y,35,R);
+      drawLine(svg,O,e,'dashed');
+      drawText(svg,`${q.v} ${q.unit}`,(O.x+e.x)/2+6,(O.y+e.y)/2-16);
+    }else{
+      const a=ptAng(O.x,O.y,180,R),b=ptAng(O.x,O.y,0,R);
+      drawLine(svg,a,b,'dashed');
+      drawText(svg,`${q.v} ${q.unit}`,O.x,O.y-18);
+    }
+    return svg;
+  }
+
+  /* ==================================================================
+     QUESTION GENERATORS — EXPECTED
+     ================================================================== */
+
+  /* θ chosen with its divisor so θ·r/180 stays tidy in exact form. */
+  const ARC_ANGLES=[[30,6],[45,4],[60,3],[90,2],[120,3],[135,4],[150,6],[180,1],[270,2]];
+  function pickArc(u){
+    const [theta,div]=choice(ARC_ANGLES),s=scaleFor(u);
+    const r=multipleIn(div*s,3*s,14*s);
+    return{theta,r,coef:theta*r/180};
+  }
+  function qArc(){
+    const u=pickUnit(),{theta,r,coef}=pickArc(u);
+    return{type:'sector',unit:u,theta,r,coef,plus:0,arcOnly:true,hasPi:true,promptKey:'arc',
+           answer:fmtLen(coef,0,u)};
+  }
+  function qSectorPerim(){
+    const u=pickUnit(),{theta,r,coef}=pickArc(u);
+    return{type:'sector',unit:u,theta,r,coef,plus:2*r,arcOnly:false,hasPi:true,promptKey:'sector',
+           answer:fmtLen(coef,2*r,u)};
+  }
+  /* A 45° wedge and a 270° one have very different shapes; sizing the radius
+     from the wedge's own extent keeps both filling the card, and keeps the
+     label text the same physical size in every question. */
+  function sectorFit(theta){
+    const angs=[0,theta].concat([90,180,270].filter(a=>a<theta));
+    const xs=angs.map(a=>Math.cos(rad(a))).concat([0]);
+    const ys=angs.map(a=>-Math.sin(rad(a))).concat([0]);
+    const x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
+    const R=Math.min(300/(x1-x0),180/(y1-y0),145);
+    const w=R*(x1-x0),h=R*(y1-y0);
+    return{R,O:P((VIEW.w-w)/2-R*x0,(VIEW.h-h)/2-R*y0-6)};
+  }
+  function drawSector(q){
+    const svg=makeSvg(),f=sectorFit(q.theta),O=f.O,R=f.R,a0=0,a1=q.theta;
+    const s=ptAng(O.x,O.y,a0,R),e=ptAng(O.x,O.y,a1,R);
+    if(q.arcOnly){
+      drawLine(svg,O,s,'thin'); drawLine(svg,O,e,'thin');
+      drawPath(svg,arcD(O.x,O.y,R,a0,a1),'feature');
+    }else{
+      drawPath(svg,`M ${O.x} ${O.y} L ${s.x.toFixed(1)} ${s.y.toFixed(1)} ${tail(arcD(O.x,O.y,R,a0,a1))} Z`,'shape');
+    }
+    drawDot(svg,O,4.5);
+    // Radius label on the 0° arm — above it once the wedge wraps below.
+    drawText(svg,`${q.r} ${q.unit}`,O.x+R/2,O.y+22);
+    // The angle at the centre.
+    const lp=ptAng(O.x,O.y,q.theta/2,q.theta>200?48:42);
+    drawText(svg,`${q.theta}°`,lp.x,lp.y,'angLabel');
+    drawPath(svg,arcD(O.x,O.y,q.theta>200?32:28,a0,a1),'thin');
+    return svg;
+  }
+
+  /* Semicircle and quadrant. */
+  function qSemiQuad(){
+    const u=pickUnit(),s=scaleFor(u),half=Math.random()<0.5;
+    const r=multipleIn(2*s,4*s,14*s);
+    const coef=half?r:r/2, plus=2*r;
+    return{type:'semiquad',unit:u,half,r,coef,plus,hasPi:true,promptKey:'perim',
+           answer:fmtLen(coef,plus,u)};
+  }
+  function drawSemiQuad(q){
+    const svg=makeSvg();
+    if(q.half){
+      // Left end → right end along the diameter, then the arc back over the top.
+      const O=P(210,198),R=140;
+      drawPath(svg,`M ${(O.x-R)} ${O.y} L ${(O.x+R)} ${O.y} ${tail(arcD(O.x,O.y,R,0,180))} Z`,'shape');
+      drawLine(svg,O,ptAng(O.x,O.y,0,R),'dashed');
+      drawDot(svg,O,4.5);
+      drawText(svg,`${q.r} ${q.unit}`,O.x+R/2,O.y+24);
+    }else{
+      const O=P(135,220),R=180;
+      drawPath(svg,`M ${O.x} ${O.y} L ${(O.x+R)} ${O.y} ${tail(arcD(O.x,O.y,R,0,90))} Z`,'shape');
+      drawDot(svg,O,4.5);
+      drawText(svg,`${q.r} ${q.unit}`,O.x+R/2,O.y+24);
+      rightMark(svg,O,P(O.x+R,O.y),P(O.x,O.y-R),16);
+    }
+    return svg;
+  }
+
+  /* Composite figures with a curved edge. */
+  function qCompCurved(){
+    const u=pickUnit(),s=scaleFor(u),kind=choice(['window','stadium','threeq']);
+    if(kind==='window'){
+      const w=multipleIn(2*s,6*s,16*s),h=multipleIn(s,4*s,14*s);
+      return{type:'compCurved',kind,unit:u,w,h,coef:w/2,plus:w+2*h,hasPi:true,promptKey:'comp',
+             answer:fmtLen(w/2,w+2*h,u)};
+    }
+    if(kind==='stadium'){
+      const w=multipleIn(s,4*s,12*s),Lg=multipleIn(s,6*s,18*s);
+      return{type:'compCurved',kind,unit:u,w,Lg,coef:w,plus:2*Lg,hasPi:true,promptKey:'comp',
+             answer:fmtLen(w,2*Lg,u)};
+    }
+    const r=multipleIn(2*s,4*s,14*s);
+    return{type:'compCurved',kind,unit:u,r,coef:3*r/2,plus:2*r,hasPi:true,promptKey:'comp',
+           answer:fmtLen(3*r/2,2*r,u)};
+  }
+  function drawCompCurved(q){
+    const svg=makeSvg(),u=q.unit;
+    if(q.kind==='window'){
+      // Up the right wall, over the semicircular top, down the left wall.
+      const x0=125,x1=295,yTop=112,yBot=234,R=(x1-x0)/2,cx=(x0+x1)/2;
+      drawPath(svg,`M ${x1} ${yBot} L ${x1} ${yTop} ${tail(arcD(cx,yTop,R,0,180))} L ${x0} ${yBot} Z`,'shape');
+      drawLine(svg,P(x0,yTop),P(x1,yTop),'dashed');
+      drawText(svg,`${q.w} ${u}`,cx,yBot+24);
+      drawText(svg,`${q.h} ${u}`,x0-36,(yTop+yBot)/2);
+      rightMark(svg,P(x0,yBot),P(x1,yBot),P(x0,yTop),13);
+      rightMark(svg,P(x1,yBot),P(x0,yBot),P(x1,yTop),13);
+    }else if(q.kind==='stadium'){
+      // Anticlockwise: bottom edge, right cap (through 0°), top edge, left cap.
+      const x0=142,x1=298,yT=100,yB=190,R=(yB-yT)/2,cy=(yT+yB)/2;
+      drawPath(svg,`M ${x0} ${yB} L ${x1} ${yB} ${tail(arcD(x1,cy,R,270,90))} L ${x0} ${yT} ${tail(arcD(x0,cy,R,90,270))} Z`,'shape');
+      drawLine(svg,P(x0,yT),P(x0,yB),'dashed');
+      drawText(svg,`${q.Lg} ${u}`,(x0+x1)/2,yT-26);
+      drawText(svg,`${q.w} ${u}`,x0-R-30,cy);
+    }else{
+      const O=P(185,160),R=100;
+      drawPath(svg,`M ${O.x} ${O.y} L ${(O.x+R)} ${O.y} ${tail(arcD(O.x,O.y,R,0,270))} Z`,'shape');
+      drawDot(svg,O,4.5);
+      drawText(svg,`${q.r} ${u}`,O.x+R/2,O.y+24);
+      rightMark(svg,O,P(O.x+R,O.y),P(O.x,O.y+R),16);
+    }
+    return svg;
+  }
+
+  /* Working backwards from a circumference. */
+  function qReverse(){
+    const u=pickUnit(),s=scaleFor(u),r=randInt(2,15)*s,wantD=Math.random()<0.45;
+    const R=roundMode();
+    const shown=givenLen(2*r,0,u);
+    let ans;
+    if(R.exact){ans=fmtPlain(wantD?2*r:r,u)}
+    else{
+      const cVal=Number((2*r*Math.PI).toFixed(R.dp));
+      const val=wantD?cVal/Math.PI:cVal/(2*Math.PI);
+      ans=`${val.toFixed(R.dp)} ${u}`;
+    }
+    return{type:'reverse',unit:u,r,wantD,shown,hasPi:false,promptKey:wantD?'findD':'findR',answer:ans};
+  }
+  function drawReverse(q){
+    const svg=makeSvg(),O=P(210,128),R=92;
+    drawCircle(svg,O,R,'shape open');
+    drawDot(svg,O,4.5);
+    if(q.wantD){const a=ptAng(O.x,O.y,180,R),b=ptAng(O.x,O.y,0,R);drawLine(svg,a,b,'dashed');drawText(svg,'d = ?',O.x,O.y-25,'qMark')}
+    else{const e=ptAng(O.x,O.y,35,R);drawLine(svg,O,e,'dashed');const m=ptAng(O.x,O.y,62,R*0.62);drawText(svg,'r = ?',m.x,m.y,'qMark')}
+    drawText(svg,`C = ${q.shown}`,210,252,'givenLabel');
+    return svg;
+  }
+
+  /* Unit conversion: print one labelled side in a different unit. */
+  function maybeConvert(q,keys){
+    if(!unitsMixOn()||Math.random()>0.4)return;
+    const k=choice(keys),v=q[k];
+    if(q.unit==='cm'){q.convert={key:k,text:`${v*10} mm`}}
+    else if(q.unit==='m'){q.convert={key:k,text:`${v*100} cm`}}
+    else{q.convert={key:k,text:`${(v/10)} cm`}}
+    q.giveIn=q.unit;
+  }
+  function sideText(q,key){
+    if(q.convert&&q.convert.key===key)return q.convert.text;
+    return `${q[key]} ${q.unit}`;
+  }
+
+  /* ==================================================================
+     REGISTRIES
+     ================================================================== */
+  const DRAW={para:drawPara,trap:drawTrap,rhombus:drawRhombus,kite:drawKite,lshape:drawLShape,
+              circleParts:drawCircleParts,circum:drawCircum,sector:drawSector,semiquad:drawSemiQuad,
+              compCurved:drawCompCurved,reverse:drawReverse};
+  const GEN={paraPerim:qPara,trapPerim:qTrap,rhombusPerim:qRhombus,kitePerim:qKite,
+             compositeRect:qComposite,circleParts:qCircleParts,circumference:qCircum,
+             arcLength:qArc,sectorPerim:qSectorPerim,semiQuadrant:qSemiQuad,
+             compositeCurved:qCompCurved,reverseCircle:qReverse,compositeMissing:qCompositeMissing};
+  const TYPE_SETS={
+    basic:[
+      ['paraPerim','Perimeter — parallelogram'],
+      ['trapPerim','Perimeter — trapezium'],
+      ['rhombusPerim','Perimeter — rhombus'],
+      ['kitePerim','Perimeter — kite'],
+      ['compositeRect','Perimeter — composite figure'],
+      ['circleParts','Name the parts of a circle'],
+      ['circumference','Circumference from r or d']
+    ],
+    expected:[
+      ['arcLength','Arc length'],
+      ['sectorPerim','Perimeter of a sector'],
+      ['semiQuadrant','Semicircles and quadrants'],
+      ['compositeCurved','Composite figures with curves'],
+      ['compositeMissing','Composite figures — missing sides'],
+      ['reverseCircle','Work backwards — find r or d']
+    ]
+  };
+
+  /* ==================================================================
+     RENDERING
+     ================================================================== */
+  function promptHTML(q,idx){
+    const rtl=L().dir==='rtl'&&!isEn();
+    const body=isEn()
+      ? `${LANG.en.question}${idx} · ${LANG.en[q.promptKey]}`
+      : `<span dir="${L().dir}">${L().question}${idx} · ${L()[q.promptKey]}</span>`+
+        `<span class="supportEnglish">${LANG.en.question}${idx} · ${LANG.en[q.promptKey]}</span>`;
+    const note=q.giveIn?`<span class="promptNote">${TR('giveIn',{u:q.giveIn})}</span>`:'';
+    return `<div class="promptSmall ${rtl?'rtlPrompt':''}">${body}${note}</div>`;
+  }
+  function answerLabelHTML(){return TRword(LANG.en.answer,L().answer)}
+  function answerValueHTML(q){
+    if(q.isWord)return TRword(q.answer,q.answerLocal(lang()));
+    return q.answer;
+  }
+  function headerLabel(base){
+    if(isEn())return base;
+    const t=base==='Worksheet'?L().worksheet:base==='Answer key'?L().answerKey:base;
+    return `${t}<br><span style="font-size:.82em;color:var(--muted)">${base}</span>`;
+  }
+  function roundNoteText(){
+    const R=roundMode();
+    if(R.exact)return LANG.en.noteExact;
+    if(R.dp===0)return LANG.en.noteWhole;
+    return fill(LANG.en.noteRound,{n:R.dp,pl:R.dp===1?'place':'places'});
+  }
+  function roundNoteLocal(){
+    const R=roundMode();
+    if(isEn())return roundNoteText();
+    if(R.exact)return `${L().noteExact} · ${LANG.en.noteExact}`;
+    if(R.dp===0)return `${L().noteWhole} · ${LANG.en.noteWhole}`;
+    const v={n:R.dp,pl:R.dp===1?'place':'places'};
+    return `${fill(L().noteRound,v)} · ${fill(LANG.en.noteRound,v)}`;
+  }
+  function pageHeaderHTML(levelName,pageLabel,showNameDate){
+    const rtl=L().dir==='rtl'&&!isEn();
+    const enTitle=`Length — Worksheet (${levelName})`;
+    const title=isEn()?enTitle
+      :`${L().topic} — ${L().worksheet} (${levelName})<br><span style="font-size:.82em;color:var(--muted)">${enTitle}</span>`;
+    const nameDate=showNameDate?`<div class="nameDate">
+        <div class="lineField"><div class="lineLabel">${L().name}${isEn()?'':`<br><span style="font-size:.82em">Name</span>`}</div><div class="lineBox"></div></div>
+        <div class="lineField"><div class="lineLabel">${L().date}${isEn()?'':`<br><span style="font-size:.82em">Date</span>`}</div><div class="lineBox"></div></div>
+      </div>`:'';
+    return `<div class="pageHeader"><div><div class="hdrTitle" ${rtl?'dir="rtl"':''}>${title}</div><div class="hdrSub">${pageLabel}</div></div>${nameDate}</div>`;
+  }
+  function pageFooterHTML(){return `<div class="pageFooter">This tool and more can be found at <a href="${SITE}">www.millsmathstools.au</a></div>`}
+
+  function makeQuestionCard(q,showAnswer,idx){
+    const wrap=document.createElement('div');wrap.className='qCard';
+    const prompt=document.createElement('div');prompt.className='prompt';
+    prompt.innerHTML=promptHTML(q,idx);
+    wrap.appendChild(prompt);
+    const viz=document.createElement('div');viz.className='vizWrap';
+    viz.appendChild(DRAW[q.type](q));
+    wrap.appendChild(viz);
+    if(toggleWorking.checked&&!showAnswer){
+      const w=document.createElement('div');w.className='workBox';
+      w.innerHTML=`<span class="workTag">${isEn()?LANG.en.working:L().working}</span>`;
+      wrap.appendChild(w);
+    }
+    const ans=document.createElement('div');ans.className='ansRow';
+    ans.innerHTML=`<div class="ansLabel">${answerLabelHTML()}</div><div class="ansBox ${showAnswer?'key':''}">${showAnswer?answerValueHTML(q):''}</div>`;
+    wrap.appendChild(ans);
+    return wrap;
+  }
+
+  function paginate(n,per){
+    const counts=[];let rem=n;
+    while(rem>0){const take=Math.min(per,rem);counts.push(take);rem-=take}
+    return counts;
+  }
+  function buildPages(qs,counts,showAnswers,anyPi){
+    const pages=[],rtl=L().dir==='rtl'&&!isEn(),total=counts.length,per=toggleWorking.checked?4:6;
+    let cursor=0;
+    counts.forEach((take,p)=>{
+      const page=document.createElement('div');
+      page.className='page'+(rtl?' lang-rtl':'')+(showAnswers?' answerKeyPage':'');
+      const titleText=showAnswers?'Answer key':'Worksheet';
+      let pageLabel=isEn()?`${titleText} — Page ${p+1} of ${total}`
+                          :`${headerLabel(titleText)} — ${L().page} ${p+1} / ${total}`;
+      if(anyPi)pageLabel+=` · ${isEn()?roundNoteText():roundNoteLocal()}`;
+      page.innerHTML=pageHeaderHTML(levelSel.value==='basic'?'Basic':'Expected',pageLabel,!showAnswers);
+      const grid=document.createElement('div');
+      grid.className='grid '+(per===4?'rows-2':'rows-3');
+      for(let i=0;i<take;i++)grid.appendChild(makeQuestionCard(qs[cursor+i],showAnswers,cursor+i+1));
+      cursor+=take;
+      page.appendChild(grid);
+      const f=document.createElement('div');f.innerHTML=pageFooterHTML();
+      page.appendChild(f.firstElementChild);
+      pages.push(page);
+    });
+    return pages;
+  }
+
+  function activeIds(){return TYPE_SETS[levelSel.value].map(x=>x[0]).filter(id=>document.getElementById(`chk_${id}`)?.checked)}
+  function renderCheckboxes(){
+    chkWrap.innerHTML='';
+    TYPE_SETS[levelSel.value].forEach(([id,label])=>{
+      const lab=document.createElement('label');lab.className='chk';
+      lab.innerHTML=`<input type="checkbox" id="chk_${id}" checked> ${label}`;
+      chkWrap.appendChild(lab);
+    });
+    updateSelectBtn();updatePill();
+  }
+  function updateSelectBtn(){
+    const boxes=[...chkWrap.querySelectorAll('input[type="checkbox"]')];
+    selectBtn.textContent=boxes.some(b=>b.checked)?'Deselect all':'Select all';
+  }
+  function updatePill(){
+    const n=Math.max(1,Math.min(48,Math.round(Number(countInp.value)||12)));
+    const per=toggleWorking.checked?4:6;
+    const pages=paginate(n,per).length;
+    totalPill.textContent=`${n} question${n===1?'':'s'} · ${pages} page${pages===1?'':'s'} + key`;
+  }
+
+  function generate(){
+    out.innerHTML='';
+    const ids=activeIds();
+    if(!ids.length){out.innerHTML=`<div class="warn">${isEn()?LANG.en.noTypes:L().noTypes+' / '+LANG.en.noTypes}</div>`;return}
+    const n=Math.max(1,Math.min(48,Math.round(Number(countInp.value)||12)));
+    countInp.value=String(n);
+    // Deal one of every ticked type first, then fill at random and shuffle, so
+    // a short paper still shows each type the teacher asked for.
+    const order=[];
+    for(let i=0;i<n;i++)order.push(i<ids.length?ids[i]:choice(ids));
+    for(let i=order.length-1;i>0;i--){const j=randInt(0,i);[order[i],order[j]]=[order[j],order[i]]}
+    const qs=order.map(id=>{const q=GEN[id]();q.sourceType=id;return q});
+    const anyPi=qs.some(q=>q.hasPi);
+    const per=toggleWorking.checked?4:6;
+    const counts=paginate(n,per);
+    buildPages(qs,counts,false,anyPi).forEach(p=>out.appendChild(p));
+    buildPages(qs,counts,true,anyPi).forEach(p=>out.appendChild(p));
+    out.firstElementChild?.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+
+  function resetAll(){
+    out.innerHTML='';
+    levelSel.value='basic';countInp.value='12';roundSel.value='1';
+    toggleTicks.checked=true;toggleRight.checked=true;toggleWorking.checked=false;
+    toggleUnits.checked=false;
+    renderCheckboxes();updatePill();
+  }
+
+  /* ---- wiring ---- */
+  try{const saved=localStorage.getItem(LANG_KEY);if(saved&&LANG[saved])languageSel.value=saved}catch(e){}
+  levelSel.addEventListener('change',()=>{out.innerHTML='';renderCheckboxes()});
+  languageSel.addEventListener('change',()=>{try{localStorage.setItem(LANG_KEY,languageSel.value)}catch(e){}if(out.children.length)generate()});
+  chkWrap.addEventListener('change',updateSelectBtn);
+  selectBtn.addEventListener('click',e=>{
+    e.preventDefault();
+    const boxes=[...chkWrap.querySelectorAll('input[type="checkbox"]')],any=boxes.some(b=>b.checked);
+    boxes.forEach(b=>b.checked=!any);updateSelectBtn();
+  });
+  countInp.addEventListener('input',updatePill);
+  toggleWorking.addEventListener('change',updatePill);
+  [toggleTicks,toggleRight,toggleWorking,toggleUnits,roundSel].forEach(el=>
+    el.addEventListener('change',()=>{if(out.children.length)generate()}));
+  genBtn.addEventListener('click',generate);
+  printBtn.addEventListener('click',()=>window.print());
+  resetBtn.addEventListener('click',resetAll);
+  renderCheckboxes();updatePill();
+
+  /* Exposed for the headless harness only. */
+  window.__LEN__={GEN,DRAW,TYPE_SETS,LANG,fmtLen,paginate,roundMode};
+})();
+</script>
+  <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "c7e5713b5e4f4993907eb285797dc89b"}'></script><!-- End Cloudflare Web Analytics -->
+</body>
+</html>
