@@ -73,6 +73,23 @@ window.MMT_TOOL_LINKS = {
     }
   ],
 
+  "MA3-3DS-02": [
+    {
+      title: "Unit Conversion \u2014 Double Number Line",
+      kind: "Teacher tool",
+      url: "/interactive-tools/stage-4/measurement-space/unit-conversion-number-line/",
+      note: "Capacity conversions on a double number line \u2014 kL, L and mL \u2014 built from the 1 : 1000 anchor.",
+      tags: ["unit conversion", "metric", "double number line", "proportional reasoning", "scaling", "measurement", "capacity", "volume", "kL", "L", "mL"]
+    },
+    {
+      title: "Converting Units of Measurement",
+      kind: "Worksheet maker",
+      url: "/worksheet-creators/stage-4/measurement-space/unit-conversion.html",
+      note: "Capacity conversions on and off the number line, four levels, Stage 3 setting for kL, L and mL. Trilingual, with an answer key.",
+      tags: ["unit conversion", "metric", "double number line", "proportional reasoning", "scaling", "measurement", "capacity", "volume", "kL", "L", "mL", "worksheet generator", "printable", "trilingual"]
+    },
+  ],
+
   "MA3-AR-01": [
     {
       title: "Partition Splitter",
@@ -150,6 +167,23 @@ window.MMT_TOOL_LINKS = {
       note: "Connect four by naming coordinate pairs.",
       tags: ["game", "coordinates", "Cartesian plane", "two player"]
     }
+  ],
+
+  "MA3-GM-02": [
+    {
+      title: "Unit Conversion \u2014 Double Number Line",
+      kind: "Teacher tool",
+      url: "/interactive-tools/stage-4/measurement-space/unit-conversion-number-line/",
+      note: "Metric length conversions on a double number line: the 1 : ratio anchor stays on screen and every value is the same scaling of it. km, m, cm and mm.",
+      tags: ["unit conversion", "metric", "double number line", "proportional reasoning", "scaling", "measurement", "length", "km", "m", "cm", "mm"]
+    },
+    {
+      title: "Converting Units of Measurement",
+      kind: "Worksheet maker",
+      url: "/worksheet-creators/stage-4/measurement-space/unit-conversion.html",
+      note: "Fill a whole number line, then one jump, then bare conversions, comparing and word problems. Stage 3 setting uses neighbouring units only. Trilingual, with an answer key.",
+      tags: ["unit conversion", "metric", "double number line", "proportional reasoning", "scaling", "measurement", "length", "km", "m", "cm", "mm", "worksheet generator", "printable", "trilingual"]
+    },
   ],
 
   "MA3-GM-03": [
@@ -233,6 +267,23 @@ window.MMT_TOOL_LINKS = {
       note: "Memory game matching multiplication facts.",
       tags: ["game", "memory", "multiplication", "fluency", "matching"]
     }
+  ],
+
+  "MA3-NSM-01": [
+    {
+      title: "Unit Conversion \u2014 Double Number Line",
+      kind: "Teacher tool",
+      url: "/interactive-tools/stage-4/measurement-space/unit-conversion-number-line/",
+      note: "Metric mass conversions on a double number line \u2014 kg and g \u2014 built from the 1 : 1000 anchor rather than a rule about zeros.",
+      tags: ["unit conversion", "metric", "double number line", "proportional reasoning", "scaling", "measurement", "mass", "kg", "g", "tonnes"]
+    },
+    {
+      title: "Converting Units of Measurement",
+      kind: "Worksheet maker",
+      url: "/worksheet-creators/stage-4/measurement-space/unit-conversion.html",
+      note: "Mass conversions on and off the number line, four levels, Stage 3 setting for kg and g. Trilingual, with an answer key.",
+      tags: ["unit conversion", "metric", "double number line", "proportional reasoning", "scaling", "measurement", "mass", "kg", "g", "tonnes", "worksheet generator", "printable", "trilingual"]
+    },
   ],
 
   "MA3-NSM-02": [
@@ -899,6 +950,20 @@ window.MMT_TOOL_LINKS = {
 
   "MA4-LEN-C-01": [
     {
+      title: "Converting Units of Measurement",
+      kind: "Worksheet maker",
+      url: "/worksheet-creators/stage-4/measurement-space/unit-conversion.html",
+      note: "Fill a whole number line, then one jump, then bare conversions, comparing and word problems. Stage 3 or Stage 4 unit pairs, four levels. Trilingual, with an answer key.",
+      tags: ["unit conversion", "metric", "double number line", "proportional reasoning", "scaling", "measurement", "length", "mass", "capacity", "worksheet generator", "printable", "trilingual"]
+    },
+    {
+      title: "Unit Conversion \u2014 Double Number Line",
+      kind: "Teacher tool",
+      url: "/interactive-tools/stage-4/measurement-space/unit-conversion-number-line/",
+      note: "Metric conversions read off a double number line: the 1 : ratio anchor stays on screen and every value is the same scaling of it. Length, mass and capacity, four difficulty tiers, smooth zoom to each new position.",
+      tags: ["unit conversion", "metric", "double number line", "length", "mass", "capacity", "proportional reasoning", "scaling", "km", "m", "cm", "mm", "kg", "g", "L", "mL"]
+    },
+    {
       title: "Area Model Splitter",
       kind: "Teacher tool",
       url: "/interactive-tools/stage-4/measurement-space/perimeter-area-rectangle/",
@@ -995,6 +1060,20 @@ window.MMT_TOOL_LINKS = {
 
   "MA4-RAT-C-01": [
     {
+      title: "Unit Conversion \u2014 Double Number Line",
+      kind: "Teacher tool",
+      url: "/interactive-tools/stage-4/measurement-space/unit-conversion-number-line/",
+      note: "The double number line as a proportional tool: one anchor, and every other pair of values is the same multiplier applied to it. Length, mass and capacity.",
+      tags: ["unit conversion", "metric", "double number line", "proportional reasoning", "scaling", "measurement", "ratio", "rates", "length", "mass", "capacity"]
+    },
+    {
+      title: "Converting Units of Measurement",
+      kind: "Worksheet maker",
+      url: "/worksheet-creators/stage-4/measurement-space/unit-conversion.html",
+      note: "Proportional reasoning through metric conversion: fill a number line, one jump, fluency, comparing and word problems. Trilingual, with an answer key.",
+      tags: ["unit conversion", "metric", "double number line", "proportional reasoning", "scaling", "measurement", "ratio", "rates", "length", "mass", "capacity", "worksheet generator", "printable", "trilingual"]
+    },
+    {
       title: "Ratio Splitter",
       kind: "Teacher tool",
       url: "/interactive-tools/stage-4/ratios-rates/divide-a-ratio/",
@@ -1008,6 +1087,57 @@ window.MMT_TOOL_LINKS = {
       note: "Stacked bar model for comparing ratios and scaling them up.",
       tags: ["ratio", "bar model", "proportion", "scaling", "visual"]
     }
+  ],
+
+  "MA5-ALG-P-01": [
+    {
+      title: "Complete the Square",
+      kind: "Teacher tool",
+      url: "/interactive-tools/stage-5/algebra/complete-the-square/",
+      note: "Where (x + p)\u00b2 comes from, as an area: the corner piece that completes the square is b\u00b2/4, seen rather than remembered.",
+      tags: ["complete the square", "quadratic", "quadratic equations", "algebra tiles", "area model", "manipulatives", "solving quadratics", "expanding", "factorising", "perfect square", "identity", "stage 5"]
+    },
+    {
+      title: "Complete the Square — Worksheet Creator",
+      kind: "Worksheet creator",
+      url: "/worksheet-creators/stage-5/algebra/complete-the-square.html",
+      note: "Printable A4 practice: label the area model, fill the two blanks, then write expressions in completed square form. Exact answers — halves, quarters and surds, never a rounded decimal.",
+      tags: ["complete the square", "completing the square", "quadratic", "quadratic equations", "worksheet", "printable", "area model", "algebra tiles", "completed square form", "solving quadratics", "turning point", "minimum", "surds", "exact answers", "answer key", "differentiated", "stage 5"]
+    },
+  ],
+
+  "MA5-EQU-P-01": [
+    {
+      title: "Complete the Square",
+      kind: "Teacher tool",
+      url: "/interactive-tools/stage-5/algebra/complete-the-square/",
+      note: "Solve a monic quadratic by literally building the square: halve the x-term, put the two halves on two sides, and click the gap to complete it. Handles positive and negative b, and makes the second solution its own step.",
+      tags: ["complete the square", "quadratic", "quadratic equations", "algebra tiles", "area model", "manipulatives", "solving quadratics", "monic", "roots", "positive and negative b", "second solution", "stage 5"]
+    },
+    {
+      title: "Complete the Square — Worksheet Creator",
+      kind: "Worksheet creator",
+      url: "/worksheet-creators/stage-5/algebra/complete-the-square.html",
+      note: "Printable A4 practice that walks the same scaffold as the teaching tool: label the model, fill the two blanks, completed square form, then solve equations with room to work. Answer key included.",
+      tags: ["complete the square", "completing the square", "quadratic", "quadratic equations", "worksheet", "printable", "area model", "algebra tiles", "completed square form", "solving quadratics", "turning point", "minimum", "surds", "exact answers", "answer key", "differentiated", "stage 5"]
+    },
+  ],
+
+  "MA5-EQU-P-02": [
+    {
+      title: "Complete the Square",
+      kind: "Teacher tool",
+      url: "/interactive-tools/stage-5/algebra/complete-the-square/",
+      note: "The tile build for monic quadratics, plus a Prove the formula mode that runs the same eight moves on ax\u00b2 + bx + c = 0 and lands on the quadratic formula.",
+      tags: ["complete the square", "quadratic", "quadratic equations", "algebra tiles", "area model", "manipulatives", "solving quadratics", "quadratic formula", "proof", "derivation", "discriminant", "non-monic", "stage 5"]
+    },
+    {
+      title: "Complete the Square — Worksheet Creator",
+      kind: "Worksheet creator",
+      url: "/worksheet-creators/stage-5/algebra/complete-the-square.html",
+      note: "Printable A4 practice, monic or with a ≠ 1, ending in turning points and “show it is always positive”. Surds stay exact and every answer is generated, not looked up.",
+      tags: ["complete the square", "completing the square", "quadratic", "quadratic equations", "worksheet", "printable", "area model", "algebra tiles", "completed square form", "solving quadratics", "turning point", "minimum", "surds", "exact answers", "answer key", "differentiated", "stage 5"]
+    },
   ],
 
   "MA5-FIN-C-01": [

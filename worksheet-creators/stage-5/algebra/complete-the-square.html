@@ -1,0 +1,1212 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Complete the Square — Worksheet Generator</title>
+
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --ink:#111827;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --shadow:0 14px 40px rgba(0,0,0,.10);
+      --radius:18px;
+
+      --blue:#2563eb;
+      --green:#16a34a;
+      --red:#dc2626;
+
+      --sweet1:#4ade80;  --sweet2:#16a34a;
+      --mild1:#facc15;   --mild2:#d97706;
+      --medium1:#fb923c; --medium2:#ea580c;
+      --spicy1:#f87171;  --spicy2:#b91c1c;
+
+      /* the tile colours are the sticky notes from the board — same as the
+         teaching tool, so a class that saw the screen sees the same paper */
+      --tSq:#bfdbfe;   --tSqEdge:#2563eb;   --tSqInk:#1e3a8a;
+      --tX:#bbf7d0;    --tXEdge:#16a34a;    --tXInk:#14532d;
+      --tP:#fbcfe8;    --tPEdge:#db2777;    --tPInk:#9d174d;
+
+      --footer-h:44px;
+      --mathFont:"Cambria Math","STIX Two Math","Latin Modern Math","Asana Math",Cambria,"Palatino Linotype","Book Antiqua",Palatino,"Times New Roman",serif;
+      --uiFont:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0; background:var(--bg); color:var(--ink);
+      font-family:var(--uiFont); padding-bottom:var(--footer-h);
+    }
+
+    .wrap{ max-width:1280px; margin:14px auto 32px; padding:0 14px; }
+    .card{ background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px; }
+
+    .title{ margin:0 0 4px; font-size:28px; font-weight:1000; letter-spacing:.2px; }
+    .subtitle{ margin:0 0 14px; color:var(--muted); font-weight:850; font-size:15px; line-height:1.35; }
+    .subtitle a{ color:var(--blue); text-decoration:none; font-weight:1000; }
+
+    .controls{ display:grid; gap:10px; }
+    .band{
+      border:1px solid var(--border); border-radius:18px; padding:12px 14px;
+      background:linear-gradient(180deg,#ffffff,#f9fafb);
+    }
+    .bandHead{
+      font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+      font-weight:1000; color:var(--muted); margin:0 0 9px;
+    }
+    .bandGrid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; align-items:end; }
+    .bandRow{ display:flex; gap:16px 22px; flex-wrap:wrap; align-items:center; }
+
+    label{ display:block; margin:0 0 7px; font-size:15px; font-weight:950; }
+    select, input[type="number"]{
+      border:2px solid #e5e7eb; border-radius:14px; padding:12px 13px;
+      font-weight:950; font-size:17px; background:#fff; width:100%; outline:none;
+    }
+    select:focus, input[type="number"]:focus{ border-color:var(--blue); }
+
+    .sw{
+      display:inline-flex; align-items:center; gap:10px; cursor:pointer;
+      user-select:none; font-weight:950; font-size:14.5px; color:#111827; white-space:nowrap;
+    }
+    .sw input{ position:absolute; opacity:0; width:0; height:0; }
+    .sw .track{
+      position:relative; width:46px; height:26px; border-radius:999px; background:#cbd5e1;
+      transition:.18s ease; flex:0 0 auto; box-shadow:inset 0 1px 3px rgba(15,23,42,.18);
+    }
+    .sw .track::after{
+      content:""; position:absolute; top:3px; left:3px; width:20px; height:20px;
+      border-radius:50%; background:#fff; box-shadow:0 2px 6px rgba(15,23,42,.3); transition:.18s ease;
+    }
+    .sw input:checked + .track{ background:var(--green); }
+    .sw input:checked + .track::after{ transform:translateX(20px); }
+    .sw input:focus-visible + .track{ box-shadow:0 0 0 4px rgba(37,99,235,.28); }
+
+    .note{ margin:9px 0 0; font-size:12.5px; font-weight:800; color:var(--muted); line-height:1.45; }
+    .note.warn{ color:var(--red); }
+
+    .secGrid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(212px,1fr)); gap:10px; }
+    .secOpt{
+      border:1.5px solid var(--border); border-radius:15px; padding:11px 12px 12px;
+      background:#fff; display:grid; gap:10px; align-content:start;
+      transition:opacity .15s ease, background .15s ease, border-color .15s ease;
+    }
+    .secOpt.off{ opacity:.55; background:#f9fafb; }
+    .secOpt .sw{ white-space:normal; }
+    .cntRow{ display:flex; align-items:center; gap:9px; }
+    .cntRow label{ margin:0; font-size:12.5px; font-weight:900; color:var(--muted); white-space:nowrap; }
+    .cntRow input[type="number"]{ width:82px; padding:8px 6px; font-size:17px; text-align:center; }
+    .totalRow{
+      margin-top:11px; font-size:13.5px; font-weight:950; color:var(--ink);
+      display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    }
+    .totalRow .pill{ background:#eef2ff; color:#1d4ed8; border-radius:999px; padding:4px 12px; font-weight:1000; }
+    .totalRow .pill.zero{ background:#fee2e2; color:#991b1b; }
+
+    .btnRow{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end; }
+    button{
+      border:none; border-radius:14px; padding:12px 16px; font-weight:1000; cursor:pointer;
+      background:#f3f4f6; color:#111827; font-size:16px; user-select:none;
+      transition:transform .04s ease, filter .15s ease, opacity .2s ease;
+    }
+    button:active{ transform:scale(.98); }
+    button.primary{ background:#2563eb; color:#fff; }
+    button.ghost{ background:#eef2ff; color:#1d4ed8; }
+    button.danger{ background:#fee2e2; color:#991b1b; }
+
+    .outWrap{ margin-top:14px; }
+
+    /* =====================================================================
+       THE PAPER
+       ===================================================================== */
+    .page{
+      margin:14px auto 0; background:#fff; border:1px solid var(--border);
+      border-radius:18px; box-shadow:0 10px 26px rgba(15,23,42,.08); overflow:hidden;
+      width:210mm; max-width:100%; height:297mm;
+      display:flex; flex-direction:column;
+    }
+    .pageHeader{
+      padding:9px 13px 7px; border-bottom:2px solid #111827;
+      display:flex; align-items:flex-end; justify-content:space-between; gap:10px;
+    }
+    .hdrTitle{ font-weight:1000; font-size:15px; line-height:1.1; }
+    .hdrSub{ color:var(--muted); font-weight:850; font-size:11px; margin-top:2px; white-space:nowrap; }
+    .nameDate{ display:flex; gap:8px; align-items:flex-end; }
+    .lineField{ display:flex; flex-direction:column; gap:3px; width:116px; }
+    .lineLabel{ font-size:10px; font-weight:950; color:var(--muted); }
+    .lineBox{ height:19px; border-bottom:1.6px solid #111827; }
+
+    .sheet{ padding:8px 13px 10px; flex:1 1 auto; display:flex; flex-direction:column; min-height:0; }
+
+    .section{ margin-bottom:9px; }
+    .secHead{
+      display:flex; align-items:baseline; gap:9px;
+      border-bottom:1.6px solid #111827; padding-bottom:3px; margin-bottom:7px;
+    }
+    .secLetter{
+      font-weight:1000; font-size:14px; letter-spacing:.02em;
+      background:#111827; color:#fff; border-radius:5px; padding:1px 7px; flex:0 0 auto;
+    }
+    .secText{ font-weight:900; font-size:13.5px; color:#111827; line-height:1.3; }
+    .secCont{ margin-left:auto; font-size:11px; font-weight:900; color:var(--muted); flex:0 0 auto; }
+
+    /* chosen language on top, English beneath; every symbol stays LTR */
+    .tl{ display:block; }
+    .tl[lang="ar"], .tl[lang="fa"]{ font-size:1.05em; }
+    .el{ display:block; font-size:.84em; opacity:.72; font-weight:750; margin-top:1px; }
+    bdi{ unicode-bidi:isolate; }
+
+    .qGrid{ display:grid; gap:8px 9px; grid-template-columns:repeat(var(--cols,3),1fr); }
+    .qCard{
+      border:1.2px solid #d7dce3; border-radius:10px; padding:5px 7px 6px;
+      display:flex; flex-direction:column; gap:4px;
+      break-inside:avoid; page-break-inside:avoid; background:#fff;
+    }
+    .qCard.flat{ flex-direction:row; align-items:center; flex-wrap:wrap; gap:5px 7px; padding:7px 8px; min-width:0; }
+    .qTop{ display:flex; align-items:center; gap:6px; width:100%; }
+    .qNum{
+      width:20px; height:20px; border-radius:999px; color:#fff;
+      display:flex; align-items:center; justify-content:center;
+      font-size:11px; font-weight:1000; flex:0 0 auto;
+    }
+    .qNum.sweet{ background:linear-gradient(180deg,var(--sweet1),var(--sweet2)); }
+    .qNum.mild{ background:linear-gradient(180deg,var(--mild1),var(--mild2)); }
+    .qNum.medium{ background:linear-gradient(180deg,var(--medium1),var(--medium2)); }
+    .qNum.spicy{ background:linear-gradient(180deg,var(--spicy1),var(--spicy2)); }
+
+    /* Every expression is set the way an equation editor sets it: variables in
+       the real math italic alphabet where the font has it (.mi), a synthesised
+       italic only as a fallback (i), and regular weight — not bold. */
+    .qExpr{
+      font-family:var(--mathFont); font-weight:500; font-size:18px;
+      display:block; line-height:1.42; min-width:0;
+    }
+    .qExpr.inl{ display:inline; }
+    .qExpr.sm{ font-size:16px; }
+    .mi{ font-style:normal; }
+    .qExpr i, .exText i, .hdrTitle i{ font-style:italic; }
+    .qExpr sup, .ansKey sup, .exText sup{ font-size:.62em; vertical-align:.5em; line-height:0; }
+
+    .frac{ display:inline-flex; flex-direction:column; align-items:center; vertical-align:middle;
+           line-height:1; font-size:.78em; }
+    .frac .fn{ padding:0 .3em .06em; }
+    .frac .fd{ padding:.07em .3em 0; border-top:.085em solid currentColor; }
+    /* A radical is DRAWN, not typed. The √ glyph's own metrics differ wildly
+       between maths fonts — in some it hangs below the baseline — so the tick
+       is a stretched svg and the vinculum is the radicand's own top border.
+       align-items:stretch makes the svg exactly as tall as what it covers, so
+       the tip always meets the bar. */
+    .rad{ display:inline-flex; align-items:stretch; vertical-align:-.24em; }
+    .rad .rsvg{ width:.56em; flex:0 0 auto; overflow:visible; }
+    .rad .rc{ border-top:1.15px solid currentColor; padding:.08em .16em 0 .02em; white-space:nowrap; }
+
+    /* a box to write the answer in, because a blank is a place, not a line */
+    .box{
+      display:inline-flex; align-items:center; justify-content:center;
+      vertical-align:-.32em; margin:0 2px;
+      min-width:var(--bw,40px); height:1.5em; padding:0 5px;
+      border:1.7px solid #111827; border-radius:6px; flex:0 0 auto;
+      font-family:var(--mathFont); font-weight:500;
+    }
+    .box.wide{ --bw:60px; }
+    .box.key{ border-color:var(--green); color:var(--green); font-weight:700; }
+
+    .ansLine{
+      display:inline-block; vertical-align:bottom;
+      border-bottom:1.7px solid #111827; height:1.4em;
+      min-width:var(--ansW,64px); flex:1 1 auto; align-self:flex-end;
+    }
+    .ansLine.full{ display:block; width:100%; min-width:0; height:1.5em; }
+    .ansKey{
+      font-family:var(--mathFont); font-weight:700; font-size:16px; color:var(--green);
+      display:block; line-height:1.5; min-width:0;
+    }
+    .ansKey.full{ display:block; width:100%; }
+    .ansKey .step{ color:#4b5563; font-weight:500; }
+
+    /* room to work — the point of section D is the working, not the answer */
+    .work{
+      width:100%; margin-top:3px;
+      background-image:repeating-linear-gradient(to bottom,
+        transparent 0, transparent 21px, #b8c2cf 21px, #b8c2cf 22px);
+    }
+    .work.w2{ height:44px; } .work.w3{ height:66px; } .work.w4{ height:88px; }
+    .page.isKey .work{ display:none; }
+
+    /* the area model */
+    .qModel{ width:100%; }
+    .qModel svg{ display:block; width:100%; height:auto; }
+    .modelFoot{ margin-top:3px; }
+
+    .explainBox{
+      border:1.6px solid #4f46e5; border-radius:10px; padding:8px 11px 9px;
+      background:rgba(79,70,229,.035); break-inside:avoid; page-break-inside:avoid;
+      flex:1 1 auto; max-height:96mm; display:flex; flex-direction:column; min-height:0;
+    }
+    .exHead{
+      font-size:11px; font-weight:1000; letter-spacing:.1em; text-transform:uppercase;
+      color:#4338ca; margin-bottom:4px;
+    }
+    .exText{ font-size:13px; font-weight:850; line-height:1.45; color:#111827; }
+    .exText b{ font-weight:1000; }
+    .exText bdi, .qWord bdi{ font-family:var(--mathFont); font-weight:600; font-size:1.06em; }
+    .ruled{
+      flex:1 1 auto; min-height:24px; margin-top:8px;
+      background-image:repeating-linear-gradient(to bottom,
+        transparent 0, transparent 27px, #a5b4c4 27px, #a5b4c4 28.2px);
+    }
+    .page.isKey .explainBox{ flex:0 0 auto; }
+    .exKey{
+      margin-top:auto; font-size:11px; font-weight:850; line-height:1.4;
+      color:var(--green); background:rgba(22,163,74,.08);
+      border:1.2px solid rgba(22,163,74,.35); border-radius:8px; padding:5px 7px;
+    }
+
+    /* the optional method reminder — off by default, because the picture is
+       supposed to make it unnecessary */
+    .method{
+      border:1.4px dashed #94a3b8; border-radius:9px; padding:6px 10px 7px;
+      margin-bottom:8px; display:flex; align-items:center; gap:6px 16px;
+      flex-wrap:wrap; justify-content:center; break-inside:avoid;
+    }
+    .method .mh{ font-family:var(--uiFont); font-weight:1000; font-size:12px; color:#111827; }
+    .method .ms{ font-family:var(--mathFont); font-weight:500; font-size:15px; }
+
+    .pageFooter{
+      padding:5px 13px 6px; border-top:1px solid rgba(229,231,235,.95);
+      display:flex; align-items:center; justify-content:space-between;
+      font-weight:900; color:var(--muted); font-size:10px;
+    }
+    .pageFooter a{ color:#2563eb; text-decoration:none; font-weight:1000; }
+
+    .measure{ position:absolute; left:-10000px; top:0; width:210mm; visibility:hidden; }
+    .probe{ position:absolute; left:-10000px; top:0; visibility:hidden; white-space:nowrap;
+            font-family:var(--mathFont); font-size:100px; }
+
+    .mmtFooter{
+      position:fixed; left:0; right:0; bottom:0; height:var(--footer-h);
+      display:flex; align-items:center; justify-content:center; padding:0 12px;
+      background:rgba(255,255,255,.92); border-top:1px solid rgba(229,231,235,.95);
+      backdrop-filter:blur(8px); z-index:500; font-weight:900; color:#111827;
+      text-align:center; font-size:13px;
+    }
+    .mmtFooter a{ color:#2563eb; text-decoration:none; font-weight:950; }
+
+    @media print{
+      @page{ size:A4; margin:8mm 7mm; }
+      html, body{ width:210mm; height:auto; }
+      body{ background:#fff; padding-bottom:0; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+
+      .wrap{ max-width:none; margin:0; padding:0; }
+      .card{ box-shadow:none; border-radius:0; padding:0; }
+      .controls, .title, .subtitle, .mmtFooter{ display:none !important; }
+
+      .page{
+        margin:0; border:none; border-radius:0; box-shadow:none;
+        width:auto; height:281mm; page-break-after:always;
+      }
+      .page:last-child{ page-break-after:auto; }
+
+      .pageHeader{ padding:0 0 1.6mm; }
+      .sheet{ padding:2.4mm 0 0; }
+      .pageFooter{ padding:1.4mm 0 0; }
+    }
+  </style>
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "c7e5713b5e4f4993907eb285797dc89b"}'></script><!-- End Cloudflare Web Analytics -->
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1 class="title">Complete the Square — Worksheet Generator</h1>
+      <p class="subtitle">Printable A4 worksheets from the <a href="/interactive-tools/stage-5/algebra/complete-the-square/">Complete the Square</a> teaching tool. The scaffold fades across the page: an area model to label, then the two blanks, then writing an expression in completed square form, then solving an equation with it, then using it. Answers stay exact — surds are never turned into decimals. Worksheet language prints every instruction bilingually for EAL/D students; the algebra stays Western and LTR.</p>
+
+      <div class="controls">
+        <div class="band">
+          <p class="bandHead">The paper</p>
+          <div class="bandGrid">
+            <div>
+              <label for="scopeSel">Coefficient of <i>x</i>&sup2;</label>
+              <select id="scopeSel">
+                <option value="monic" selected>Monic only &mdash; <i>x</i>&sup2; every time</option>
+                <option value="any">Include <i>a</i> &ne; 1 in the harder questions</option>
+              </select>
+            </div>
+            <div>
+              <label for="levelSel">Level</label>
+              <select id="levelSel">
+                <option value="sweet">Sweet &mdash; small even <i>b</i>, whole answers</option>
+                <option value="mild">Mild &mdash; even <i>b</i>, either sign</option>
+                <option value="medium">Medium &mdash; odd <i>b</i>, fractions and surds</option>
+                <option value="spicy">Spicy &mdash; big numbers, surds, <i>a</i> &ne; 1</option>
+                <option value="mixed" selected>Mixed &mdash; a ladder of all four</option>
+              </select>
+            </div>
+            <div>
+              <label for="densitySel">Question size</label>
+              <select id="densitySel">
+                <option value="roomy">Large</option>
+                <option value="normal" selected>Medium</option>
+                <option value="tight">Small &mdash; fit the most on a page</option>
+              </select>
+            </div>
+            <div>
+              <label for="langSel">Worksheet language</label>
+              <select id="langSel">
+                <option value="en">English only</option>
+                <option value="ar">Arabic + English (العربية)</option>
+                <option value="fa">Farsi / Persian + English (فارسی)</option>
+              </select>
+            </div>
+          </div>
+          <p class="note"><b>Level</b> chooses the numbers, not the sections &mdash; a Sweet paper still meets every question type, and a Mixed paper climbs the ladder inside each section separately.</p>
+        </div>
+
+        <div class="band">
+          <p class="bandHead">Sections &mdash; and how many of each</p>
+          <div class="secGrid">
+            <div class="secOpt" data-for="kModel">
+              <label class="sw"><input type="checkbox" id="kModel" checked /><span class="track"></span><span>Label the area model</span></label>
+              <div class="cntRow"><label for="nModel">How many</label><input id="nModel" type="number" min="0" max="12" value="2" /></div>
+            </div>
+            <div class="secOpt" data-for="kGap">
+              <label class="sw"><input type="checkbox" id="kGap" checked /><span class="track"></span><span>Fill the two blanks</span></label>
+              <div class="cntRow"><label for="nGap">How many</label><input id="nGap" type="number" min="0" max="40" value="8" /></div>
+            </div>
+            <div class="secOpt" data-for="kForm">
+              <label class="sw"><input type="checkbox" id="kForm" checked /><span class="track"></span><span>Completed square form</span></label>
+              <div class="cntRow"><label for="nForm">How many</label><input id="nForm" type="number" min="0" max="40" value="6" /></div>
+            </div>
+            <div class="secOpt" data-for="kSolve">
+              <label class="sw"><input type="checkbox" id="kSolve" checked /><span class="track"></span><span>Solve the equation</span></label>
+              <div class="cntRow"><label for="nSolve">How many</label><input id="nSolve" type="number" min="0" max="30" value="6" /></div>
+            </div>
+            <div class="secOpt" data-for="kUse">
+              <label class="sw"><input type="checkbox" id="kUse" checked /><span class="track"></span><span>Use it</span></label>
+              <div class="cntRow"><label for="nUse">How many</label><input id="nUse" type="number" min="0" max="16" value="3" /></div>
+            </div>
+          </div>
+          <div class="totalRow"><span>On the paper:</span><span class="pill" id="totalPill">0 questions</span></div>
+          <p class="note">The picture is handed over in stages. <b>Label the area model</b> is the screen from the teaching tool with the edges and the corner missing &mdash; the negative ones are where the thinking is. <b>Fill the two blanks</b> is <bdi><i>x</i>&sup2; + <i>b</i><i>x</i> + &#9744; = (<i>x</i> + &#9744;)&sup2;</bdi> and nothing else. <b>Completed square form</b> adds a constant to carry. <b>Solve the equation</b> is the whole method, with room to work and exact answers. <b>Use it</b> asks for turning points, smallest values and arguments.</p>
+        </div>
+
+        <div class="band">
+          <p class="bandHead">Options</p>
+          <div class="bandRow">
+            <label class="sw"><input type="checkbox" id="methodToggle" /><span class="track"></span><span>Method reminder</span></label>
+            <label class="sw"><input type="checkbox" id="reasonToggle" checked /><span class="track"></span><span>Reasoning prompt on each page</span></label>
+            <label class="sw"><input type="checkbox" id="keyToggle" checked /><span class="track"></span><span>Answer key pages</span></label>
+          </div>
+          <p class="note">The <b>method reminder</b> prints the identity at the top of page one. It is off by default on purpose &mdash; the area model is meant to make the rule unnecessary. The <b>reasoning prompt</b> is a misconception to argue with, and it stretches into whatever space the last section leaves.</p>
+        </div>
+
+        <div class="btnRow">
+          <button id="genBtn" class="primary">Generate worksheet</button>
+          <button id="printBtn" class="ghost">Print (Ctrl+P)</button>
+          <button id="resetBtn" class="danger">Reset</button>
+        </div>
+      </div>
+
+      <div id="out" class="outWrap"></div>
+    </div>
+  </div>
+
+  <div class="mmtFooter">
+    This tool and more can be found at&nbsp;
+    <a href="https://www.millsmathstools.au">www.millsmathstools.au</a>
+  </div>
+<script>
+(() => {
+  "use strict";
+
+  const SITE = "https://www.millsmathstools.au";
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
+  const MINUS = "−";                       // a hyphen is not a minus sign
+
+  /* ===================== MATHS ITALICS =====================
+     Word's equation editor does not slant an upright face — it draws
+     variables from Cambria Math's own italic alphabet, which lives in
+     Unicode's Mathematical Alphanumeric Symbols block. Use those real glyphs
+     where the font has them, and fall back to a synthesised italic where it
+     does not, so a school machine without a maths font never prints tofu.
+     Same decision, same code, as the teaching tool.                        */
+  function mathItalic(str){
+    let out = "";
+    for(const ch of String(str)){
+      const c = ch.codePointAt(0);
+      if(ch === "h") out += "ℎ";
+      else if(c >= 97 && c <= 122) out += String.fromCodePoint(0x1D44E + c - 97);
+      else if(c >= 65 && c <=  90) out += String.fromCodePoint(0x1D434 + c - 65);
+      else out += ch;
+    }
+    return out;
+  }
+  let MATH_ALPHA = false;
+  function detectMathAlpha(){
+    try{
+      const p = document.createElement("span");
+      p.className = "probe";
+      document.body.appendChild(p);
+      p.textContent = "\u{1D465}\u{1D44E}\u{1D44F}\u{1D450}";
+      const real = p.getBoundingClientRect().width;
+      p.textContent = "";
+      const gone = p.getBoundingClientRect().width;
+      p.remove();
+      return real > 0 && gone > 0 && Math.abs(real - gone) > 1;
+    }catch(_){ return false; }
+  }
+  // a variable, set the way an equation editor sets it
+  const IT = t => MATH_ALPHA ? '<span class="mi">' + mathItalic(t) + '</span>' : '<i>' + t + '</i>';
+  const X   = () => IT("x");
+  const SQ  = "<sup>2</sup>";
+
+  // every <bdi> on this page holds algebra, so set its letters the way the
+  // rest of the page sets them (entities are parked first so &sup2; survives)
+  function mathify(html){
+    return String(html).replace(/<bdi>([\s\S]*?)<\/bdi>/g, function(m, inner){
+      const ents = [];
+      let t = inner.replace(/&[a-zA-Z][a-zA-Z0-9]*;|&#\d+;/g, e => { ents.push(e); return "\u0001" + (ents.length - 1) + "\u0001"; });
+      t = t.replace(/[A-Za-z]+/g, w => IT(w));
+      t = t.replace(/\u0001(\d+)\u0001/g, (mm, i) => ents[+i]);
+      return "<bdi>" + t + "</bdi>";
+    });
+  }
+
+  /* ===================== EXACT ARITHMETIC =====================
+     Everything on the paper is exact. No answer is ever a rounded decimal:
+     halves and quarters print as real stacked fractions, and irrational
+     roots stay under a vinculum.                                          */
+  function gcd(a, b){ a = Math.abs(a); b = Math.abs(b); while(b){ const t = a % b; a = b; b = t; } return a || 1; }
+  function fr(n, d){
+    if(d < 0){ n = -n; d = -d; }
+    const g = gcd(n, d) || 1;
+    return { n:n / g, d:d / g };
+  }
+  const isInt = f => f.d === 1;
+  const num = n => (n < 0 ? MINUS : "") + Math.abs(n);
+  function fracHTML(n, d){
+    return '<span class="frac"><span class="fn">' + n + '</span><span class="fd">' + d + '</span></span>';
+  }
+  // a fraction, with the sign kept OUTSIDE the bar where it belongs
+  function frHTML(f){
+    if(isInt(f)) return num(f.n);
+    return (f.n < 0 ? MINUS : "") + fracHTML(Math.abs(f.n), f.d);
+  }
+  const frAbsHTML = f => isInt(f) ? String(Math.abs(f.n)) : fracHTML(Math.abs(f.n), f.d);
+  const frTxt = f => isInt(f) ? String(f.n) : f.n + "/" + f.d;
+
+  // √D = k√m, with every square factor pulled out
+  function simpSurd(D){
+    let k = 1, m = D;
+    for(let i = 2; i * i <= m; i++){ while(m % (i * i) === 0){ m /= i * i; k *= i; } }
+    return { k:k, m:m };
+  }
+  function radHTML(inner){
+    return '<span class="rad">'
+      + '<svg class="rsvg" viewBox="0 0 10 22" preserveAspectRatio="none" aria-hidden="true">'
+      +   '<path d="M0.7 13 L3.3 13 L5.8 20.4 L9.6 0.8" fill="none" stroke="currentColor" '
+      +   'stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />'
+      + '</svg><span class="rc">' + inner + '</span></span>';
+  }
+
+  /* ===================== THE QUADRATIC =====================
+     One shape everywhere: { a, b, c } meaning ax² + bx + c.               */
+  function termX(k){                                   // never writes a 1 in front of x
+    const a = Math.abs(k);
+    return (a === 1 ? "" : String(a)) + X();
+  }
+  function quadHTML(a, b, c, withY){
+    let s = (a === 1 ? "" : String(a)) + X() + SQ;
+    if(b !== 0) s += " " + (b < 0 ? MINUS : "+") + " " + termX(b);
+    if(c !== 0) s += " " + (c < 0 ? MINUS : "+") + " " + Math.abs(c);
+    return (withY ? IT("y") + " = " : "") + s;
+  }
+  const quadTxt = (a, b, c) =>
+    (a === 1 ? "" : a) + "x^2" + (b ? (b < 0 ? " - " : " + ") + (Math.abs(b) === 1 ? "" : Math.abs(b)) + "x" : "")
+    + (c ? (c < 0 ? " - " : " + ") + Math.abs(c) : "");
+
+  // ax² + bx + c = a(x + p)² + q, exactly
+  const pOf = (a, b) => fr(b, 2 * a);
+  const qOf = (a, b, c) => fr(4 * a * c - b * b, 4 * a);
+
+  function bracketHTML(a, b){
+    const p = pOf(a, b);
+    return '(' + X() + " " + (p.n < 0 ? MINUS : "+") + " " + frAbsHTML(p) + ')' + SQ;
+  }
+  function csHTML(a, b, c){
+    const q = qOf(a, b, c);
+    let s = (a === 1 ? "" : String(a)) + bracketHTML(a, b);
+    if(q.n !== 0) s += " " + (q.n < 0 ? MINUS : "+") + " " + frAbsHTML(q);
+    return s;
+  }
+
+  /* the solutions of ax² + bx + c = 0, exactly */
+  function rootsOf(a, b, c){
+    const D = b * b - 4 * a * c;
+    if(D < 0) return { none:true, D:D };
+    const s = Math.round(Math.sqrt(D));
+    if(s * s === D) return { rational:true, D:D, r:[fr(-b + s, 2 * a), fr(-b - s, 2 * a)] };
+    const sq = simpSurd(D);
+    const g = gcd(gcd(Math.abs(b), sq.k), Math.abs(2 * a));
+    return { surd:true, D:D, nb:-b / g, k:sq.k / g, m:sq.m, den:(2 * a) / g };
+  }
+  function rootsHTML(a, b, c){
+    const R = rootsOf(a, b, c);
+    if(R.none) return "no real solutions";
+    if(R.rational){
+      const [r1, r2] = R.r;
+      if(frTxt(r1) === frTxt(r2)) return X() + " = " + frHTML(r1) + " (twice)";
+      return X() + " = " + frHTML(r1) + " &nbsp;or&nbsp; " + X() + " = " + frHTML(r2);
+    }
+    const rad = radHTML(String(R.m));
+    const kk = R.k === 1 ? "" : String(R.k);
+    if(R.den === 1) return X() + " = " + num(R.nb) + " &plusmn; " + kk + rad;
+    return X() + " = " + fracHTML(num(R.nb) + " &plusmn; " + kk + rad, String(R.den));
+  }
+  // the line before the answer: (x + p)² = D/4a²
+  function squareStepHTML(a, b, c){
+    return bracketHTML(a, b) + " = " + frHTML(fr(b * b - 4 * a * c, 4 * a * a));
+  }
+
+  /* ===================== worksheet language (EN / Arabic / Farsi) ===================== */
+  let LANG = "en";
+  try{ LANG = localStorage.getItem("mmt-cts-ws-lang") || "en"; }catch(_){ }
+  function TR(o){
+    if(o == null) return "";
+    if(typeof o === "string") o = { en:o };
+    if(LANG === "en" || !o[LANG]) return o.en || "";
+    return '<span class="tl" dir="rtl" lang="' + LANG + '">' + o[LANG] + '</span>'
+         + '<span class="el">' + (o.en || "") + '</span>';
+  }
+
+  const WS = {
+    name:{ en:"Name", ar:"الاسم", fa:"نام" },
+    date:{ en:"Date", ar:"التاريخ", fa:"تاریخ" },
+    model:{ en:"Label the area model. Fill every box, then complete the statement underneath.",
+      ar:"سمِّ نموذج المساحة. املأ كل مربع، ثم أكمل العبارة أسفله.",
+      fa:"مدل مساحت را برچسب بزن. هر کادر را پر کن، سپس عبارت زیر آن را کامل کن." },
+    gap:{ en:"Fill the two boxes so that each statement is true.",
+      ar:"املأ المربعين ليصبح كل بيان صحيحًا.",
+      fa:"دو کادر را پر کن تا هر گزاره درست شود." },
+    form:{ en:"Write each expression in completed square form.",
+      ar:"اكتب كل عبارة على صورة المربع الكامل.",
+      fa:"هر عبارت را به صورت مربع کامل بنویس." },
+    solve:{ en:"Solve each equation by completing the square. Leave any surds exact.",
+      ar:"حل كل معادلة بإكمال المربع. اترك الجذور بصورتها الدقيقة.",
+      fa:"هر معادله را با کامل کردن مربع حل کن. رادیکال‌ها را دقیق بگذار." },
+    use:{ en:"Use completing the square to answer each question.",
+      ar:"استخدم إكمال المربع للإجابة عن كل سؤال.",
+      fa:"برای پاسخ به هر پرسش از کامل کردن مربع استفاده کن." },
+    cont:{ en:"continued", ar:"تابع", fa:"ادامه" },
+    think:{ en:"Something to argue with", ar:"شيء تناقشه", fa:"چیزی برای بحث" },
+    method:{ en:"Remember", ar:"تذكَّر", fa:"به یاد داشته باش" }
+  };
+
+  /* ===================== QUESTION MAKERS ===================== */
+  const ORDER = ["sweet", "mild", "medium", "spicy"];
+  const rInt = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+  const pick = a => a[Math.floor(Math.random() * a.length)];
+  const coin = () => Math.random() < 0.5;
+  const isSquare = n => { const s = Math.round(Math.sqrt(n)); return s * s === n; };
+
+  /* A. the area model. b is ALWAYS even, because half of an odd number is a
+     length nobody can draw sensibly on a schematic. The ladder is the SIGN:
+     the negative model is the one that teaches something, so it is where the
+     harder levels live. */
+  function makeModelQ(lv){
+    const b = lv === "sweet"  ?  2 * rInt(2, 6)
+            : lv === "mild"   ?  2 * rInt(6, 12)
+            : lv === "medium" ? -2 * rInt(2, 7)
+            :                   -2 * rInt(7, 15);
+    return { kind:"model", level:lv, a:1, b:b, c:0 };
+  }
+
+  /* B. x² + bx + ☐ = (x + ☐)². Monic on purpose — this section is the
+     identity and nothing else. Odd b is the step up, because half of it is a
+     fraction and the corner is a quarter. */
+  function makeGapQ(lv){
+    const b = lv === "sweet"  ? 2 * rInt(1, 8)
+            : lv === "mild"   ? (coin() ? 1 : -1) * 2 * rInt(2, 12)
+            : lv === "medium" ? (coin() ? 1 : -1) * (2 * rInt(1, 7) + 1)
+            :                   (coin() ? 1 : -1) * (2 * rInt(6, 15) + 1);
+    return { kind:"gap", level:lv, a:1, b:b, c:0 };
+  }
+
+  /* C. write ax² + bx + c in completed square form. */
+  function makeFormQ(lv, scope){
+    let a = 1, b, c;
+    if(lv === "sweet"){ b = 2 * rInt(1, 7); c = rInt(1, 12); }
+    else if(lv === "mild"){ b = (coin() ? 1 : -1) * 2 * rInt(2, 10); c = (coin() ? 1 : -1) * rInt(1, 30); }
+    else if(lv === "medium"){ b = (coin() ? 1 : -1) * (2 * rInt(1, 7) + 1); c = (coin() ? 1 : -1) * rInt(1, 20); }
+    else if(scope === "any"){
+      // a is taken out first, so keep b a multiple of a — the challenge is the
+      // factor, not an unreadable sixth
+      a = pick([2, 2, 3, 4]);
+      b = a * (coin() ? 1 : -1) * 2 * rInt(1, 5);
+      c = (coin() ? 1 : -1) * rInt(1, 25);
+    } else { b = (coin() ? 1 : -1) * (2 * rInt(8, 16) + 1); c = (coin() ? 1 : -1) * rInt(10, 60); }
+    return { kind:"form", level:lv, a:a, b:b, c:c };
+  }
+
+  /* D. solve ax² + bx + c = 0. Every generated equation has real solutions —
+     the discriminant is chosen, not hoped for. */
+  function makeSolveQ(lv, scope){
+    if(lv === "sweet" || lv === "mild"){
+      // pick the ROOTS, so the answer is always exact and always integers
+      const hi = lv === "sweet" ? 7 : 12;
+      for(let t = 0; t < 60; t++){
+        let r1 = rInt(-hi, hi), r2 = rInt(-hi, hi);
+        if(r1 === r2) continue;
+        if(((r1 + r2) % 2 + 2) % 2 !== 0) continue;               // keeps b even
+        if(lv === "sweet" && (r1 + r2) > 0) { const t2 = r1; r1 = -t2; }
+        const b = -(r1 + r2), c = r1 * r2;
+        if(b === 0 || c === 0 || Math.abs(b) > 2 * hi || Math.abs(c) > 150) continue;
+        return { kind:"solve", level:lv, a:1, b:b, c:c };
+      }
+      return { kind:"solve", level:lv, a:1, b:6, c:-7 };
+    }
+    if(lv === "medium"){
+      // b even, and c set so the surd survives: x = −p ± √m
+      for(let t = 0; t < 60; t++){
+        const p = (coin() ? 1 : -1) * rInt(1, 9), m = rInt(2, 30);
+        if(isSquare(m)) continue;
+        return { kind:"solve", level:lv, a:1, b:2 * p, c:p * p - m };
+      }
+    }
+    if(scope === "any"){
+      for(let t = 0; t < 80; t++){
+        const a = pick([2, 3]), b = a * (coin() ? 1 : -1) * 2 * rInt(1, 5), c = (coin() ? 1 : -1) * rInt(1, 12);
+        const D = b * b - 4 * a * c;
+        if(D <= 0) continue;
+        return { kind:"solve", level:"spicy", a:a, b:b, c:c };
+      }
+    }
+    // monic and spicy: odd b, so the answer is a fraction or a surd over 2
+    for(let t = 0; t < 80; t++){
+      const b = (coin() ? 1 : -1) * (2 * rInt(1, 8) + 1), c = (coin() ? 1 : -1) * rInt(1, 20);
+      const D = b * b - 4 * c;
+      if(D <= 0 || isSquare(D)) continue;
+      return { kind:"solve", level:"spicy", a:1, b:b, c:c };
+    }
+    return { kind:"solve", level:"spicy", a:1, b:5, c:1 };
+  }
+
+  /* E. use it. Three things completing the square is actually FOR. */
+  const USE = [
+    { id:"vertex", needPos:false,
+      q:{ en:"The parabola <bdi>{1}</bdi>. Write <bdi>y</bdi> in completed square form, then write down the coordinates of its minimum point.",
+          ar:"القطع المكافئ <bdi>{1}</bdi>. اكتب <bdi>y</bdi> على صورة المربع الكامل، ثم اكتب إحداثيّي نقطة الصغرى.",
+          fa:"سهمی <bdi>{1}</bdi>. <bdi>y</bdi> را به صورت مربع کامل بنویس، سپس مختصات نقطهٔ کمینه را بنویس." } },
+    { id:"least", needPos:false,
+      q:{ en:"What is the smallest value <bdi>{2}</bdi> can take, and which value of <bdi>x</bdi> gives it?",
+          ar:"ما أصغر قيمة يمكن أن تأخذها <bdi>{2}</bdi>؟ وأي قيمة لـ <bdi>x</bdi> تعطيها؟",
+          fa:"کمترین مقداری که <bdi>{2}</bdi> می‌تواند بگیرد چقدر است و کدام مقدار <bdi>x</bdi> آن را می‌دهد؟" } },
+    { id:"positive", needPos:true,
+      q:{ en:"Show that <bdi>{2}</bdi> is positive for every value of <bdi>x</bdi>.",
+          ar:"بيّن أن <bdi>{2}</bdi> موجبة لكل قيمة لـ <bdi>x</bdi>.",
+          fa:"نشان بده که <bdi>{2}</bdi> برای هر مقدار <bdi>x</bdi> مثبت است." } }
+  ];
+
+  function makeUseQ(lv, scope, forceId){
+    const tpl = forceId ? USE.find(u => u.id === forceId) : pick(USE);
+    let a = 1, b, c;
+    if(lv === "spicy" && scope === "any"){ a = pick([2, 3]); b = a * 2 * (coin() ? 1 : -1) * rInt(1, 4); }
+    else if(lv === "medium" || lv === "spicy") b = (coin() ? 1 : -1) * (2 * rInt(1, 6) + 1);
+    else b = (coin() ? 1 : -1) * 2 * rInt(1, lv === "sweet" ? 5 : 9);
+    if(tpl.needPos){
+      // q must be strictly positive, so build c from the square upwards
+      const k = rInt(1, 9);
+      c = Math.round((b * b) / (4 * a)) + k;
+      if(qOf(a, b, c).n <= 0) c += 1;
+    } else {
+      c = (coin() ? 1 : -1) * rInt(1, lv === "sweet" ? 14 : 40);
+    }
+    return { kind:"use", level:lv, a:a, b:b, c:c, tpl:tpl.id };
+  }
+
+  /* ===================== THE AREA MODEL, DRAWN ===================== */
+  // SVG collapses runs of whitespace and has no <sup>, so every label is
+  // assembled from tspans: digits upright, letters in the maths italic, and
+  // the square as a raised, smaller tspan.
+  function svgMath(s){
+    let out = "", i = 0;
+    while(i < s.length){
+      const ch = s[i];
+      if(ch === "²"){ out += '<tspan dy="-0.40em" font-size="0.62em">2</tspan>'; i++; continue; }
+      if(/[a-zA-Z]/.test(ch)){
+        let run = "";
+        while(i < s.length && /[a-zA-Z]/.test(s[i])) run += s[i++];
+        out += MATH_ALPHA ? '<tspan>' + mathItalic(run) + '</tspan>'
+                          : '<tspan font-style="italic">' + run + '</tspan>';
+        continue;
+      }
+      let run = "";
+      while(i < s.length && !/[a-zA-Z²]/.test(s[i])) run += s[i++];
+      out += '<tspan>' + esc(run) + '</tspan>';
+    }
+    return out;
+  }
+  function svgLabel(x, y, s, size, fill, anchor){
+    return '<text x="' + x + '" y="' + y + '" text-anchor="' + (anchor || "middle")
+      + '" font-family="var(--mathFont)" font-weight="500" font-size="' + size + '" fill="' + fill + '">'
+      + svgMath(s) + '</text>';
+  }
+  function svgBox(x, y, w, h, val, isKey){
+    const r = '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="5" fill="#fff" '
+      + 'stroke="' + (isKey ? "#16a34a" : "#111827") + '" stroke-width="1.7"'
+      + (isKey ? "" : ' stroke-dasharray="5 4"') + ' />';
+    return r + (isKey ? svgLabel(x + w / 2, y + h / 2 + 6, val, 17, "#16a34a") : "");
+  }
+
+  function svgModel(q, isKey){
+    const h = q.b / 2, neg = h < 0, ah = Math.abs(h);
+    const XS = 104, HS = 58, OX = 56, OY = 42, PR = 14, PB = 14;
+    const W = OX + XS + HS + PR, H = OY + XS + HS + PB;
+    const cell = (x, y, w, hh, fill, edge, dashed) =>
+      '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + hh + '" rx="6" fill="' + fill
+      + '" stroke="' + edge + '" stroke-width="2.2"' + (dashed ? ' stroke-dasharray="6 4"' : "") + ' />'
+      + (dashed ? '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + hh + '" rx="6" fill="url(#cut' + (isKey ? "k" : "") + ')" />' : "");
+
+    const strip = (neg ? MINUS : "") + (ah === 1 ? "" : ah) + "x";
+    let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Area model for x squared plus '
+      + q.b + ' x">'
+      + '<defs><pattern id="cut' + (isKey ? "k" : "") + '" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">'
+      + '<line x1="0" y1="0" x2="0" y2="9" stroke="#16a34a" stroke-width="1.5" opacity=".45" /></pattern></defs>';
+
+    s += cell(OX, OY, XS, XS, "var(--tSq)", "var(--tSqEdge)", false);
+    s += svgLabel(OX + XS / 2, OY + XS / 2 + 8, "x²", 25, "var(--tSqInk)");
+    s += cell(OX + XS, OY, HS, XS, "var(--tX)", "var(--tXEdge)", neg);
+    s += svgLabel(OX + XS + HS / 2, OY + XS / 2 + 6, strip, 17, "var(--tXInk)");
+    s += cell(OX, OY + XS, XS, HS, "var(--tX)", "var(--tXEdge)", neg);
+    s += svgLabel(OX + XS / 2, OY + XS + HS / 2 + 6, strip, 17, "var(--tXInk)");
+    // the corner is the question: pale pink, and empty until the key
+    s += '<rect x="' + (OX + XS) + '" y="' + (OY + XS) + '" width="' + HS + '" height="' + HS
+      + '" rx="6" fill="#fdf2f8" stroke="var(--tPEdge)" stroke-width="2.2" stroke-dasharray="6 4" />';
+    s += isKey ? svgLabel(OX + XS + HS / 2, OY + XS + HS / 2 + 7, String(h * h), 19, "var(--tPInk)")
+               : svgLabel(OX + XS + HS / 2, OY + XS + HS / 2 + 8, "?", 22, "#f9a8d4");
+
+    // the edges: x is given, the other side is the box
+    s += svgLabel(OX + XS / 2, OY - 13, "x", 20, "#334155");
+    s += svgBox(OX + XS + HS / 2 - 20, OY - 32, 40, 25, num(h), isKey);
+    s += svgLabel(OX - 16, OY + XS / 2 + 7, "x", 20, "#334155", "end");
+    s += svgBox(OX - 48, OY + XS + HS / 2 - 13, 40, 25, num(h), isKey);
+    return s + '</svg>';
+  }
+
+  /* ===================== CARDS ===================== */
+  const bx = (val, isKey, wide) =>
+    '<span class="box' + (wide ? " wide" : "") + (isKey ? " key" : "") + '">' + (isKey ? val : "") + '</span>';
+
+  function cardHTML(q, isKey){
+    const badge = '<span class="qNum ' + q.level + '">' + q.idx + '</span>';
+    const h = q.b / 2;
+
+    if(q.kind === "model"){
+      return '<div class="qCard"><div class="qTop">' + badge
+        + '<span class="qExpr sm">' + quadHTML(1, q.b, 0) + '</span></div>'
+        + '<div class="qModel">' + svgModel(q, isKey) + '</div>'
+        + '<div class="modelFoot"><span class="qExpr sm">' + quadHTML(1, q.b, 0) + " + " + bx(String(h * h), isKey)
+        + " = (" + X() + " " + (h < 0 ? MINUS : "+") + " " + bx(String(Math.abs(h)), isKey) + ")" + SQ
+        + '</span></div></div>';
+    }
+
+    if(q.kind === "gap"){
+      const c4 = fr(q.b * q.b, 4), p = fr(q.b, 2);
+      return '<div class="qCard flat">' + badge
+        + '<span class="qExpr">' + quadHTML(1, q.b, 0) + " + " + bx(frAbsHTML(c4), isKey, true)
+        + " = (" + X() + " " + (q.b < 0 ? MINUS : "+") + " " + bx(frAbsHTML(p), isKey) + ")" + SQ
+        + '</span></div>';
+    }
+
+    if(q.kind === "form"){
+      const body = '<span class="qExpr">' + quadHTML(q.a, q.b, q.c) + " =</span>"
+        + (isKey ? '<span class="ansKey">' + csHTML(q.a, q.b, q.c) + '</span>'
+                 : '<span class="ansLine"></span>');
+      return '<div class="qCard flat">' + badge + body + '</div>';
+    }
+
+    if(q.kind === "solve"){
+      const work = '<div class="work ' + q.workH + '"></div>';
+      return '<div class="qCard"><div class="qTop">' + badge
+        + '<span class="qExpr">' + quadHTML(q.a, q.b, q.c) + " = 0</span></div>"
+        + (isKey
+            ? '<div class="ansKey full"><span class="step">' + squareStepHTML(q.a, q.b, q.c) + '</span></div>'
+              + '<div class="ansKey full">' + rootsHTML(q.a, q.b, q.c) + '</div>'
+            : work)
+        + '</div>';
+    }
+
+    // use it
+    const Y = '<span class="qExpr sm inl">' + quadHTML(q.a, q.b, q.c, true) + '</span>';
+    const Q = '<span class="qExpr sm inl">' + quadHTML(q.a, q.b, q.c) + '</span>';
+    const t = USE.find(u => u.id === q.tpl);
+    // mathify FIRST, then fill: the tokens are digits so the italiciser walks
+    // straight past them, and the expression it drops in is already set
+    const fill = s2 => s2.replace(/\{1\}/g, Y).replace(/\{2\}/g, Q);
+    const text = fill(mathify(TR({ en:t.q.en, ar:t.q.ar, fa:t.q.fa })));
+    let ans = "";
+    if(isKey){
+      const p = pOf(q.a, q.b), qq = qOf(q.a, q.b, q.c), mp = fr(-p.n, p.d);
+      const cs = '<span class="step">' + (q.a === 1 ? "" : "") + csHTML(q.a, q.b, q.c) + '</span>';
+      if(q.tpl === "vertex")
+        ans = cs + '<span> &nbsp;minimum at (' + frHTML(mp) + ", " + frHTML(qq) + ")</span>";
+      else if(q.tpl === "least")
+        ans = cs + '<span> &nbsp;smallest value ' + frHTML(qq) + " when " + X() + " = " + frHTML(mp) + "</span>";
+      else
+        ans = cs + '<span> &nbsp;the square is never negative, so the value is at least ' + frHTML(qq) + " &gt; 0</span>";
+      ans = '<span class="ansKey full">' + ans + '</span>';
+    } else {
+      ans = '<span class="ansLine full"></span><span class="ansLine full"></span>';
+    }
+    return '<div class="qCard"><div class="qTop">' + badge + '<span class="qWord" style="font-size:12.5px;font-weight:850;line-height:1.45;flex:1 1 auto">'
+      + text + '</span></div><div class="qFoot" style="width:100%">' + ans + '</div></div>';
+  }
+
+  /* ===================== SECTIONS ===================== */
+  const KINDS = {
+    model: { head:WS.model, cols:{ roomy:1, normal:2, tight:2 } },
+    gap:   { head:WS.gap,   cols:{ roomy:2, normal:2, tight:3 } },
+    form:  { head:WS.form,  cols:{ roomy:2, normal:2, tight:3 } },
+    solve: { head:WS.solve, cols:{ roomy:1, normal:2, tight:3 } },
+    use:   { head:WS.use,   cols:{ roomy:1, normal:1, tight:2 } }
+  };
+  const KIND_IDS  = ["model", "gap", "form", "solve", "use"];
+  const TOGGLE_ID = { model:"kModel", gap:"kGap", form:"kForm", solve:"kSolve", use:"kUse" };
+  const COUNT_ID  = { model:"nModel", gap:"nGap", form:"nForm", solve:"nSolve", use:"nUse" };
+  const DEFAULT_N = { model:2, gap:8, form:6, solve:6, use:3 };
+  const SEC_LETTER = ["A", "B", "C", "D", "E", "F", "G", "H"];
+
+  function sectionHTML(b, isKey, density){
+    const cols = KINDS[b.kind].cols[density] || 1;
+    return '<div class="section">'
+      + '<div class="secHead"><span class="secLetter">' + b.letter + '</span>'
+      + '<span class="secText">' + TR(KINDS[b.kind].head) + '</span>'
+      + (b.cont ? '<span class="secCont">' + TR(WS.cont) + '</span>' : "")
+      + '</div>'
+      + '<div class="qGrid" style="--cols:' + cols + '">'
+      + b.qs.map(q => cardHTML(q, isKey)).join("")
+      + '</div></div>';
+  }
+
+  /* ===================== the misconceptions ===================== */
+  const REASONS = [
+    { scope:"monic",
+      q:{ en:"Kim says that to complete the square on <bdi>x&sup2; + 10x</bdi> you add <bdi>10</bdi>, because <bdi>10</bdi> is the number in front of <bdi>x</bdi>. Draw the area model and use it to say what really has to be added.",
+          ar:"تقول كيم إنه لإكمال المربع في <bdi>x&sup2; + 10x</bdi> تضيف <bdi>10</bdi>، لأن <bdi>10</bdi> هو معامل <bdi>x</bdi>. ارسم نموذج المساحة واستخدمه لتوضيح ما يجب إضافته فعلًا.",
+          fa:"کیم می‌گوید برای کامل کردن مربع در <bdi>x&sup2; + 10x</bdi> باید <bdi>10</bdi> اضافه کنی، چون <bdi>10</bdi> ضریب <bdi>x</bdi> است. مدل مساحت را بکش و با آن بگو واقعاً چه چیزی باید اضافه شود." },
+      a:"Half of 10 goes on each strip, so each strip is 5x and the missing corner is 5 × 5 = 25. You add 25, not 10 — what you add is (half of b)², never b." },
+    { scope:"monic",
+      q:{ en:"Sam writes <bdi>(x + 4)&sup2; = x&sup2; + 16</bdi>. Test it with <bdi>x = 1</bdi>. What is missing, and whereabouts is it in the area model?",
+          ar:"يكتب سام <bdi>(x + 4)&sup2; = x&sup2; + 16</bdi>. جرّب ذلك عند <bdi>x = 1</bdi>. ما الناقص؟ وأين يقع في نموذج المساحة؟",
+          fa:"سام می‌نویسد <bdi>(x + 4)&sup2; = x&sup2; + 16</bdi>. با <bdi>x = 1</bdi> امتحان کن. چه چیزی کم است و کجای مدل مساحت قرار دارد؟" },
+      a:"x = 1 gives 25 on the left and 17 on the right. The missing 8x is the two green strips, 4x each: (x + 4)² = x² + 8x + 16." },
+    { scope:"monic",
+      q:{ en:"Jess solves <bdi>(x + 3)&sup2; = 25</bdi> and writes <bdi>x + 3 = 5</bdi>, so <bdi>x = 2</bdi>. What has she missed, and what is the other solution?",
+          ar:"تحل جيس <bdi>(x + 3)&sup2; = 25</bdi> فتكتب <bdi>x + 3 = 5</bdi>، إذن <bdi>x = 2</bdi>. ما الذي أغفلته؟ وما الحل الآخر؟",
+          fa:"جس معادلهٔ <bdi>(x + 3)&sup2; = 25</bdi> را حل می‌کند و می‌نویسد <bdi>x + 3 = 5</bdi>، پس <bdi>x = 2</bdi>. چه چیزی را جا انداخته و پاسخ دیگر چیست؟" },
+      a:"A square root has two values: x + 3 = ±5. The second gives x + 3 = −5, so x = −8." },
+    { scope:"monic",
+      q:{ en:"Ben says <bdi>x&sup2; + 5x</bdi> cannot be completed because <bdi>5</bdi> is odd. What would you tell him? Complete it.",
+          ar:"يقول بن إنه لا يمكن إكمال مربع <bdi>x&sup2; + 5x</bdi> لأن <bdi>5</bdi> عدد فردي. بماذا تجيبه؟ أكمل المربع.",
+          fa:"بن می‌گوید <bdi>x&sup2; + 5x</bdi> را نمی‌شود کامل کرد چون <bdi>5</bdi> فرد است. به او چه می‌گویی؟ آن را کامل کن." },
+      a:"Half of 5 is 5/2, which is a perfectly good length. x² + 5x + 25/4 = (x + 5/2)². An odd b only means the answer is a fraction." },
+    { scope:"monic",
+      q:{ en:"Ali completes the square on <bdi>x&sup2; &minus; 6x</bdi> and writes <bdi>(x &minus; 3)&sup2; &minus; 9</bdi>. Another student writes <bdi>(x &minus; 3)&sup2; + 9</bdi>. Expand both and explain which is right.",
+          ar:"يكمل علي مربع <bdi>x&sup2; &minus; 6x</bdi> فيكتب <bdi>(x &minus; 3)&sup2; &minus; 9</bdi>، ويكتب طالب آخر <bdi>(x &minus; 3)&sup2; + 9</bdi>. فُكَّ القوسين في كليهما وبيّن أيهما الصواب.",
+          fa:"علی مربع <bdi>x&sup2; &minus; 6x</bdi> را کامل می‌کند و می‌نویسد <bdi>(x &minus; 3)&sup2; &minus; 9</bdi>؛ دانش‌آموز دیگری <bdi>(x &minus; 3)&sup2; + 9</bdi> می‌نویسد. هر دو را باز کن و بگو کدام درست است." },
+      a:"(x − 3)² = x² − 6x + 9, so 9 was added and has to be taken straight back off: x² − 6x = (x − 3)² − 9." },
+    { scope:"any",
+      q:{ en:"Two students complete the square on <bdi>2x&sup2; + 12x + 5</bdi>. One writes <bdi>(2x + 6)&sup2; &minus; 31</bdi>, the other <bdi>2(x + 3)&sup2; &minus; 13</bdi>. Expand both and decide.",
+          ar:"طالبان يكملان مربع <bdi>2x&sup2; + 12x + 5</bdi>. أحدهما يكتب <bdi>(2x + 6)&sup2; &minus; 31</bdi> والآخر <bdi>2(x + 3)&sup2; &minus; 13</bdi>. فُكَّ القوسين في كليهما وقرِّر.",
+          fa:"دو دانش‌آموز مربع <bdi>2x&sup2; + 12x + 5</bdi> را کامل می‌کنند. یکی <bdi>(2x + 6)&sup2; &minus; 31</bdi> و دیگری <bdi>2(x + 3)&sup2; &minus; 13</bdi> می‌نویسد. هر دو را باز کن و تصمیم بگیر." },
+      a:"(2x + 6)² = 4x² + 24x + 36 — the wrong x² term. 2(x + 3)² − 13 = 2x² + 12x + 18 − 13 = 2x² + 12x + 5, so the second is right: take the a out first." }
+  ];
+
+  function explainHTML(r, isKey){
+    return '<div class="explainBox">'
+      + '<div class="exHead">' + TR(WS.think) + '</div>'
+      + '<div class="exText">' + mathify(TR(r.q)) + '</div>'
+      + (isKey ? '<div class="exKey">' + r.a + '</div>' : '<div class="ruled"></div>')
+      + '</div>';
+  }
+
+  function methodHTML(){
+    return '<div class="method"><span class="mh">' + TR(WS.method) + '</span>'
+      + '<span class="ms">' + X() + SQ + " + " + IT("b") + X() + " = (" + X() + " + "
+      + fracHTML(IT("b"), "2") + ")" + SQ + " " + MINUS + " " + fracHTML(IT("b") + SQ, "4") + '</span>'
+      + '<span class="ms">' + IT("a") + X() + SQ + " + " + IT("b") + X() + " + " + IT("c")
+      + " = " + IT("a") + "(" + X() + " + " + fracHTML(IT("b"), "2" + IT("a")) + ")" + SQ + " + "
+      + IT("c") + " " + MINUS + " " + fracHTML(IT("b") + SQ, "4" + IT("a")) + '</span></div>';
+  }
+
+  /* ===================== BUILD ===================== */
+  function sectionCounts(){
+    const c = {};
+    KIND_IDS.forEach(k => {
+      c[k] = $(TOGGLE_ID[k]).checked ? Math.max(0, Math.min(40, parseInt($(COUNT_ID[k]).value, 10) || 0)) : 0;
+    });
+    return c;
+  }
+  const totalAsked = () => { const c = sectionCounts(); return KIND_IDS.reduce((t, k) => t + c[k], 0); };
+
+  const A4_CONTENT_PX = (() => {
+    const p = document.createElement("div");
+    p.style.cssText = "position:absolute;left:-10000px;top:0;height:281mm;";
+    document.body.appendChild(p);
+    const h = p.getBoundingClientRect().height;
+    p.remove();
+    return h;
+  })();
+
+  const WORK_H = { roomy:"w4", normal:"w3", tight:"w2" };
+
+  function buildPages(){
+    const scope = $("scopeSel").value;
+    const level = $("levelSel").value;
+    const density = $("densitySel").value;
+
+    const counts = sectionCounts();
+    const kinds = KIND_IDS.filter(k => counts[k] > 0);
+    if(!kinds.length) return { error:"Turn on at least one section and give it a number of questions." };
+    const count = kinds.reduce((t, k) => t + counts[k], 0);
+
+    const MAKE = {
+      model:lv => makeModelQ(lv),
+      gap:  lv => makeGapQ(lv),
+      form: lv => makeFormQ(lv, scope),
+      solve:lv => makeSolveQ(lv, scope),
+      use:  lv => makeUseQ(lv, scope)
+    };
+
+    // Every section climbs its OWN ladder, so a paper of 2 models and 20
+    // fluency questions still runs sweet → spicy inside each one.
+    const byKind = {}, seen = {};
+    kinds.forEach(k => {
+      const n = counts[k], qs = [];
+      for(let i = 0; i < n; i++){
+        const lv = (level === "mixed")
+          ? ORDER[Math.min(ORDER.length - 1, Math.floor(i / Math.max(1, n / ORDER.length)))]
+          : level;
+        let q = null;
+        for(let t = 0; t < 50; t++){
+          const cand = MAKE[k](lv);
+          // "Use it" should not ask the same kind of thing three times running
+          if(k === "use" && n >= 3 && i < USE.length){
+            const want = USE[i % USE.length].id;
+            if(cand.tpl !== want && t < 30) continue;
+          }
+          // no repeats, and — for the algebra sections — no two questions
+          // built on the same a and b either, or a paper reads as one question
+          const key = k + "|" + cand.a + "|" + cand.b + "|" + cand.c + "|" + (cand.tpl || "");
+          const shape = k + "#" + cand.a + "|" + cand.b;
+          if(!seen[key] && !seen[shape]){ seen[key] = 1; seen[shape] = 1; q = cand; break; }
+          q = q || cand;
+        }
+        if(k === "solve") q.workH = WORK_H[density] || "w3";
+        qs.push(q);
+      }
+      byKind[k] = qs;
+    });
+
+    const groups = kinds.map(k => ({
+      kind:k,
+      qs:byKind[k].sort((x, y) => ORDER.indexOf(x.level) - ORDER.indexOf(y.level))
+    })).filter(g => g.qs.length);
+
+    let n = 1;
+    groups.forEach(g => g.qs.forEach(q => { q.idx = n++; }));
+    groups.forEach((g, i) => { g.letter = SEC_LETTER[i]; });
+
+    const withReason = $("reasonToggle").checked;
+    const withMethod = $("methodToggle").checked;
+    const pool = REASONS.filter(r => r.scope === "monic" || scope === "any");
+    const reasons = (pool.length ? pool : REASONS).slice().sort(() => Math.random() - 0.5);
+
+    /* ---- pass 1: render a full-width probe and read the real heights ---- */
+    function probeFor(isKey){
+      const html = groups.map(g => sectionHTML(
+        { kind:g.kind, letter:g.letter, cont:false, qs:g.qs.slice(0, KINDS[g.kind].cols[density] || 1) },
+        isKey, density
+      )).join("") + (withReason ? explainHTML(reasons[0], isKey) : "")
+        + (withMethod ? methodHTML() : "");
+      const m = document.createElement("div");
+      m.className = "measure";
+      m.innerHTML = '<div class="sheet">' + html + '</div>';
+      document.body.appendChild(m);
+      return m;
+    }
+    // an answer can make a KEY card taller than the blank one it mirrors, and
+    // both halves share one pagination — so measure both and keep the larger
+    const mS = probeFor(false), mK = probeFor(true);
+    const secsS = [...mS.querySelectorAll(".section")], secsK = [...mK.querySelectorAll(".section")];
+    const H = groups.map((g, i) => {
+      const sec = secsS[i], secK = secsK[i];
+      const headEl = sec.querySelector(".secHead");
+      const num2 = (x, dflt) => (isFinite(x) && x > 0 ? x : dflt);
+      const head = Math.max(headEl.getBoundingClientRect().height,
+                            secK.querySelector(".secHead").getBoundingClientRect().height)
+                 + num2(parseFloat(getComputedStyle(headEl).marginBottom), 7);
+      const gridGap = num2(parseFloat(getComputedStyle(sec.querySelector(".qGrid")).rowGap), 8);
+      const cS = sec.querySelector(".qCard"), cK = secK.querySelector(".qCard");
+      const row = Math.max(cS ? cS.getBoundingClientRect().height : 60,
+                           cK ? cK.getBoundingClientRect().height : 60) + gridGap;
+      return { head:num2(head, 24), row:num2(row, 60), gap:num2(parseFloat(getComputedStyle(sec).marginBottom), 9),
+               cols:KINDS[g.kind].cols[density] || 1 };
+    });
+    const explainH = withReason
+      ? Math.max(mS.querySelector(".explainBox").getBoundingClientRect().height,
+                 mK.querySelector(".explainBox").getBoundingClientRect().height) + 6 : 0;
+    const methodH = withMethod ? mS.querySelector(".method").getBoundingClientRect().height + 8 : 0;
+    const sheetEl = mS.querySelector(".sheet");
+    const sheetPad = parseFloat(getComputedStyle(sheetEl).paddingTop)
+                   + parseFloat(getComputedStyle(sheetEl).paddingBottom);
+    mS.remove(); mK.remove();
+
+    const CHROME = 48 + 23;                       // page header + page footer
+    const budget = Math.max(320, A4_CONTENT_PX - CHROME - sheetPad - explainH);
+
+    /* ---- pass 2: fill greedily, in whole card rows ---- */
+    function pack(cap){
+      const pages = []; let page = [], used = 0;
+      const flush = () => { if(page.length) pages.push(page); page = []; used = 0; };
+      groups.forEach((g, gi) => {
+        const h = H[gi];
+        let i = 0, first = true;
+        while(i < g.qs.length){
+          let room = cap - used - (pages.length === 0 && page.length === 0 ? methodH : 0);
+          if(room < h.head + h.row + h.gap){
+            if(used === 0) room = cap;            // nothing there yet — force it
+            else { flush(); room = cap; }
+          }
+          const rows = Math.max(1, Math.floor((room - h.head - h.gap) / h.row));
+          const take = Math.min(g.qs.length - i, rows * h.cols);
+          const usedRows = Math.ceil(take / h.cols);
+          page.push({ type:"section", kind:g.kind, letter:g.letter, cont:!first, qs:g.qs.slice(i, i + take) });
+          used += h.head + usedRows * h.row + h.gap;
+          i += take; first = false;
+        }
+      });
+      flush();
+      return pages;
+    }
+    const pages = pack(budget);
+    if(withMethod && pages.length) pages[0].unshift({ type:"method" });
+    if(withReason) pages.forEach((p, i) => p.push({ type:"explain", reason:reasons[i % reasons.length] }));
+    return { pages:pages, level:level, scope:scope, density:density, count:count };
+  }
+
+  const LEVEL_LABEL = { sweet:"Sweet", mild:"Mild", medium:"Medium", spicy:"Spicy", mixed:"Mixed" };
+  const SCOPE_LABEL = { monic:"Monic", any:"Including a ≠ 1" };
+
+  function pageHTML(blocks, meta, key, pageNo, total){
+    const body = blocks.map(b =>
+      b.type === "explain" ? explainHTML(b.reason, key)
+      : b.type === "method" ? methodHTML()
+      : sectionHTML(b, key, meta.density)).join("");
+    return '<section class="page' + (key ? " isKey" : "") + '">'
+      + '<div class="pageHeader">'
+      +   '<div><div class="hdrTitle">Complete the Square' + (key ? " &mdash; ANSWERS" : "") + '</div>'
+      +   '<div class="hdrSub">' + (key ? "Answer key &middot; " : "") + esc(SCOPE_LABEL[meta.scope])
+      +   " &middot; " + esc(LEVEL_LABEL[meta.level]) + '</div></div>'
+      +   (key ? "" : '<div class="nameDate">'
+      +     '<div class="lineField"><span class="lineLabel">' + TR(WS.name) + '</span><span class="lineBox"></span></div>'
+      +     '<div class="lineField"><span class="lineLabel">' + TR(WS.date) + '</span><span class="lineBox"></span></div>'
+      +   '</div>')
+      + '</div>'
+      + '<div class="sheet">' + body + '</div>'
+      + '<div class="pageFooter"><span>Page ' + pageNo + ' of ' + total + '</span>'
+      +   '<span><a href="' + SITE + '">www.millsmathstools.au</a></span></div>'
+      + '</section>';
+  }
+
+  function generate(scroll){
+    const built = buildPages();
+    const out = $("out");
+    if(built.error){ out.innerHTML = '<p class="note warn">' + esc(built.error) + '</p>'; return; }
+    const key = $("keyToggle").checked;
+    const n = built.pages.length;
+    const total = key ? n * 2 : n;
+    let html = "";
+    built.pages.forEach((p, i) => { html += pageHTML(p, built, false, i + 1, total); });
+    if(key) built.pages.forEach((p, i) => { html += pageHTML(p, built, true, n + i + 1, total); });
+    out.innerHTML = html;
+    if(scroll && out.scrollIntoView) out.scrollIntoView({ behavior:"smooth", block:"start" });
+  }
+
+  function reset(){
+    $("scopeSel").value = "monic";
+    $("levelSel").value = "mixed";
+    $("densitySel").value = "normal";
+    KIND_IDS.forEach(k => { $(TOGGLE_ID[k]).checked = true; $(COUNT_ID[k]).value = DEFAULT_N[k]; });
+    $("methodToggle").checked = false;
+    $("reasonToggle").checked = true;
+    $("keyToggle").checked = true;
+    LANG = "en"; $("langSel").value = "en";
+    try{ localStorage.setItem("mmt-cts-ws-lang", "en"); }catch(_){ }
+    syncSections();
+    $("out").innerHTML = "";
+  }
+
+  function syncSections(){
+    KIND_IDS.forEach(k => {
+      const on = $(TOGGLE_ID[k]).checked;
+      $(COUNT_ID[k]).disabled = !on;
+      const cardEl = document.querySelector('.secOpt[data-for="' + TOGGLE_ID[k] + '"]');
+      if(cardEl) cardEl.classList.toggle("off", !on);
+    });
+    const n = totalAsked();
+    const pill = $("totalPill");
+    pill.textContent = n === 1 ? "1 question" : n + " questions";
+    pill.classList.toggle("zero", n === 0);
+  }
+
+  KIND_IDS.forEach(k => {
+    $(TOGGLE_ID[k]).addEventListener("change", function(){
+      if(this.checked && (parseInt($(COUNT_ID[k]).value, 10) || 0) === 0) $(COUNT_ID[k]).value = DEFAULT_N[k];
+      syncSections();
+    });
+    $(COUNT_ID[k]).addEventListener("input", function(){
+      const v = parseInt(this.value, 10) || 0;
+      if(v === 0 && $(TOGGLE_ID[k]).checked){ $(TOGGLE_ID[k]).checked = false; }
+      else if(v > 0 && !$(TOGGLE_ID[k]).checked){ $(TOGGLE_ID[k]).checked = true; }
+      syncSections();
+    });
+  });
+
+  ["methodToggle", "reasonToggle", "keyToggle"].forEach(id => {
+    $(id).addEventListener("change", () => generate(false));
+  });
+  $("scopeSel").addEventListener("change", () => generate(false));
+  $("levelSel").addEventListener("change", () => generate(false));
+  $("densitySel").addEventListener("change", () => generate(false));
+  $("langSel").addEventListener("change", function(){
+    LANG = this.value;
+    try{ localStorage.setItem("mmt-cts-ws-lang", LANG); }catch(_){ }
+    generate(false);
+  });
+  $("genBtn").addEventListener("click", () => generate(true));
+  $("printBtn").addEventListener("click", () => window.print());
+  $("resetBtn").addEventListener("click", reset);
+
+  MATH_ALPHA = detectMathAlpha();
+  $("langSel").value = LANG;
+  syncSections();
+  generate(false);
+
+  // exposed for the headless harness only
+  window.__CTSWS = { fr:fr, frTxt:frTxt, gcd:gcd, simpSurd:simpSurd, pOf:pOf, qOf:qOf,
+                     rootsOf:rootsOf, quadTxt:quadTxt, mathItalic:mathItalic,
+                     isMathAlpha:function(){ return MATH_ALPHA; },
+                     setMathAlpha:function(v){ MATH_ALPHA = !!v; },
+                     makeModelQ:makeModelQ, makeGapQ:makeGapQ, makeFormQ:makeFormQ,
+                     makeSolveQ:makeSolveQ, makeUseQ:makeUseQ, USE:USE, REASONS:REASONS,
+                     buildPages:buildPages, generate:generate, ORDER:ORDER,
+                     KINDS:KINDS, KIND_IDS:KIND_IDS, DEFAULT_N:DEFAULT_N,
+                     csHTML:csHTML, rootsHTML:rootsHTML, cardHTML:cardHTML, svgModel:svgModel };
+})();
+</script>
+</body>
+</html>

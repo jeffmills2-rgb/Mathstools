@@ -1,0 +1,1384 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Complete the Square | Mills Maths Tools</title>
+
+  <style>
+    :root{
+      --bg:#f8fafc;
+      --card:#ffffff;
+      --ink:#0f172a;
+      --muted:#64748b;
+      --border:#e2e8f0;
+      --shadow:0 18px 45px rgba(15,23,42,.13);
+      --blue:#2563eb;
+      --blue-dark:#1d4ed8;
+      --green:#22c55e;
+      --green-dark:#15803d;
+      --purple:#7c3aed;
+      --orange:#f97316;
+      --orange-dark:#c2410c;
+      --line:#334155;
+      --line-soft:#94a3b8;
+      --pink:#db2777;
+
+      /* the sticky-note palette from the board: blue x-squared, green
+         x-terms, yellow the constant, pink the piece that completes it */
+      --tSq:#bae6fd;   --tSqEdge:#0284c7;   --tSqInk:#075985;
+      --tX:#bbf7d0;    --tXEdge:#16a34a;    --tXInk:#14532d;
+      --tC:#fef08a;    --tCEdge:#ca8a04;    --tCInk:#713f12;
+      --tP:#fbcfe8;    --tPEdge:#db2777;    --tPInk:#9d174d;
+
+      --uiFont:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      /* Word's equation editor IS Cambria Math; then the other real maths
+         faces, then serifs that at least have a genuine italic to fall to. */
+      --mathFont:"Cambria Math","STIX Two Math","Latin Modern Math","Asana Math",Cambria,"Palatino Linotype","Book Antiqua",Palatino,"Times New Roman",Georgia,serif;
+      --mathWeight:500;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ min-height:100%; }
+    body{
+      margin:0; font-family:var(--uiFont); color:var(--ink);
+      background:
+        radial-gradient(circle at top left,rgba(37,99,235,.14),transparent 32rem),
+        radial-gradient(circle at top right,rgba(124,58,237,.12),transparent 34rem),
+        var(--bg);
+      overflow-x:hidden;
+    }
+    button,input,select{ font:inherit; }
+    [hidden]{ display:none !important; }
+
+    .app{ min-height:100dvh; display:flex; flex-direction:column; min-width:0; }
+
+    /* ---------- topbar ---------- */
+    .mmtTopbar{
+      position:relative; z-index:40;
+      background:linear-gradient(135deg,#0f172a,#123b7a 55%,#2563eb);
+      color:white; padding:14px 24px;
+      display:grid; grid-template-columns:minmax(220px,1fr) auto minmax(320px,1fr);
+      align-items:center; gap:18px;
+      box-shadow:0 10px 28px rgba(15,23,42,.22);
+    }
+    .mmtBrand{
+      display:flex; align-items:center; gap:12px; justify-self:start;
+      text-decoration:none; color:white; border-radius:14px; padding:8px 12px;
+      margin-left:-12px; font-weight:900;
+      transition:background .18s ease,transform .18s ease,box-shadow .18s ease;
+    }
+    .mmtBrand:hover{ background:rgba(255,255,255,.12); transform:translateY(-1px);
+      box-shadow:0 0 10px rgba(124,58,237,.6),0 0 18px rgba(37,99,235,.4); }
+    .mmtBrandLogo{
+      width:44px; height:44px; border-radius:9px; background:white; color:#1d4ed8;
+      display:grid; place-items:center; font-weight:1000; letter-spacing:-.08em;
+      box-shadow:inset 0 -2px 0 rgba(15,23,42,.08); flex:0 0 auto;
+    }
+    .mmtBrandText strong{ display:block; font-size:1.18rem; line-height:1; letter-spacing:-.03em; color:white; }
+    .mmtBrandText span{ display:block; font-size:.78rem; opacity:.82; font-weight:650; color:white; }
+    .mmtTopTitle{
+      font-weight:850; font-size:clamp(1.05rem,1.9vw,1.5rem); letter-spacing:-.04em;
+      text-align:center; color:white; white-space:nowrap;
+    }
+    .topActions{ justify-self:end; display:flex; align-items:center; justify-content:flex-end; gap:10px; flex-wrap:wrap; }
+
+    .btn{
+      appearance:none; border:1px solid rgba(255,255,255,.28); background:rgba(255,255,255,.14);
+      color:white; padding:11px 15px; border-radius:14px; font-weight:900; font-size:15px;
+      cursor:pointer; transition:.18s ease; user-select:none;
+    }
+    .btn:hover:not(:disabled){ background:rgba(255,255,255,.22); transform:translateY(-1px); }
+    .btn:focus-visible{ outline:none; box-shadow:0 0 0 4px rgba(255,255,255,.23); }
+    .btn-primary{ background:white; color:#1d4ed8; border-color:white; }
+    .btn-primary:hover:not(:disabled){ background:#eef2ff; color:#1d4ed8; }
+    .btn:disabled{ opacity:.45; cursor:not-allowed; transform:none; }
+
+    .menuWrap{ position:relative; display:inline-flex; }
+    .dropMenu{ position:absolute; top:calc(100% + 8px); right:0; min-width:250px; background:#fff; color:var(--ink);
+      border:1px solid rgba(226,232,240,.95); border-radius:14px; box-shadow:0 18px 45px rgba(15,23,42,.22);
+      padding:7px; display:none; z-index:120; text-align:left; }
+    .dropMenu.open{ display:grid; gap:4px; }
+    .toolLink{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border-radius:10px;
+      color:var(--ink); text-decoration:none; font-weight:900; font-size:.9rem; }
+    .toolLink::after{ content:'\203A'; color:var(--blue); font-weight:1000; font-size:1.1rem; line-height:1; }
+    .toolLink:hover,.toolLink:focus-visible{ background:#eef2ff; color:#1d4ed8; outline:none; }
+    .toolLink small{ display:block; font-weight:650; font-size:.74rem; color:var(--muted); }
+    .toolLink.is-disabled{ color:var(--line-soft); cursor:not-allowed; }
+    .toolLink.is-disabled::after{ content:'\2022'; color:var(--line-soft); font-size:.9rem; }
+    .toolLink.is-disabled:hover{ background:transparent; color:var(--line-soft); }
+    .toolLink.is-disabled small{ color:var(--line-soft); }
+
+    /* NO overflow scroller here: the Randomiser submenu is absolutely
+       positioned outside this box, and any overflow but visible clips it. */
+    .settingsMenu.open{ gap:11px; padding:15px 18px; min-width:302px; }
+    .settingsHead{ font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; font-weight:950; color:var(--muted); }
+    .settingsNote{ margin:0; font-size:.76rem; font-weight:650; color:var(--muted); line-height:1.4; }
+    .settingsRule{ height:1px; background:var(--border); margin:1px 0; }
+
+    .subWrap{ position:relative; }
+    .subRow{
+      display:flex; align-items:center; justify-content:space-between; gap:10px; width:100%;
+      appearance:none; border:1px solid transparent; background:transparent; cursor:pointer;
+      padding:9px 11px; border-radius:11px; font:inherit; font-weight:900; font-size:.92rem;
+      color:var(--ink); text-align:left; transition:background .16s ease; white-space:nowrap;
+    }
+    .subRow:hover,.subRow:focus-visible,.subWrap.open .subRow{ background:#eef2ff; color:#1d4ed8; outline:none; }
+    .subRow .val{ display:inline-flex; align-items:center; gap:6px; font-weight:800; font-size:.84rem; color:var(--muted); }
+    .subRow .val::after{ content:'\2039'; font-size:1.05rem; font-weight:1000; color:var(--blue); }
+    .subMenu{
+      position:absolute; top:-8px; right:calc(100% + 10px); min-width:252px;
+      background:#fff; border:1px solid rgba(226,232,240,.95); border-radius:14px;
+      box-shadow:0 18px 45px rgba(15,23,42,.22); padding:7px; display:none; z-index:130;
+    }
+    .subWrap:hover .subMenu, .subWrap.open .subMenu{ display:grid; gap:3px; }
+    .subOpt{
+      appearance:none; border:0; background:transparent; cursor:pointer; width:100%;
+      display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
+      padding:9px 11px; border-radius:10px; font:inherit; text-align:left;
+      font-weight:900; font-size:.9rem; color:var(--ink);
+    }
+    .subOpt small{ display:block; font-weight:650; font-size:.74rem; color:var(--muted); margin-top:2px; }
+    .subOpt:hover,.subOpt:focus-visible{ background:#eef2ff; color:#1d4ed8; outline:none; }
+    .subOpt .tick{ color:var(--green); font-weight:1000; opacity:0; flex:0 0 auto; font-size:1.05rem; }
+    .subOpt.on .tick{ opacity:1; }
+
+    .layout{
+      width:min(1240px, calc(100vw - 48px));
+      margin:20px auto 14px;
+      background:rgba(255,255,255,.94);
+      border:1px solid rgba(226,232,240,.9);
+      border-radius:26px; box-shadow:var(--shadow); overflow:hidden;
+      display:block; position:relative;
+    }
+    .stage{ padding:16px clamp(14px,3vw,32px) 22px; display:flex; flex-direction:column; gap:12px; min-width:0; }
+
+    /* ---------- the equation strip ---------- */
+    .eqCard{
+      position:relative;
+      background:white; border:1px solid var(--border); border-radius:20px;
+      padding:12px 18px 13px; display:flex; flex-direction:column; align-items:center; gap:10px;
+    }
+    .segWrap{ display:inline-flex; background:#eef2f7; border:1px solid var(--border); border-radius:14px; padding:4px; gap:4px; }
+    .seg{
+      appearance:none; border:0; background:transparent; color:var(--muted);
+      font-weight:900; font-size:.9rem; padding:9px 15px; border-radius:11px; cursor:pointer; white-space:nowrap;
+      transition:.16s ease; font-family:var(--uiFont);
+    }
+    .seg.on{ background:#fff; color:var(--blue-dark); box-shadow:0 4px 12px rgba(15,23,42,.12); }
+
+    .eqRow{ display:flex; align-items:center; justify-content:center; gap:.3em; flex-wrap:wrap;
+      font-family:var(--mathFont); font-weight:var(--mathWeight); font-size:clamp(1.5rem,3.2vw,2.15rem); color:var(--line); }
+    .numBox{
+      width:88px; text-align:center; border:2px solid var(--border); border-radius:12px;
+      padding:1px 6px; background:#fff; color:var(--ink); font-family:var(--mathFont);
+      font-weight:600; font-size:clamp(1.35rem,2.8vw,1.85rem); line-height:1.2; outline:none;
+      transition:border-color .18s ease, box-shadow .18s ease;
+    }
+    .numBox:hover{ border-color:var(--line-soft); }
+    .numBox:focus{ border-color:var(--blue); box-shadow:0 0 0 4px rgba(37,99,235,.16); }
+    .numBox.bad{ border-color:var(--pink); }
+    .enterBtn{
+      appearance:none; border:1px solid var(--blue); background:var(--blue); color:#fff;
+      font-weight:900; font-size:.95rem; padding:9px 16px; border-radius:12px; cursor:pointer;
+      box-shadow:0 8px 20px rgba(37,99,235,.22); transition:.16s ease; font-family:var(--uiFont);
+    }
+    .enterBtn:hover{ background:var(--blue-dark); transform:translateY(-1px); }
+    .inputMsg{ min-height:15px; margin:0; font-size:.84rem; font-weight:750; color:var(--pink); text-align:center; max-width:680px; }
+    .genBtn{
+      position:absolute; top:12px; right:14px; z-index:2;
+      appearance:none; border:1px solid #ddd6fe; background:#f5f3ff; color:#5b21b6;
+      font-weight:850; font-size:.8rem; padding:6px 13px; border-radius:999px; cursor:pointer;
+      transition:.16s ease; white-space:nowrap; display:inline-flex; align-items:center; gap:7px; font-family:var(--uiFont);
+    }
+    .genBtn:hover{ background:#ede9fe; border-color:#c4b5fd; }
+    .genBtn .tierTag{ color:var(--muted); font-weight:750; }
+    .proofHead{ font-family:var(--mathFont); font-weight:var(--mathWeight); font-size:clamp(1.35rem,2.8vw,1.95rem); color:var(--line); text-align:center; }
+    .proofSub{ font-size:.82rem; font-weight:750; color:var(--muted); text-align:center; margin:0; }
+
+    /* switches */
+    .sw{ display:inline-flex; align-items:center; gap:11px; cursor:pointer; user-select:none; font-weight:850; color:var(--line); font-size:.95rem; white-space:nowrap; }
+    .sw input{ position:absolute; opacity:0; width:0; height:0; }
+    .sw .track{ position:relative; width:50px; height:29px; border-radius:999px; background:#cbd5e1; transition:.18s ease; flex:0 0 auto; box-shadow:inset 0 1px 3px rgba(15,23,42,.18); }
+    .sw .track::after{ content:""; position:absolute; top:3px; left:3px; width:23px; height:23px; border-radius:50%; background:#fff; box-shadow:0 2px 6px rgba(15,23,42,.3); transition:.18s ease; }
+    .sw input:checked + .track{ background:var(--green); }
+    .sw input:checked + .track::after{ transform:translateX(21px); }
+
+    /* the tile board */
+    .svgCard{ background:white; border:1px solid var(--border); border-radius:22px; padding:8px clamp(8px,2vw,16px) 6px; }
+    .board{ width:100%; height:auto; max-height:52vh; display:block; margin:0 auto; user-select:none; -webkit-user-select:none; }
+    .board text{ font-family:var(--mathFont); }
+    .hot{ cursor:pointer; }
+    .mline{ font-family:var(--mathFont); }
+    /* variables: the real math-italic alphabet when the font has it (.mi),
+       a synthesised italic only as a fallback (i) */
+    .proofHead i, .eqRow i{ font-style:italic; }
+    .mi{ font-style:normal; }
+    .proofHead sup, .eqRow sup{ font-size:.62em; vertical-align:.52em; line-height:0; }
+    /* the monic equation slides in to REPLACE the one above it, so the class
+       sees the divide-by-a happen rather than finding a new equation there */
+    @keyframes slideSwap{ from{ opacity:0; transform:translateY(-16px); } to{ opacity:1; transform:translateY(0); } }
+    .proofHead.swap{ animation:slideSwap .52s cubic-bezier(.2,.75,.3,1) both; }
+    .hot:focus{ outline:none; }
+    @keyframes tapPulse{
+      0%,100%{ opacity:.0; transform:scale(1); }
+      50%{ opacity:.55; transform:scale(1.035); }
+    }
+    .tapRing{ animation:tapPulse 1.7s ease-in-out infinite; transform-box:fill-box; transform-origin:center; pointer-events:none; }
+    @keyframes popIn{ 0%{opacity:0;transform:scale(.5);} 62%{opacity:1;transform:scale(1.12);} 100%{opacity:1;transform:scale(1);} }
+    .popIn{ animation:popIn .46s cubic-bezier(.2,.75,.3,1.25) both; transform-box:fill-box; transform-origin:center; }
+
+    /* narration */
+    .narrate{
+      background:white; border:1px solid var(--border); border-radius:20px;
+      padding:12px 18px; display:flex; flex-direction:column; gap:5px; align-items:center; text-align:center;
+    }
+    .stepCount{ font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; font-weight:950; color:var(--muted); }
+    .stepPrompt{ font-size:clamp(1rem,2vw,1.15rem); font-weight:800; color:var(--line); line-height:1.35; min-height:1.3em; }
+    .stepMaths{
+      font-family:var(--mathFont); font-size:clamp(1.16rem,2.5vw,1.62rem); font-weight:var(--mathWeight); color:var(--purple);
+      line-height:1.3; min-height:1.3em; display:flex; align-items:center; justify-content:center; gap:.3em; flex-wrap:wrap;
+    }
+    .stepMaths.answer{ color:var(--pink); }
+    .history{
+      max-width:760px; font-size:.88rem; font-weight:750; color:var(--orange-dark); line-height:1.45;
+      background:#fff7ed; border:1px solid #fed7aa; border-radius:13px; padding:9px 14px; margin:2px 0 0;
+    }
+    .navRow{ display:flex; gap:10px; justify-content:center; align-items:center; flex-wrap:wrap; padding-bottom:2px; }
+    .navBtn{
+      appearance:none; border:1px solid var(--border); background:#fff; color:var(--line);
+      font-weight:900; font-size:.94rem; padding:10px 16px; border-radius:13px; cursor:pointer;
+      transition:.16s ease; box-shadow:0 6px 16px rgba(15,23,42,.08); font-family:var(--uiFont);
+    }
+    .navBtn:hover:not(:disabled){ transform:translateY(-1px); background:#f8fafc; }
+    .navBtn:disabled{ opacity:.4; cursor:not-allowed; transform:none; }
+    .navBtn.next{ background:var(--purple); border-color:var(--purple); color:#fff; box-shadow:0 8px 20px rgba(124,58,237,.24); min-width:150px; }
+    .navBtn.next:hover:not(:disabled){ background:#6d28d9; }
+    .hint{ text-align:center; font-size:.8rem; font-weight:700; color:var(--muted); margin:0; }
+
+    /* stacked fraction in HTML text */
+    .frac{ display:inline-flex; flex-direction:column; align-items:center; vertical-align:middle; line-height:1; font-size:.8em; }
+    .frac .n{ padding:0 .3em .05em; }
+    .frac .d{ padding:.06em .3em 0; border-top:.09em solid currentColor; }
+
+    @media (max-width:980px){
+      .mmtTopbar{ grid-template-columns:1fr; justify-items:center; padding:12px 14px; }
+      .mmtBrand{ margin-left:0; } .topActions{ justify-self:center; justify-content:center; }
+      .dropMenu{ right:auto; left:50%; transform:translateX(-50%); }
+      .subMenu{ position:static; display:grid; gap:3px; box-shadow:none; border:0; padding:0 0 0 8px; min-width:0; }
+      .layout{ width:calc(100vw - 24px); }
+      .genBtn{ position:static; margin-top:2px; }
+      .numBox{ width:74px; }
+    }
+    @media (prefers-reduced-motion:reduce){
+      *{ animation-duration:.001ms !important; animation-delay:.001ms !important; transition-duration:.001ms !important; }
+    }
+  </style>
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "c7e5713b5e4f4993907eb285797dc89b"}'></script><!-- End Cloudflare Web Analytics -->
+</head>
+<body>
+  <div class="app">
+    <header class="mmtTopbar">
+      <a class="mmtBrand" href="https://www.millsmathstools.au" target="_self" aria-label="Back to Mills Maths Tools">
+        <span class="mmtBrandLogo" aria-hidden="true">MMT</span>
+        <span class="mmtBrandText"><strong>MMT</strong><span>Mills Maths Tools</span></span>
+      </a>
+      <div class="mmtTopTitle">Complete the Square</div>
+      <div class="topActions">
+        <div class="menuWrap">
+          <button class="btn" id="settingsBtn" type="button" aria-haspopup="true" aria-expanded="false">Settings &#9662;</button>
+          <nav class="dropMenu settingsMenu" id="settingsMenu" aria-label="Settings">
+            <div class="settingsHead">Randomiser</div>
+            <div class="subWrap" id="tierWrap">
+              <button class="subRow" id="tierRow" type="button" aria-haspopup="true" aria-expanded="false">
+                <span>Random equation</span>
+                <span class="val" id="tierVal">Core</span>
+              </button>
+              <div class="subMenu" id="tierMenu" role="menu" aria-label="Random equation setting">
+                <button class="subOpt" type="button" role="menuitemradio" data-tier="starter">
+                  <span>Starter<small>Small even <i>b</i>, always positive</small></span>
+                  <span class="tick" aria-hidden="true">&#10003;</span>
+                </button>
+                <button class="subOpt on" type="button" role="menuitemradio" data-tier="core">
+                  <span>Core<small>Even <i>b</i>, positive or negative</small></span>
+                  <span class="tick" aria-hidden="true">&#10003;</span>
+                </button>
+                <button class="subOpt" type="button" role="menuitemradio" data-tier="stretch">
+                  <span>Stretch<small>Odd <i>b</i> &mdash; half of it is a half</small></span>
+                  <span class="tick" aria-hidden="true">&#10003;</span>
+                </button>
+                <button class="subOpt" type="button" role="menuitemradio" data-tier="challenge">
+                  <span>Challenge<small>Big numbers, either sign, odd or even</small></span>
+                  <span class="tick" aria-hidden="true">&#10003;</span>
+                </button>
+              </div>
+            </div>
+            <div class="settingsRule" role="separator"></div>
+            <div class="settingsHead">Display</div>
+            <label class="sw"><input type="checkbox" id="areaToggle"><span class="track"></span><span>Show tile areas</span></label>
+            <label class="sw"><input type="checkbox" id="explainToggle"><span class="track"></span><span>Explainer note</span></label>
+            <p class="settingsNote">Both solutions are always shown. The explainer note is off by default &mdash; the story behind the second solution is yours to tell.</p>
+          </nav>
+        </div>
+        <div class="menuWrap">
+          <button class="btn" id="toolsBtn" type="button" aria-haspopup="true" aria-expanded="false">Tools &#9662;</button>
+          <nav class="dropMenu" id="toolsMenu" aria-label="Related tools">
+            <a class="toolLink" href="/worksheet-creators/stage-5/algebra/complete-the-square.html">Worksheet Creator<small>Printable A4: label the model, fill the blanks, completed square form, solve, use it</small></a>
+            <span class="toolLink is-disabled" aria-disabled="true">Student Quiz<small>Coming soon</small></span>
+          </nav>
+        </div>
+        <button class="btn btn-primary" id="resetBtn" type="button">Reset</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="stage" id="stage">
+
+        <div class="eqCard">
+          <button class="genBtn" id="genBtn" type="button" title="Change the range under Settings &rsaquo; Random equation">
+            <span aria-hidden="true">&#9860;</span><span>New equation</span><span class="tierTag" id="tierTag">&middot; Core</span>
+          </button>
+
+          <div class="segWrap" role="tablist" aria-label="Mode">
+            <button class="seg on" id="modeNum" type="button" role="tab" aria-selected="true">Build it with tiles</button>
+            <button class="seg" id="modeProof" type="button" role="tab" aria-selected="false">Prove the formula</button>
+          </div>
+
+          <div id="numInputs">
+            <div class="eqRow">
+              <span id="eqXsq"><i>x</i>&sup2;</span><span>+</span>
+              <input class="numBox" id="bInput" inputmode="numeric" autocomplete="off" value="26" aria-label="Coefficient of x" />
+              <span id="eqX"><i>x</i></span><span>=</span>
+              <input class="numBox" id="cInput" inputmode="numeric" autocomplete="off" value="27" aria-label="Constant" />
+              <button class="enterBtn" id="useBtn" type="button">Build</button>
+            </div>
+          </div>
+          <div id="proofHeadWrap" hidden>
+            <div class="proofHead" id="proofHead"><i>a</i> <i>x</i>&sup2; + <i>b</i> <i>x</i> + <i>c</i> = 0</div>
+            <p class="proofSub">The same moves, with letters instead of numbers.</p>
+          </div>
+
+          <p class="inputMsg" id="inputMsg"></p>
+        </div>
+
+        <div class="svgCard">
+          <svg class="board" id="board" viewBox="0 0 1000 470" role="img" aria-label="Algebra tiles completing the square"></svg>
+        </div>
+
+        <div class="narrate">
+          <div class="navRow">
+            <button class="navBtn" id="backBtn" type="button">&#9664; Back</button>
+            <button class="navBtn next" id="nextBtn" type="button">Next &#9654;</button>
+            <button class="navBtn" id="restartBtn" type="button">Start again</button>
+          </div>
+          <div class="stepCount" id="stepCount">Step 1</div>
+          <div class="stepPrompt" id="stepPrompt"></div>
+          <div class="stepMaths" id="stepMaths"></div>
+          <p class="history" id="historyBox" hidden></p>
+          <p class="hint" id="hint">Click the glowing tile, or press Space. &larr; goes back, R makes a new equation.</p>
+        </div>
+
+      </section>
+    </main>
+  </div>
+
+<script>
+(function(){
+  "use strict";
+  const $ = id => document.getElementById(id);
+  const NS = "http://www.w3.org/2000/svg";
+  const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let instant = reduceMotion;              // the headless harness flips this on
+
+  function el(tag, attrs, text){
+    const n = document.createElementNS(NS, tag);
+    if(attrs) for(const k in attrs) n.setAttribute(k, attrs[k]);
+    if(text != null) n.textContent = text;
+    return n;
+  }
+  function uiFont(n){ n.style.fontFamily = "var(--uiFont)"; return n; }
+  function label(x, y, txt, opt){
+    const t = el("text", Object.assign({ x:x.toFixed(2), y:y.toFixed(2), "text-anchor":"middle",
+      "dominant-baseline":"middle" }, opt || {}));
+    t.textContent = txt;
+    return t;
+  }
+
+  /* ============================================================
+     A SMALL MATHS TYPESETTER FOR SVG
+     Real fractions with a rule, real radicals with a vinculum, and
+     parentheses that grow — because "b/2a" and "sqrt(x)/2a" written
+     with slashes is not what a student has to read in an exam.
+     ============================================================ */
+  let measText = null, measCache = {};
+  function approxWidth(s, fs){
+    let w = 0;
+    for(let i = 0; i < s.length; i++){
+      const ch = s.charAt(i);
+      if("()[]|".indexOf(ch) >= 0) w += 0.34;
+      else if(ch === " ") w += 0.26;
+      else if("=±+−-×÷".indexOf(ch) >= 0) w += 0.58;
+      else if("ijl.,'".indexOf(ch) >= 0) w += 0.30;
+      else if(ch >= "0" && ch <= "9") w += 0.50;
+      else if(ch === "√") w += 0.60;
+      else if("²³".indexOf(ch) >= 0) w += 0.32;
+      else if(ch === "m" || ch === "w") w += 0.78;
+      else w += 0.52;
+    }
+    return w * fs;
+  }
+  /* ------------------------------------------------------------------
+     MATH ITALICS. Word's equation editor does not slant an upright face —
+     it draws variables from Cambria Math's own italic alphabet, which lives
+     in Unicode's Mathematical Alphanumeric Symbols block. Use those real
+     glyphs when the font actually has them, and fall back to a synthesised
+     italic (and plain ASCII) when it does not, so nothing ever tofus.
+     ------------------------------------------------------------------ */
+  function mathItalic(str){
+    let out = "";
+    for(const ch of String(str)){
+      const c = ch.codePointAt(0);
+      if(ch === "h") out += "\u210E";                                  // ℎ sits outside the block
+      else if(c >= 97 && c <= 122) out += String.fromCodePoint(0x1D44E + c - 97);
+      else if(c >= 65 && c <=  90) out += String.fromCodePoint(0x1D434 + c - 65);
+      else out += ch;
+    }
+    return out;
+  }
+  let MATH_ALPHA = false;
+  function ensureMeas(){
+    if(measText) return;
+    const svg = el("svg", { width:"0", height:"0" });
+    svg.setAttribute("style", "position:absolute;left:-9999px;top:0;overflow:hidden");
+    measText = el("text", { "font-weight":"500" });
+    measText.style.fontFamily = 'var(--mathFont)';
+    svg.appendChild(measText);
+    document.body.appendChild(svg);
+  }
+  function rawWidth(str, fs){
+    try{
+      ensureMeas();
+      measText.setAttribute("font-size", fs);
+      measText.setAttribute("font-style", "normal");
+      measText.textContent = str;
+      return measText.getComputedTextLength ? measText.getComputedTextLength() : 0;
+    }catch(_){ return 0; }
+  }
+  // A run of math italics vs a run of certainly-absent private-use code
+  // points: different widths mean real glyphs, equal widths mean notdef boxes.
+  function detectMathAlpha(){
+    const real = rawWidth("\u{1D465}\u{1D44E}\u{1D44F}\u{1D450}", 100);
+    const gone = rawWidth("\uE000\uE001\uE002\uE003", 100);
+    return real > 0 && gone > 0 && Math.abs(real - gone) > 1;
+  }
+  const glyphsOf = n => (n.it && MATH_ALPHA) ? mathItalic(n.s) : n.s;
+  const slantOf  = n => !!(n.it && !MATH_ALPHA);
+
+  function measure(s, fs, it){
+    const key = s + "|" + fs + "|" + (it ? "i" : "u");
+    if(measCache[key] != null) return measCache[key];
+    let w = 0;
+    try{
+      ensureMeas();
+      measText.setAttribute("font-size", fs);
+      measText.setAttribute("font-style", it ? "italic" : "normal");
+      measText.textContent = s;
+      w = measText.getComputedTextLength ? measText.getComputedTextLength() : 0;
+    }catch(_){ w = 0; }
+    if(!(w > 0)) w = approxWidth(s, fs);      // jsdom, and any font that has not loaded
+    measCache[key] = w;
+    return w;
+  }
+
+  // node builders
+  const MT  = s => ({ k:"t", s:String(s) });              // upright: numerals, operators
+  const MI  = s => ({ k:"t", s:String(s), it:true });     // italic: every variable
+  const MR  = function(){ const a = []; for(let i = 0; i < arguments.length; i++){
+                 const x = arguments[i]; if(x == null) continue;
+                 if(Object.prototype.toString.call(x) === "[object Array]") a.push.apply(a, x); else a.push(x); }
+               return { k:"r", a:a }; };
+  const MF  = (n, d) => ({ k:"f", n:n, d:d });
+  const MS  = r => ({ k:"s", r:r });
+  const MP  = (b, e) => ({ k:"p", b:b, e:e });
+  const MB  = x => ({ k:"b", x:x });                       // brackets that grow
+  const SP  = f => ({ k:"sp", f:(f == null ? 0.34 : f) }); // measured gap, no glyph
+  const GH  = n => ({ k:"gh", n:n });                     // measures like n, draws nothing
+
+  function mSize(n, fs){
+    if(n.k === "sp") return { w:n.f * fs, a:0, d:0 };
+    if(n.k === "gh") return mSize(n.n, fs);
+    if(n.k === "t") return { w:measure(glyphsOf(n), fs, slantOf(n)), a:0.74 * fs, d:0.26 * fs };
+    if(n.k === "r"){
+      let w = 0, a = 0, d = 0;
+      n.a.forEach(c => { const s = mSize(c, fs); w += s.w; a = Math.max(a, s.a); d = Math.max(d, s.d); });
+      return { w:w, a:a, d:d };
+    }
+    if(n.k === "f"){
+      const fu = fs * 0.94, sn = mSize(n.n, fu), sd = mSize(n.d, fu), axis = 0.30 * fs;
+      return { w:Math.max(sn.w, sd.w) + 0.36 * fs,
+               a:axis + 0.16 * fs + sn.d + sn.a,
+               d:-axis + 0.20 * fs + sd.a + sd.d };
+    }
+    if(n.k === "s"){
+      const sr = mSize(n.r, fs);
+      return { w:0.62 * fs + sr.w + 0.16 * fs, a:sr.a + 0.28 * fs, d:sr.d };
+    }
+    if(n.k === "p"){
+      const sb = mSize(n.b, fs), se = mSize(n.e, fs * 0.62);
+      return { w:sb.w + se.w + 0.05 * fs, a:Math.max(sb.a, sb.a * 0.54 + se.a + 0.26 * fs), d:sb.d };
+    }
+    // brackets
+    const sx = mSize(n.x, fs), pw = 0.32 * fs;
+    return { w:sx.w + 2 * pw, a:sx.a * 1.08 + 0.05 * fs, d:sx.d * 1.08 + 0.05 * fs };
+  }
+
+  function mDraw(g, n, x, y, fs, fill){
+    const S = mSize(n, fs);
+    const rule = Math.max(1.8, fs * 0.055);
+    if(n.k === "sp" || n.k === "gh") return S.w;
+    if(n.k === "t"){
+      const t = el("text", { x:x.toFixed(2), y:y.toFixed(2), "font-size":fs.toFixed(1),
+        "font-weight":"500", fill:fill, "text-anchor":"start",
+        "font-style":(slantOf(n) ? "italic" : "normal") });
+      t.setAttributeNS("http://www.w3.org/XML/1998/namespace", "xml:space", "preserve");
+      t.textContent = glyphsOf(n); g.appendChild(t); return S.w;
+    }
+    if(n.k === "r"){ let cx = x; n.a.forEach(c => { cx += mDraw(g, c, cx, y, fs, fill); }); return S.w; }
+    if(n.k === "f"){
+      const fu = fs * 0.94, sn = mSize(n.n, fu), sd = mSize(n.d, fu);
+      const axisY = y - 0.30 * fs, w = S.w;
+      mDraw(g, n.n, x + (w - sn.w) / 2, axisY - 0.16 * fs - sn.d, fu, fill);
+      mDraw(g, n.d, x + (w - sd.w) / 2, axisY + 0.20 * fs + sd.a, fu, fill);
+      g.appendChild(el("line", { x1:(x + 0.06 * fs).toFixed(2), y1:axisY.toFixed(2),
+        x2:(x + w - 0.06 * fs).toFixed(2), y2:axisY.toFixed(2), stroke:fill,
+        "stroke-width":rule.toFixed(2), "stroke-linecap":"round" }));
+      return w;
+    }
+    if(n.k === "s"){
+      const sr = mSize(n.r, fs), top = y - sr.a - 0.22 * fs, bot = y + sr.d, w = S.w;
+      const d = "M " + (x + 0.05 * fs).toFixed(1) + " " + (y - sr.a * 0.40).toFixed(1)
+              + " L " + (x + 0.22 * fs).toFixed(1) + " " + (y - sr.a * 0.14).toFixed(1)
+              + " L " + (x + 0.44 * fs).toFixed(1) + " " + bot.toFixed(1)
+              + " L " + (x + 0.60 * fs).toFixed(1) + " " + top.toFixed(1)
+              + " H " + (x + w - 0.04 * fs).toFixed(1);
+      g.appendChild(el("path", { d:d, fill:"none", stroke:fill, "stroke-width":rule.toFixed(2),
+        "stroke-linejoin":"round", "stroke-linecap":"round" }));
+      mDraw(g, n.r, x + 0.62 * fs, y, fs, fill);
+      return w;
+    }
+    if(n.k === "p"){
+      const sb = mSize(n.b, fs);
+      mDraw(g, n.b, x, y, fs, fill);
+      mDraw(g, n.e, x + sb.w + 0.05 * fs, y - sb.a * 0.54, fs * 0.62, fill);
+      return S.w;
+    }
+    const sx = mSize(n.x, fs), pw = 0.32 * fs, a = sx.a * 1.08, dd = sx.d * 1.08;
+    g.appendChild(el("path", { d:"M " + (x + pw * 0.88).toFixed(1) + " " + (y - a).toFixed(1)
+      + " Q " + (x + pw * 0.06).toFixed(1) + " " + y.toFixed(1) + " " + (x + pw * 0.88).toFixed(1) + " " + (y + dd).toFixed(1),
+      fill:"none", stroke:fill, "stroke-width":rule.toFixed(2), "stroke-linecap":"round" }));
+    mDraw(g, n.x, x + pw, y, fs, fill);
+    const xr = x + pw + sx.w;
+    g.appendChild(el("path", { d:"M " + (xr + pw * 0.12).toFixed(1) + " " + (y - a).toFixed(1)
+      + " Q " + (xr + pw * 0.94).toFixed(1) + " " + y.toFixed(1) + " " + (xr + pw * 0.12).toFixed(1) + " " + (y + dd).toFixed(1),
+      fill:"none", stroke:fill, "stroke-width":rule.toFixed(2), "stroke-linecap":"round" }));
+    return S.w;
+  }
+
+  /* ============================================================
+     THE MATHS
+     Working form is  x² + bx = c  (monic). h = b/2 is the piece that
+     goes on two sides, and target = c + h² is the completed area.
+     ============================================================ */
+  function round12(x){
+    if(!isFinite(x) || x === 0) return x;
+    const mag = Math.floor(Math.log10(Math.abs(x)));
+    const p = Math.min(15, Math.max(0, 12 - mag));
+    const f = Math.pow(10, p);
+    return Math.round(x * f) / f;
+  }
+  function fmt(x){
+    const v = round12(x);
+    let s = String(v);
+    if(s.indexOf("e") >= 0) s = v.toFixed(6).replace(/0+$/, "").replace(/\.$/, "");
+    return s;
+  }
+  const neat = t => String(t).replace(/-/g, "−");        // hyphen -> real minus
+  const gcd = (a, b) => b ? gcd(b, a % b) : Math.abs(a);
+
+  function simpSurd(n){
+    if(n < 0) return null;
+    let k = 1, r = Math.round(n);
+    if(Math.abs(r - n) > 1e-9) return { k:1, r:n, inexact:true };
+    for(let f = 2; f * f <= r; f++){ while(r % (f * f) === 0){ k *= f; r /= f * f; } }
+    return { k:k, r:r, inexact:false };
+  }
+  // √target, kept exact. target can be a quarter-multiple (odd b), so pull
+  // the 4 out: √t = √(4t)/2. Returns the PARTS as well as a flat string, so
+  // the display can typeset k√r/den properly instead of printing a slash.
+  function sideOf(target){
+    if(target < 0) return { none:true };
+    const m = round12(target * 4);
+    if(Math.abs(m - Math.round(m)) < 1e-9){
+      const s = simpSurd(Math.round(m));
+      if(s && !s.inexact){
+        if(s.r === 1) return { exact:true, value:s.k / 2, k:s.k, r:1, den:2, txt:fmt(s.k / 2) };
+        const g = gcd(s.k, 2), kk = s.k / g, dd = 2 / g;
+        return { exact:false, value:Math.sqrt(target), k:kk, r:s.r, den:dd,
+                 txt:(kk === 1 ? "" : kk) + "√" + s.r + (dd === 1 ? "" : "/" + dd) };
+      }
+    }
+    return { exact:false, value:Math.sqrt(target), k:1, r:target, den:1, approx:true, txt:"√" + fmt(target) };
+  }
+  // the side as a maths node: k√r over den
+  function sideNode(side){
+    if(side.none) return MT("—");
+    if(side.exact) return MT(neat(side.txt));
+    const rad = MR(side.k === 1 ? null : MT(String(side.k)), MS(MT(fmt(side.r))));
+    return side.den === 1 ? rad : MF(rad, MT(String(side.den)));
+  }
+
+  function model(b, c){
+    const h = round12(b / 2);
+    const target = round12(c + h * h);
+    const side = sideOf(target);
+    const roots = side.none ? [] : [round12(-h + side.value), round12(-h - side.value)];
+    return { b:b, c:c, h:h, target:target, side:side, roots:roots, neg:b < 0 };
+  }
+
+  /* ---- randomiser: pick the ROOTS, not the coefficients ----
+     b = -(p+q), c = -pq, side = |p-q|/2, so the side is always exact.
+     Roots get OPPOSITE SIGNS, which forces c > 0 (a positive yellow tile,
+     the picture the lesson used) and gives the last step two real answers. */
+  const TIERS = {
+    starter:   { hMax:6,  neg:false, odd:false },
+    core:      { hMax:13, neg:true,  odd:false },
+    stretch:   { hMax:10, neg:true,  odd:true  },
+    challenge: { hMax:26, neg:true,  odd:true  }
+  };
+  const rint = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+  function randomEq(tier, lastKey){
+    const T = TIERS[tier] || TIERS.core;
+    for(let guard = 0; guard < 400; guard++){
+      const pos = rint(1, Math.max(2, T.hMax));
+      const neg = -rint(1, Math.max(2, T.hMax * 2));
+      const sum = pos + neg;
+      if(sum === 0) continue;
+      const wantNeg = T.neg && Math.random() < 0.45;
+      if(wantNeg ? sum <= 0 : sum >= 0) continue;
+      const b = -sum, c = -(pos * neg), h = b / 2;
+      if(!T.odd && b % 2 !== 0) continue;
+      if(T.odd && tier === "stretch" && b % 2 === 0) continue;
+      if(Math.abs(h) < 1 || Math.abs(h) > T.hMax) continue;
+      if(c <= 0 || c > 900) continue;
+      if(Math.abs(b) > 60) continue;
+      const key = b + "|" + c;
+      if(key === lastKey) continue;
+      return { b:b, c:c };
+    }
+    return { b:26, c:27 };
+  }
+
+  /* ============================================================
+     STATE
+     Numbers: 4 tile steps, then 3 algebra lines.
+     Proof:   1 setup step, 4 tile steps, then 4 algebra lines —
+              the extra one at the front is the divide-by-a.
+     ============================================================ */
+  const state = {
+    mode:"num", b:26, c:27, tier:"core",
+    showAreas:false, showExplain:false,
+    step:0, lastKey:"", vb:[0, 0, 1000, 470]
+  };
+  let M = model(26, 27);
+  let animRAF = 0, animating = false, popIds = {};
+
+  const PROOF = () => state.mode === "proof";
+  // The proof opens with the algebra the tiles cannot show: the general
+  // quadratic, take c across, divide by a. Only then is it monic and
+  // buildable, which is why every step boundary is a function of the mode.
+  const TILE_FIRST   = () => (PROOF() ? 3 : 0);          // first step that draws tiles
+  const DISPLAY_START = () => (PROOF() ? 7 : 4);         // first step that is pure algebra
+  const STEPS        = () => (PROOF() ? 10 : 7);
+  const maxStep = () => STEPS() - 1;
+  const NUM_STEPS = 7, PROOF_STEPS = 10;
+
+  /* ============================================================
+     GEOMETRY — a two-way table, schematic rather than to scale.
+     x is unknown, so a true picture is impossible; the h side still
+     grows with √|h| so 13 looks bigger than 3, clamped so it holds.
+     ============================================================ */
+  const XS = 168, OX = 150, OY = 104, GAP = 62;
+  function hSize(h){
+    const a = Math.abs(h) || 1;
+    return Math.max(58, Math.min(122, 30 + 68 * Math.sqrt(a / 13)));
+  }
+
+  function tile(g, t){
+    if(t.op <= 0.004 || t.w <= 0.4 || t.h <= 0.4) return;
+    const grp = el("g", { opacity:t.op.toFixed(3) });
+    if(t.id && popIds[t.id]) grp.setAttribute("class", "popIn");
+    const r = el("rect", { x:t.x.toFixed(2), y:t.y.toFixed(2), width:t.w.toFixed(2), height:t.h.toFixed(2),
+      rx:"7", fill:t.fill, stroke:t.edge, "stroke-width":"2.6" });
+    if(t.removed){ r.setAttribute("fill", "url(#cut)"); r.setAttribute("stroke-dasharray", "7 5"); }
+    grp.appendChild(r);
+    if(!t.hideLabel && t.node && t.w > 30 && t.h > 22){
+      const size = Math.max(15, Math.min(30, Math.min(t.w, t.h) * 0.34));
+      const S = mSize(t.node, size);
+      mDraw(grp, t.node, t.x + t.w / 2 - S.w / 2, t.y + t.h / 2 + (S.a - S.d) / 2, size, t.ink);
+      if(state.showAreas && t.area != null && t.h > 44){
+        grp.appendChild(uiFont(el("text", { x:(t.x + t.w / 2).toFixed(2),
+          y:(t.y + t.h / 2 + size * 0.95).toFixed(2), "text-anchor":"middle",
+          "font-size":(size * 0.5).toFixed(1), "font-weight":"800", fill:t.ink, opacity:".72" },
+          "area " + t.area)));
+      }
+    }
+    g.appendChild(grp);
+  }
+
+  // The dimensions, written where an area model writes them. This replaces the
+  // curly braces, and it is what lets a NEGATIVE h work with no special case:
+  // the edge simply reads −1, and every cell is the product of its two edges,
+  // exactly like a two-way table.
+  const EDGE_FS = 26;
+  function edgeLabels(g, S, op){
+    if(!S || !S.edges || op <= 0.004) return;
+    const grp = el("g", { opacity:op.toFixed(3), class:"edges" });
+    S.edges.forEach(e => {
+      const s = mSize(e.node, EDGE_FS);
+      const x = e.side === "top" ? e.at - s.w / 2 : e.at - s.w;
+      const y = e.side === "top" ? e.y : e.y + (s.a - s.d) / 2;
+      mDraw(grp, e.node, x, y, EDGE_FS, "var(--line)");
+    });
+    g.appendChild(grp);
+  }
+  function edgeBounds(S){
+    const out = [];
+    if(!S || !S.edges) return out;
+    S.edges.forEach(e => {
+      const s = mSize(e.node, EDGE_FS);
+      const x = e.side === "top" ? e.at - s.w / 2 : e.at - s.w;
+      const y = e.side === "top" ? e.y : e.y + (s.a - s.d) / 2;
+      out.push({ x:x, y:y - s.a, w:s.w, h:s.a + s.d });
+    });
+    return out;
+  }
+
+  /* ============================================================
+     SCENES
+     ============================================================ */
+  const C = {
+    sq:{ fill:"var(--tSq)", edge:"var(--tSqEdge)", ink:"var(--tSqInk)" },
+    x: { fill:"var(--tX)",  edge:"var(--tXEdge)",  ink:"var(--tXInk)"  },
+    c: { fill:"var(--tC)",  edge:"var(--tCEdge)",  ink:"var(--tCInk)"  },
+    p: { fill:"var(--tP)",  edge:"var(--tPEdge)",  ink:"var(--tPInk)"  }
+  };
+  function box(id, kind, x, y, w, h, op, node){
+    return Object.assign({ id:id, x:x, y:y, w:w, h:h, op:op, node:node }, C[kind]);
+  }
+  const N_x2         = () => MP(MI("x"), MT("2"));
+  const N_xbOverA    = () => MF(MI("bx"), MI("a"));
+  const N_xbOver2a   = () => MF(MI("bx"), MR(MT("2"), MI("a")));
+  const N_b2Over4a2  = () => MF(MP(MI("b"), MT("2")), MR(MT("4"), MP(MI("a"), MT("2"))));
+  const N_negCOverA  = () => MF(MR(MT("−"), MI("c")), MI("a"));
+  const N_disc       = () => MR(MP(MI("b"), MT("2")), SP(0.26), MT("−"), SP(0.26), MT("4"), MI("ac"));
+  const N_mergedRHS  = () => MF(N_disc(), MR(MT("4"), MP(MI("a"), MT("2"))));
+  const N_bOver2a    = () => MF(MI("b"), MR(MT("2"), MI("a")));
+
+  // a coefficient of 1 is never written: the cell reads x or −x, not 1x or −1x
+  function coefX(v){
+    const a = Math.abs(v);
+    if(a === 1) return v < 0 ? MR(MT("−"), MI("x")) : MI("x");
+    return MR(MT(neat(fmt(v))), MI("x"));
+  }
+  // the h dimension, as it appears on an edge AND inside (x + h)²
+  function hNode(){ return PROOF() ? N_bOver2a() : MT(neat(fmt(M.h))); }
+  // the whole side, built so the flying edge label lands exactly on its slot
+  function sideParts(){
+    const xN = MI("x"), hN = hNode();
+    const neg = !PROOF() && M.h < 0;
+    return { xN:xN, hN:hN, neg:neg,
+             row:g => neg ? MR(g(xN), SP(0.42), g(hN))
+                          : MR(g(xN), SP(0.30), MT("+"), SP(0.30), g(hN)) };
+  }
+
+  function sceneFor(step){
+    const P = PROOF();
+    if(P && step < TILE_FIRST()) return { display:true, which:"setup",
+      shown:step + 1, boxes:[], rhs:[] };
+    if(step >= DISPLAY_START()) return { display:true, which:"final",
+      shown:step - DISPLAY_START() + 1, boxes:[], rhs:[] };
+
+    const ts = step - TILE_FIRST();                      // 0..3 within the tile sequence
+    const hS = P ? 96 : hSize(M.h);
+    const h = P ? 1 : M.h;
+    const neg = !P && M.h < 0;
+    const bx = OX, by = OY;
+    const S = { boxes:[], rhs:[], display:false, shown:0, ts:ts };
+
+    S.boxes.push(box("sq", "sq", bx, by, XS, XS, 1, N_x2()));
+    const xTermNode = () => P ? N_xbOver2a() : coefX(h);
+    if(ts === 0){
+      S.boxes.push(box("gr", "x", bx + XS + 26, by, 2 * hS, XS, 1,
+        P ? N_xbOverA() : coefX(M.b)));
+      S.boxes.push(box("gb", "x", bx + XS + 26 + hS, by, hS, XS, 0, null));
+    } else {
+      S.boxes.push(box("gr", "x", bx + XS, by, hS, XS, 1, xTermNode()));
+      S.boxes.push(box("gb", "x", bx, by + XS, XS, hS, 1, xTermNode()));
+    }
+    // Two negatives make the corner POSITIVE — the picture should say so.
+    S.boxes.push(box("pk", "p", bx + XS, by + XS, hS, hS, ts >= 2 ? 1 : 0,
+      P ? N_b2Over4a2() : MT(neat(fmt(round12(h * h))))));
+    if(neg){ S.boxes[1].removed = true; S.boxes[2].removed = true; }
+    if(ts === 1) S.hole = { x:bx + XS, y:by + XS, w:hS, h:hS };
+
+    // the edges name the dimensions from the moment the square is laid out
+    if(ts >= 1){
+      const hN = hNode();
+      S.edges = [
+        { side:"top",  at:bx + XS / 2,       y:by - 16, node:MI("x") },
+        { side:"top",  at:bx + XS + hS / 2,  y:by - 16, node:hN },
+        { side:"left", at:bx - 20, y:by + XS / 2,       node:MI("x") },
+        { side:"left", at:bx - 20, y:by + XS + hS / 2,  node:hN }
+      ];
+    }
+
+    let lhsRight = bx;
+    S.boxes.forEach(t => { if(t.op > 0 || t.w > 0) lhsRight = Math.max(lhsRight, t.x + t.w); });
+    const rightX = lhsRight + GAP;
+    S.eq = { x:rightX - GAP / 2, y:by + (XS + hS) / 2 };
+
+    const SIDE = XS + hS, rh = 78;
+    if(ts <= 1){
+      S.rhs.push(box("yc", "c", rightX, by + SIDE / 2 - rh / 2, SIDE, rh, 1,
+        P ? N_negCOverA() : MT(neat(fmt(M.c)))));
+    } else if(ts === 2){
+      const tot = rh + 24 + hS, top2 = by + (SIDE - tot) / 2;
+      S.rhs.push(box("yc", "c", rightX, top2, SIDE, rh, 1,
+        P ? N_negCOverA() : MT(neat(fmt(M.c)))));
+      S.rhs.push(box("pc", "p", rightX + (SIDE - hS) / 2, top2 + rh + 24, hS, hS, 1,
+        P ? N_b2Over4a2() : MR(MT("+"), MT(neat(fmt(round12(M.h * M.h)))))));
+    } else {
+      // same id as the yellow tile so it GROWS into the square, and the same
+      // size as the completed square, because that is what the equation says
+      S.rhs.push(box("yc", "c", rightX, by, SIDE, SIDE, 1,
+        P ? N_mergedRHS() : MT(neat(fmt(M.target)))));
+    }
+    return S;
+  }
+
+  /* ---- the algebra that replaces the model ---- */
+  const EQN = () => [SP(0.40), MT("="), SP(0.40)];
+  function line1Spec(ghost){
+    const wrap = n => ghost ? GH(n) : n;
+    const sp = sideParts();
+    const rhs = PROOF() ? N_mergedRHS() : MT(neat(fmt(M.target)));
+    return { node:MR(MP(MB(sp.row(wrap)), MT("2")), EQN(), wrap(rhs)),
+             xN:sp.xN, hN:sp.hN, neg:sp.neg, rhs:rhs };
+  }
+  function displayLines(which){
+    if(PROOF() && which === "setup"){
+      return [
+        MR(MI("a"), N_x2(), SP(0.26), MT("+"), SP(0.26), MI("bx"), SP(0.26), MT("+"),
+           SP(0.26), MI("c"), EQN(), MT("0")),
+        MR(MI("a"), N_x2(), SP(0.26), MT("+"), SP(0.26), MI("bx"), EQN(), MT("−"), MI("c")),
+        MR(N_x2(), SP(0.26), MT("+"), SP(0.26), N_xbOverA(), EQN(), N_negCOverA())
+      ];
+    }
+    if(PROOF()){
+      const lhs = () => MR(MI("x"), SP(0.30), MT("+"), SP(0.30), N_bOver2a());
+      return [
+        line1Spec(false).node,
+        MR(lhs(), EQN(), MF(MR(MT("±"), SP(0.16), MS(N_disc())), MR(MT("2"), MI("a")))),
+        MR(MI("x"), EQN(), MF(MR(MT("−"), MI("b"), SP(0.22), MT("±"), SP(0.22), MS(N_disc())),
+           MR(MT("2"), MI("a"))))
+      ];
+    }
+    const sp = sideParts();
+    const lhs = () => sp.row(n => n);
+    const sd = sideNode(M.side);
+    const last = M.side.exact
+      ? MR(MI("x"), EQN(), MT(neat(fmt(M.roots[0]))), SP(0.55), MT("or"), SP(0.55),
+           MI("x"), EQN(), MT(neat(fmt(M.roots[1]))))
+      : MR(MI("x"), EQN(), MT(neat(fmt(-M.h))), SP(0.22), MT("±"), SP(0.22), sd);
+    return [ line1Spec(false).node, MR(lhs(), EQN(), MT("±"), SP(0.20), sd), last ];
+  }
+
+  // One size for every line, fixed baselines so revealing one never shifts
+  // the ones above it.
+  function layoutLines(lines, vb){
+    const REF = 46;
+    let widest = 0, tall = 0;
+    const S0 = lines.map(L => mSize(L, REF));
+    S0.forEach(s => { widest = Math.max(widest, s.w); });
+    const gap0 = REF * 0.40;
+    S0.forEach((s, i) => { tall += s.a + s.d + (i ? gap0 : 0); });
+    const k = Math.min(1, (vb[2] * 0.94) / Math.max(1, widest), (vb[3] * 0.88) / Math.max(1, tall));
+    const fs = REF * k, S = lines.map(L => mSize(L, fs)), gap = fs * 0.40;
+    let total = 0;
+    S.forEach((s, i) => { total += s.a + s.d + (i ? gap : 0); });
+    const x = [], y = [];
+    let cur = vb[1] + (vb[3] - total) / 2;
+    S.forEach((s, i) => {
+      if(i) cur += gap;
+      cur += s.a; y.push(cur); cur += s.d;
+      x.push(vb[0] + (vb[2] - s.w) / 2);
+    });
+    return { fs:fs, x:x, y:y, S:S, total:total };
+  }
+
+  // where the two travelling pieces END UP inside line one
+  function line1Targets(){
+    const lay = layoutLines(displayLines("final"), state.vb), fs = lay.fs;
+    const spec = line1Spec(false);
+    const lhsX = lay.x[0] + 0.32 * fs;
+    const wx = mSize(spec.xN, fs).w;
+    const hX = spec.neg ? lhsX + wx + 0.42 * fs
+                        : lhsX + wx + 0.30 * fs + measure("+", fs, false) + 0.30 * fs;
+    return { fs:fs, y:lay.y[0], xX:lhsX, hX:hX,
+             rhsX:lay.x[0] + mSize(MP(MB(sideParts().row(n => n)), MT("2")), fs).w
+                  + 0.80 * fs + measure("=", fs, false),
+             xN:spec.xN, hN:spec.hN, rhs:spec.rhs };
+  }
+  // where they START — the two TOP edge labels, and the number in the square
+  function line1Sources(){
+    const S = sceneFor(DISPLAY_START() - 1);
+    const top = S.edges.filter(e => e.side === "top");
+    const sx = mSize(top[0].node, EDGE_FS), sh = mSize(top[1].node, EDGE_FS);
+    const t = S.rhs[0];
+    const nfs = Math.max(15, Math.min(30, Math.min(t.w, t.h) * 0.34));
+    const nS = mSize(t.node, nfs);
+    return {
+      xX:top[0].at - sx.w / 2, xY:top[0].y,
+      hX:top[1].at - sh.w / 2, hY:top[1].y, efs:EDGE_FS,
+      rhsX:t.x + t.w / 2 - nS.w / 2, rhsY:t.y + t.h / 2 + (nS.a - nS.d) / 2,
+      rhsFs:nfs, rhsNode:t.node, tileId:t.id, rhsInk:t.ink
+    };
+  }
+
+  /* ============================================================
+     DRAW
+     ============================================================ */
+  const lerp = (a, b, e) => a + (b - a) * e;
+  function blendBox(A, B, e){
+    if(!A) return Object.assign({}, B, { op:B.op * e });
+    if(!B) return Object.assign({}, A, { op:A.op * (1 - e) });
+    const out = Object.assign({}, B);
+    ["x", "y", "w", "h", "op"].forEach(k => { out[k] = lerp(A[k], B[k], e); });
+    return out;
+  }
+  function pairUp(a, b){
+    const ids = {};
+    (a || []).forEach(t => { ids[t.id] = [t, null]; });
+    (b || []).forEach(t => { ids[t.id] = [ids[t.id] ? ids[t.id][0] : null, t]; });
+    return Object.keys(ids).map(k => ids[k]);
+  }
+
+  function draw(A, B, e, morph){
+    const svg = $("board");
+    while(svg.firstChild) svg.removeChild(svg.firstChild);
+    const defs = el("defs");
+    const pat = el("pattern", { id:"cut", width:"11", height:"11", patternUnits:"userSpaceOnUse", patternTransform:"rotate(45)" });
+    pat.appendChild(el("rect", { width:"11", height:"11", fill:"var(--tX)" }));
+    pat.appendChild(el("line", { x1:"0", y1:"0", x2:"0", y2:"11", stroke:"var(--tXEdge)", "stroke-width":"3.4", opacity:".55" }));
+    defs.appendChild(pat);
+    svg.appendChild(defs);
+    const g = el("g");
+
+    pairUp(A && A.boxes, B.boxes).forEach(p => tile(g, blendBox(p[0], p[1], e)));
+    const gAlpha = (B.boxes && B.boxes.length) ? (A && A.boxes && A.boxes.length ? 1 : e) : (1 - e);
+
+    if(B.hole && e > 0.5){
+      const op = (e - 0.5) / 0.5;
+      const hole = el("g", { opacity:op.toFixed(3) });
+      hole.appendChild(el("rect", { x:B.hole.x, y:B.hole.y, width:B.hole.w, height:B.hole.h,
+        rx:"7", fill:"#fdf2f8", stroke:"var(--tPEdge)", "stroke-width":"3", "stroke-dasharray":"9 7" }));
+      hole.appendChild(el("text", { x:(B.hole.x + B.hole.w / 2), y:(B.hole.y + B.hole.h / 2 + 12),
+        "text-anchor":"middle", "font-size":"38", "font-weight":"900", fill:"var(--tPEdge)", opacity:".55" }, "?"));
+      g.appendChild(hole);
+    }
+
+    // the two top edges are what fly, so they are hidden while in flight
+    const eSrc = (B.edges ? B : (A && A.edges ? A : null));
+    if(eSrc){
+      const eo = (B.edges && A && A.edges) ? 1 : (B.edges ? e : 1 - e);
+      const shown = morph ? { edges:eSrc.edges.filter(x => x.side === "left") } : eSrc;
+      edgeLabels(g, shown, eo);
+    }
+    if(eSrc && eSrc.eq){
+      g.appendChild(el("text", { x:eSrc.eq.x.toFixed(2), y:eSrc.eq.y.toFixed(2), "text-anchor":"middle",
+        "dominant-baseline":"middle", "font-size":"46", "font-weight":"500", fill:"var(--line)",
+        opacity:gAlpha.toFixed(3) }, "="));
+    } else if(B.eq || (A && A.eq)){
+      const q = B.eq || A.eq;
+      g.appendChild(el("text", { x:q.x.toFixed(2), y:q.y.toFixed(2), "text-anchor":"middle",
+        "dominant-baseline":"middle", "font-size":"46", "font-weight":"500", fill:"var(--line)",
+        opacity:gAlpha.toFixed(3) }, "="));
+    }
+
+    pairUp(A && A.rhs, B.rhs).forEach(p => {
+      const t = blendBox(p[0], p[1], e);
+      if(morph && t.id === morph.src.tileId) t.hideLabel = true;
+      tile(g, t);
+    });
+    if(B.rhs && B.rhs.length === 2){
+      const a = B.rhs[0], b = B.rhs[1];
+      g.appendChild(el("text", { x:(a.x + a.w / 2).toFixed(2), y:((a.y + a.h + b.y) / 2).toFixed(2),
+        "text-anchor":"middle", "dominant-baseline":"middle", "font-size":"32", "font-weight":"500",
+        fill:"var(--line)", opacity:e.toFixed(2) }, "+"));
+    }
+
+    if(morph){
+      const p = morph.fwd ? e : 1 - e;
+      const lay = layoutLines(displayLines("final"), state.vb);
+      const gl = el("g", { opacity:p.toFixed(3), class:"mline" });
+      mDraw(gl, line1Spec(true).node, lay.x[0], lay.y[0], lay.fs, "var(--ink)");
+      g.appendChild(gl);
+      const fly = (node, sx, sy, sf, tx, ty, tf, cFrom, cTo) => {
+        const x = lerp(sx, tx, p), y = lerp(sy, ty, p), f = lerp(sf, tf, p);
+        [[cFrom, 1 - p], [cTo, p]].forEach(c => {
+          if(c[1] <= 0.004) return;
+          const gf = el("g", { class:"mfly", opacity:c[1].toFixed(3) });
+          mDraw(gf, node, x, y, f, c[0]);
+          g.appendChild(gf);
+        });
+      };
+      const S = morph.src, D = morph.dst;
+      fly(D.xN, S.xX, S.xY, S.efs, D.xX, D.y, D.fs, "var(--line)", "var(--ink)");
+      fly(D.hN, S.hX, S.hY, S.efs, D.hX, D.y, D.fs, "var(--line)", "var(--ink)");
+      fly(S.rhsNode, S.rhsX, S.rhsY, S.rhsFs, D.rhsX, D.y, D.fs, S.rhsInk, "var(--ink)");
+    } else {
+      const dA = (A && A.display) ? A : null, dB = B.display ? B : null;
+      const which = (dB || dA || {}).which;
+      if(dA || dB){
+        const shownA = dA && dA.which === which ? dA.shown : 0;
+        const shownB = dB && dB.which === which ? dB.shown : 0;
+        const lines = displayLines(which), lay = layoutLines(lines, state.vb);
+        const fade = dB ? 1 : (1 - e);
+        lines.forEach((L, i) => {
+          const op = (i < shownA ? 1 : (i < shownB ? e : 0)) * fade;
+          if(op <= 0.004) return;
+          const gl = el("g", { opacity:op.toFixed(3), class:"mline" });
+          mDraw(gl, L, lay.x[i], lay.y[i], lay.fs,
+            (which === "final" && i === lines.length - 1) ? "var(--pink)" : "var(--ink)");
+          g.appendChild(gl);
+        });
+      }
+    }
+    svg.appendChild(g);
+    popIds = {};
+  }
+
+  /* ---- click targets: the gesture IS the move ---- */
+  function wireHotspots(){
+    const ts = state.step - TILE_FIRST();
+    if(state.step >= DISPLAY_START() || ts < 0 || ts > 2) return;
+    const svg = $("board"), S = sceneFor(state.step), acts = [];
+    if(ts === 0){ const gr = S.boxes.find(t => t.id === "gr"); if(gr) acts.push(gr); }
+    else if(ts === 1 && S.hole){ acts.push(S.hole); }
+    else if(ts === 2 && S.rhs.length === 2){
+      const a = S.rhs[0], b = S.rhs[1];
+      acts.push({ x:a.x, y:a.y, w:a.w, h:(b.y + b.h) - a.y });
+    }
+    if(!acts.length) return;
+    const g = el("g");
+    acts.forEach(a => {
+      g.appendChild(el("rect", { x:(a.x - 5).toFixed(2), y:(a.y - 5).toFixed(2),
+        width:(a.w + 10).toFixed(2), height:(a.h + 10).toFixed(2), rx:"11",
+        fill:"none", stroke:"var(--orange)", "stroke-width":"4", class:"tapRing" }));
+      const hit = el("rect", { x:(a.x - 6).toFixed(2), y:(a.y - 6).toFixed(2),
+        width:(a.w + 12).toFixed(2), height:(a.h + 12).toFixed(2), fill:"transparent", class:"hot" });
+      hit.setAttribute("role", "button");
+      hit.setAttribute("tabindex", "0");
+      hit.addEventListener("click", () => go(state.step + 1));
+      hit.addEventListener("keydown", ev => { if(ev.key === "Enter" || ev.key === " "){ ev.preventDefault(); go(state.step + 1); } });
+      g.appendChild(hit);
+    });
+    svg.appendChild(g);
+  }
+
+  // Computed per equation over the TILE steps only, never mid-tween, so the
+  // algebra display is centred in the same box and the card never resizes.
+  function computeVB(){
+    let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+    const eat = t => { x0 = Math.min(x0, t.x); y0 = Math.min(y0, t.y);
+                       x1 = Math.max(x1, t.x + t.w); y1 = Math.max(y1, t.y + t.h); };
+    for(let st = TILE_FIRST(); st < DISPLAY_START(); st++){
+      const S = sceneFor(st);
+      S.boxes.forEach(t => { if(t.op > 0 || t.w > 0) eat(t); });
+      S.rhs.forEach(eat);
+      if(S.hole) eat(S.hole);
+      edgeBounds(S).forEach(eat);        // the edge labels are part of the picture
+    }
+    x0 -= 26; y0 -= 20; x1 += 20; y1 += 22;
+    state.vb = [x0, y0, Math.max(200, x1 - x0), Math.max(160, y1 - y0)];
+    $("board").setAttribute("viewBox", state.vb.join(" "));
+  }
+
+  function renderStatic(){ draw(null, sceneFor(state.step), 1); wireHotspots(); }
+  function animTween(dur, frame, done){
+    cancelAnimationFrame(animRAF); animating = true; syncNav();
+    if(instant || typeof requestAnimationFrame !== "function"){
+      frame(1); animating = false; if(done) done(); syncNav(); return;
+    }
+    let t0 = null;
+    function f(now){
+      if(t0 === null) t0 = now;
+      const p = Math.min(1, (now - t0) / dur);
+      frame(p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2);
+      if(p < 1){ animRAF = requestAnimationFrame(f); }
+      else{ animating = false; if(done) done(); syncNav(); }
+    }
+    animRAF = requestAnimationFrame(f);
+  }
+  function go(target){
+    if(animating) return;
+    target = Math.max(0, Math.min(maxStep(), target));
+    if(target === state.step) return;
+    const A = sceneFor(state.step), prevStep = state.step;
+    state.step = target;
+    const B = sceneFor(target);
+    if(target === TILE_FIRST() + 2) popIds = { pk:1, pc:1 };
+    syncText();
+    const lo = DISPLAY_START() - 1, hi = DISPLAY_START();
+    let morph = null;
+    if((prevStep === lo && target === hi) || (prevStep === hi && target === lo)){
+      morph = { fwd:target === hi, src:line1Sources(), dst:line1Targets() };
+    }
+    animTween(morph ? 780 : 620, e => draw(A, B, e, morph), renderStatic);
+  }
+
+  /* ============================================================
+     WORDS — one short cue, and the equation as it now stands.
+     The maths line states the CURRENT EQUATION, so rearranging the
+     tiles does not change it.
+     ============================================================ */
+  function fr(n, d){ return '<span class="frac"><span class="n">' + n + '</span><span class="d">' + d + '</span></span>'; }
+  const IT = t => MATH_ALPHA ? '<span class="mi">' + mathItalic(t) + '</span>'
+                             : '<i>' + t + '</i>';
+  const SUP2 = "<sup>2</sup>";
+  const HISTORY = "For thousands of years mathematicians did not write down the negative "
+    + "solutions to their equations — they were measuring real land and real walls. "
+    + "The picture on this screen has the same blind spot.";
+  const PROOF_NOTE = "Every quadratic you will ever solve with the formula is this same "
+    + "picture, built out of letters instead of numbers.";
+
+  function proofHeadHTML(monic){
+    return monic
+      ? IT("x") + SUP2 + " + " + fr(IT("bx"), IT("a")) + " = " + fr("−" + IT("c"), IT("a"))
+      : IT("a") + IT("x") + SUP2 + " + " + IT("b") + IT("x") + " + " + IT("c") + " = 0";
+  }
+
+  function syncText(){
+    const P = PROOF(), s = state.step, hb = $("historyBox");
+    hb.hidden = true;
+    $("stepMaths").className = "stepMaths";
+    $("stepCount").textContent = (P ? "Proof · step " : "Step ") + (s + 1) + " of " + STEPS();
+
+    let cue = "", maths = "";
+    if(P){
+      const monic = IT("x") + SUP2 + " + " + fr(IT("bx"), IT("a")) + " = " + fr("−" + IT("c"), IT("a"));
+      const CUES = [
+        "Any quadratic at all. Nothing is built yet.",
+        "Take " + IT("c") + " across.",
+        "Divide every term by " + IT("a") + ".",
+        "Monic at last, so now it can be built.",
+        "Halve the x-term so it can sit on two sides.",
+        "The corner is " + fr(IT("b"), "2" + IT("a")) + " by " + fr(IT("b"), "2" + IT("a")) + ". Add it to both sides.",
+        "Read the edges, and put the right side over one denominator.",
+        "One square, one fraction. Now solve it.",
+        "Root both sides — the bottom is a perfect square, so 2" + IT("a") + " comes straight out.",
+        "Take the halved term across, and there it is."
+      ];
+      const MATHS = [ "", "", "", monic, monic,
+        "x² + " + fr(IT("bx"), IT("a")) + " + " + fr(IT("b") + "²", "4" + IT("a") + "²") + " = "
+          + fr("−" + IT("c"), IT("a")) + " + " + fr(IT("b") + "²", "4" + IT("a") + "²"),
+        "( x + " + fr(IT("b"), "2" + IT("a")) + " )² = " + fr(IT("b") + "² − 4" + IT("ac"), "4" + IT("a") + "²"),
+        "", "", "" ];
+      cue = CUES[s]; maths = MATHS[s];
+      const head = $("proofHead");
+      const want = proofHeadHTML(s >= 2);
+      if(head.innerHTML !== want){
+        head.innerHTML = want;
+        if(s >= 2){ head.classList.remove("swap"); void head.offsetWidth; head.classList.add("swap"); }
+      }
+      if(s === PROOF_STEPS - 1 && state.showExplain){ hb.hidden = false; hb.textContent = PROOF_NOTE; }
+    } else {
+      const sgn = M.neg ? "−" : "+", bAbs = fmt(Math.abs(M.b)), ah = Math.abs(M.h);
+      const hSigned = neat(fmt(M.h)), hh = fmt(round12(M.h * M.h));
+      const eq0 = "x² " + sgn + " " + bAbs + "x = " + fmt(M.c);
+      const CUES = [
+        "One x-squared, " + (M.neg ? "take away " : "") + bAbs + " lots of x, and " + fmt(M.c) + ".",
+        "Halve " + bAbs + "x so it can sit on two sides.",
+        "The corner is " + hSigned + " × " + hSigned + " = " + hh + ". Add it to both sides.",
+        "Read the edges: the square is x " + sgn + " " + fmt(ah) + " each way.",
+        "One square, one number. Now solve it.",
+        "Take the square root of both sides.",
+        "Take the " + hSigned + " across."
+      ];
+      const MATHS = [ eq0, eq0,
+        "x² " + sgn + " " + bAbs + "x + " + hh + " = " + fmt(M.c) + " + " + hh,
+        "( x " + sgn + " " + fmt(ah) + " )² = " + fmt(M.target),
+        "", "", "" ];
+      cue = CUES[s]; maths = MATHS[s];
+      if(s === NUM_STEPS - 1 && state.showExplain){ hb.hidden = false; hb.textContent = HISTORY; }
+    }
+    $("stepPrompt").innerHTML = cue;
+    $("stepMaths").innerHTML = maths;
+    const th = s - TILE_FIRST();
+    $("hint").textContent = (s < DISPLAY_START() && th >= 0 && th <= 2)
+      ? "Click the glowing tile, or press Space. \u2190 goes back, R makes a new equation."
+      : "Press Space or \u2192 for the next step, \u2190 to go back.";
+    syncNav();
+  }
+
+  function syncNav(){
+    $("backBtn").disabled = animating || state.step === 0;
+    $("nextBtn").disabled = animating || state.step >= maxStep();
+    $("genBtn").disabled = animating || PROOF();
+  }
+
+  /* ============================================================
+     INPUT
+     ============================================================ */
+  function readInputs(){
+    const bRaw = $("bInput").value.trim(), cRaw = $("cInput").value.trim(), msg = $("inputMsg");
+    $("bInput").classList.remove("bad"); $("cInput").classList.remove("bad"); msg.textContent = "";
+    if(!/^-?\d+(\.\d+)?$/.test(bRaw)){ $("bInput").classList.add("bad"); msg.textContent = "b must be a number."; return false; }
+    if(!/^-?\d+(\.\d+)?$/.test(cRaw)){ $("cInput").classList.add("bad"); msg.textContent = "c must be a number."; return false; }
+    const b = Number(bRaw), c = Number(cRaw);
+    if(b === 0){ $("bInput").classList.add("bad"); msg.textContent = "With no x-term there is nothing to complete — give b a value."; return false; }
+    if(Math.abs(b) > 200){ $("bInput").classList.add("bad"); msg.textContent = "Keep b between −200 and 200 so the tiles stay readable."; return false; }
+    const m = model(b, c);
+    if(m.target < 0){
+      msg.textContent = "The completed square would need an area of " + neat(fmt(m.target))
+        + " — impossible, so this equation has no real solutions.";
+      return false;
+    }
+    state.b = b; state.c = c; M = m;
+    return true;
+  }
+  function applyInputs(){
+    if(!readInputs()) return;
+    state.step = 0; state.lastKey = state.b + "|" + state.c;
+    computeVB(); syncText(); renderStatic(); syncNav();
+  }
+  function newEquation(){
+    const e = randomEq(state.tier, state.lastKey);
+    state.b = e.b; state.c = e.c; state.lastKey = e.b + "|" + e.c;
+    $("bInput").value = String(e.b); $("cInput").value = String(e.c);
+    $("bInput").classList.remove("bad"); $("cInput").classList.remove("bad"); $("inputMsg").textContent = "";
+    M = model(e.b, e.c); state.step = 0;
+    computeVB(); syncText(); renderStatic(); syncNav();
+  }
+  function setMode(m){
+    if(state.mode === m) return;
+    state.mode = m; state.step = 0;
+    $("modeNum").classList.toggle("on", m === "num");
+    $("modeProof").classList.toggle("on", m === "proof");
+    $("modeNum").setAttribute("aria-selected", m === "num" ? "true" : "false");
+    $("modeProof").setAttribute("aria-selected", m === "proof" ? "true" : "false");
+    $("numInputs").hidden = m !== "num";
+    $("proofHeadWrap").hidden = m !== "proof";
+    $("proofHead").classList.remove("swap");
+    $("inputMsg").textContent = "";
+    computeVB(); syncText(); renderStatic(); syncNav();
+  }
+
+  /* ============================================================
+     WIRING
+     ============================================================ */
+  const TIER_NAMES = { starter:"Starter", core:"Core", stretch:"Stretch", challenge:"Challenge" };
+  function syncChrome(){
+    $("tierVal").textContent = TIER_NAMES[state.tier];
+    $("tierTag").textContent = "· " + TIER_NAMES[state.tier];
+    document.querySelectorAll("#tierMenu .subOpt").forEach(b => b.classList.toggle("on", b.dataset.tier === state.tier));
+  }
+  function closeMenus(except){
+    ["settingsMenu", "toolsMenu"].forEach(id => { if(id !== except) $(id).classList.remove("open"); });
+    ["settingsBtn", "toolsBtn"].forEach(id => $(id).setAttribute("aria-expanded", "false"));
+    $("tierWrap").classList.remove("open");
+  }
+  function toggleMenu(btnId, menuId){
+    $(btnId).addEventListener("click", e => {
+      e.stopPropagation();
+      const open = !$(menuId).classList.contains("open");
+      closeMenus(menuId);
+      $(menuId).classList.toggle("open", open);
+      $(btnId).setAttribute("aria-expanded", open ? "true" : "false");
+    });
+  }
+  toggleMenu("settingsBtn", "settingsMenu");
+  toggleMenu("toolsBtn", "toolsMenu");
+  document.addEventListener("click", e => { if(!e.target.closest(".menuWrap")) closeMenus(null); });
+  $("settingsMenu").addEventListener("click", e => e.stopPropagation());
+  $("tierRow").addEventListener("click", e => {
+    e.stopPropagation();
+    const open = $("tierWrap").classList.toggle("open");
+    $("tierRow").setAttribute("aria-expanded", open ? "true" : "false");
+  });
+  document.querySelectorAll("#tierMenu .subOpt").forEach(b => {
+    b.addEventListener("click", e => {
+      e.stopPropagation();
+      state.tier = b.dataset.tier;
+      $("tierWrap").classList.remove("open");
+      syncChrome(); newEquation();
+    });
+  });
+  $("modeNum").addEventListener("click", () => setMode("num"));
+  $("modeProof").addEventListener("click", () => setMode("proof"));
+  $("useBtn").addEventListener("click", applyInputs);
+  ["bInput", "cInput"].forEach(id => {
+    $(id).addEventListener("keydown", e => { if(e.key === "Enter"){ e.preventDefault(); applyInputs(); } });
+  });
+  $("areaToggle").addEventListener("change", e => { state.showAreas = e.target.checked; renderStatic(); });
+  $("explainToggle").addEventListener("change", e => { state.showExplain = e.target.checked; syncText(); });
+  $("nextBtn").addEventListener("click", () => go(state.step + 1));
+  $("backBtn").addEventListener("click", () => go(state.step - 1));
+  $("restartBtn").addEventListener("click", () => {
+    cancelAnimationFrame(animRAF); animating = false;
+    state.step = 0; syncText(); renderStatic(); syncNav();
+  });
+  $("genBtn").addEventListener("click", newEquation);
+  $("resetBtn").addEventListener("click", () => {
+    cancelAnimationFrame(animRAF); animating = false;
+    state.tier = "core"; state.showAreas = false; state.showExplain = false;
+    $("areaToggle").checked = false; $("explainToggle").checked = false;
+    setMode("num");
+    state.b = 26; state.c = 27; M = model(26, 27); state.step = 0; state.lastKey = "26|27";
+    $("bInput").value = "26"; $("cInput").value = "27";
+    $("bInput").classList.remove("bad"); $("cInput").classList.remove("bad"); $("inputMsg").textContent = "";
+    syncChrome(); computeVB(); syncText(); renderStatic(); syncNav();
+  });
+  document.addEventListener("keydown", e => {
+    if(e.target && /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) return;
+    if(e.key === " " || e.key === "ArrowRight"){ e.preventDefault(); go(state.step + 1); }
+    else if(e.key === "ArrowLeft"){ e.preventDefault(); go(state.step - 1); }
+    else if((e.key === "r" || e.key === "R") && state.mode === "num"){ e.preventDefault(); newEquation(); }
+  });
+
+  // ---- boot ----
+  // decide once whether the real math-italic alphabet is available, then
+  // write the static markup that was authored with plain <i> fallbacks
+  MATH_ALPHA = detectMathAlpha();
+  $("eqXsq").innerHTML = IT("x") + SUP2;
+  $("eqX").innerHTML   = IT("x");
+  $("proofHead").innerHTML = proofHeadHTML(false);
+  syncChrome(); computeVB(); syncText(); renderStatic(); syncNav();
+
+  // exposed for the headless harness only
+  window.__CTS = { setInstant:function(v){ instant = !!v || reduceMotion; },
+                   state:state, model:model, sideOf:sideOf, simpSurd:simpSurd, sideNode:sideNode,
+                   randomEq:randomEq, TIERS:TIERS, sceneFor:sceneFor, go:go, setMode:setMode,
+                   fmt:fmt, neat:neat, round12:round12, computeVB:computeVB,
+                   displayLines:displayLines, layoutLines:layoutLines, mSize:mSize,
+                   line1Spec:line1Spec, line1Sources:line1Sources, line1Targets:line1Targets, measure:measure,
+                   getM:function(){ return M; }, maxStep:maxStep,
+                   TILE_FIRST:TILE_FIRST, DISPLAY_START:DISPLAY_START, STEPS:STEPS,
+                   edgeBounds:edgeBounds, sideParts:sideParts,
+                   NUM_STEPS:NUM_STEPS, PROOF_STEPS:PROOF_STEPS,
+                   mathItalic:mathItalic, isMathAlpha:function(){ return MATH_ALPHA; },
+                   setMathAlpha:function(v){ MATH_ALPHA = !!v; } };
+})();
+</script>
+</body>
+</html>

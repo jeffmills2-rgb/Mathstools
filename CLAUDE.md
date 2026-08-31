@@ -16,6 +16,400 @@
 > §2 "TWO folders", §3 deploy paths and §5's `mathstools-main 2` heading below
 > describe the OLD layout — this block supersedes them.
 >
+> **NEW (2026-08-31, session — being pushed): COMPLETE THE SQUARE — WORKSHEET
+> CREATOR.** `worksheet-creators/stage-5/algebra/complete-the-square.html`, the
+> first Stage 5 worksheet creator. Same shell, same A4 machinery and the same
+> trilingual EN/AR/FA convention as the Unit Conversion creator; cross-listed
+> under the SAME three outcomes as the teaching tool (**MA5-ALG-P-01**,
+> **MA5-EQU-P-01**, **MA5-EQU-P-02**), and the tool's "Tools ▾" menu row 1 is now
+> a live link to it (only Student Quiz is still greyed out).
+>
+> * **FIVE SECTIONS, and the scaffold fades across them.** **A Label the area
+>   model** is the screen from the teaching tool with the two edge labels and the
+>   corner missing, and the identity underneath to finish — the picture and the
+>   symbols on one card, which is the whole point of the pairing. **B Fill the
+>   two boxes** is `x² + bx + ☐ = (x + ☐)²` and nothing else. **C Completed
+>   square form** adds a constant to carry. **D Solve the equation** is the whole
+>   method with ruled room to work. **E Use it** asks the three things completing
+>   the square is actually FOR: the minimum point, the smallest value, and "show
+>   this is always positive".
+> * **THE LEVEL LADDER IS THE SIGN, NOT THE SIZE, IN SECTION A.** b is ALWAYS
+>   even there — half of an odd number is a length nobody can draw on a schematic
+>   — so Sweet and Mild are positive and **Medium and Spicy are the NEGATIVE
+>   models**, hatched strips and a positive corner. That is where the thinking
+>   is. Elsewhere the ladder is even b → either sign → odd b (fractions and
+>   surds) → big numbers and a ≠ 1.
+> * **EVERY ANSWER IS EXACT.** Nothing on the paper is a rounded decimal:
+>   `fr()` keeps p as a half and q as a quarter, `simpSurd()` pulls every square
+>   factor out, and roots print as `(−b ± k√m)/2a` reduced by
+>   `gcd(gcd(|b|, k), |2a|)`. Checks substitute both roots of 5304 quadratics
+>   back into the equation and assert no card ever contains a "." or a hyphen
+>   used as a minus.
+> * **The discriminant is CHOSEN, not hoped for.** `makeSolveQ` builds Sweet and
+>   Mild from the ROOTS (integers, sum even so b stays even, neither root 0 —
+>   that would be a factorising question); Medium picks p and a non-square m so
+>   the answer is `−p ± √m`; Spicy either brings a ≠ 1 or an odd b. No generated
+>   equation is ever unsolvable, and 2400 of them are verified per run.
+> * **a is always a factor of b when a ≠ 1**, so taking it out leaves a half at
+>   worst rather than an unreadable sixth. And **"show it is always positive" is
+>   only ever asked when it IS** — c is built up from the square so q > 0.
+> * **A RADICAL IS DRAWN, NOT TYPED.** The √ glyph's metrics differ wildly
+>   between maths fonts — in Latin Modern it hangs below the baseline and the
+>   vinculum floats off to the left. So the tick is a stretched inline `<svg>`
+>   and the vinculum is the radicand's own `border-top`, with
+>   `align-items:stretch` making the svg exactly as tall as what it covers.
+>   Font-independent, and it survives inside a fraction numerator.
+> * **`<sup>` inside a FLEX row is a flex item**, so `gap` pushed it sideways and
+>   `vertical-align` stopped applying — `x²` printed as "x 2". Expressions are
+>   `display:block` text; only the boxes, fractions and radicals are inline-flex.
+> * **Same typography as the teaching tool:** `mathItalic()` + `detectMathAlpha()`
+>   for Word's real italic alphabet with an ASCII fallback, weight 500 not 800,
+>   and `mathify()` italicises the algebra inside every `<bdi>` in the prose (it
+>   parks entities first so `&sup2;` survives, and uses no lookbehind, which old
+>   Safari does not have). The "use it" placeholders are `{1}` and `{2}` — DIGITS
+>   — precisely so the italiciser walks past them.
+> * **Verified headlessly** (jsdom, 67 checks) and screenshotted through
+>   Playwright at three densities, five levels, both scopes and all three
+>   languages, with an audit for cards or sections running under the page footer.
+>
+> **NEW (2026-08-31, session — being pushed): COMPLETE THE SQUARE.** A Stage 5
+> teaching tool at `interactive-tools/stage-5/algebra/complete-the-square/index.html`,
+> built directly from Jeff's own whiteboard lesson (the photos in
+> `Complete the square notes.pdf`). Self-contained inline CSS/JS, same shell and
+> tokens as the Stage 4 tools. **The tile colours are the sticky notes from the
+> board and must not change** — blue x², green x-terms, yellow the constant on
+> the right, pink the piece that completes the square. A class that saw the
+> board sees the same picture here.
+>
+> * **TWO modes, one segmented control.** *Build it with tiles* (numbers) and
+>   *Prove the formula* (the same moves on ax² + bx + c = 0, ending on the
+>   quadratic formula). Steps 5–8 of the lesson notes ARE the proof mode.
+> * **Clicking the tile IS the move.** The glowing ring sits on the green
+>   rectangle (click → it halves and the second half slides underneath), then on
+>   the empty corner (click → the pink square drops in), then on the two
+>   right-hand tiles (click → they merge). Next/Back still walk the whole
+>   sequence, and every hotspot is a real `role="button"` with `tabindex` so it
+>   works from the keyboard.
+> * **ONE LAYOUT FOR BOTH SIGNS — the tiles are a TWO-WAY TABLE, not a cut-out.**
+>   Teacher feedback 2026-08-31 replaced the curly braces and their bracketed
+>   side lengths with plain **edge labels on the top and left**, the way an area
+>   model is normally labelled: `x` and `h` sit against the column and the row
+>   they measure (`EDGE_FS = 26`, `S.edges`), and every cell is simply the
+>   product of its two edges — `x²`, `hx`, `hx`, `h²`. That one change made the
+>   old cut-off-strips branch for negative b unnecessary and **it has been
+>   deleted**: for x² − 2x = 143 the edge label just reads `−1`, the two `−x`
+>   cells are hatched, and the corner reads a **positive** `1` because
+>   (−1)(−1) = 1. The sign arithmetic is now visible in the table instead of
+>   being narrated by a second story. Same four tile ids (`sq/gr/gb/pk`), same
+>   2×2 grid, both signs.
+> * **THE PROOF STARTS WITH THREE STEPS OF PURE ALGEBRA, BEFORE ANY TILE.**
+>   Teacher feedback 2026-08-31. The tiles can only ever show a MONIC quadratic,
+>   so the proof does the two moves that get there first, one arrow-press each:
+>   step 1 is ax² + bx + c = 0 on its own, step 2 takes c across, step 3 divides
+>   every term by a — and only on step 4 do the tiles appear. When a is divided
+>   out the monic equation slides up to become the headline
+>   (`proofHeadHTML(monic)` + a `.swap` class re-triggered with
+>   `void head.offsetWidth`); taking c across deliberately does NOT touch the
+>   headline, because the equation on the card is still the one being solved.
+>   That is why the three step constants are **functions of the mode, not
+>   numbers**: `TILE_FIRST()` (0 numbers / 3 proof), `DISPLAY_START()` (4 / 7)
+>   and `STEPS()` (7 / 10, from `NUM_STEPS` and `PROOF_STEPS`). Anything that
+>   indexes steps must CALL them — using `DISPLAY_START` as a constant is a real
+>   bug a headless check now catches.
+> * **THREE FINAL LINES IN THE PROOF, NOT FOUR.** Rooting both sides and then
+>   simplifying √(4a²) to 2a read as the same line twice on screen (teacher
+>   feedback 2026-08-31), so the perfect square comes out in the one move:
+>   (x + b/2a)² = (b²−4ac)/4a² → x + b/2a = ±√(b²−4ac)/2a → the formula. A check
+>   asserts the three lines are pairwise different and that the radical appears
+>   on exactly two of them.
+> * **FOUR TILE STEPS, THEN THE MODEL GETS OUT OF THE WAY.** The tile steps
+>   build the picture; from `DISPLAY_START()` the tiles vanish and the algebra
+>   takes the whole board at display size, one line at a time — 3 lines in
+>   numbers mode, 4 in the proof. Back and forward across that boundary is the
+>   point: the teacher can pull the picture back to show where a line came
+>   from. **Both solutions are always shown**; there is no toggle. The history
+>   note about negative roots is the optional **Explainer note** (Settings,
+>   default OFF) — the area/non-negative argument is a teacher-talk moment,
+>   not screen furniture.
+> * **The right-hand side is a SQUARE, and the same size as the completed one.**
+>   196 is the area of a square of side 14, so drawing it as a wide rectangle
+>   quietly contradicted the next step (teacher feedback 2026-08-31). At step 4
+>   the merged tile is a square of side `XS + hS`, top-aligned with the left —
+>   "square = square" is what makes rooting BOTH sides obvious. It also keeps
+>   the yellow tile's id (`yc`) so it GROWS into that square rather than
+>   cross-fading, and the pink piece beside it is drawn h by h because it is
+>   literally the corner that was just added.
+> * **Crossing into the algebra is a MORPH, not a fade.** The pieces are already
+>   on screen — the two TOP EDGE LABELS naming the side, and the number in the
+>   square — so on the last tile step → first display step they FLY into their
+>   places in `(x + 13)² = 196` while the brackets, the ² and the = fade in
+>   around them, and they fly back on the way in reverse. Three things make the
+>   handoff seamless and must stay true: `sideParts()` builds `x + h` out of the
+>   very nodes the edges draw and spaces it with measured `SP()`s, so each edge
+>   label lands exactly on its own slot inside the bracket (the negative case
+>   drops the `+` and uses one wider spacer instead); `line1Spec(true)` returns
+>   the line with those
+>   two pieces wrapped in `GH()`, which MEASURES identically but draws nothing,
+>   so the frame has holes exactly where they land; and each piece is painted
+>   twice mid-flight, its tile colour fading into its equation colour, so
+>   neither end pops. Headless checks assert the flight's destination equals
+>   what `layoutLines` gives the static line, to the pixel.
+> * **The maths line states the CURRENT EQUATION, not the move just made.**
+>   Halving a tile does not change the equation, so step 2's line is identical
+>   to step 1's in BOTH modes. An earlier build printed
+>   `(b/a)x = (b/2a)x + (b/2a)x` at that step and it did not describe the
+>   picture on screen; teacher feedback 2026-08-31. The cue carries the move,
+>   the maths line carries the state.
+> * **The randomiser picks the ROOTS, not the coefficients.** With roots p and
+>   q: b = −(p+q), c = −pq, side = |p−q|/2, so the side is always exact and no
+>   random equation ever needs a surd. Roots are given **opposite signs**, which
+>   forces c > 0 (a positive yellow tile, the picture the lesson used) and
+>   guarantees the second-solution step always has something to say. Tiers:
+>   Starter (small even positive b) → Core (even, either sign) → Stretch (odd b,
+>   so half of it is a half) → Challenge (big, either sign).
+> * **Typed equations are freer than random ones:** any b and c, with a surd
+>   side rendered exactly (`sideOf` pulls the 4 out — √t = √(4t)/2 — so odd b
+>   still lands exactly), and **a negative completed area is reported as "no
+>   real solutions" rather than drawn**. That guard is where the discriminant
+>   lives; do not let it silently draw a square with negative area.
+> * **The tiles are SCHEMATIC and must stay so.** x is unknown, so a true-to-
+>   scale picture is impossible (in x² + 26x = 27 the answer is 1 and the
+>   x-square would be a speck). `hSize()` still grows the h-side with √|h| so 13
+>   looks bigger than 3, clamped to 58–122 against a fixed x-side of 168.
+> * **The viewBox is computed per equation** (`computeVB`, over the TILE steps
+>   only, never mid-tween) so the tiles fill the card and the algebra display is
+>   then centred inside that same box — the card does not resize when the model
+>   steps aside. It must also reserve the MEASURED extent of the EDGE labels:
+>   once `b/2a` is a real fraction a fixed padding is not enough. The left-hand
+>   labels hang 20px clear of the tiles (raised after a clash on the vertical
+>   axis, teacher feedback 2026-08-31).
+> * **The `=` column starts after whatever the left side actually reaches**, per
+>   step. With a fixed column the wide b-by-x tile at step 1 sat on top of the
+>   equals sign and the yellow tile (teacher feedback 2026-08-31); a headless
+>   check now asserts the clearance at every tile step.
+> * **There is a small SVG MATHS TYPESETTER in here** (`MT/MI/MR/MF/MS/MP/MB/SP/GH`,
+>   `mSize`, `mDraw`) — real fraction rules, real radicals with a vinculum, and
+>   brackets that grow. Slash notation was rejected on teacher feedback.
+>   Every variable goes through `MI()`, and **it is set the way WORD SETS IT**:
+>   Word's equation editor does not slant an upright face, it draws variables
+>   from Cambria Math's own italic alphabet, which lives in Unicode's
+>   **Mathematical Alphanumeric Symbols** block (x → U+1D465, and ℎ from U+210E
+>   because the block has a hole there). `mathItalic()` does that mapping and
+>   `detectMathAlpha()` decides ONCE at boot whether to use it — it measures a
+>   run of those code points against a run of private-use ones, and equal widths
+>   mean both came back as notdef boxes, so it falls back to ASCII plus a
+>   synthesised `font-style:italic` and nothing ever tofus. `--mathFont` leads
+>   with **Cambria Math** for exactly that reason, then the other real maths
+>   faces, then serifs that at least own a genuine italic. Everything
+>   mathematical also dropped from weight 800 to `--mathWeight` 500 — an
+>   equation editor sets regular weight, and 800 was most of why it did not look
+>   like one (teacher feedback 2026-08-31). Numbers and operators stay upright in
+>   `MT()`, and `coefX(v)` writes the coefficient of x and **never prints a 1**,
+>   so it reads `−x`, not `−1x`. Two
+>   traps it exists to avoid: **SVG collapses leading and trailing whitespace**,
+>   so every gap is an explicit measured `SP()` spacer and never a space inside
+>   a text node (a text node's rendered and measured widths disagree, which put
+>   the `=` on top of the following fraction rule); and **display lines are
+>   stacked on their measured ascent and descent**, because a fixed line step
+>   makes a fraction-inside-a-radical-inside-a-fraction land on the line above.
+>   Widths come from `getComputedTextLength` with an `approxWidth` fallback, so
+>   it still lays out under jsdom.
+> * **Gotchas:** the proof's tiles carry a typeset NODE and no plain label, so
+>   the label guard has to test `t.label != null || t.node` or every green and
+>   pink tile prints blank; a hyphen is not a minus sign, so labels go through
+>   `neat()`; and the hatch fill for negative cells is a `<pattern>` with a
+>   `patternTransform`, which `getBBox` ignores — so a naive overflow audit has
+>   to measure the cell, not the paint.
+> * **Verified headlessly** (jsdom, 151 checks): 7560 equations re-derived
+>   independently (both roots substituted back into x² + bx = c), 2000 random
+>   equations against their tier rules, every surd squared back to its target,
+>   the scene geometry (the corner exactly fills the L-shape's gap and is h by
+>   h; the wide tile is exactly twice the halved one), the negative-b branch,
+>   the answer never leaking before its step, the click targets actually
+>   advancing, both modes rendering cleanly over 720 steps, no hyphen ever used
+>   as a minus, the mode-dependent step constants, the three opening algebra
+>   steps revealing one line each with no tiles on screen, the divide-by-a
+>   headline matching the monic tiles, the three final proof lines being
+>   pairwise different, every cell of the two-way table equal to the product of
+>   its edge labels in both signs, and every variable set correctly in BOTH
+>   typography paths — italic in the fallback, real math-alphanumeric glyphs and
+>   nothing synthetically slanted when the alphabet is there. Screenshotted
+>   through Playwright at every step of both modes with an out-of-viewBox audit.
+> * **Wired in:** cross-listed in `resources/toolLinks.js` under **MA5-EQU-P-01**,
+>   **MA5-EQU-P-02** and **MA5-ALG-P-01**, plus a homepage Interactive Tool card
+>   (interactive count 26 → 27). Its **"Tools ▾" menu holds two greyed-out
+>   rows** — Worksheet Creator and Student Quiz, neither built.
+> * **Deliberately not built (v1):** non-monic a ≠ 1 in the TILE mode — the
+>   PROOF mode now does the rearranging explicitly (steps 1–3 above), but the
+>   numbers mode still opens monic; and same-sign roots / c < 0, which would put
+>   a negative on the yellow tile.
+
+> **NEW (2026-08-31, session — being pushed): UNIT CONVERSION — DOUBLE NUMBER
+> LINE.** A new Stage 4 teaching tool at
+> `interactive-tools/stage-4/measurement-space/unit-conversion-number-line/index.html`
+> (self-contained inline CSS/JS, same shell/tokens as the Stage 4 fraction
+> tools). Metric conversions are done by SCALING, not by a rule about zeros: the
+> larger unit runs along the top line, the smaller along the bottom, and every
+> value on the page is the same multiplier applied to the `1 : ratio` anchor.
+>
+> * **The anchor never leaves the screen.** Step 1 is `1 km / 1000 m` and
+>   nothing else; every later position is drawn WITH it, because the whole
+>   argument is “2 is twice 1, so it is twice 1000”. This is why the drawn
+>   domain is `max(1.35, lam * 1.28)` rather than something that frames the
+>   target nicely — do not “improve” it into a view that drops the anchor.
+> * **Steps are anchor → (pose → reveal) × n**, endlessly, generated lazily and
+>   cached in `state.rounds` so Back replays the same numbers instead of
+>   re-rolling them. Each Next to a NEW position runs a two-phase tween in one
+>   animation (old target fades, line geo-zooms, new target arrives); pose →
+>   reveal does NOT zoom, so the eye stays on the position.
+> * **The blank ALTERNATES top and bottom** (`r % 2`), so the class converts in
+>   both directions. Big-to-small and small-to-big are deliberately told as the
+>   SAME act — the × arc is identical on both lines either way — with the
+>   × / ÷ rule carried only by the one line of maths underneath.
+> * **The scaling arc arrives in two halves:** the GIVEN line's `× lam` arc is
+>   there at the pose, and the other line's identical arc appears with the
+>   answer. “The same jump on both lines” is the reveal. The vertical green
+>   `× ratio` link is shown alone at the anchor step, then at the target on
+>   each reveal — two routes to the same answer, a commutative square.
+> * **The faint hop marks are NEVER labelled.** Labelling every anchor multiple
+>   on both lines would hand over the answer; unlabelled they let a child count
+>   hops. When the target falls between hops that ONE interval is subdivided,
+>   and the subdivision is chosen (2/4/5/8/10/16/20) so the target lands ON a
+>   mark — a target floating between sub-ticks reads as a drawing error. Skipped
+>   when the marks would come closer than 18px.
+> * **Three hard constraints on the multiplier `lam`,** all about the picture,
+>   enforced in `lamPool` and asserted headlessly: `lam >= 0.25` (closer to zero
+>   and the label collides with the 0), `lam <= 12` (further out and the anchor
+>   is squashed against the left edge), and `|lam - 1| >= 0.1` (a target sitting
+>   on the anchor hides the jump). **Big numbers come from a bigger unit gap
+>   (km → cm gives 1 : 100 000), never from a bigger multiplier.**
+> * **Tiers vary the VALUES, not the units** — Starter (whole 2–9) → Core (whole
+>   to 12 + halves) → Stretch (one decimal place, values under 1) → Challenge
+>   (awkward decimals — 0.375, 1.125, 11.25). A tier may carry at most
+>   `log10(ratio)` decimal places (`+1` at Challenge, which is the only tier
+>   allowed a decimal on the smaller-unit line).
+> * **Gotcha — floating point:** `8.2 * 1000000` is `8199999.999999999`. Every
+>   product goes through `mulK()` (scale to a whole number of thousandths
+>   FIRST), and `round9()` rounds to 12 SIGNIFICANT figures, not 12 decimal
+>   places — the bottom line reaches into the billions for mg and mL.
+> * **Gotcha — the settings menu must NOT scroll.** The Difficulty submenu is
+>   absolutely positioned outside the menu box, so any `overflow` but `visible`
+>   on `.settingsMenu` clips it away entirely. Keep the menu short instead.
+> * **Gotcha:** the stylesheet's `.nline text{font-family:var(--mathFont)}` beats
+>   a `font-family` presentation ATTRIBUTE, so UI-font labels go through
+>   `uiFont()` (inline `style.fontFamily`) — same trap as the area model.
+> * **Units:** length (km/m/cm/mm), mass (t/kg/g/mg), capacity (ML/kL/L/mL). The
+>   top list omits the smallest unit and the bottom list offers only the units
+>   BELOW the chosen top one, so the ratio always exceeds one.
+> * **Settings:** Measure / Top line / Bottom line, a Difficulty submenu, and
+>   four Display switches — Estimate first (default OFF; a typed prediction is
+>   locked in before Next unlocks, and is reported back at the reveal), Scaling
+>   arrows, Unit link, Faint hop marks.
+> * **Verified headlessly** (jsdom, 53 checks): 3080 multiplier/unit-pair
+>   combinations for exactness, decimal-place limits, whole smaller-unit values
+>   and label spacing; 480 pose/reveal pairs asserting the answer is NEVER on
+>   the line before the reveal (compared as whole `<text>` labels — substring
+>   matching false-positives, “375” lives inside “0.375”), that the empty box is
+>   there at the pose and gone at the reveal, the alternating blank, Back not
+>   re-rolling, the unit pickers, estimate mode, every Display toggle, Reset, and
+>   that the on-screen cue stays under 60 characters. Screenshotted through
+>   Playwright at every step including mid-zoom.
+> * **The Display defaults are all OFF except the hop marks** (teacher feedback,
+>   same session): the scaling arrows and the unit link are a REVEAL the teacher
+>   chooses to add, not scaffolding the class starts with. Do not switch them
+>   back on by default.
+> * **Cross-listed in `resources/toolLinks.js` under FIVE outcomes** — Stage 3
+>   **MA3-GM-02** (Length), **MA3-NSM-01** (Mass), **MA3-3DS-02** (Volume and
+>   capacity), and Stage 4 **MA4-LEN-C-01** and **MA4-RAT-C-01** (the double
+>   number line IS the ratio representation). Nothing is duplicated on disk;
+>   all ten rows point at the same two URLs. Its **“Tools ▾” menu holds two
+>   rows** — a live *Worksheet Creator* link and a greyed-out *Student Quiz*
+>   (the harness asserts that shape). No Firebase, no registry entry, no
+>   homepage card yet.
+
+> **NEW (2026-08-31, session — being pushed): CONVERTING UNITS OF MEASUREMENT
+> — WORKSHEET CREATOR.** `worksheet-creators/stage-4/measurement-space/unit-conversion.html`,
+> the printable sibling of the tool above, built from Jeff's own Stage 3
+> “Converting units of capacity” sheet (a full double number line with values
+> missing down BOTH lines, then plain conversions). Same shell, spice ladder,
+> trilingual convention, measured-then-greedy pagination and answer key as the
+> Multiplying Fractions creator — read that one's notes first, this is the same
+> machine.
+>
+> * **Five sections, scaffold fading left to right** (`line`, `jump`, `fluent`,
+>   `compare`, `word`), each independently toggled with its OWN question count
+>   and its OWN spice ladder. **A** fill a whole number line (the Stage 3
+>   opener) → **B** one jump from the 1 : ratio anchor → **C** bare conversions
+>   → **D** write `<` `=` `>` between two measurements → **E** short in-context
+>   problems.
+> * **TWO orthogonal controls, and they must stay orthogonal:** **Stage** picks
+>   the UNIT PAIRS (Stage 3 = neighbouring units only, and never mg or t;
+>   Stage 4 = any gap), **Level** picks the NUMBERS on them. So a Stage 3 class
+>   can still meet spicy decimals on L and mL.
+> * **Section D's whole point is the EQUAL pairs.** Roughly one comparison in
+>   four is genuinely equal (2.5 km vs 2500 m), because a student reading only
+>   the digits will always call it “<”. Do not “fix” the frequency down.
+> * **TWO multiplier pools, and the difference matters.** `poolFor(level, k,
+>   forPicture)`: the DRAWN pool obeys the teaching tool's constraints (0.25 ≤
+>   lam ≤ 12, |lam−1| ≥ 0.1) so the picture works; the TEXT pool is wider,
+>   which is where `8886 mL = 8.886 L` lives. Both cap decimal places at
+>   `log10(ratio)` so the smaller unit always lands whole.
+> * **The printed jump needs FOUR extra limits the board does not** — it gets a
+>   quarter of the width. Ratio ≤ 10 000, lam ≤ 6, |lam−1| ≥ 0.3, and its own
+>   620-unit viewBox (a 1000-unit one shrank the type to nothing). It also
+>   **draws no zeros**: the closed left end says zero already, and on a
+>   half-page card the two zero labels sat on top of the anchor.
+> * **Fill-the-line ticks are BUCKETED, not just min-gapped.** Random picks with
+>   a minimum gap still clump — five ticks landed at 1, 6, 7, 8, 9 and left half
+>   the line empty. One tick per bucket, jittered inside the middle of it, is
+>   irregular (the point) AND spread (legible). Grids must be fine enough to
+>   jitter in: with E=1 at tenths there are only 10 slots and four ticks are
+>   FORCED onto 2, 4, 6, 8, which put two identical lines on one page. Hence
+>   `SPAN_DEC` prefers finer grids and the dedupe key for a line is its TICK
+>   PATTERN ALONE, ignoring units.
+> * **The given side ALTERNATES down every line** — that is what makes one
+>   picture ask for both directions.
+> * **Reasoning prompts are TAGGED by measure** (`fam`), because a
+>   capacity-only sheet arguing about kilometres is a sheet nobody reads. Keep
+>   at least two per family so a one-measure paper can vary them.
+> * **The larger unit is on TOP**, matching the teaching tool. Jeff's original
+>   sheet had mL on top; consistency with the board won.
+> * **Nothing on the student half is coloured** — these get photocopied. The
+>   only colour is the answer key's green.
+> * **Gotchas:** every printed value is length-capped (≤ 9 characters) or a long
+>   one wraps and makes a card taller than the row the packer measured;
+>   comparisons use `baseOf()` (scale to whole thousandths FIRST) because
+>   `12.06 * 1e9` carries fuzz that made two genuinely equal amounts compare
+>   unequal; and the pagination heights are NaN-proofed so a zero-layout
+>   environment cannot produce a nonsense budget.
+> * **Verified headlessly** (jsdom, 71 checks): 2240 generated questions
+>   re-derived independently (including that every printed `<` `=` `>` is the
+>   true relation and never compares two values in the same unit), 5337
+>   multipliers for exactness and whole smaller-unit values, 672 number lines
+>   for tick spread/alternation/wholeness, rendered pages inspected for answer
+>   leaks on the student half, section lettering, question numbering, the
+>   trilingual rendering in all three languages, template completeness across
+>   EN/AR/FA, every option toggle and Reset. Audited again under Playwright for
+>   real layout: no page overflows its A4 box, no question is lost or
+>   duplicated when a section splits, non-final pages run 95–97% full, and the
+>   Arabic and Farsi papers were screenshotted.
+> * **Wired into the homepage** (`index.html`): a full *Interactive Tool* card
+>   and a *Worksheet Creator* mini card, so both appear under the nav's
+>   Interactive Tools / Worksheet Creator tabs and in search. Their
+>   `data-search` text spells the units out in FULL (millilitres, kilograms —
+>   a teacher does not type "mL") and carries all five outcome codes and both
+>   stage words, since a card can only hold one `data-stage`.
+> * **Housekeeping done at the same time:** the hardcoded `.group-count` pills
+>   on the homepage had drifted — worksheet-creator said 18 for 24 cards and
+>   online-quizzes said 20 for 23, both wrong BEFORE this change. All three
+>   (with interactive-tools 19 → 26) now match the cards. **They are hardcoded,
+>   not computed** — the live counts are only on the chooser tiles
+>   (`refreshCatCounts`), so a new card means editing the pill by hand.
+> * **TODO:** the AR/FA strings want a fluent proofread (same as the other
+>   creators). A **cubic-units section** (isometric cubes — how many small cubes
+>   fill the big one, leading to 1 cm³ = 1 mL) was scoped from Jeff's original
+>   sheet and deliberately left out of v1.
+
 > **NEW (2026-08-26, session — being pushed): MULTIPLYING FRACTIONS — AREA
 > MODEL.** A new Stage 4 teaching tool at
 > `interactive-tools/stage-4/number/multiplying-fractions-area-model/index.html`
@@ -547,6 +941,26 @@ portal/PLACEMENT.md , portal/README.md   migration + structure notes
 - All Firebase quizzes were migrated to the secure exchange (via `quizClient.js`
   or inline). The decimal-zoom rounding quiz was converted from a public
   leaderboard to a secure achievements quiz.
+- **Complete the Square (2026-08-31):** teacher tool
+  `interactive-tools/stage-5/algebra/complete-the-square/`, the first Stage 5
+  algebra tool. Two modes (tiles, and the formula proof), cross-listed under
+  **MA5-EQU-P-01 / MA5-EQU-P-02 / MA5-ALG-P-01**, alongside its worksheet
+  creator `worksheet-creators/stage-5/algebra/complete-the-square.html` (the
+  first Stage 5 creator, listed under the same three outcomes, reached from the
+  tool's "Tools ▾" menu). Read BOTH 2026-08-31 header blocks before touching the
+  tile colours, the proof's opening algebra steps, the exact-answer arithmetic
+  or the drawn radical.
+- **Unit Conversion family (2026-08-31):** teacher tool
+  `interactive-tools/stage-4/measurement-space/unit-conversion-number-line/`
+  and worksheet creator
+  `worksheet-creators/stage-4/measurement-space/unit-conversion.html`.
+  **Cross-listed under five outcomes** so it is findable from both stages:
+  Stage 3 **MA3-GM-02** / **MA3-NSM-01** / **MA3-3DS-02**, Stage 4
+  **MA4-LEN-C-01** / **MA4-RAT-C-01** (ten rows, two URLs, nothing duplicated
+  on disk — the same cross-listing convention as the Protractor). No Firebase,
+  no registry entry, no student quiz yet. Read the two 2026-08-31 header
+  blocks before touching the drawn domain, the hop marks, the multiplier
+  constraints or the worksheet's tick bucketing.
 - **Multiplying Fractions — Area Model (2026-08-26):** teacher tool
   `interactive-tools/stage-4/number/multiplying-fractions-area-model/`, filed
   under **MA4-FRC-C-01**. Teaching tool ONLY so far (no worksheet, no quiz), and
@@ -658,6 +1072,23 @@ portal/PLACEMENT.md , portal/README.md   migration + structure notes
   leaves only the rule. Also possible in the tool itself: **mixed numbers**
   (needs a grid wider than one whole, and is the bridge to expanding brackets),
   and **dividing** fractions on the same square.
+- **Complete the Square siblings:** the teaching tool AND its worksheet creator
+  shipped 2026-08-31. Still
+  to build: a **worksheet creator** and a **student quiz** (both stubbed as
+  greyed rows in its Tools menu). Extensions flagged in the header block:
+  non-monic quadratics in the TILE mode (needs a "divide by a" step), c < 0,
+  and a discriminant view built on the existing "no real solutions" guard.
+- **Unit Conversion — Double Number Line siblings:** the teaching tool and the
+  **worksheet creator** both shipped 2026-08-31. Still to build: a **student
+  quiz** (`online-quizzes/stage-4/measurement-space/unit-conversion.html`,
+  registry id `unit-conversion-quiz`) carrying the v2 login block — it is
+  stubbed as the one remaining greyed row in the tool's Tools menu. A
+  **cubic-units section** for the worksheet creator (isometric cubes → 1 cm³ =
+  1 mL) is scoped and deliberately unbuilt. Possible extensions to the tool itself:
+  **time** (h/min/s — valuable precisely BECAUSE the ratio is 60, not a power
+  of ten, so it breaks the “move the decimal point” habit) and **area/volume**
+  (m² ↔ cm² is 10 000, not 100 — the classic trap, and it would need its own
+  tier). Digital storage (GB/MB/kB) was considered and left out.
 - **Revision Generator — Stage 3**: 6 of 8 topics built (Represents Numbers,
   Additive Relations, Multiplicative Relations, Fractions, 2D Space and Area,
   Geometric Measure). Each remaining topic needs a new diagram engine first:

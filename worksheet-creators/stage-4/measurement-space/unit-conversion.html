@@ -1,0 +1,1185 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Converting Units of Measurement — Worksheet Generator</title>
+
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --ink:#111827;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --shadow:0 14px 40px rgba(0,0,0,.10);
+      --radius:18px;
+
+      --blue:#2563eb;
+      --green:#16a34a;
+      --red:#dc2626;
+
+      --sweet1:#4ade80;  --sweet2:#16a34a;
+      --mild1:#facc15;   --mild2:#d97706;
+      --medium1:#fb923c; --medium2:#ea580c;
+      --spicy1:#f87171;  --spicy2:#b91c1c;
+
+      --footer-h:44px;
+      --mathFont:"Cambria Math","STIX Two Math","STIXGeneral","Times New Roman",serif;
+      --uiFont:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0; background:var(--bg); color:var(--ink);
+      font-family:var(--uiFont); padding-bottom:var(--footer-h);
+    }
+
+    .wrap{ max-width:1280px; margin:14px auto 32px; padding:0 14px; }
+    .card{ background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px; }
+
+    .title{ margin:0 0 4px; font-size:28px; font-weight:1000; letter-spacing:.2px; }
+    .subtitle{ margin:0 0 14px; color:var(--muted); font-weight:850; font-size:15px; line-height:1.35; }
+    .subtitle a{ color:var(--blue); text-decoration:none; font-weight:1000; }
+
+    .controls{ display:grid; gap:10px; }
+    .band{
+      border:1px solid var(--border); border-radius:18px; padding:12px 14px;
+      background:linear-gradient(180deg,#ffffff,#f9fafb);
+    }
+    .bandHead{
+      font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+      font-weight:1000; color:var(--muted); margin:0 0 9px;
+    }
+    .bandGrid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; align-items:end; }
+    .bandRow{ display:flex; gap:16px 22px; flex-wrap:wrap; align-items:center; }
+
+    label{ display:block; margin:0 0 7px; font-size:15px; font-weight:950; }
+    select, input[type="number"]{
+      border:2px solid #e5e7eb; border-radius:14px; padding:12px 13px;
+      font-weight:950; font-size:17px; background:#fff; width:100%; outline:none;
+    }
+    select:focus, input[type="number"]:focus{ border-color:var(--blue); }
+
+    .sw{
+      display:inline-flex; align-items:center; gap:10px; cursor:pointer;
+      user-select:none; font-weight:950; font-size:14.5px; color:#111827; white-space:nowrap;
+    }
+    .sw input{ position:absolute; opacity:0; width:0; height:0; }
+    .sw .track{
+      position:relative; width:46px; height:26px; border-radius:999px; background:#cbd5e1;
+      transition:.18s ease; flex:0 0 auto; box-shadow:inset 0 1px 3px rgba(15,23,42,.18);
+    }
+    .sw .track::after{
+      content:""; position:absolute; top:3px; left:3px; width:20px; height:20px;
+      border-radius:50%; background:#fff; box-shadow:0 2px 6px rgba(15,23,42,.3); transition:.18s ease;
+    }
+    .sw input:checked + .track{ background:var(--green); }
+    .sw input:checked + .track::after{ transform:translateX(20px); }
+    .sw input:focus-visible + .track{ box-shadow:0 0 0 4px rgba(37,99,235,.28); }
+
+    .note{ margin:9px 0 0; font-size:12.5px; font-weight:800; color:var(--muted); line-height:1.45; }
+    .note.warn{ color:var(--red); }
+
+    /* one card per section: what it is, and how many of them */
+    .secGrid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(212px,1fr)); gap:10px; }
+    .secOpt{
+      border:1.5px solid var(--border); border-radius:15px; padding:11px 12px 12px;
+      background:#fff; display:grid; gap:10px; align-content:start;
+      transition:opacity .15s ease, background .15s ease, border-color .15s ease;
+    }
+    .secOpt.off{ opacity:.55; background:#f9fafb; }
+    .secOpt .sw{ white-space:normal; }
+    .cntRow{ display:flex; align-items:center; gap:9px; }
+    .cntRow label{ margin:0; font-size:12.5px; font-weight:900; color:var(--muted); white-space:nowrap; }
+    .cntRow input[type="number"]{ width:82px; padding:8px 6px; font-size:17px; text-align:center; }
+    .totalRow{
+      margin-top:11px; font-size:13.5px; font-weight:950; color:var(--ink);
+      display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    }
+    .totalRow .pill{
+      background:#eef2ff; color:#1d4ed8; border-radius:999px; padding:4px 12px; font-weight:1000;
+    }
+    .totalRow .pill.zero{ background:#fee2e2; color:#991b1b; }
+
+    .btnRow{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end; }
+    button{
+      border:none; border-radius:14px; padding:12px 16px; font-weight:1000; cursor:pointer;
+      background:#f3f4f6; color:#111827; font-size:16px; user-select:none;
+      transition:transform .04s ease, filter .15s ease, opacity .2s ease;
+    }
+    button:active{ transform:scale(.98); }
+    button.primary{ background:#2563eb; color:#fff; }
+    button.ghost{ background:#eef2ff; color:#1d4ed8; }
+    button.danger{ background:#fee2e2; color:#991b1b; }
+
+    .outWrap{ margin-top:14px; }
+
+    /* =====================================================================
+       THE PAPER
+       The number line is the point of this sheet, so the two sections that
+       carry one get the full width of the page and the fluency sections
+       pack in around them.
+       ===================================================================== */
+    .page{
+      margin:14px auto 0; background:#fff; border:1px solid var(--border);
+      border-radius:18px; box-shadow:0 10px 26px rgba(15,23,42,.08); overflow:hidden;
+      width:210mm; max-width:100%; height:297mm;
+      display:flex; flex-direction:column;
+    }
+    .pageHeader{
+      padding:9px 13px 7px; border-bottom:2px solid #111827;
+      display:flex; align-items:flex-end; justify-content:space-between; gap:10px;
+    }
+    .hdrTitle{ font-weight:1000; font-size:15px; line-height:1.1; }
+    .hdrSub{ color:var(--muted); font-weight:850; font-size:11px; margin-top:2px; white-space:nowrap; }
+    .nameDate{ display:flex; gap:8px; align-items:flex-end; }
+    .lineField{ display:flex; flex-direction:column; gap:3px; width:116px; }
+    .lineLabel{ font-size:10px; font-weight:950; color:var(--muted); }
+    .lineBox{ height:19px; border-bottom:1.6px solid #111827; }
+
+    .sheet{ padding:8px 13px 10px; flex:1 1 auto; display:flex; flex-direction:column; min-height:0; }
+
+    .section{ margin-bottom:9px; }
+    .secHead{
+      display:flex; align-items:baseline; gap:9px;
+      border-bottom:1.6px solid #111827; padding-bottom:3px; margin-bottom:7px;
+    }
+    .secLetter{
+      font-weight:1000; font-size:14px; letter-spacing:.02em;
+      background:#111827; color:#fff; border-radius:5px; padding:1px 7px; flex:0 0 auto;
+    }
+    .secText{ font-weight:900; font-size:13.5px; color:#111827; line-height:1.3; }
+    .secText em{ font-style:normal; color:var(--muted); font-weight:800; }
+    .secCont{ margin-left:auto; font-size:11px; font-weight:900; color:var(--muted); flex:0 0 auto; }
+
+    /* bilingual lines: chosen language on top, English beneath.
+       Numerals and every unit stay Western and LTR.                        */
+    .tl{ display:block; }
+    .tl[lang="ar"], .tl[lang="fa"]{ font-size:1.05em; }
+    .el{ display:block; font-size:.84em; opacity:.72; font-weight:750; margin-top:1px; }
+    bdi{ unicode-bidi:isolate; }
+
+    /* --- the card grid --- */
+    .qGrid{ display:grid; gap:8px 9px; grid-template-columns:repeat(var(--cols,3),1fr); }
+    .qCard{
+      border:1.2px solid #d7dce3; border-radius:10px; padding:5px 7px 6px;
+      display:flex; flex-direction:column; gap:4px;
+      break-inside:avoid; page-break-inside:avoid; background:#fff;
+    }
+    .qCard.flat{ flex-direction:row; align-items:center; flex-wrap:wrap; gap:5px 7px; padding:7px 8px; min-width:0; }
+    .qTop{ display:flex; align-items:center; gap:6px; width:100%; }
+    .qNum{
+      width:20px; height:20px; border-radius:999px; color:#fff;
+      display:flex; align-items:center; justify-content:center;
+      font-size:11px; font-weight:1000; flex:0 0 auto;
+    }
+    .qNum.sweet{ background:linear-gradient(180deg,var(--sweet1),var(--sweet2)); }
+    .qNum.mild{ background:linear-gradient(180deg,var(--mild1),var(--mild2)); }
+    .qNum.medium{ background:linear-gradient(180deg,var(--medium1),var(--medium2)); }
+    .qNum.spicy{ background:linear-gradient(180deg,var(--spicy1),var(--spicy2)); }
+    .qExpr{
+      font-family:var(--mathFont); font-weight:1000; font-size:17px;
+      display:flex; align-items:center; gap:.25em; flex-wrap:wrap; line-height:1.15;
+    }
+    .qExpr .u{ font-family:var(--uiFont); font-size:.72em; font-weight:1000; }
+    .qLine{ width:100%; }
+    .qLine svg{ display:block; width:100%; height:auto; }
+    .qWord{ font-size:12.5px; font-weight:850; line-height:1.4; flex:1 1 auto; }
+    .qWord bdi{ font-family:var(--mathFont); font-weight:1000; }
+    .qFoot{ display:flex; align-items:center; gap:6px; width:100%; flex-wrap:wrap; }
+
+    /* Somewhere to write, and nothing more. */
+    .ansLine{
+      display:inline-block; vertical-align:bottom;
+      border-bottom:1.7px solid #111827; height:1.35em;
+      min-width:var(--ansW,58px); flex:0 1 auto;
+    }
+    .ansLine.long{ min-width:104px; }
+    .ansLine.full{ display:block; width:100%; min-width:0; height:1.5em; }
+    .ansKey{
+      font-family:var(--mathFont); font-weight:1000; font-size:15px; color:var(--green);
+      display:inline-flex; align-items:center; gap:.25em; flex-wrap:wrap; line-height:1.2;
+    }
+    .ansKey .u{ font-family:var(--uiFont); font-size:.74em; }
+    .ansKey.full{ display:flex; width:100%; }
+
+    /* the < = > box for the comparison section */
+    .relBox{
+      display:inline-flex; align-items:center; justify-content:center;
+      width:30px; height:26px; border:1.7px solid #111827; border-radius:6px;
+      font-family:var(--mathFont); font-weight:1000; font-size:17px; flex:0 0 auto;
+    }
+    .relBox.key{ color:var(--green); border-color:var(--green); }
+
+    /* --- the reasoning block --- */
+    .explainBox{
+      border:1.6px solid #4f46e5; border-radius:10px; padding:8px 11px 9px;
+      background:rgba(79,70,229,.035); break-inside:avoid; page-break-inside:avoid;
+      flex:1 0 auto; max-height:96mm; display:flex; flex-direction:column; min-height:0;
+    }
+    .exHead{
+      font-size:11px; font-weight:1000; letter-spacing:.1em; text-transform:uppercase;
+      color:#4338ca; margin-bottom:4px;
+    }
+    .exText{ font-size:13px; font-weight:850; line-height:1.4; color:#111827; }
+    .exText b{ font-weight:1000; }
+    .ruled{
+      flex:1 1 auto; min-height:30px; margin-top:8px;
+      background-image:repeating-linear-gradient(to bottom,
+        transparent 0, transparent 27px, #a5b4c4 27px, #a5b4c4 28.2px);
+    }
+    .page.isKey .explainBox{ flex:0 0 auto; }
+    .exKey{
+      margin-top:auto; font-size:11px; font-weight:850; line-height:1.35;
+      color:var(--green); background:rgba(22,163,74,.08);
+      border:1.2px solid rgba(22,163,74,.35); border-radius:8px; padding:5px 7px;
+    }
+
+    /* the optional metric ladder in the margin */
+    .ladder{
+      border:1.4px dashed #94a3b8; border-radius:9px; padding:5px 9px 6px;
+      margin-bottom:8px; display:flex; align-items:center; justify-content:center;
+      gap:5px 10px; flex-wrap:wrap; break-inside:avoid;
+    }
+    .ladder .lu{ font-family:var(--uiFont); font-weight:1000; font-size:13px; }
+    .ladder .lop{ font-family:var(--mathFont); font-weight:900; font-size:11.5px; color:var(--muted); white-space:nowrap; }
+
+    .pageFooter{
+      padding:5px 13px 6px; border-top:1px solid rgba(229,231,235,.95);
+      display:flex; align-items:center; justify-content:space-between;
+      font-weight:900; color:var(--muted); font-size:10px;
+    }
+    .pageFooter a{ color:#2563eb; text-decoration:none; font-weight:1000; }
+
+    .measure{ position:absolute; left:-10000px; top:0; width:210mm; visibility:hidden; }
+
+    .mmtFooter{
+      position:fixed; left:0; right:0; bottom:0; height:var(--footer-h);
+      display:flex; align-items:center; justify-content:center; padding:0 12px;
+      background:rgba(255,255,255,.92); border-top:1px solid rgba(229,231,235,.95);
+      backdrop-filter:blur(8px); z-index:500; font-weight:900; color:#111827;
+      text-align:center; font-size:13px;
+    }
+    .mmtFooter a{ color:#2563eb; text-decoration:none; font-weight:950; }
+
+    @media print{
+      @page{ size:A4; margin:8mm 7mm; }
+      html, body{ width:210mm; height:auto; }
+      body{ background:#fff; padding-bottom:0; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+
+      .wrap{ max-width:none; margin:0; padding:0; }
+      .card{ box-shadow:none; border-radius:0; padding:0; }
+      .controls, .title, .subtitle, .mmtFooter{ display:none !important; }
+
+      .page{
+        margin:0; border:none; border-radius:0; box-shadow:none;
+        width:auto; height:281mm; page-break-after:always;
+      }
+      .page:last-child{ page-break-after:auto; }
+
+      .pageHeader{ padding:0 0 1.6mm; }
+      .sheet{ padding:2.4mm 0 0; }
+      .pageFooter{ padding:1.4mm 0 0; }
+    }
+  </style>
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "c7e5713b5e4f4993907eb285797dc89b"}'></script><!-- End Cloudflare Web Analytics -->
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1 class="title">Converting Units of Measurement — Worksheet Generator</h1>
+      <p class="subtitle">Printable A4 worksheets from the <a href="/interactive-tools/stage-4/measurement-space/unit-conversion-number-line/">Unit Conversion &mdash; Double Number Line</a> teaching tool. The scaffold fades across the page: a whole number line to fill in, then a single jump, then bare conversions, then comparing and using them. Metric only. Worksheet language prints every instruction bilingually for EAL/D students; the numerals and units stay Western and LTR.</p>
+
+      <div class="controls">
+        <div class="band">
+          <p class="bandHead">The paper</p>
+          <div class="bandGrid">
+            <div>
+              <label for="stageSel">Stage</label>
+              <select id="stageSel">
+                <option value="s3">Stage 3 &mdash; neighbouring units only</option>
+                <option value="s4" selected>Stage 4 &mdash; any gap, including km to cm</option>
+              </select>
+            </div>
+            <div>
+              <label for="measSel">Measure</label>
+              <select id="measSel">
+                <option value="length">Length</option>
+                <option value="mass">Mass</option>
+                <option value="capacity">Capacity</option>
+                <option value="all" selected>All three &mdash; mixed</option>
+              </select>
+            </div>
+            <div>
+              <label for="levelSel">Level</label>
+              <select id="levelSel">
+                <option value="sweet">Sweet &mdash; whole numbers, one step</option>
+                <option value="mild">Mild &mdash; whole numbers and halves, both directions</option>
+                <option value="medium">Medium &mdash; one and two decimal places</option>
+                <option value="spicy">Spicy &mdash; awkward decimals, values under 1</option>
+                <option value="mixed" selected>Mixed &mdash; a ladder of all four</option>
+              </select>
+            </div>
+            <div>
+              <label for="densitySel">Question size</label>
+              <select id="densitySel">
+                <option value="roomy">Large</option>
+                <option value="normal" selected>Medium</option>
+                <option value="tight">Small &mdash; fit the most on a page</option>
+              </select>
+            </div>
+            <div>
+              <label for="langSel">Worksheet language</label>
+              <select id="langSel">
+                <option value="en">English only</option>
+                <option value="ar">Arabic + English (العربية)</option>
+                <option value="fa">Farsi / Persian + English (فارسی)</option>
+              </select>
+            </div>
+          </div>
+          <p class="note"><b>Stage</b> chooses the unit pairs, <b>Level</b> chooses the numbers on them &mdash; they work independently, so a Stage 3 class can still meet spicy decimals on L and mL.</p>
+        </div>
+
+        <div class="band">
+          <p class="bandHead">Sections &mdash; and how many of each</p>
+          <div class="secGrid">
+            <div class="secOpt" data-for="kLine">
+              <label class="sw"><input type="checkbox" id="kLine" checked /><span class="track"></span><span>Fill the number line</span></label>
+              <div class="cntRow"><label for="nLine">How many</label><input id="nLine" type="number" min="0" max="20" value="2" /></div>
+            </div>
+            <div class="secOpt" data-for="kJump">
+              <label class="sw"><input type="checkbox" id="kJump" checked /><span class="track"></span><span>One jump</span></label>
+              <div class="cntRow"><label for="nJump">How many</label><input id="nJump" type="number" min="0" max="40" value="4" /></div>
+            </div>
+            <div class="secOpt" data-for="kFluent">
+              <label class="sw"><input type="checkbox" id="kFluent" checked /><span class="track"></span><span>Convert these</span></label>
+              <div class="cntRow"><label for="nFluent">How many</label><input id="nFluent" type="number" min="0" max="60" value="12" /></div>
+            </div>
+            <div class="secOpt" data-for="kCompare">
+              <label class="sw"><input type="checkbox" id="kCompare" checked /><span class="track"></span><span>Bigger, smaller or equal</span></label>
+              <div class="cntRow"><label for="nCompare">How many</label><input id="nCompare" type="number" min="0" max="40" value="6" /></div>
+            </div>
+            <div class="secOpt" data-for="kWord">
+              <label class="sw"><input type="checkbox" id="kWord" checked /><span class="track"></span><span>Use it</span></label>
+              <div class="cntRow"><label for="nWord">How many</label><input id="nWord" type="number" min="0" max="20" value="3" /></div>
+            </div>
+          </div>
+          <div class="totalRow"><span>On the paper:</span><span class="pill" id="totalPill">0 questions</span></div>
+          <p class="note">The picture is handed over in stages. <b>Fill the number line</b> gives a whole ladder with values missing down both lines. <b>One jump</b> gives the <bdi>1 : ratio</bdi> anchor and a single target. <b>Convert these</b> drops the picture. <b>Bigger, smaller or equal</b> puts <bdi>&lt; &nbsp;= &nbsp;&gt;</bdi> between two measurements &mdash; some pairs are equal, which is where the marks are won. <b>Use it</b> is short in-context problems. Each section climbs its own ladder.</p>
+        </div>
+
+        <div class="band">
+          <p class="bandHead">Options</p>
+          <div class="bandRow">
+            <label class="sw"><input type="checkbox" id="ladderToggle" /><span class="track"></span><span>Metric ladder reminder</span></label>
+            <label class="sw"><input type="checkbox" id="reasonToggle" checked /><span class="track"></span><span>Reasoning prompt on each page</span></label>
+            <label class="sw"><input type="checkbox" id="keyToggle" checked /><span class="track"></span><span>Answer key pages</span></label>
+          </div>
+          <p class="note">The <b>metric ladder</b> prints <bdi>km &rarr; m &rarr; cm &rarr; mm</bdi> with its multipliers at the top of page one. It is off by default on purpose &mdash; the number line is meant to make the ladder unnecessary. The reasoning prompt is a misconception to argue with.</p>
+        </div>
+
+        <div class="btnRow">
+          <button id="genBtn" class="primary">Generate worksheet</button>
+          <button id="printBtn" class="ghost">Print (Ctrl+P)</button>
+          <button id="resetBtn" class="danger">Reset</button>
+        </div>
+      </div>
+
+      <div id="out" class="outWrap"></div>
+    </div>
+  </div>
+
+  <div class="mmtFooter">
+    This tool and more can be found at&nbsp;
+    <a href="https://www.millsmathstools.au">www.millsmathstools.au</a>
+  </div>
+
+<script>
+(() => {
+  "use strict";
+
+  const SITE = "https://www.millsmathstools.au";
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
+
+  /* ===================== worksheet language (EN / Arabic / Farsi) =====================
+     Same convention as the other creators: the chosen language on top, English
+     beneath. Every numeral and every unit stays Western and LTR, isolated with
+     <bdi> so it does not flip inside a right-to-left sentence.             */
+  let LANG = "en";
+  try{ LANG = localStorage.getItem("mmt-unitconv-ws-lang") || "en"; }catch(_){ }
+  function TR(o){
+    if(o == null) return "";
+    if(typeof o === "string") o = { en:o };
+    if(LANG === "en" || !o[LANG]) return o.en || "";
+    return '<span class="tl" dir="rtl" lang="' + LANG + '">' + o[LANG] + '</span>'
+         + '<span class="el">' + (o.en || "") + '</span>';
+  }
+
+  const WS = {
+    name:{ en:"Name", ar:"الاسم", fa:"نام" },
+    date:{ en:"Date", ar:"التاريخ", fa:"تاریخ" },
+    line:{ en:"Fill in every missing measurement on the number lines.",
+      ar:"أكمل كل قياس ناقص على خطوط الأعداد.",
+      fa:"هر اندازهٔ جاافتاده را روی خط اعداد کامل کن." },
+    jump:{ en:"Use what 1 unit is worth to find the missing measurement.",
+      ar:"استخدم قيمة الوحدة الواحدة لإيجاد القياس الناقص.",
+      fa:"از ارزش ۱ واحد استفاده کن تا اندازهٔ جاافتاده را پیدا کنی." },
+    fluent:{ en:"Convert each measurement. Use a number line or a pattern you can see.",
+      ar:"حوِّل كل قياس. استعن بخط الأعداد أو بنمط تراه.",
+      fa:"هر اندازه را تبدیل کن. از خط اعداد یا الگویی که می‌بینی استفاده کن." },
+    compare:{ en:"Write &lt; , = or &gt; in each box. Watch out — some pairs are equal.",
+      ar:"اكتب &lt; أو = أو &gt; في كل مربع. انتبه — بعض الأزواج متساوية.",
+      fa:"در هر کادر &lt; یا = یا &gt; بنویس. حواست باشد — بعضی جفت‌ها برابرند." },
+    word:{ en:"Answer each question. Show the conversion you used.",
+      ar:"أجب عن كل سؤال. أظهر التحويل الذي استخدمته.",
+      fa:"به هر پرسش پاسخ بده. تبدیلی را که به کار بردی نشان بده." },
+    cont:{ en:"continued", ar:"تابع", fa:"ادامه" },
+    think:{ en:"Something to argue with", ar:"شيء تناقشه", fa:"چیزی برای بحث" },
+    ladder:{ en:"Remember", ar:"تذكَّر", fa:"به یاد داشته باش" }
+  };
+
+  /* ===================== UNITS =====================
+     Metric only. `f` is the unit's size in the family's base unit, so the
+     ratio between any two is f(big)/f(small) — always a power of ten.     */
+  const FAMILIES = {
+    length:   { label:"Length", en:"length", units:[
+      { sym:"km", f:1000000 }, { sym:"m", f:1000 }, { sym:"cm", f:10 }, { sym:"mm", f:1 } ] },
+    mass:     { label:"Mass", en:"mass", units:[
+      { sym:"t",  f:1000000000 }, { sym:"kg", f:1000000 }, { sym:"g", f:1000 }, { sym:"mg", f:1 } ] },
+    capacity: { label:"Capacity", en:"capacity", units:[
+      { sym:"kL", f:1000000 }, { sym:"L", f:1000 }, { sym:"mL", f:1 } ] }
+  };
+  // Stage 3 meets neither milligrams nor tonnes-to-grams; it works between
+  // units that sit next to each other, which is also the only place its
+  // syllabus goes.
+  const S3_UNITS = { length:["km","m","cm","mm"], mass:["kg","g"], capacity:["kL","L","mL"] };
+
+  function pairsFor(stage, famKeys){
+    const out = [];
+    famKeys.forEach(fk => {
+      const us = FAMILIES[fk].units;
+      for(let i = 0; i < us.length - 1; i++){
+        for(let j = i + 1; j < us.length; j++){
+          if(stage === "s3"){
+            if(j - i !== 1) continue;                                   // neighbours only
+            const ok = S3_UNITS[fk];
+            if(ok.indexOf(us[i].sym) < 0 || ok.indexOf(us[j].sym) < 0) continue;
+          }
+          const k = round12(us[i].f / us[j].f);
+          if(k > 1000000) continue;         // 1 t = 1 000 000 000 mg is unreadable on a line
+          out.push({ fam:fk, top:us[i].sym, bot:us[j].sym, k:k });
+        }
+      }
+    });
+    return out;
+  }
+
+  /* ===================== NUMBERS =====================
+     Round to significant figures, not decimal places — the smaller-unit line
+     reaches into the millions. Products go through mulK, because 8.2 × 1e6
+     is 8199999.999999999 in a double.                                     */
+  const NBSP = " ";
+  function round12(x){
+    if(!isFinite(x) || x === 0) return x;
+    const mag = Math.floor(Math.log10(Math.abs(x)));
+    const p = Math.min(15, Math.max(0, 12 - mag));
+    const f = Math.pow(10, p);
+    return Math.round(x * f) / f;
+  }
+  function mulK(lam, k){ return (Math.round(lam * 1000) * k) / 1000; }
+  // A measurement's size in the family's base unit, computed exactly: the
+  // value carries at most three decimals and every f is a power of ten, so
+  // scaling to a whole number first removes the fuzz that otherwise made two
+  // genuinely equal amounts (2.5 km and 2500 m) compare as unequal.
+  function baseOf(v, sym, fam){
+    const f = FAMILIES[fam].units.find(u => u.sym === sym).f;
+    return (Math.round(v * 1000) * f) / 1000;
+  }
+  function dp(x){
+    const s = String(round12(x));
+    const i = s.indexOf(".");
+    return i < 0 ? 0 : s.length - i - 1;
+  }
+  function fmt(x){
+    let v = round12(x);
+    let s = String(v);
+    if(s.indexOf("e") >= 0) s = v.toFixed(6).replace(/0+$/, "").replace(/\.$/, "");
+    const parts = s.split(".");
+    let ip = parts[0];
+    if(ip.replace("-", "").length >= 5) ip = ip.replace(/\B(?=(\d{3})+(?!\d))/g, NBSP);
+    return parts.length > 1 ? ip + "." + parts[1] : ip;
+  }
+  const pick = a => a[Math.floor(Math.random() * a.length)];
+  const rint = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+
+  const ORDER = ["sweet", "mild", "medium", "spicy"];
+
+  /* The multiplier from the anchor. Two pools:
+       linePool — constrained so the PICTURE works (see the teaching tool:
+         the anchor must stay on screen and labels must not collide);
+       freePool — no picture, so the numbers can be as awkward as the level
+         wants. This is where 8886 mL = 8.886 L lives.
+     Both obey one rule: the multiplier may carry at most log10(ratio)
+     decimal places, so the smaller-unit value always lands whole.        */
+  function poolFor(level, k, forPicture){
+    const maxDp = Math.round(Math.log10(k));
+    const out = [];
+    const add = v => {
+      const r = round12(v);
+      if(dp(r) > maxDp) return;
+      if(forPicture && (r < 0.25 || r > 12 || Math.abs(r - 1) < 0.1)) return;
+      if(!forPicture){
+        if(r < 0.01 || r > 40) return;
+        // both printed values have to fit on one line of a three-column card
+        if(fmt(mulK(r, k)).length > 9 || String(r).length > 7) return;
+      }
+      out.push(r);
+    };
+    if(level === "sweet"){
+      for(let n = 2; n <= 9; n++) add(n);
+    } else if(level === "mild"){
+      for(let n = 2; n <= 12; n++) add(n);
+      for(let n = 1; n <= 9; n++) add(n + 0.5);
+      if(!forPicture) for(let n = 13; n <= 24; n++) add(n);
+    } else if(level === "medium"){
+      for(let n = 3; n <= 99; n++){ if(n % 10 !== 0) add(n / 10); }
+      [0.25, 0.75, 1.25, 2.25, 2.75, 4.25, 6.75].forEach(add);
+      if(!forPicture) for(let n = 105; n <= 395; n += 5){ if(n % 10 !== 0) add(n / 100); }
+    } else {
+      [0.375, 0.625, 0.875, 1.125, 1.375, 2.375, 3.125, 4.625, 6.875, 11.25,
+       0.35, 0.45, 1.05, 7.05, 11.5].forEach(add);
+      for(let n = 1; n <= 47; n++){ const v = n / 4; if(dp(v) > 0) add(v); }
+      if(!forPicture){
+        [0.075, 0.025, 0.125, 8.886, 2.55, 0.931, 3.045, 12.06, 0.008, 0.05,
+         0.006, 25.5, 0.0125, 7.305].forEach(add);
+      }
+    }
+    return out.length ? out : [2, 3, 4, 5];
+  }
+
+  /* ---------- the fill-in number line ----------
+     The span is a whole number of anchor units so both ends label cleanly,
+     and the interior ticks carry at most log10(ratio) decimal places so the
+     smaller-unit values are whole. The given side ALTERNATES down the line,
+     which is what makes a student convert both ways on one picture.      */
+  const SPAN_DEC = { sweet:[[10,0],[1,1],[2,1]], mild:[[10,1],[1,2],[2,1],[5,1]],
+                     medium:[[1,2],[10,1],[2,2],[5,2]], spicy:[[1,3],[10,2],[1,2],[2,3]] };
+
+  function makeLineQ(level, pair, nTicks){
+    const k = pair.k, maxDp = Math.round(Math.log10(k));
+    const opts = SPAN_DEC[level].filter(o => o[1] <= maxDp);
+    const [E, dec] = opts.length ? pick(opts) : [10, 0];
+    const step = Math.pow(10, -dec);
+    const slots = Math.round(E / step);                    // every legal tick position
+    const edge = Math.max(1, Math.ceil(slots * 0.09));      // keep clear of the two ends
+    const n = Math.max(3, Math.min(nTicks, Math.floor(slots / 2) - 1));
+    const usable = slots - 2 * edge, bw = usable / n;
+    const chosen = [];
+    for(let i = 0; i < n; i++){
+      const lo = edge + i * bw + bw * 0.30, hi = edge + (i + 1) * bw - bw * 0.30;
+      let sl = Math.round(lo + Math.random() * Math.max(0, hi - lo));
+      sl = Math.max(edge, Math.min(slots - edge, sl));
+      if(chosen.length && sl <= chosen[chosen.length - 1]) sl = chosen[chosen.length - 1] + 1;
+      if(sl >= slots) break;
+      chosen.push(sl);
+    }
+    const startTop = Math.random() < 0.5;
+    const ticks = chosen.map((s, i) => ({
+      v: round12(s * step),
+      given: (i % 2 === 0) === startTop ? "top" : "bot"
+    }));
+    return { kind:"line", level:level, pair:pair, E:E, ticks:ticks };
+  }
+
+  // A quarter of the board's width means a quarter of the room: the teaching
+  // tool only needs the target 0.1 off the anchor to be readable, a printed
+  // card needs 0.3.
+  const JUMP_MAX_K = 10000, JUMP_MAX_LAM = 6, JUMP_CLEAR = 0.3;
+  function jumpPairs(pairs){
+    const ok = pairs.filter(p => p.k <= JUMP_MAX_K);
+    return ok.length ? ok : pairs;
+  }
+  function makeJumpQ(level, pair){
+    const pool = poolFor(level, pair.k, true)
+      .filter(v => v <= JUMP_MAX_LAM && Math.abs(v - 1) >= JUMP_CLEAR);
+    const lam = pick(pool.length ? pool : poolFor(level, pair.k, true));
+    return { kind:"jump", level:level, pair:pair, lam:lam,
+             blank: Math.random() < 0.5 ? "top" : "bot" };
+  }
+
+  function makeFluentQ(level, pair){
+    const lam = pick(poolFor(level, pair.k, false));
+    const big = round12(lam), small = mulK(lam, pair.k);
+    const toSmall = Math.random() < 0.5;
+    return { kind:"fluent", level:level, pair:pair,
+             from: toSmall ? { v:big, u:pair.top } : { v:small, u:pair.bot },
+             to:   toSmall ? pair.bot : pair.top,
+             ans:  toSmall ? small : big };
+  }
+
+  function makeCompareQ(level, pair){
+    const lam = pick(poolFor(level, pair.k, false));
+    const big = round12(lam), small = mulK(lam, pair.k);
+    // One pair in four is EQUAL — that is where the section earns its keep,
+    // because a student reading only the digits will always call it "<".
+    if(Math.random() < 0.28){
+      const flip = Math.random() < 0.5;
+      return { kind:"compare", level:level, pair:pair, rel:"=",
+               a: flip ? { v:big, u:pair.top } : { v:small, u:pair.bot },
+               b: flip ? { v:small, u:pair.bot } : { v:big, u:pair.top } };
+    }
+    // otherwise nudge one side off by a clean amount so the answer is decided
+    const pool = poolFor(level, pair.k, false);
+    let lam2 = pick(pool);
+    for(let g = 0; g < 30 && Math.abs(lam2 - lam) < 1e-9; g++) lam2 = pick(pool);
+    const big2 = round12(lam2), small2 = mulK(lam2, pair.k);
+    const aTop = Math.random() < 0.5;
+    const a = aTop ? { v:big, u:pair.top } : { v:small, u:pair.bot };
+    const b = aTop ? { v:small2, u:pair.bot } : { v:big2, u:pair.top };
+    const d = baseOf(a.v, a.u, pair.fam) - baseOf(b.v, b.u, pair.fam);
+    return { kind:"compare", level:level, pair:pair, a:a, b:b,
+             rel: d > 0 ? ">" : d < 0 ? "<" : "=" };
+  }
+
+  /* ---------- in-context problems ----------
+     No personal names: a name inside a right-to-left sentence is one more
+     thing to translate badly, and the maths does not need one. Every
+     template needs a real conversion before it can be answered.          */
+  const WORD = {
+    length:[
+      { en:"A cross-country course is {A} {UA} long. The signs along it are marked in {UB}. How many {UB} is the course?",
+        ar:"مسار للجري طوله {A} {UA}. اللافتات عليه مكتوبة بـ {UB}. كم {UB} يبلغ طول المسار؟",
+        fa:"یک مسیر دو صحرانوردی {A} {UA} است. تابلوهای آن با {UB} علامت‌گذاری شده‌اند. مسیر چند {UB} است؟",
+        ansU:"B" },
+      { en:"A roll of tape holds {B} {UB}. A job needs {A} {UA}. Is one roll enough? Explain.",
+        ar:"لفة شريط طولها {B} {UB}. يحتاج العمل إلى {A} {UA}. هل تكفي لفة واحدة؟ اشرح.",
+        fa:"یک قرقره نوار {B} {UB} دارد. یک کار به {A} {UA} نیاز دارد. آیا یک قرقره کافی است؟ توضیح بده.",
+        ansU:"cmp" },
+      { en:"A shelf is {A} {UA} long. Write that length in {UB}.",
+        ar:"طول الرف {A} {UA}. اكتب هذا الطول بـ {UB}.",
+        fa:"طول یک قفسه {A} {UA} است. این طول را با {UB} بنویس.",
+        ansU:"B" }
+    ],
+    mass:[
+      { en:"A parcel weighs {B} {UB}. Postage is worked out in {UA}. What is its weight in {UA}?",
+        ar:"طرد وزنه {B} {UB}. تُحسب أجرة البريد بـ {UA}. ما وزنه بـ {UA}؟",
+        fa:"وزن یک بسته {B} {UB} است. هزینهٔ پست بر حسب {UA} حساب می‌شود. وزن آن چند {UA} است؟",
+        ansU:"A" },
+      { en:"A recipe needs {B} {UB}. The packet holds {A} {UA}. Is there enough? Explain.",
+        ar:"وصفة تحتاج إلى {B} {UB}. تحتوي العبوة على {A} {UA}. هل يكفي؟ اشرح.",
+        fa:"یک دستور پخت به {B} {UB} نیاز دارد. بسته {A} {UA} دارد. آیا کافی است؟ توضیح بده.",
+        ansU:"cmp" },
+      { en:"A box of books has a mass of {A} {UA}. Write that mass in {UB}.",
+        ar:"صندوق كتب كتلته {A} {UA}. اكتب هذه الكتلة بـ {UB}.",
+        fa:"جرم یک جعبه کتاب {A} {UA} است. این جرم را با {UB} بنویس.",
+        ansU:"B" }
+    ],
+    capacity:[
+      { en:"A water tank holds {A} {UA}. A bucket is measured in {UB}. How many {UB} does the tank hold?",
+        ar:"خزان ماء يتسع {A} {UA}. يُقاس الدلو بـ {UB}. كم {UB} يتسع الخزان؟",
+        fa:"یک مخزن آب {A} {UA} جا دارد. سطل با {UB} اندازه‌گیری می‌شود. مخزن چند {UB} جا دارد؟",
+        ansU:"B" },
+      { en:"A drink bottle holds {B} {UB}. A jug holds {A} {UA}. Which holds more? Explain.",
+        ar:"زجاجة مشروب تتسع {B} {UB}. إبريق يتسع {A} {UA}. أيهما يتسع أكثر؟ اشرح.",
+        fa:"یک بطری نوشیدنی {B} {UB} جا دارد. یک پارچ {A} {UA} جا دارد. کدام بیشتر جا دارد؟ توضیح بده.",
+        ansU:"cmp" },
+      { en:"A recipe uses {B} {UB} of milk. Write that amount in {UA}.",
+        ar:"وصفة تستخدم {B} {UB} من الحليب. اكتب هذه الكمية بـ {UA}.",
+        fa:"یک دستور پخت {B} {UB} شیر مصرف می‌کند. این مقدار را با {UA} بنویس.",
+        ansU:"A" }
+    ]
+  };
+
+  function makeWordQ(level, pair){
+    const lam = pick(poolFor(level, pair.k, false));
+    const big = round12(lam), small = mulK(lam, pair.k);
+    const tpl = pick(WORD[pair.fam]);
+    let ans;
+    if(tpl.ansU === "A") ans = { v:big, u:pair.top };
+    else if(tpl.ansU === "B") ans = { v:small, u:pair.bot };
+    else ans = { cmp:true, v:big, u:pair.top, v2:small, u2:pair.bot };
+    return { kind:"word", level:level, pair:pair, tpl:tpl, big:big, small:small, ans:ans };
+  }
+
+  /* ===================== DRAWING =====================
+     Larger unit on TOP, matching the teaching tool, so a class that has seen
+     the board sees the same picture on paper. Nothing is coloured: these
+     sheets get photocopied.                                              */
+  function svgLine(q, isKey){
+    const k = q.pair.k, A = q.pair.top, B = q.pair.bot, E = q.E;
+    const W = 1000, LEFT = 46, RIGHT = 954, AX = 74;
+    const TOPY = 40, BOTY = 116;
+    const x = v => LEFT + (v / E) * (RIGHT - LEFT);
+    const out = [];
+    const P = (s) => out.push(s);
+
+    P('<line x1="' + LEFT + '" y1="' + AX + '" x2="' + RIGHT + '" y2="' + AX + '" stroke="#111827" stroke-width="3" stroke-linecap="round"/>');
+
+    function tick(v, tall){
+      const xx = x(v).toFixed(2), h = tall ? 13 : 9;
+      P('<line x1="' + xx + '" y1="' + (AX - h) + '" x2="' + xx + '" y2="' + (AX + h) + '" stroke="#111827" stroke-width="' + (tall ? 3 : 2.2) + '" stroke-linecap="round"/>');
+    }
+    function val(v, unit, top){
+      const xx = x(v).toFixed(2), y = top ? TOPY : BOTY;
+      P('<text x="' + xx + '" y="' + y + '" text-anchor="middle" font-size="21" font-weight="700" fill="#111827" font-family="' + MATHF + '">' + fmt(v)
+        + '<tspan font-size="15" font-family="' + UIF + '" font-weight="700"> ' + unit + '</tspan></text>');
+    }
+    function box(v, unit, top, answer){
+      const xx = x(v), y = top ? TOPY : BOTY;
+      const txt = answer == null ? "" : fmt(answer);
+      const w = Math.max(56, txt.length * 12 + 20);
+      P('<rect x="' + (xx - w / 2 - 12).toFixed(2) + '" y="' + (y - 21) + '" width="' + w + '" height="27" rx="4" fill="none" stroke="#111827" stroke-width="2"/>');
+      if(answer != null){
+        P('<text x="' + (xx - 12).toFixed(2) + '" y="' + (y - 1) + '" text-anchor="middle" font-size="19" font-weight="700" fill="#16a34a" font-family="' + MATHF + '">' + esc(txt) + '</text>');
+      }
+      P('<text x="' + (xx + w / 2 - 8).toFixed(2) + '" y="' + y + '" text-anchor="start" font-size="15" font-weight="700" fill="#111827" font-family="' + UIF + '">' + unit + '</text>');
+    }
+
+    // the two ends are always fully labelled — they are the anchor
+    tick(0, true); tick(E, true);
+    val(0, A, true); val(0, B, false);
+    val(E, A, true); val(mulK(E, k), B, false);
+
+    q.ticks.forEach(t => {
+      tick(t.v, false);
+      const bigV = t.v, smallV = mulK(t.v, k);
+      if(t.given === "top"){ val(bigV, A, true);  box(bigV, B, false, isKey ? smallV : null); }
+      else                 { val(smallV, B, false); box(bigV, A, true,  isKey ? bigV : null); }
+    });
+
+    return '<svg viewBox="0 0 ' + W + ' 136" role="img" aria-label="Double number line, ' + A + ' above and ' + B + ' below">' + out.join("") + '</svg>';
+  }
+
+  const MATHF = "Cambria Math, STIX Two Math, Times New Roman, serif";
+  const UIF = "Inter, system-ui, Arial, sans-serif";
+
+  function svgJump(q, isKey){
+    const k = q.pair.k, A = q.pair.top, B = q.pair.bot;
+    const max = Math.max(1.5, q.lam * 1.24);
+    const W = 620, LEFT = 34, RIGHT = 590, AX = 74, TOPY = 40, BOTY = 116;
+    const x = v => LEFT + (v / max) * (RIGHT - LEFT);
+    const out = [];
+    const P = s => out.push(s);
+    P('<line x1="' + LEFT + '" y1="' + (AX - 15) + '" x2="' + LEFT + '" y2="' + (AX + 15) + '" stroke="#111827" stroke-width="3" stroke-linecap="round"/>');
+    P('<line x1="' + LEFT + '" y1="' + AX + '" x2="' + RIGHT + '" y2="' + AX + '" stroke="#111827" stroke-width="3" stroke-linecap="round"/>');
+    function txt(xx, y, s, unit, colour, size){
+      P('<text x="' + xx.toFixed(2) + '" y="' + y + '" text-anchor="middle" font-size="' + size + '" font-weight="700" fill="' + colour + '" font-family="' + MATHF + '">' + s
+        + '<tspan font-size="14" font-family="' + UIF + '" font-weight="700"> ' + unit + '</tspan></text>');
+    }
+    const xa = x(1);
+    P('<line x1="' + xa.toFixed(2) + '" y1="' + (AX - 13) + '" x2="' + xa.toFixed(2) + '" y2="' + (AX + 13) + '" stroke="#111827" stroke-width="3" stroke-linecap="round"/>');
+    txt(xa, TOPY, "1", A, "#111827", 21);
+    txt(xa, BOTY, fmt(k), B, "#111827", 21);
+
+    const xt = x(q.lam), small = mulK(q.lam, k);
+    P('<line x1="' + xt.toFixed(2) + '" y1="' + (AX - 13) + '" x2="' + xt.toFixed(2) + '" y2="' + (AX + 13) + '" stroke="#111827" stroke-width="3" stroke-linecap="round"/>');
+    const blankTop = q.blank === "top";
+    if(blankTop) txt(xt, BOTY, fmt(small), B, "#111827", 21);
+    else         txt(xt, TOPY, fmt(q.lam), A, "#111827", 21);
+    const by = blankTop ? TOPY : BOTY;
+    const av = blankTop ? fmt(q.lam) : fmt(small);
+    const bw = Math.max(56, av.length * 12 + 20);
+    P('<rect x="' + (xt - bw / 2 - 11).toFixed(2) + '" y="' + (by - 21) + '" width="' + bw + '" height="27" rx="4" fill="none" stroke="#111827" stroke-width="2"/>');
+    if(isKey){
+      P('<text x="' + (xt - 11).toFixed(2) + '" y="' + (by - 1) + '" text-anchor="middle" font-size="19" font-weight="700" fill="#16a34a" font-family="' + MATHF + '">' + av + '</text>');
+    }
+    P('<text x="' + (xt + bw / 2 - 7).toFixed(2) + '" y="' + by + '" text-anchor="start" font-size="14" font-weight="700" fill="#111827" font-family="' + UIF + '">' + (blankTop ? A : B) + '</text>');
+    return '<svg viewBox="0 0 ' + W + ' 136" role="img" aria-label="Double number line with one missing value">' + out.join("") + '</svg>';
+  }
+
+  /* ===================== CARDS ===================== */
+  const U = s => '<span class="u">' + s + '</span>';
+
+  function cardHTML(q, isKey){
+    const badge = '<span class="qNum ' + q.level + '">' + q.idx + '</span>';
+    if(q.kind === "line"){
+      return '<div class="qCard"><div class="qTop">' + badge
+        + '<span class="qExpr" style="font-size:14px">1 ' + U(q.pair.top) + ' = ' + fmt(q.pair.k) + ' ' + U(q.pair.bot) + '</span></div>'
+        + '<div class="qLine">' + svgLine(q, isKey) + '</div></div>';
+    }
+    if(q.kind === "jump"){
+      return '<div class="qCard"><div class="qTop">' + badge + '</div>'
+        + '<div class="qLine">' + svgJump(q, isKey) + '</div></div>';
+    }
+    if(q.kind === "fluent"){
+      const body = '<span class="qExpr">' + fmt(q.from.v) + ' ' + U(q.from.u) + ' =</span>'
+        + (isKey ? '<span class="ansKey">' + fmt(q.ans) + ' ' + U(q.to) + '</span>'
+                 : '<span class="ansLine"></span><span class="qExpr">' + U(q.to) + '</span>');
+      return '<div class="qCard flat">' + badge + body + '</div>';
+    }
+    if(q.kind === "compare"){
+      return '<div class="qCard flat">' + badge
+        + '<span class="qExpr">' + fmt(q.a.v) + ' ' + U(q.a.u) + '</span>'
+        + '<span class="relBox' + (isKey ? " key" : "") + '">' + (isKey ? esc(q.rel) : "") + '</span>'
+        + '<span class="qExpr">' + fmt(q.b.v) + ' ' + U(q.b.u) + '</span></div>';
+    }
+    // word
+    const t = q.tpl;
+    const fill = s => s.replace(/\{A\}/g, '<bdi>' + fmt(q.big) + '</bdi>')
+                       .replace(/\{B\}/g, '<bdi>' + fmt(q.small) + '</bdi>')
+                       .replace(/\{UA\}/g, '<bdi>' + q.pair.top + '</bdi>')
+                       .replace(/\{UB\}/g, '<bdi>' + q.pair.bot + '</bdi>');
+    const text = TR({ en:fill(t.en), ar:fill(t.ar), fa:fill(t.fa) });
+    let ansHTML;
+    if(isKey){
+      ansHTML = q.ans.cmp
+        ? '<span class="ansKey full">' + fmt(q.ans.v) + ' ' + U(q.ans.u) + ' = ' + fmt(q.ans.v2) + ' ' + U(q.ans.u2) + ' — they are the same amount</span>'
+        : '<span class="ansKey full">' + fmt(q.ans.v) + ' ' + U(q.ans.u) + '</span>';
+    } else {
+      ansHTML = '<span class="ansLine full"></span><span class="ansLine full"></span>';
+    }
+    return '<div class="qCard"><div class="qTop">' + badge + '<span class="qWord">' + text + '</span></div>'
+      + '<div class="qFoot">' + ansHTML + '</div></div>';
+  }
+
+  /* ===================== SECTIONS ===================== */
+  const KINDS = {
+    line:    { head:WS.line,    cols:{ roomy:1, normal:1, tight:1 } },
+    jump:    { head:WS.jump,    cols:{ roomy:1, normal:2, tight:2 } },
+    fluent:  { head:WS.fluent,  cols:{ roomy:2, normal:3, tight:4 } },
+    compare: { head:WS.compare, cols:{ roomy:2, normal:3, tight:3 } },
+    word:    { head:WS.word,    cols:{ roomy:1, normal:1, tight:2 } }
+  };
+  const KIND_IDS  = ["line", "jump", "fluent", "compare", "word"];
+  const TOGGLE_ID = { line:"kLine", jump:"kJump", fluent:"kFluent", compare:"kCompare", word:"kWord" };
+  const COUNT_ID  = { line:"nLine", jump:"nJump", fluent:"nFluent", compare:"nCompare", word:"nWord" };
+  const DEFAULT_N = { line:2, jump:4, fluent:12, compare:6, word:3 };
+  const SEC_LETTER = ["A", "B", "C", "D", "E", "F", "G", "H"];
+
+  function sectionHTML(b, isKey, density){
+    const cols = KINDS[b.kind].cols[density] || 1;
+    return '<div class="section">'
+      + '<div class="secHead"><span class="secLetter">' + b.letter + '</span>'
+      + '<span class="secText">' + TR(KINDS[b.kind].head) + '</span>'
+      + (b.cont ? '<span class="secCont">' + TR(WS.cont) + '</span>' : "")
+      + '</div>'
+      + '<div class="qGrid" style="--cols:' + cols + '">'
+      + b.qs.map(q => cardHTML(q, isKey)).join("")
+      + '</div></div>';
+  }
+
+  /* Each prompt is tagged with the measure it argues about, because a
+     capacity-only sheet asking about kilometres is a sheet nobody reads. */
+  const REASONS = [
+    { fam:"length",
+      q:{ en:"Sam says <bdi>2.5 km</bdi> is <bdi>250 m</bdi>, because there are <bdi>100 cm</bdi> in a metre. What has Sam mixed up? Draw a number line from <bdi>0</bdi> to <bdi>3 km</bdi> to show the truth.",
+          ar:"يقول سام إن <bdi>2.5 km</bdi> تساوي <bdi>250 m</bdi>، لأن في المتر <bdi>100 cm</bdi>. ما الذي خلطه سام؟ ارسم خط أعداد من <bdi>0</bdi> إلى <bdi>3 km</bdi> لتوضيح الصواب.",
+          fa:"سام می‌گوید <bdi>2.5 km</bdi> برابر <bdi>250 m</bdi> است، چون در هر متر <bdi>100 cm</bdi> هست. سام چه چیزی را اشتباه گرفته؟ خط اعدادی از <bdi>0</bdi> تا <bdi>3 km</bdi> بکش و درست را نشان بده." },
+      a:"He used the wrong ratio: 1 km is 1000 m, not 100. 2.5 km = 2.5 × 1000 = 2500 m — ten times what he said." },
+    { fam:"length",
+      q:{ en:"Jo says that to change <bdi>mm</bdi> into <bdi>cm</bdi> you always take a zero off the end. Try it on <bdi>5 mm</bdi>. What goes wrong, and what is the rule really doing?",
+          ar:"يقول جو إنه لتحويل <bdi>mm</bdi> إلى <bdi>cm</bdi> تحذف صفرًا من النهاية دائمًا. جرّب ذلك على <bdi>5 mm</bdi>. ما الخطأ؟ وماذا تفعل القاعدة في الحقيقة؟",
+          fa:"جو می‌گوید برای تبدیل <bdi>mm</bdi> به <bdi>cm</bdi> همیشه یک صفر از آخر برمی‌داری. روی <bdi>5 mm</bdi> امتحان کن. چه اشکالی پیش می‌آید و قاعده واقعاً چه می‌کند؟" },
+      a:"5 mm has no zero to remove. The rule is really dividing by 10: 5 ÷ 10 = 0.5 cm. Taking a zero off only looks right for multiples of 10." },
+    { fam:"length",
+      q:{ en:"Two students convert <bdi>7 m</bdi> into <bdi>cm</bdi>. One writes <bdi>70 cm</bdi>, the other <bdi>700 cm</bdi>. Without a calculator, how can you tell which one is impossible?",
+          ar:"طالبان يحوّلان <bdi>7 m</bdi> إلى <bdi>cm</bdi>. أحدهما يكتب <bdi>70 cm</bdi> والآخر <bdi>700 cm</bdi>. بدون آلة حاسبة، كيف تعرف أيّهما مستحيل؟",
+          fa:"دو دانش‌آموز <bdi>7 m</bdi> را به <bdi>cm</bdi> تبدیل می‌کنند. یکی <bdi>70 cm</bdi> و دیگری <bdi>700 cm</bdi> می‌نویسد. بدون ماشین‌حساب چطور می‌فهمی کدام غیرممکن است؟" },
+      a:"70 cm is shorter than a metre, so it cannot be 7 metres. Going to a smaller unit must give a bigger number: 7 × 100 = 700 cm." },
+    { fam:"mass",
+      q:{ en:"Ana says <bdi>1500 g</bdi> must be heavier than <bdi>1.5 kg</bdi>, because <bdi>1500</bdi> is a much bigger number than <bdi>1.5</bdi>. Is she right? How would you convince her?",
+          ar:"تقول آنا إن <bdi>1500 g</bdi> أثقل من <bdi>1.5 kg</bdi>، لأن <bdi>1500</bdi> عدد أكبر بكثير من <bdi>1.5</bdi>. هل هي محقة؟ كيف تقنعها؟",
+          fa:"آنا می‌گوید <bdi>1500 g</bdi> باید سنگین‌تر از <bdi>1.5 kg</bdi> باشد، چون <bdi>1500</bdi> خیلی بزرگ‌تر از <bdi>1.5</bdi> است. آیا درست می‌گوید؟ چطور او را قانع می‌کنی؟" },
+      a:"They are the same mass. A bigger number can mean a smaller unit — you cannot compare the digits until both are in the same unit." },
+    { fam:"mass",
+      q:{ en:"A bag of flour is labelled <bdi>500 g</bdi>. Kai says four bags make <bdi>2000 kg</bdi>. Where did the mistake happen, and what is the real answer?",
+          ar:"كيس دقيق مكتوب عليه <bdi>500 g</bdi>. يقول كاي إن أربعة أكياس تساوي <bdi>2000 kg</bdi>. أين وقع الخطأ؟ وما الإجابة الصحيحة؟",
+          fa:"روی یک کیسه آرد نوشته <bdi>500 g</bdi>. کای می‌گوید چهار کیسه می‌شود <bdi>2000 kg</bdi>. اشتباه کجا رخ داده و پاسخ درست چیست؟" },
+      a:"Four bags are 2000 g, and the unit stayed grams. 2000 g = 2000 ÷ 1000 = 2 kg. Kai changed the unit without changing the number." },
+    { fam:"capacity",
+      q:{ en:"A bottle says <bdi>250 mL</bdi>. Priya says that is <bdi>0.25 L</bdi>, and also a quarter of a litre. Can it be both? Use a number line from <bdi>0</bdi> to <bdi>1 L</bdi> to explain.",
+          ar:"على زجاجة مكتوب <bdi>250 mL</bdi>. تقول بريا إنها <bdi>0.25 L</bdi>، وأيضًا رُبع لتر. أيمكن أن تكون الاثنتين؟ استخدم خط أعداد من <bdi>0</bdi> إلى <bdi>1 L</bdi> للشرح.",
+          fa:"روی بطری نوشته <bdi>250 mL</bdi>. پریا می‌گوید این <bdi>0.25 L</bdi> است و هم یک‌چهارم لیتر. می‌شود هر دو باشد؟ با خط اعدادی از <bdi>0</bdi> تا <bdi>1 L</bdi> توضیح بده." },
+      a:"Yes — both name the same point. 250 out of 1000 mL is a quarter of the way to 1 L, and a quarter written as a decimal is 0.25." },
+    { fam:"capacity",
+      q:{ en:"A jug holds <bdi>1.5 L</bdi>. Noor says that is <bdi>150 mL</bdi>, because you move the decimal point two places. What is the rule really, and how much does the jug hold?",
+          ar:"إبريق يتسع <bdi>1.5 L</bdi>. تقول نور إن ذلك <bdi>150 mL</bdi>، لأنك تحرّك الفاصلة العشرية منزلتين. ما القاعدة الصحيحة؟ وكم يتسع الإبريق؟",
+          fa:"یک پارچ <bdi>1.5 L</bdi> جا دارد. نور می‌گوید این <bdi>150 mL</bdi> است، چون ممیز را دو رقم جابه‌جا می‌کنی. قاعدهٔ درست چیست و پارچ چقدر جا دارد؟" },
+      a:"1 L is 1000 mL, so the decimal point moves three places, not two: 1.5 L = 1500 mL. Ten times what Noor said." }
+  ];
+
+  function explainHTML(r, isKey){
+    return '<div class="explainBox">'
+      + '<div class="exHead">' + TR(WS.think) + '</div>'
+      + '<div class="exText">' + TR(r.q) + '</div>'
+      + (isKey ? '<div class="exKey">' + esc(r.a) + '</div>' : '<div class="ruled"></div>')
+      + '</div>';
+  }
+
+  function ladderHTML(famKeys){
+    const rows = famKeys.map(fk => {
+      const us = FAMILIES[fk].units;
+      const bits = [];
+      for(let i = 0; i < us.length; i++){
+        bits.push('<span class="lu">' + us[i].sym + '</span>');
+        if(i < us.length - 1){
+          bits.push('<span class="lop">&mdash;&times;' + fmt(us[i].f / us[i + 1].f) + '&rarr;</span>');
+        }
+      }
+      return bits.join("");
+    });
+    return '<div class="ladder"><span class="lop" style="font-weight:1000;color:#111827">' + TR(WS.ladder) + '</span>' + rows.join('<span style="width:12px"></span>') + '</div>';
+  }
+
+  /* ===================== BUILD ===================== */
+  function sectionCounts(){
+    const c = {};
+    KIND_IDS.forEach(k => {
+      c[k] = $(TOGGLE_ID[k]).checked ? Math.max(0, Math.min(60, parseInt($(COUNT_ID[k]).value, 10) || 0)) : 0;
+    });
+    return c;
+  }
+  const totalAsked = () => { const c = sectionCounts(); return KIND_IDS.reduce((t, k) => t + c[k], 0); };
+
+  const A4_CONTENT_PX = (() => {
+    const p = document.createElement("div");
+    p.style.cssText = "position:absolute;left:-10000px;top:0;height:281mm;";
+    document.body.appendChild(p);
+    const h = p.getBoundingClientRect().height;
+    p.remove();
+    return h;
+  })();
+
+  function buildPages(){
+    const stage = $("stageSel").value;
+    const meas = $("measSel").value;
+    const level = $("levelSel").value;
+    const density = $("densitySel").value;
+    const famKeys = meas === "all" ? ["length", "mass", "capacity"] : [meas];
+    const pairs = pairsFor(stage, famKeys);
+    if(!pairs.length) return { error:"That measure has no unit pairs at this stage. Try Stage 4, or another measure." };
+
+    const counts = sectionCounts();
+    const kinds = KIND_IDS.filter(k => counts[k] > 0);
+    if(!kinds.length) return { error:"Turn on at least one section and give it a number of questions." };
+    const count = kinds.reduce((t, k) => t + counts[k], 0);
+
+    const MAKE = { line:makeLineQ, jump:makeJumpQ, fluent:makeFluentQ, compare:makeCompareQ, word:makeWordQ };
+    const TICKS = { roomy:4, normal:5, tight:5 };
+
+    // Every section climbs its OWN ladder, so a paper of 2 number lines and
+    // 20 conversions still runs sweet → spicy inside each one.
+    const byKind = {}, seen = {};
+    kinds.forEach(k => {
+      const n = counts[k], qs = [];
+      for(let i = 0; i < n; i++){
+        const lv = (level === "mixed")
+          ? ORDER[Math.min(ORDER.length - 1, Math.floor(i / Math.max(1, n / ORDER.length)))]
+          : level;
+        let q = null;
+        for(let t = 0; t < 40; t++){
+          const pr = pick(k === "jump" ? jumpPairs(pairs) : pairs);
+          const cand = k === "line" ? makeLineQ(lv, pr, TICKS[density]) : MAKE[k](lv, pr);
+          const key = k === "line"
+            ? "line|" + cand.E + "|" + cand.ticks.map(t2 => t2.v).join(",")   // pattern alone
+            : k + "|" + pr.top + pr.bot + "|" + JSON.stringify(cand.lam || cand.from || cand.a || cand.big);
+          if(!seen[key]){ seen[key] = 1; q = cand; break; }
+          q = q || cand;
+        }
+        qs.push(q);
+      }
+      byKind[k] = qs;
+    });
+
+    const groups = kinds.map(k => ({
+      kind:k,
+      qs:byKind[k].sort((x, y) => ORDER.indexOf(x.level) - ORDER.indexOf(y.level))
+    })).filter(g => g.qs.length);
+
+    let n = 1;
+    groups.forEach(g => g.qs.forEach(q => { q.idx = n++; }));
+    groups.forEach((g, i) => { g.letter = SEC_LETTER[i]; });
+
+    const withReason = $("reasonToggle").checked;
+    const withLadder = $("ladderToggle").checked;
+    const pool = REASONS.filter(r => famKeys.indexOf(r.fam) >= 0);
+    const reasons = (pool.length ? pool : REASONS).slice().sort(() => Math.random() - 0.5);
+
+    /* ---- pass 1: render a full-width probe and read the real heights ---- */
+    function probeFor(isKey){
+      const html = groups.map(g => sectionHTML(
+        { kind:g.kind, letter:g.letter, cont:false, qs:g.qs.slice(0, KINDS[g.kind].cols[density] || 1) },
+        isKey, density
+      )).join("") + (withReason ? explainHTML(reasons[0], isKey) : "")
+        + (withLadder ? ladderHTML(famKeys) : "");
+      const m = document.createElement("div");
+      m.className = "measure";
+      m.innerHTML = '<div class="sheet">' + html + '</div>';
+      document.body.appendChild(m);
+      return m;
+    }
+    // an answer can make a KEY card taller than the blank one it mirrors, and
+    // both halves share one pagination — so measure both and keep the larger
+    const mS = probeFor(false), mK = probeFor(true);
+    const secsS = [...mS.querySelectorAll(".section")], secsK = [...mK.querySelectorAll(".section")];
+    const H = groups.map((g, i) => {
+      const sec = secsS[i], secK = secsK[i];
+      const headEl = sec.querySelector(".secHead");
+      const num = (x, dflt) => (isFinite(x) && x > 0 ? x : dflt);
+      const head = Math.max(headEl.getBoundingClientRect().height,
+                            secK.querySelector(".secHead").getBoundingClientRect().height)
+                 + num(parseFloat(getComputedStyle(headEl).marginBottom), 7);
+      const gridGap = num(parseFloat(getComputedStyle(sec.querySelector(".qGrid")).rowGap), 8);
+      const cS = sec.querySelector(".qCard"), cK = secK.querySelector(".qCard");
+      const row = Math.max(cS ? cS.getBoundingClientRect().height : 60,
+                           cK ? cK.getBoundingClientRect().height : 60) + gridGap;
+      return { head:num(head, 24), row:num(row, 60), gap:num(parseFloat(getComputedStyle(sec).marginBottom), 9),
+               cols:KINDS[g.kind].cols[density] || 1 };
+    });
+    const explainH = withReason
+      ? Math.max(mS.querySelector(".explainBox").getBoundingClientRect().height,
+                 mK.querySelector(".explainBox").getBoundingClientRect().height) + 6 : 0;
+    const ladderH = withLadder ? mS.querySelector(".ladder").getBoundingClientRect().height + 8 : 0;
+    const sheetEl = mS.querySelector(".sheet");
+    const sheetPad = parseFloat(getComputedStyle(sheetEl).paddingTop)
+                   + parseFloat(getComputedStyle(sheetEl).paddingBottom);
+    mS.remove(); mK.remove();
+
+    const CHROME = 48 + 23;                       // page header + page footer
+    const budget = Math.max(320, A4_CONTENT_PX - CHROME - sheetPad - explainH);
+
+    /* ---- pass 2: fill greedily, in whole card rows ----
+       Packing to the average section cost leaves every page two-thirds white
+       when the sections are small, so this fills each page and lets the
+       reasoning box stretch into whatever the last one leaves.            */
+    function pack(cap){
+      const pages = []; let page = [], used = 0;
+      const flush = () => { if(page.length) pages.push(page); page = []; used = 0; };
+      groups.forEach((g, gi) => {
+        const h = H[gi];
+        let i = 0, first = true;
+        while(i < g.qs.length){
+          let room = cap - used - (pages.length === 0 && page.length === 0 ? ladderH : 0);
+          if(room < h.head + h.row + h.gap){
+            if(used === 0) room = cap;            // nothing there yet — force it
+            else { flush(); room = cap; }
+          }
+          const rows = Math.max(1, Math.floor((room - h.head - h.gap) / h.row));
+          const take = Math.min(g.qs.length - i, rows * h.cols);
+          const usedRows = Math.ceil(take / h.cols);
+          page.push({ type:"section", kind:g.kind, letter:g.letter, cont:!first, qs:g.qs.slice(i, i + take) });
+          used += h.head + usedRows * h.row + h.gap;
+          i += take; first = false;
+        }
+      });
+      flush();
+      return pages;
+    }
+    const pages = pack(budget);
+    if(withLadder && pages.length) pages[0].unshift({ type:"ladder", fams:famKeys });
+    if(withReason) pages.forEach((p, i) => p.push({ type:"explain", reason:reasons[i % reasons.length] }));
+    return { pages:pages, level:level, stage:stage, meas:meas, density:density, count:count, famKeys:famKeys };
+  }
+
+  // short on the printed page — the long descriptions belong on the controls
+  const LEVEL_LABEL = { sweet:"Sweet", mild:"Mild", medium:"Medium", spicy:"Spicy", mixed:"Mixed" };
+  const STAGE_LABEL = { s3:"Stage 3", s4:"Stage 4" };
+  const MEAS_LABEL = { length:"Length", mass:"Mass", capacity:"Capacity", all:"Length, mass and capacity" };
+
+  function pageHTML(blocks, meta, key, pageNo, total){
+    const body = blocks.map(b =>
+      b.type === "explain" ? explainHTML(b.reason, key)
+      : b.type === "ladder" ? ladderHTML(b.fams)
+      : sectionHTML(b, key, meta.density)).join("");
+    return '<section class="page' + (key ? " isKey" : "") + '">'
+      + '<div class="pageHeader">'
+      +   '<div><div class="hdrTitle">Converting Units of Measurement' + (key ? " &mdash; ANSWERS" : "") + '</div>'
+      +   '<div class="hdrSub">' + (key ? "Answer key &middot; " : "") + esc(MEAS_LABEL[meta.meas]) + " &middot; " + esc(STAGE_LABEL[meta.stage]) + " &middot; " + esc(LEVEL_LABEL[meta.level]) + '</div></div>'
+      +   (key ? "" : '<div class="nameDate">'
+      +     '<div class="lineField"><span class="lineLabel">' + TR(WS.name) + '</span><span class="lineBox"></span></div>'
+      +     '<div class="lineField"><span class="lineLabel">' + TR(WS.date) + '</span><span class="lineBox"></span></div>'
+      +   '</div>')
+      + '</div>'
+      + '<div class="sheet">' + body + '</div>'
+      + '<div class="pageFooter"><span>Page ' + pageNo + ' of ' + total + '</span>'
+      +   '<span><a href="' + SITE + '">www.millsmathstools.au</a></span></div>'
+      + '</section>';
+  }
+
+  function generate(scroll){
+    const built = buildPages();
+    const out = $("out");
+    if(built.error){ out.innerHTML = '<p class="note warn">' + esc(built.error) + '</p>'; return; }
+    const key = $("keyToggle").checked;
+    const n = built.pages.length;
+    const total = key ? n * 2 : n;
+    let html = "";
+    built.pages.forEach((p, i) => { html += pageHTML(p, built, false, i + 1, total); });
+    if(key) built.pages.forEach((p, i) => { html += pageHTML(p, built, true, n + i + 1, total); });
+    out.innerHTML = html;
+    if(scroll && out.scrollIntoView) out.scrollIntoView({ behavior:"smooth", block:"start" });
+  }
+
+  function reset(){
+    $("stageSel").value = "s4";
+    $("measSel").value = "all";
+    $("levelSel").value = "mixed";
+    $("densitySel").value = "normal";
+    KIND_IDS.forEach(k => { $(TOGGLE_ID[k]).checked = true; $(COUNT_ID[k]).value = DEFAULT_N[k]; });
+    $("ladderToggle").checked = false;
+    $("reasonToggle").checked = true;
+    $("keyToggle").checked = true;
+    LANG = "en"; $("langSel").value = "en";
+    try{ localStorage.setItem("mmt-unitconv-ws-lang", "en"); }catch(_){ }
+    syncSections();
+    $("out").innerHTML = "";
+  }
+
+  /* keep each section card, its number box and the running total in step */
+  function syncSections(){
+    KIND_IDS.forEach(k => {
+      const on = $(TOGGLE_ID[k]).checked;
+      $(COUNT_ID[k]).disabled = !on;
+      const cardEl = document.querySelector('.secOpt[data-for="' + TOGGLE_ID[k] + '"]');
+      if(cardEl) cardEl.classList.toggle("off", !on);
+    });
+    const n = totalAsked();
+    const pill = $("totalPill");
+    pill.textContent = n === 1 ? "1 question" : n + " questions";
+    pill.classList.toggle("zero", n === 0);
+  }
+
+  KIND_IDS.forEach(k => {
+    $(TOGGLE_ID[k]).addEventListener("change", function(){
+      // turning a section on with nothing in the box is almost never meant
+      if(this.checked && (parseInt($(COUNT_ID[k]).value, 10) || 0) === 0) $(COUNT_ID[k]).value = DEFAULT_N[k];
+      syncSections();
+    });
+    $(COUNT_ID[k]).addEventListener("input", function(){
+      // typing 0 switches the section off, so the two controls never disagree
+      const v = parseInt(this.value, 10) || 0;
+      if(v === 0 && $(TOGGLE_ID[k]).checked){ $(TOGGLE_ID[k]).checked = false; }
+      else if(v > 0 && !$(TOGGLE_ID[k]).checked){ $(TOGGLE_ID[k]).checked = true; }
+      syncSections();
+    });
+  });
+
+  // Stage 3 has no place for a km-to-mm jump, so switching stage re-generates
+  $("stageSel").addEventListener("change", () => generate(false));
+  $("measSel").addEventListener("change", () => generate(false));
+  $("langSel").addEventListener("change", function(){
+    LANG = this.value;
+    try{ localStorage.setItem("mmt-unitconv-ws-lang", LANG); }catch(_){ }
+    generate(false);
+  });
+  $("genBtn").addEventListener("click", () => generate(true));
+  $("printBtn").addEventListener("click", () => window.print());
+  $("resetBtn").addEventListener("click", reset);
+
+  $("langSel").value = LANG;
+  syncSections();
+  generate(false);
+
+  // exposed for the headless harness only
+  window.__UCWS = { baseOf:baseOf, jumpPairs:jumpPairs, JUMP_MAX_K:JUMP_MAX_K, JUMP_MAX_LAM:JUMP_MAX_LAM, JUMP_CLEAR:JUMP_CLEAR, buildPages:buildPages, generate:generate, pairsFor:pairsFor, poolFor:poolFor,
+                    makeLineQ:makeLineQ, makeJumpQ:makeJumpQ, makeFluentQ:makeFluentQ,
+                    makeCompareQ:makeCompareQ, makeWordQ:makeWordQ, FAMILIES:FAMILIES,
+                    fmt:fmt, dp:dp, mulK:mulK, round12:round12, WORD:WORD, REASONS:REASONS,
+                    setLang:function(v){ LANG = v; $("langSel").value = v; } };
+})();
+</script>
+</body>
+</html>
