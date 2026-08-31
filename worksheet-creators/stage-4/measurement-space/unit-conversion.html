@@ -570,16 +570,43 @@
 
   function makeLineQ(level, pair, nTicks){
     const k = pair.k, maxDp = Math.round(Math.log10(k));
+    /* Every legal span, costed for how many ticks its LABELS can fit.
+       The widest thing on the line is the whole span written in the small
+       unit, and each interior tick needs room for that or for a filled answer
+       box, whichever is wider. Before the lower line was drawn in the right
+       place none of this mattered — nothing down there was visible. */
+    const SPANPX = 908;
+    function cost(E, dec){
+      const step = Math.pow(10, -dec), slots = Math.round(E / step), pxPerSlot = SPANPX / slots;
+      const wide = fmt(mulK(E, k));
+      const item = Math.max(textW(wide, pair.bot), boxW(wide, pair.bot)) + 10;
+      const endW = Math.max(textW(fmt(E), pair.top), textW(wide, pair.bot));
+      // interior ticks must clear the two end labels as well as each other
+      const edge = Math.max(1, Math.ceil(Math.max(slots * 0.09, (endW / 2 + item / 2 + 10) / pxPerSlot)));
+      const usable = Math.max(1, slots - 2 * edge);
+      const fitN = Math.min(Math.floor(usable * pxPerSlot / (item + pxPerSlot)),
+                            Math.max(1, Math.floor(slots / 2) - 1));
+      return { E, dec, step, slots, pxPerSlot, item, edge, usable, fitN };
+    }
     const opts = SPAN_DEC[level].filter(o => o[1] <= maxDp);
-    const [E, dec] = opts.length ? pick(opts) : [10, 0];
-    const step = Math.pow(10, -dec);
-    const slots = Math.round(E / step);                    // every legal tick position
-    const edge = Math.max(1, Math.ceil(slots * 0.09));      // keep clear of the two ends
-    const n = Math.max(3, Math.min(nTicks, Math.floor(slots / 2) - 1));
-    const usable = slots - 2 * edge, bw = usable / n;
+    const cand = (opts.length ? opts : [[10, 0]]).map(o => cost(o[0], o[1]));
+    // A one-blank number line is a thin question, so prefer a span that leaves
+    // room for a few — huge ratios like 1 km = 1 000 000 mm are the ones that
+    // otherwise get squeezed down to a single tick.
+    const best = Math.max(...cand.map(c => c.fitN));
+    const roomy = cand.filter(c => c.fitN >= Math.min(3, best));
+    const C = pick(roomy.length ? roomy : cand);
+    const E = C.E, step = C.step, slots = C.slots, pxPerSlot = C.pxPerSlot, item = C.item, edge = C.edge, usable = C.usable;
+    const n = Math.max(1, Math.min(nTicks, Math.max(1, C.fitN)));
+    const bw = usable / n, bwPx = bw * pxPerSlot;
+    /* A tick lands anywhere in the middle of its band, so the WORST gap is the
+       band less twice the jitter. Shrink the jitter until that gap still fits a
+       label; at 0 the ticks space out evenly, which is the right answer when
+       the numbers are long. */
+    const jit = Math.max(0, Math.min(0.20, (1 - (item + pxPerSlot) / bwPx) / 2));
     const chosen = [];
     for(let i = 0; i < n; i++){
-      const lo = edge + i * bw + bw * 0.30, hi = edge + (i + 1) * bw - bw * 0.30;
+      const lo = edge + i * bw + bw * (0.5 - jit), hi = edge + i * bw + bw * (0.5 + jit);
       let sl = Math.round(lo + Math.random() * Math.max(0, hi - lo));
       sl = Math.max(edge, Math.min(slots - edge, sl));
       if(chosen.length && sl <= chosen[chosen.length - 1]) sl = chosen[chosen.length - 1] + 1;
@@ -708,6 +735,12 @@
      Larger unit on TOP, matching the teaching tool, so a class that has seen
      the board sees the same picture on paper. Nothing is coloured: these
      sheets get photocopied.                                              */
+  /* Rough printed widths, in SVG user units. Used to keep end labels inside
+     the picture and — more importantly — to stop makeLineQ asking for more
+     ticks than the labels can fit side by side. */
+  function textW(numStr, unit){ return numStr.length * 11.5 + 8 + unit.length * 8.5; }
+  function boxW(ansStr, unit){ return Math.max(56, ansStr.length * 12 + 20) + 20 + unit.length * 8.5; }
+
   function svgLine(q, isKey){
     const k = q.pair.k, A = q.pair.top, B = q.pair.bot, E = q.E;
     const W = 1000, LEFT = 46, RIGHT = 954, AX = 74;
@@ -722,9 +755,18 @@
       const xx = x(v).toFixed(2), h = tall ? 13 : 9;
       P('<line x1="' + xx + '" y1="' + (AX - h) + '" x2="' + xx + '" y2="' + (AX + h) + '" stroke="#111827" stroke-width="' + (tall ? 3 : 2.2) + '" stroke-linecap="round"/>');
     }
-    function val(v, unit, top){
-      const xx = x(v).toFixed(2), y = top ? TOPY : BOTY;
-      P('<text x="' + xx + '" y="' + y + '" text-anchor="middle" font-size="21" font-weight="700" fill="#111827" font-family="' + MATHF + '">' + fmt(v)
+    // POSITION and SHOWN are different numbers on the lower line: the tick sits
+    // at a place on the large-unit scale, but the label reads in small units.
+    // Passing the small-unit value to x() put every lower label thousands of
+    // pixels off-canvas, so a blank above it had nothing to convert from.
+    function val(pos, shown, unit, top){
+      const y = top ? TOPY : BOTY, str = fmt(shown), w = textW(str, unit);
+      // The end labels are the widest (the whole span in the small unit) and
+      // sit hard against the edge, so they anchor rather than centre.
+      let xx = x(pos), anchor = "middle";
+      if(xx - w / 2 < 2){ xx = 2; anchor = "start"; }
+      else if(xx + w / 2 > W - 2){ xx = W - 2; anchor = "end"; }
+      P('<text x="' + xx.toFixed(2) + '" y="' + y + '" text-anchor="' + anchor + '" font-size="21" font-weight="700" fill="#111827" font-family="' + MATHF + '">' + str
         + '<tspan font-size="15" font-family="' + UIF + '" font-weight="700"> ' + unit + '</tspan></text>');
     }
     function box(v, unit, top, answer){
@@ -740,14 +782,14 @@
 
     // the two ends are always fully labelled — they are the anchor
     tick(0, true); tick(E, true);
-    val(0, A, true); val(0, B, false);
-    val(E, A, true); val(mulK(E, k), B, false);
+    val(0, 0, A, true); val(0, 0, B, false);
+    val(E, E, A, true); val(E, mulK(E, k), B, false);
 
     q.ticks.forEach(t => {
       tick(t.v, false);
       const bigV = t.v, smallV = mulK(t.v, k);
-      if(t.given === "top"){ val(bigV, A, true);  box(bigV, B, false, isKey ? smallV : null); }
-      else                 { val(smallV, B, false); box(bigV, A, true,  isKey ? bigV : null); }
+      if(t.given === "top"){ val(bigV, bigV, A, true);   box(bigV, B, false, isKey ? smallV : null); }
+      else                 { val(bigV, smallV, B, false); box(bigV, A, true,  isKey ? bigV : null); }
     });
 
     return '<svg viewBox="0 0 ' + W + ' 136" role="img" aria-label="Double number line, ' + A + ' above and ' + B + ' below">' + out.join("") + '</svg>';
