@@ -80,6 +80,18 @@
     .sw input:focus-visible + .track{ box-shadow:0 0 0 4px rgba(37,99,235,.28); }
 
     .note{ margin:9px 0 0; font-size:12.5px; font-weight:800; color:var(--muted); line-height:1.45; }
+    .pairBox{ grid-column:1/-1; border:1.5px solid var(--line,#e5e7eb); border-radius:12px; padding:9px 11px 10px; background:#fff; }
+    .pairHead{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:7px; }
+    .pairHead label{ margin:0; }
+    .pairHint{ font-size:12px; font-weight:800; color:var(--muted); }
+    .pairAll{ margin-left:auto; font-size:12px; font-weight:900; color:#1d4ed8; background:#eef2ff; border:none; border-radius:999px; padding:5px 11px; cursor:pointer; font-family:inherit; }
+    .pairGroup{ margin-top:6px; }
+    .pairGroup:first-child{ margin-top:0; }
+    .pairFam{ font-size:11px; font-weight:1000; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:0 0 5px; }
+    .pairList{ display:flex; flex-wrap:wrap; gap:7px 8px; }
+    .pairChk{ display:inline-flex; align-items:center; gap:7px; border:1.5px solid #e5e7eb; border-radius:999px; padding:6px 11px; font-size:13.5px; font-weight:900; cursor:pointer; user-select:none; background:#fff; }
+    .pairChk input{ width:16px; height:16px; accent-color:#2563eb; margin:0; }
+    .pairChk.off{ opacity:.5; }
     .note.warn{ color:var(--red); }
 
     /* one card per section: what it is, and how many of them */
@@ -338,8 +350,16 @@
                 <option value="fa">Farsi / Persian + English (فارسی)</option>
               </select>
             </div>
+            <div class="pairBox">
+              <div class="pairHead">
+                <label>Conversions</label>
+                <span class="pairHint">Tick the unit pairs this paper should use.</span>
+                <button type="button" id="pairAllBtn" class="pairAll">Untick all</button>
+              </div>
+              <div id="pairWrap"></div>
+            </div>
           </div>
-          <p class="note"><b>Stage</b> chooses the unit pairs, <b>Level</b> chooses the numbers on them &mdash; they work independently, so a Stage 3 class can still meet spicy decimals on L and mL.</p>
+          <p class="note"><b>Stage</b> and <b>Measure</b> set which pairs are on offer, <b>Conversions</b> narrows that to the ones you want, and <b>Level</b> chooses the numbers on them &mdash; they work independently, so a Stage 3 class can still meet spicy decimals on L and mL.</p>
         </div>
 
         <div class="band">
@@ -477,6 +497,63 @@
     return out;
   }
 
+  /* ===================== THE CONVERSION PICKER =====================
+     Stage and Measure decide which pairs EXIST; these checkboxes decide which
+     of them this paper actually uses, so a teacher can run a sheet on nothing
+     but mm and cm. The list refills whenever Stage or Measure changes, and a
+     pair that survives the change keeps its tick. */
+  const pairId = p => "pair_" + p.fam + "_" + p.top + "_" + p.bot;
+  const pairTicked = {};                    // id -> bool, remembered across refills
+
+  function offeredPairs(){
+    const meas = $("measSel").value;
+    const famKeys = meas === "all" ? ["length", "mass", "capacity"] : [meas];
+    return pairsFor($("stageSel").value, famKeys);
+  }
+  function renderPairPicker(){
+    const wrap = $("pairWrap");
+    if(!wrap) return;
+    const all = offeredPairs();
+    const byFam = {};
+    all.forEach(p => { (byFam[p.fam] = byFam[p.fam] || []).push(p); });
+    const showFam = Object.keys(byFam).length > 1;
+    wrap.innerHTML = Object.keys(byFam).map(fk =>
+      '<div class="pairGroup">'
+      + (showFam ? '<p class="pairFam">' + FAMILIES[fk].label + '</p>' : '')
+      + '<div class="pairList">' + byFam[fk].map(p => {
+          const id = pairId(p);
+          if(pairTicked[id] === undefined) pairTicked[id] = true;
+          return '<label class="pairChk' + (pairTicked[id] ? '' : ' off') + '">'
+            + '<input type="checkbox" id="' + id + '"' + (pairTicked[id] ? ' checked' : '') + '> '
+            + p.top + ' &harr; ' + p.bot + '</label>';
+        }).join("") + '</div></div>').join("");
+    wrap.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+      cb.addEventListener("change", () => {
+        pairTicked[cb.id] = cb.checked;
+        cb.parentNode.classList.toggle("off", !cb.checked);
+        updatePairAllBtn();
+        generate(false);
+      });
+    });
+    updatePairAllBtn();
+  }
+  function updatePairAllBtn(){
+    const btn = $("pairAllBtn");
+    if(!btn) return;
+    const boxes = [...$("pairWrap").querySelectorAll('input[type="checkbox"]')];
+    btn.textContent = boxes.some(b => b.checked) ? "Untick all" : "Tick all";
+  }
+  /* The pairs this paper may draw on. A teacher who unticks everything gets
+     the full list back rather than an empty sheet. */
+  function chosenPairs(){
+    const all = offeredPairs();
+    const on = all.filter(p => {
+      const el = document.getElementById(pairId(p));
+      return el ? el.checked : true;
+    });
+    return on.length ? on : all;
+  }
+
   /* ===================== NUMBERS =====================
      Round to significant figures, not decimal places — the smaller-unit line
      reaches into the millions. Products go through mulK, because 8.2 × 1e6
@@ -570,55 +647,110 @@
 
   function makeLineQ(level, pair, nTicks){
     const k = pair.k, maxDp = Math.round(Math.log10(k));
-    /* Every legal span, costed for how many ticks its LABELS can fit.
-       The widest thing on the line is the whole span written in the small
-       unit, and each interior tick needs room for that or for a filled answer
-       box, whichever is wider. Before the lower line was drawn in the right
-       place none of this mattered — nothing down there was visible. */
-    const SPANPX = 908;
+    const SPANPX = 908, GAP = 15;      // whitespace kept between neighbouring labels
+
+    /* Every legal span, costed for what it can actually PRINT.
+       Two fixed pairs sit on the line before any blanks are placed: 0 at the
+       left, and the UNIT ANCHOR — 1 of the larger unit against k of the
+       smaller (1 m against 100 cm). The anchor is the rate the whole line is
+       built on, so it is always given on both lines, and it has to sit inside
+       the line rather than at an end, or there is nothing to scale DOWN to. */
     function cost(E, dec){
       const step = Math.pow(10, -dec), slots = Math.round(E / step), pxPerSlot = SPANPX / slots;
+      const X = v => 46 + (v / E) * SPANPX;
       const wide = fmt(mulK(E, k));
-      const item = Math.max(textW(wide, pair.bot), boxW(wide, pair.bot)) + 10;
-      const endW = Math.max(textW(fmt(E), pair.top), textW(wide, pair.bot));
-      // interior ticks must clear the two end labels as well as each other
-      const edge = Math.max(1, Math.ceil(Math.max(slots * 0.09, (endW / 2 + item / 2 + 10) / pxPerSlot)));
-      const usable = Math.max(1, slots - 2 * edge);
-      const fitN = Math.min(Math.floor(usable * pxPerSlot / (item + pxPerSlot)),
-                            Math.max(1, Math.floor(slots / 2) - 1));
-      return { E, dec, step, slots, pxPerSlot, item, edge, usable, fitN };
+      const item = Math.max(textW(wide, pair.bot), boxW(wide, pair.bot));
+      // half-widths of the three fixed positions
+      const hZero = Math.max(textW("0", pair.top), textW("0", pair.bot)) / 2;
+      const hAnch = Math.max(textW("1", pair.top), textW(fmt(k), pair.bot)) / 2;
+      // Whichever line carries the blank, the end item is clamped against the
+      // right edge, so it occupies a whole width there, not half of one.
+      const endW = Math.max(textW(fmt(E), pair.top), boxW(fmt(E), pair.top),
+                            textW(wide, pair.bot),  boxW(wide, pair.bot));
+      const ax = X(1);
+      // the two stretches of line the blanks can live in
+      const loA = 46 + hZero + GAP,  hiA = ax - hAnch - GAP;
+      const loB = ax + hAnch + GAP,  hiB = (46 + SPANPX + 44) - endW - GAP;
+      const wA = Math.max(0, hiA - loA), wB = Math.max(0, hiB - loB);
+      /* Room is limited by BOTH the pixels available and the tick grid: a span
+         of 2 in whole units has only three legal positions, two of which are
+         already the ends, so it can host no blanks however wide it looks. */
+      const gridIn = (lo, hi) => Math.max(0,
+        Math.floor((hi - 46) / pxPerSlot) - Math.ceil((lo - 46) / pxPerSlot) + 1);
+      const capA = Math.min(Math.floor(wA / (item + GAP)), gridIn(loA, hiA));
+      const capB = Math.min(Math.floor(wB / (item + GAP)), gridIn(loB, hiB));
+      const frac = (ax - 46) / SPANPX;
+      return { E, dec, step, slots, pxPerSlot, item, X, loA, hiA, loB, hiB, wA, wB, capA, capB, frac,
+               fit: capA + capB };
     }
-    const opts = SPAN_DEC[level].filter(o => o[1] <= maxDp);
-    const cand = (opts.length ? opts : [[10, 0]]).map(o => cost(o[0], o[1]));
-    // A one-blank number line is a thin question, so prefer a span that leaves
-    // room for a few — huge ratios like 1 km = 1 000 000 mm are the ones that
-    // otherwise get squeezed down to a single tick.
-    const best = Math.max(...cand.map(c => c.fitN));
-    const roomy = cand.filter(c => c.fitN >= Math.min(3, best));
-    const C = pick(roomy.length ? roomy : cand);
-    const E = C.E, step = C.step, slots = C.slots, pxPerSlot = C.pxPerSlot, item = C.item, edge = C.edge, usable = C.usable;
-    const n = Math.max(1, Math.min(nTicks, Math.max(1, C.fitN)));
-    const bw = usable / n, bwPx = bw * pxPerSlot;
-    /* A tick lands anywhere in the middle of its band, so the WORST gap is the
-       band less twice the jitter. Shrink the jitter until that gap still fits a
-       label; at 0 the ticks space out evenly, which is the right answer when
-       the numbers are long. */
-    const jit = Math.max(0, Math.min(0.20, (1 - (item + pxPerSlot) / bwPx) / 2));
-    const chosen = [];
-    for(let i = 0; i < n; i++){
-      const lo = edge + i * bw + bw * (0.5 - jit), hi = edge + i * bw + bw * (0.5 + jit);
-      let sl = Math.round(lo + Math.random() * Math.max(0, hi - lo));
-      sl = Math.max(edge, Math.min(slots - edge, sl));
-      if(chosen.length && sl <= chosen[chosen.length - 1]) sl = chosen[chosen.length - 1] + 1;
-      if(sl >= slots) break;
-      chosen.push(sl);
+
+    /* The anchor must be strictly inside the line, so the span has to exceed 1.
+       A span of 2 puts it at the halfway mark, which always leaves the most
+       room on the near side — it is kept as a guaranteed fallback. */
+    let opts = SPAN_DEC[level].filter(o => o[1] <= maxDp && o[0] > 1);
+    const safety = [[2, Math.max(1, Math.min(2, maxDp))]].filter(o => o[1] <= maxDp);
+    opts = opts.concat(safety);
+    if(!opts.length) opts = [[10, 0]];
+    const cand = opts.map(o => cost(o[0], o[1]));
+    /* Prefer a span that leaves blanks on BOTH sides of the anchor — that is
+       what makes a student scale up and down rather than one way. */
+    const both = cand.filter(c => c.capA >= 1 && c.capB >= 1);
+    const pool = both.length ? both : cand.filter(c => c.fit === Math.max(...cand.map(z => z.fit)));
+    const C = pick(pool.length ? pool : cand);
+
+    const { E, step, slots, pxPerSlot, item, X } = C;
+
+    /* Share the blanks between the two stretches by how much room each has,
+       keeping at least one on each side wherever that fits. */
+    const room = C.capA + C.capB;
+    // ask for at least two whenever there is room, so both sides can be used
+    let want = Math.min(nTicks, room);
+    if(C.capA >= 1 && C.capB >= 1) want = Math.max(2, want);
+    want = Math.max(1, Math.min(want, room));
+    let nA = room ? Math.round(want * C.wA / (C.wA + C.wB)) : 0;
+    nA = Math.max(0, Math.min(nA, C.capA));
+    let nB = Math.max(0, Math.min(want - nA, C.capB));
+    if(C.capA >= 1 && nA === 0 && nB >= 2){ nA = 1; nB--; }
+    if(C.capB >= 1 && nB === 0 && nA >= 2){ nB = 1; nA--; }
+    nA = Math.min(nA, C.capA); nB = Math.min(nB, C.capB);
+
+    /* Lay each stretch out evenly, then jitter inside whatever slack is left
+       over, so two sheets never look identical but nothing ever collides. */
+    const used = { 0:1 };
+    used[Math.round(1 / step)] = 1;
+    used[slots] = 1;
+    const slotsOut = [];
+    function layout(lo, hi, n){
+      if(n <= 0) return;
+      const pitch = (hi - lo) / n;
+      for(let i = 0; i < n; i++){
+        const centre = lo + (i + 0.5) * pitch;
+        const slack = Math.max(0, (pitch - item - GAP) / 2);
+        const px = centre + (Math.random() * 2 - 1) * slack;
+        let sl = Math.round((px - 46) / pxPerSlot);
+        // stay inside this stretch even after snapping to a legal tick
+        const minSl = Math.ceil((lo + item / 2 - 46) / pxPerSlot);
+        const maxSl = Math.floor((hi - item / 2 - 46) / pxPerSlot);
+        sl = Math.max(minSl, Math.min(maxSl, sl));
+        if(sl <= 0 || sl >= slots || used[sl]) continue;
+        used[sl] = 1;
+        slotsOut.push(sl);
+      }
     }
+    layout(C.loA, C.hiA, nA);
+    layout(C.loB, C.hiB, nB);
+    slotsOut.sort((a, b) => a - b);
+
     const startTop = Math.random() < 0.5;
-    const ticks = chosen.map((s, i) => ({
-      v: round12(s * step),
+    const ticks = slotsOut.map((sl, i) => ({
+      v: round12(sl * step),
       given: (i % 2 === 0) === startTop ? "top" : "bot"
     }));
-    return { kind:"line", level:level, pair:pair, E:E, ticks:ticks };
+    // The right-hand end is no longer a freebie: one line carries it, the
+    // other carries a blank, so the anchor is the only pair given outright.
+    return { kind:"line", level:level, pair:pair, E:E, ticks:ticks,
+             endGiven: Math.random() < 0.5 ? "top" : "bot",
+             lay:{ capA:C.capA, capB:C.capB, nA:nA, nB:nB, frac:C.frac, wA:C.wA, wB:C.wB, item:C.item, slots:slots } };
   }
 
   // A quarter of the board's width means a quarter of the room: the teaching
@@ -738,8 +870,9 @@
   /* Rough printed widths, in SVG user units. Used to keep end labels inside
      the picture and — more importantly — to stop makeLineQ asking for more
      ticks than the labels can fit side by side. */
-  function textW(numStr, unit){ return numStr.length * 11.5 + 8 + unit.length * 8.5; }
-  function boxW(ansStr, unit){ return Math.max(56, ansStr.length * 12 + 20) + 20 + unit.length * 8.5; }
+  function textW(numStr, unit){ return numStr.length * 11.5 + 8 + unit.length * 10 + 4; }
+  // A box is drawn 12 left of its tick and carries its unit on the right.
+  function boxW(ansStr, unit){ return Math.max(56, ansStr.length * 12 + 20) + 12 + unit.length * 10 + 16; }
 
   function svgLine(q, isKey){
     const k = q.pair.k, A = q.pair.top, B = q.pair.bot, E = q.E;
@@ -770,9 +903,18 @@
         + '<tspan font-size="15" font-family="' + UIF + '" font-weight="700"> ' + unit + '</tspan></text>');
     }
     function box(v, unit, top, answer){
-      const xx = x(v), y = top ? TOPY : BOTY;
+      const y = top ? TOPY : BOTY;
       const txt = answer == null ? "" : fmt(answer);
       const w = Math.max(56, txt.length * 12 + 20);
+      // A box now sits at the far end of the line, so it has to be nudged back
+      // inside the picture the same way an end label is — otherwise its unit
+      // is printed past the edge and cropped.
+      const uw = unit.length * 10 + 14;
+      let xx = x(v);
+      const spill = (xx + w / 2 - 8 + uw) - (W - 2);
+      if(spill > 0) xx -= spill;
+      const under = 2 - (xx - w / 2 - 12);
+      if(under > 0) xx += under;
       P('<rect x="' + (xx - w / 2 - 12).toFixed(2) + '" y="' + (y - 21) + '" width="' + w + '" height="27" rx="4" fill="none" stroke="#111827" stroke-width="2"/>');
       if(answer != null){
         P('<text x="' + (xx - 12).toFixed(2) + '" y="' + (y - 1) + '" text-anchor="middle" font-size="19" font-weight="700" fill="#16a34a" font-family="' + MATHF + '">' + esc(txt) + '</text>');
@@ -780,10 +922,17 @@
       P('<text x="' + (xx + w / 2 - 8).toFixed(2) + '" y="' + y + '" text-anchor="start" font-size="15" font-weight="700" fill="#111827" font-family="' + UIF + '">' + unit + '</text>');
     }
 
-    // the two ends are always fully labelled — they are the anchor
-    tick(0, true); tick(E, true);
+    tick(0, true); tick(E, true); tick(1, true);
     val(0, 0, A, true); val(0, 0, B, false);
-    val(E, E, A, true); val(E, mulK(E, k), B, false);
+
+    /* The UNIT ANCHOR, given on both lines. It is the rate the rest of the
+       line is read from, and it sits inside the line rather than at an end so
+       a student has to scale both up and down from it. */
+    val(1, 1, A, true); val(1, k, B, false);
+
+    // The far end is not a freebie any more — one line has it, the other a blank.
+    if(q.endGiven === "bot"){ val(E, mulK(E, k), B, false); box(E, A, true,  isKey ? E : null); }
+    else                    { val(E, E, A, true);           box(E, B, false, isKey ? mulK(E, k) : null); }
 
     q.ticks.forEach(t => {
       tick(t.v, false);
@@ -991,8 +1140,9 @@
     const level = $("levelSel").value;
     const density = $("densitySel").value;
     const famKeys = meas === "all" ? ["length", "mass", "capacity"] : [meas];
-    const pairs = pairsFor(stage, famKeys);
-    if(!pairs.length) return { error:"That measure has no unit pairs at this stage. Try Stage 4, or another measure." };
+    if(!pairsFor(stage, famKeys).length) return { error:"That measure has no unit pairs at this stage. Try Stage 4, or another measure." };
+    const pairs = chosenPairs();                     // only the ticked conversions
+    if(!pairs.length) return { error:"Tick at least one conversion." };
 
     const counts = sectionCounts();
     const kinds = KIND_IDS.filter(k => counts[k] > 0);
@@ -1037,7 +1187,10 @@
 
     const withReason = $("reasonToggle").checked;
     const withLadder = $("ladderToggle").checked;
-    const pool = REASONS.filter(r => famKeys.indexOf(r.fam) >= 0);
+    // Follow the TICKED conversions, not just the Measure select — a sheet of
+    // nothing but cm and mm should not end on a question about litres.
+    const usedFams = pairs.map(p2 => p2.fam);
+    const pool = REASONS.filter(r => usedFams.indexOf(r.fam) >= 0);
     const reasons = (pool.length ? pool : REASONS).slice().sort(() => Math.random() - 0.5);
 
     /* ---- pass 1: render a full-width probe and read the real heights ---- */
@@ -1158,6 +1311,7 @@
   function reset(){
     $("stageSel").value = "s4";
     $("measSel").value = "all";
+    Object.keys(pairTicked).forEach(id => delete pairTicked[id]);   // every conversion back on
     $("levelSel").value = "mixed";
     $("densitySel").value = "normal";
     KIND_IDS.forEach(k => { $(TOGGLE_ID[k]).checked = true; $(COUNT_ID[k]).value = DEFAULT_N[k]; });
@@ -1166,6 +1320,7 @@
     $("keyToggle").checked = true;
     LANG = "en"; $("langSel").value = "en";
     try{ localStorage.setItem("mmt-unitconv-ws-lang", "en"); }catch(_){ }
+    renderPairPicker();
     syncSections();
     $("out").innerHTML = "";
   }
@@ -1200,8 +1355,8 @@
   });
 
   // Stage 3 has no place for a km-to-mm jump, so switching stage re-generates
-  $("stageSel").addEventListener("change", () => generate(false));
-  $("measSel").addEventListener("change", () => generate(false));
+  $("stageSel").addEventListener("change", () => { renderPairPicker(); generate(false); });
+  $("measSel").addEventListener("change", () => { renderPairPicker(); generate(false); });
   $("langSel").addEventListener("change", function(){
     LANG = this.value;
     try{ localStorage.setItem("mmt-unitconv-ws-lang", LANG); }catch(_){ }
@@ -1210,13 +1365,21 @@
   $("genBtn").addEventListener("click", () => generate(true));
   $("printBtn").addEventListener("click", () => window.print());
   $("resetBtn").addEventListener("click", reset);
+  $("pairAllBtn").addEventListener("click", () => {
+    const boxes = [...$("pairWrap").querySelectorAll('input[type="checkbox"]')];
+    const turnOff = boxes.some(b => b.checked);
+    boxes.forEach(b => { b.checked = !turnOff; pairTicked[b.id] = b.checked; b.parentNode.classList.toggle("off", !b.checked); });
+    updatePairAllBtn();
+    generate(false);
+  });
 
   $("langSel").value = LANG;
+  renderPairPicker();
   syncSections();
   generate(false);
 
   // exposed for the headless harness only
-  window.__UCWS = { baseOf:baseOf, jumpPairs:jumpPairs, JUMP_MAX_K:JUMP_MAX_K, JUMP_MAX_LAM:JUMP_MAX_LAM, JUMP_CLEAR:JUMP_CLEAR, buildPages:buildPages, generate:generate, pairsFor:pairsFor, poolFor:poolFor,
+  window.__UCWS = { chosenPairs:chosenPairs, offeredPairs:offeredPairs, renderPairPicker:renderPairPicker, pairId:pairId, baseOf:baseOf, jumpPairs:jumpPairs, JUMP_MAX_K:JUMP_MAX_K, JUMP_MAX_LAM:JUMP_MAX_LAM, JUMP_CLEAR:JUMP_CLEAR, buildPages:buildPages, generate:generate, pairsFor:pairsFor, poolFor:poolFor,
                     makeLineQ:makeLineQ, makeJumpQ:makeJumpQ, makeFluentQ:makeFluentQ,
                     makeCompareQ:makeCompareQ, makeWordQ:makeWordQ, FAMILIES:FAMILIES,
                     fmt:fmt, dp:dp, mulK:mulK, round12:round12, WORD:WORD, REASONS:REASONS,
