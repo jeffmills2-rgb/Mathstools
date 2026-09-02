@@ -981,6 +981,20 @@
 
       let levelKey = null;
       let questions = [];
+
+      /* ---- Finish & submit (shared) ------------------------------------
+         Lets a student who has run out of time submit the work they have
+         finished. See /portal/shared/earlySubmit.js. This quiz scores two
+         marks per question — area and perimeter — so progress is counted in
+         marks: each answer counts once it is locked in and can't be changed. */
+      let MMTSubmit = null;
+      import("/portal/shared/earlySubmit.js").then(m=>{
+        MMTSubmit = m.MMTSubmit;
+        MMTSubmit.register({
+          progress:()=>{ const s = getScores(); return { attempted:s.done, correct:s.total, quizLength:QUIZ_LEN*2 }; },
+          finish:()=>showCertificate()
+        });
+      }).catch(e=>console.warn("Early submit unavailable:", e&&e.message));
       let currentIndex = 0;
       let dragging = null;
 
@@ -1538,6 +1552,7 @@
 
         q.areaInput = areaInput.value.trim();
         q.perimeterInput = perimeterInput.value.trim();
+        if (MMTSubmit) setTimeout(() => MMTSubmit.refresh(), 0);
 
         if (!q.areaLocked){
           const areaVal = parseStudentNumber(q.areaInput);
@@ -1581,15 +1596,20 @@
       function getScores(){
         let areaScore = 0;
         let perimeterScore = 0;
+        let areaDone = 0;
+        let perimeterDone = 0;
 
         questions.forEach(q => {
-          if (q.areaCorrect) areaScore++;
-          if (q.perimeterCorrect) perimeterScore++;
+          if (q.areaLocked){ areaDone++; if (q.areaCorrect) areaScore++; }
+          if (q.perimeterLocked){ perimeterDone++; if (q.perimeterCorrect) perimeterScore++; }
         });
 
         return {
           areaScore,
           perimeterScore,
+          areaDone,
+          perimeterDone,
+          done: areaDone + perimeterDone,
           total: areaScore + perimeterScore
         };
       }
@@ -1599,20 +1619,25 @@
         const levelName = LEVELS[levelKey].name;
 
         certLine1.textContent = `You completed "Rectangles - Area/Perimeter" Level ${levelName}.`;
+        const partial = Boolean(MMTSubmit && MMTSubmit.isPartial());
+        const shownTotal = MMTSubmit ? MMTSubmit.total() : QUIZ_LEN * 2;
+        const areaOutOf = partial ? scores.areaDone : QUIZ_LEN;
+        const perimOutOf = partial ? scores.perimeterDone : QUIZ_LEN;
         certBreakdown.innerHTML = `
-          Area: ${scores.areaScore} / ${QUIZ_LEN}<br>
-          Perimeter: ${scores.perimeterScore} / ${QUIZ_LEN}<br>
-          Total: ${scores.total} / ${QUIZ_LEN * 2}
+          Area: ${scores.areaScore} / ${areaOutOf}<br>
+          Perimeter: ${scores.perimeterScore} / ${perimOutOf}<br>
+          Total: ${scores.total} / ${shownTotal}
         `;
 
         showModal(certModal);
         if(window.MMTSave) window.MMTSave({
           tool:"perimeter-area-rectangle-student-quiz", topic:"measurement-space",
-          level:levelName, levelKey, score:scores.total, total:QUIZ_LEN*2,
-          percent:Math.round((scores.total/(QUIZ_LEN*2))*100),
+          level:levelName, levelKey, score:scores.total, total:shownTotal,
+          percent:shownTotal?Math.round((scores.total/shownTotal)*100):0,
           masteryTopic:"perimeter-area-rectangle",
           types:["area:"+scores.areaScore,"perimeter:"+scores.perimeterScore,"level:"+levelKey],
-          certificateText:`Rectangles Area/Perimeter — ${levelName}: ${scores.total}/${QUIZ_LEN*2}`
+          certificateText:`Rectangles Area/Perimeter — ${levelName}: ${scores.total}/${shownTotal}`,
+          ...(MMTSubmit ? MMTSubmit.fields() : {})
         });
       }
 
@@ -1642,6 +1667,7 @@ ${window.MMTAuth ? window.MMTAuth.shareLine() : "Submit a screenshot or paste th
         levelKey = key;
         questions = generateQuiz(key);
         currentIndex = 0;
+        if (MMTSubmit) MMTSubmit.reset();
         hideModal(levelModal);
         renderCurrentQuestion();
       }

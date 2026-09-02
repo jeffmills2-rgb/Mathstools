@@ -647,7 +647,7 @@
   function beginSelectedQuiz(){const ids=selectedTypeIds();if(!ids.length){typesWarn.classList.add('show');return}let n=Number(countInp.value);if(!Number.isFinite(n))n=QUIZ_LENGTH;n=clamp(Math.round(n),5,60);state.quizLength=n;state.activeTypeIds=ids;start(state.pendingLevel||'basic',ids,n)}
   function openMenu(){hideOverlay(resultOverlay);hideOverlay(typeOverlay);if(state.assignment){resetQuizShell();start(state.assignment.level,state.assignment.types,state.assignment.count);return}showOverlay(levelOverlay);resetQuizShell()}
   function resetQuizShell(){state.level=null;state.questions=[];state.index=0;state.score=0;state.answered=false;state.skips=0;state.results=[];state.records=[];state.savedResult=false;barFill.style.width='0%';qBox.textContent='—';tableHost.style.display='none';tableHost.innerHTML='';answerRow.style.display='flex';ansInput.value='';ansInput.disabled=true;badge.className='badge';badge.textContent='';retryBtn.style.display='none';submitBtn.style.display='inline-block';submitBtn.textContent=tr('submit');nextBtn.style.display='none';prevBtn.style.display='none';skipBtn.style.display='inline-block';updateHeader()}
-  function start(level,typeIds=state.activeTypeIds,n=state.quizLength){reseed();state.level=level;state.questions=genQuestions(level,n,typeIds);state.index=0;state.score=0;state.answered=false;state.skips=0;state.results=[];state.records=[];state.savedResult=false;hideOverlay(levelOverlay);hideOverlay(typeOverlay);ansInput.disabled=false;showQuestion()}
+  function start(level,typeIds=state.activeTypeIds,n=state.quizLength){if(MMTSubmit)MMTSubmit.reset();reseed();state.level=level;state.questions=genQuestions(level,n,typeIds);state.index=0;state.score=0;state.answered=false;state.skips=0;state.results=[];state.records=[];state.savedResult=false;hideOverlay(levelOverlay);hideOverlay(typeOverlay);ansInput.disabled=false;showQuestion()}
   
   function buildTableInputs(q){
     tableHost.innerHTML=`<table class="valueTable"><tr><th><span class="var">n</span></th>${q.tableNs.map(n=>`<th>${n}</th>`).join('')}</tr><tr><th>${tr('value')}</th>${q.tableNs.map((_,i)=>`<td><input class="tableInput" data-i="${i}" type="text" inputmode="numeric" autocomplete="off"></td>`).join('')}</tr></table>`;
@@ -664,11 +664,37 @@
   }
 function celebrate(){const colors=['#2563eb','#16a34a','#eab308','#dc2626','#7c3aed','#06b6d4'];const cx=window.innerWidth/2,cy=Math.min(window.innerHeight*.42,360);for(let i=0;i<42;i++){const piece=document.createElement('div');piece.className='confettiPiece';piece.style.left=cx+'px';piece.style.top=cy+'px';piece.style.background=colors[i%colors.length];piece.style.setProperty('--dx',(Math.random()*520-260)+'px');piece.style.setProperty('--dy',(Math.random()*240+120)+'px');piece.style.setProperty('--rot',(Math.random()*720-360)+'deg');document.body.appendChild(piece);setTimeout(()=>piece.remove(),950)}}
 function showQuestion(){const q=state.questions[state.index];state.answered=false;ansInput.disabled=false;ansInput.value='';ansInput.classList.remove('correct','wrong','partial');badge.className='badge';badge.textContent='';retryBtn.style.display='none';submitBtn.style.display='inline-block';submitBtn.textContent=tr('submit');nextBtn.style.display='none';prevBtn.style.display=state.index>0?'inline-block':'none';skipBtn.style.display='inline-block';qLabel.innerHTML=q.instructionHTML||tr('questionLabel');qBox.innerHTML=q.expressionHTML||q.promptHTML;qBox.classList.toggle('small',stripHTML(q.expressionHTML||q.promptHTML).length>80);qBox.classList.remove('rtlPrompt');tableHost.style.display='none';tableHost.innerHTML='';answerRow.style.display='flex';if(q.mode==='table'){answerRow.style.display='none';buildTableInputs(q)}barFill.style.width=`${(state.index/state.questions.length)*100}%`;updateHeader();if(q.mode!=='table')setTimeout(()=>ansInput.focus(),30)}
-    function mark(ok,skipped=false,partial=false){if(state.answered)return;const q=state.questions[state.index];state.answered=true;if(ok||skipped){ansInput.disabled=true;setTableDisabled(true)}else{ansInput.disabled=false;setTableDisabled(false)}ansInput.classList.remove('correct','wrong','partial');ansInput.classList.add(ok?'correct':partial?'partial':'wrong');tableHost.querySelectorAll('.tableInput').forEach(inp=>{inp.classList.remove('correct','wrong','partial');inp.classList.add(ok?'correct':partial?'partial':'wrong')});if(ok)celebrate();state.records[state.index]={type:q.type,label:q.label,ok,skipped,partial,answer:q.answerText};state.results=state.records.filter(Boolean);state.score=state.results.filter(r=>r.ok).length;state.skips=state.results.filter(r=>r.skipped).length;badge.className='badge show '+(ok?'ok':partial?'partial':'bad');badge.innerHTML=ok?tr('correct'):(partial?tr('partialHCF'):(skipped?tr('skipped'):tr('incorrect')));skipBtn.style.display='none';submitBtn.style.display='inline-block';submitBtn.textContent=tr('next');nextBtn.style.display='none';prevBtn.style.display=state.index>0?'inline-block':'none';retryBtn.style.display=ok||skipped?'none':'inline-block';barFill.style.width=`${((state.index+1)/state.questions.length)*100}%`;if(ok||skipped)submitBtn.focus();else ansInput.focus()}
+    function mark(ok,skipped=false,partial=false){if(state.answered)return;const q=state.questions[state.index];state.answered=true;if(ok||skipped){ansInput.disabled=true;setTableDisabled(true)}else{ansInput.disabled=false;setTableDisabled(false)}ansInput.classList.remove('correct','wrong','partial');ansInput.classList.add(ok?'correct':partial?'partial':'wrong');tableHost.querySelectorAll('.tableInput').forEach(inp=>{inp.classList.remove('correct','wrong','partial');inp.classList.add(ok?'correct':partial?'partial':'wrong')});if(ok)celebrate();state.records[state.index]={type:q.type,label:q.label,ok,skipped,partial,answer:q.answerText};state.results=state.records.filter(Boolean);state.score=state.results.filter(r=>r.ok).length;state.skips=state.results.filter(r=>r.skipped).length;if(MMTSubmit)MMTSubmit.refresh();badge.className='badge show '+(ok?'ok':partial?'partial':'bad');badge.innerHTML=ok?tr('correct'):(partial?tr('partialHCF'):(skipped?tr('skipped'):tr('incorrect')));skipBtn.style.display='none';submitBtn.style.display='inline-block';submitBtn.textContent=tr('next');nextBtn.style.display='none';prevBtn.style.display=state.index>0?'inline-block':'none';retryBtn.style.display=ok||skipped?'none':'inline-block';barFill.style.width=`${((state.index+1)/state.questions.length)*100}%`;if(ok||skipped)submitBtn.focus();else ansInput.focus()}
     function submit(){if(state.answered){next();return}const q=state.questions[state.index];if(q.mode==='table'){mark(tableAnswerOK(q),false);return}const status=answerStatus(ansInput.value,q);mark(status==='ok',false,status==='partial')}
   function retry(){delete state.records[state.index];state.results=state.records.filter(Boolean);state.score=state.results.filter(r=>r.ok).length;state.skips=state.results.filter(r=>r.skipped).length;state.answered=false;ansInput.disabled=false;ansInput.classList.remove('correct','wrong','partial');tableHost.querySelectorAll('.tableInput').forEach(inp=>inp.classList.remove('correct','wrong','partial'));badge.className='badge';badge.textContent='';retryBtn.style.display='none';submitBtn.style.display='inline-block';submitBtn.textContent=tr('submit');nextBtn.style.display='none';prevBtn.style.display=state.index>0?'inline-block':'none';skipBtn.style.display='inline-block';if(state.questions[state.index]?.mode==='table'){setTableDisabled(false);tableHost.querySelector('.tableInput')?.focus()}else{ansInput.select();ansInput.focus()}}
   function next(){if(!state.answered)return;state.index++;if(state.index>=state.questions.length){finish()}else showQuestion()}
   function prev(){if(state.index<=0)return;state.index--;showQuestion()}
+
+  /* ---- Finish & submit (shared) ----------------------------------------
+     Lets a student who has run out of time submit the questions they have
+     finished. See /portal/shared/earlySubmit.js. On an early submit the quiz
+     is trimmed to the questions actually attempted, so every figure the finish
+     screen works out — score line, breakdown, XP — is out of that number. */
+  let MMTSubmit=null;
+  import("/portal/shared/earlySubmit.js").then(m=>{
+    MMTSubmit=m.MMTSubmit;
+    MMTSubmit.register({
+      progress:()=>({
+        attempted: state.records.filter(Boolean).length,
+        correct: state.records.filter(r=>r&&r.ok).length,
+        quizLength: state.questions.length
+      }),
+      finish:()=>{
+        if(MMTSubmit.isPartial()){
+          const done = state.records.filter(Boolean).length;
+          state.questions = state.questions.slice(0,done);
+          state.records = state.records.slice(0,done);
+        }
+        finish();
+      }
+    });
+  }).catch(e=>console.warn("Early submit unavailable:", e&&e.message));
+
   function finish(){
     barFill.style.width='100%';state.results=state.records.filter(Boolean);state.score=state.results.filter(r=>r.ok).length;state.skips=state.results.filter(r=>r.skipped).length;
     const name=levelName();
@@ -723,11 +749,12 @@ function showQuestion(){const q=state.questions[state.index];state.answered=fals
         score:state.score,
         total:state.questions.length,
         types:typeSummary,
-        xpEarned:xp.xpEarned,
+        xpEarned:MMTSubmit?MMTSubmit.scaleXP(xp.xpEarned):xp.xpEarned,
         baseXP:xp.baseXP,
         xpMultiplier:xp.xpMultiplier,
         xpRuleVersion:xp.xpRuleVersion,
         masteryTopic:'Algebraic Techniques',
+        ...(MMTSubmit ? MMTSubmit.fields() : {}),
         platformVersion:'mmt-platform-template-v1',
         assignmentMode:!!state.assignment,
         assignedTypes:state.assignment?.types||[],

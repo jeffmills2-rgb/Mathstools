@@ -813,6 +813,25 @@
 
   /* ===================== state ===================== */
   let levelKey=null, bank=[], qIndex=0, score=0;
+
+  /* ---- Finish & submit (shared) ----------------------------------------
+     Lets a student who has run out of time submit the questions they have
+     finished. See /portal/shared/earlySubmit.js. Loaded dynamically so the
+     quiz still runs if the module can't be reached. */
+  let attemptedCount=0;            // questions finished with, not the current one
+  let MMTSubmit=null;
+  import("/portal/shared/earlySubmit.js").then(m=>{
+    MMTSubmit=m.MMTSubmit;
+    MMTSubmit.register({
+      progress:()=>({ attempted:attemptedCount, correct:score, quizLength:QUIZ_LEN }),
+      finish:()=>showCertificate()
+    });
+  }).catch(e=>console.warn("Early submit unavailable:", e&&e.message));
+
+  // The denominator to report: what was attempted after an early submit,
+  // the full quiz length otherwise.
+  function effectiveTotal(){ return MMTSubmit ? MMTSubmit.total() : QUIZ_LEN; }
+
   let phase=PH.ESTIMATE, estimate=null, estimateMoved=false, answered=false, usedReveal=false;
   let pendingAnim=null, animBusy=false;   // the falling-pieces transition
   const typeTags=new Set();
@@ -998,7 +1017,9 @@
 
   function finishQuestion(correct){
     answered=true;
+    attemptedCount++;
     if(correct) score++;
+    if(MMTSubmit) MMTSubmit.refresh();
     const cur=q();
     typeTags.add("op:"+cur.op);
     typeTags.add("den:"+cur.den);
@@ -1041,24 +1062,27 @@
   function showCertificate(){
     const cfg=LEVELS[levelKey];
     progressFill.style.width="100%";
-    qCounter.innerHTML=one(UI.qCounter,{n:QUIZ_LEN,t:QUIZ_LEN});
-    certText.innerHTML = L(UI.certText,{lvl:cfg.name,s:score,t:QUIZ_LEN});
+    const shownTotal = effectiveTotal();
+    qCounter.innerHTML=one(UI.qCounter,{n:shownTotal,t:shownTotal});
+    certText.innerHTML = L(UI.certText,{lvl:cfg.name,s:score,t:shownTotal});
     certModalBack.classList.add("show");
     const tags=["level:"+levelKey].concat(Array.from(typeTags));
     if(LANG!=="en") tags.push("lang:"+LANG);
     if(window.MMTSave) window.MMTSave({
       tool:"adding-subtracting-fractions-student-quiz", topic:"fdp",
-      level:cfg.name, levelKey, score, total:QUIZ_LEN,
-      percent:Math.round((score/QUIZ_LEN)*100), masteryTopic:"adding-subtracting-fractions",
+      level:cfg.name, levelKey, score, total:shownTotal,
+      percent:shownTotal?Math.round((score/shownTotal)*100):0, masteryTopic:"adding-subtracting-fractions",
       types:tags,
-      certificateText:"Adding and Subtracting Fractions — "+cfg.name+": "+score+"/"+QUIZ_LEN
+      certificateText:"Adding and Subtracting Fractions — "+cfg.name+": "+score+"/"+shownTotal,
+      ...(MMTSubmit ? MMTSubmit.fields() : {})
     });
   }
 
   function startLevel(key){
     levelKey=key;
     bank=buildBank(key);
-    qIndex=0; score=0; typeTags.clear();
+    qIndex=0; score=0; attemptedCount=0; typeTags.clear();
+    if(MMTSubmit) MMTSubmit.reset();
     levelBanner.innerHTML=one(UI.levelWord,{n:LEVELS[key].name});
     levelModalBack.classList.remove("show");
     certModalBack.classList.remove("show");
@@ -1124,8 +1148,8 @@
   $("sameLevelBtn").addEventListener("click", () => certModalBack.classList.remove("show"));
   $("copyBtn").addEventListener("click", async () => {
     const cfg=LEVELS[levelKey]||{name:"—"};
-    const certEn=fillPlain(UI.certText.en,{lvl:cfg.name,s:score,t:QUIZ_LEN});
-    const text="🏆 Mills Maths Tools – Adding and Subtracting Fractions\nLevel: "+cfg.name+"\nScore: "+score+" / "+QUIZ_LEN+"\n\n"+certEn;
+    const certEn=fillPlain(UI.certText.en,{lvl:cfg.name,s:score,t:effectiveTotal()});
+    const text="🏆 Mills Maths Tools – Adding and Subtracting Fractions\nLevel: "+cfg.name+"\nScore: "+score+" / "+effectiveTotal()+"\n\n"+certEn;
     try{ await navigator.clipboard.writeText(text); $("copyBtn").innerHTML=L(UI.copied);
       setTimeout(()=>$("copyBtn").innerHTML=L(UI.copy),1200); }
     catch(e){ window.prompt("Copy this text:", text); }

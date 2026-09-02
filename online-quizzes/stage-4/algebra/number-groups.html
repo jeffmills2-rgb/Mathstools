@@ -827,6 +827,23 @@
     let phase = 'awaiting';
     let questions = [];
 
+    /* ---- Finish & submit (shared) --------------------------------------
+       Lets a student who has run out of time submit the questions they have
+       finished. See /portal/shared/earlySubmit.js. This quiz only moves on
+       once a question is right, so a finished question is a correct one and
+       coverage is what tells the teacher how far the student got. */
+    let attemptedCount = 0;
+    let MMTSubmit = null;
+    import("/portal/shared/earlySubmit.js").then(m=>{
+      MMTSubmit = m.MMTSubmit;
+      MMTSubmit.register({
+        progress:()=>({ attempted:attemptedCount, correct:score, quizLength:QUIZ_LEN }),
+        finish:()=>showCertificate()
+      });
+    }).catch(e=>console.warn("Early submit unavailable:", e&&e.message));
+
+    function effectiveTotal(){ return MMTSubmit ? MMTSubmit.total() : QUIZ_LEN; }
+
     let revealGroupsEnabled = false;
     let showMultEnabled = true;
 
@@ -1367,7 +1384,9 @@ function algebraTermHtml(coef, factorValue, colourGroups){
       levelKey = key;
       qIndex = 0;
       score = 0;
+      attemptedCount = 0;
       questions = [];
+      if(MMTSubmit) MMTSubmit.reset();
       revealGroupsEnabled = !!LEVELS[key].revealGroupsDefault;
       showMultEnabled = true;
       ensureQuestionExists(0);
@@ -1389,15 +1408,17 @@ function algebraTermHtml(coef, factorValue, colourGroups){
 
     function showCertificate(){
       const cfg = LEVELS[levelKey];
-      certLine1.textContent = `You completed ${cfg.name} and got ${score} out of ${QUIZ_LEN}.` + (window.MMTAuth ? window.MMTAuth.certTail() : " Paste a screenshot into Google Classroom.");
+      const total = effectiveTotal();
+      certLine1.textContent = `You completed ${cfg.name} and got ${score} out of ${total}.` + (window.MMTAuth ? window.MMTAuth.certTail() : " Paste a screenshot into Google Classroom.");
       progressFill.style.width = '100%';
       showModal(certModal);
       if(window.MMTSave) window.MMTSave({
         tool:"number-groups-student-quiz", topic:"algebra",
-        level:cfg.name, levelKey, score, total:QUIZ_LEN,
-        percent:Math.round((score/QUIZ_LEN)*100), masteryTopic:"number-groups",
+        level:cfg.name, levelKey, score, total,
+        percent:total?Math.round((score/total)*100):0, masteryTopic:"number-groups",
         types:["level:"+levelKey],
-        certificateText:`Number Groups — ${cfg.name}: ${score}/${QUIZ_LEN}`
+        certificateText:`Number Groups — ${cfg.name}: ${score}/${total}`,
+        ...(MMTSubmit ? MMTSubmit.fields() : {})
       });
     }
 
@@ -1428,6 +1449,8 @@ function algebraTermHtml(coef, factorValue, colourGroups){
       if(!question.countedCorrect){
         question.countedCorrect = true;
         score++;
+        attemptedCount++;
+        if(MMTSubmit) MMTSubmit.refresh();
       }
     }
 

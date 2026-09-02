@@ -975,6 +975,19 @@
 
       let levelKey = null;
       let questions = [];
+
+      /* ---- Finish & submit (shared) ------------------------------------
+         Lets a student who has run out of time submit the questions they have
+         finished. See /portal/shared/earlySubmit.js. A question is finished
+         once its area answer is locked in. */
+      let MMTSubmit = null;
+      import("/portal/shared/earlySubmit.js").then(m=>{
+        MMTSubmit = m.MMTSubmit;
+        MMTSubmit.register({
+          progress:()=>{ const s = getScores(); return { attempted:s.done, correct:s.total, quizLength:QUIZ_LEN }; },
+          finish:()=>showCertificate()
+        });
+      }).catch(e=>console.warn("Early submit unavailable:", e&&e.message));
       let currentIndex = 0;
       let dragging = null;
 
@@ -1510,6 +1523,7 @@
         if (!q.areaLocked){
           const areaVal = parseStudentNumber(q.areaInput);
           q.areaCorrect = Number.isFinite(areaVal) && areaVal === q.answerArea;
+          if (MMTSubmit) setTimeout(() => MMTSubmit.refresh(), 0);
           if (q.areaCorrect){
             q.areaLocked = true;
           }
@@ -1539,14 +1553,17 @@
       }
 
       function getScores(){
-        let areaScore = 0;
+        let areaScore = 0, done = 0;
 
         questions.forEach(q => {
+          if (!q.areaLocked) return;
+          done++;
           if (q.areaCorrect) areaScore++;
         });
 
         return {
           areaScore,
+          done,
           total: areaScore
         };
       }
@@ -1556,19 +1573,21 @@
         const levelName = LEVELS[levelKey].name;
 
         certLine1.textContent = `You completed "Area Model" Level ${levelName}.`;
+        const shownTotal = MMTSubmit ? MMTSubmit.total() : QUIZ_LEN;
         certBreakdown.innerHTML = `
-          Area: ${scores.areaScore} / ${QUIZ_LEN}<br>
-          Total: ${scores.total} / ${QUIZ_LEN}
+          Area: ${scores.areaScore} / ${shownTotal}<br>
+          Total: ${scores.total} / ${shownTotal}
         `;
 
         showModal(certModal);
         if(window.MMTSave) window.MMTSave({
           tool:"area-model-student-quiz", topic:"measurement-space",
-          level:levelName, levelKey, score:scores.total, total:QUIZ_LEN,
-          percent:Math.round((scores.total/QUIZ_LEN)*100),
+          level:levelName, levelKey, score:scores.total, total:shownTotal,
+          percent:shownTotal?Math.round((scores.total/shownTotal)*100):0,
           masteryTopic:"area-model",
           types:["area:"+scores.areaScore,"level:"+levelKey],
-          certificateText:`Area Model — ${levelName}: ${scores.total}/${QUIZ_LEN}`
+          certificateText:`Area Model — ${levelName}: ${scores.total}/${shownTotal}`,
+          ...(MMTSubmit ? MMTSubmit.fields() : {})
         });
       }
 
@@ -1597,6 +1616,7 @@ ${window.MMTAuth ? window.MMTAuth.shareLine() : "Submit a screenshot or paste th
         levelKey = key;
         questions = generateQuiz(key);
         currentIndex = 0;
+        if (MMTSubmit) MMTSubmit.reset();
         hideModal(levelModal);
         renderCurrentQuestion();
       }

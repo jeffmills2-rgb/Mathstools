@@ -55,6 +55,7 @@ tr:hover td{background:#f8fafc}
 .badge.kind{background:var(--chip);color:var(--mmt-blue-dark)}
 .badge.support{background:#fef2f2;color:var(--bad)}
 .badge.ok{background:#f0fdf4;color:var(--ok)}
+.badge.partial{background:#fef3c7;color:#92400e;white-space:nowrap}
 .pct{font-weight:700}
 .pct.lo{color:var(--bad)} .pct.mid{color:#b45309} .pct.hi{color:var(--ok)}
 .empty{padding:26px;text-align:center;color:var(--muted)}

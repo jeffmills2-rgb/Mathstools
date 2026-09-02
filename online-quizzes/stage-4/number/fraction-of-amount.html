@@ -520,6 +520,24 @@
   let score = 0;
   let phase = 'awaiting';
 
+  /* ---- Finish & submit (shared) ----------------------------------------
+     Lets a student who has run out of time submit the questions they have
+     finished. See /portal/shared/earlySubmit.js. Loaded dynamically so the
+     quiz still runs if the module can't be reached. */
+  let attemptedCount=0;            // questions finished with, not the current one
+  let MMTSubmit=null;
+  import("/portal/shared/earlySubmit.js").then(m=>{
+    MMTSubmit=m.MMTSubmit;
+    MMTSubmit.register({
+      progress:()=>({ attempted:attemptedCount, correct:score, quizLength:QUIZ_LEN }),
+      finish:()=>showCertificate()
+    });
+  }).catch(e=>console.warn("Early submit unavailable:", e&&e.message));
+
+  // The denominator to report: what was attempted after an early submit,
+  // the full quiz length otherwise.
+  function effectiveTotal(){ return MMTSubmit ? MMTSubmit.total() : QUIZ_LEN; }
+
   let currentSelection = null;
   let currentPartition = null;
   let isAnimating = false;
@@ -887,7 +905,7 @@
   }
   function markCorrect(q){
     q.status = 'correct'; q.solved = true;
-    if(!q.countedCorrect){ q.countedCorrect = true; score++; }
+    if(!q.countedCorrect){ q.countedCorrect = true; score++; attemptedCount++; if(MMTSubmit) MMTSubmit.refresh(); }
   }
   function submitAnswer(){
     if(phase !== 'awaiting') return;
@@ -916,20 +934,23 @@
   }
   function showCertificate(){
     const cfg = LEVELS[levelKey];
-    certText.textContent = `You completed level ${cfg.name} on Calculating fractions of amounts and received a score of ${score} out of ${QUIZ_LEN}.`;
+    const total = effectiveTotal();
+    certText.textContent = `You completed level ${cfg.name} on Calculating fractions of amounts and received a score of ${score} out of ${total}.`;
     progressFill.style.width = '100%';
     showModal(certModalBack);
     if(window.MMTSave) window.MMTSave({
       tool:"fraction-of-amount-student-quiz", topic:"fdp",
-      level:cfg.name, levelKey, score, total:QUIZ_LEN,
-      percent:Math.round((score/QUIZ_LEN)*100), masteryTopic:"fraction-of-amount",
+      level:cfg.name, levelKey, score, total,
+      percent:total?Math.round((score/total)*100):0, masteryTopic:"fraction-of-amount",
       types:["level:"+levelKey],
-      certificateText:`Fraction of an Amount — ${cfg.name}: ${score}/${QUIZ_LEN}`
+      certificateText:`Fraction of an Amount — ${cfg.name}: ${score}/${total}`,
+      ...(MMTSubmit ? MMTSubmit.fields() : {})
     });
   }
   async function copyCertificate(){
     const cfg = LEVELS[levelKey];
-    const text = `🏆 Mills Maths Tools – Calculating fractions of amounts\nLevel: ${cfg.name}\nScore: ${score} / ${QUIZ_LEN}\nCompleted: ${nowStamp()}\n\nYou completed level ${cfg.name} on Calculating fractions of amounts and received a score of ${score} out of ${QUIZ_LEN}.`;
+    const total = effectiveTotal();
+    const text = `🏆 Mills Maths Tools – Calculating fractions of amounts\nLevel: ${cfg.name}\nScore: ${score} / ${total}\nCompleted: ${nowStamp()}\n\nYou completed level ${cfg.name} on Calculating fractions of amounts and received a score of ${score} out of ${total}.`;
     try{
       await navigator.clipboard.writeText(text);
       copyBtn.textContent = 'Copied!';
@@ -968,7 +989,8 @@
     ensureQuestionExists(0); setProgress(); renderCurrentQuestion();
   }
   function startQuiz(key){
-    levelKey = key; questions = []; qIndex = 0; score = 0; phase = 'awaiting';
+    levelKey = key; questions = []; qIndex = 0; score = 0; attemptedCount = 0; phase = 'awaiting';
+    if(MMTSubmit) MMTSubmit.reset();
     currentSelection = null; currentPartition = null; isAnimating = false; showGroups = false;
     clearMainPreview(); clearMorph(); screenFade.classList.remove('active'); chartShell.classList.remove('spotlight');
     toolBackBtn.classList.remove('show');

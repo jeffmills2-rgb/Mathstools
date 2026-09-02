@@ -1023,7 +1023,7 @@
     if(q.stepScores.filter(x=>x!=null).length === q.levels.length){
       const avg = q.stepScores.reduce((s,x)=>s+x,0)/q.stepScores.length;
       q.score = Math.round(avg);
-      q.attempted = true;
+      q.attempted = true; if(MMTSubmit) MMTSubmit.refresh();
       q.correct = q.score >= 8;
     }
     render();
@@ -1056,7 +1056,7 @@
     const expectedDisplay = fmtForModel(q.model, q.targetLevel.result, q.targetLevel.dpEnd);
     const formatted = validFormatForTarget(raw, q.targetExp);
     const correct = formatted && normalizeAnswer(raw) === expected;
-    q.response = raw.trim(); q.correct = correct; q.attempted = true; q.score = correct ? 1 : 0;
+    q.response = raw.trim(); q.correct = correct; q.attempted = true; if(MMTSubmit) MMTSubmit.refresh(); q.score = correct ? 1 : 0;
     setInputState(correct ? "ok" : "bad");
     if(correct){ setMessage("ok", "✅ Correct!"); dropConfetti(55); }
     else if(!formatted){ setMessage("bad", `❌ Not quite. The correct answer is <b>${expectedDisplay}</b>. Enter a whole number (digits only).`); }
@@ -1161,6 +1161,7 @@
 
   function startLevel(level){
     if(!state.studentCode){ showLevelScreen(false); return; }
+    if(MMTSubmit) MMTSubmit.reset();
     state.level = level; state.questions = generateQuestions(level); state.qIndex = 0; state.lineLevel = 0; state.guessFrac = null; state.sweetRevealed = false; state.animating = false;
     startOverlay.classList.remove("show"); finishOverlay.classList.remove("show"); resultsOverlay.classList.remove("show");
     ansInput.value = ""; setInputState("");
@@ -1194,11 +1195,35 @@
       summaryBody.appendChild(tr);
     });
   }
+  /* ---- Finish & submit (shared) ----------------------------------------
+     Lets a student who has run out of time submit the questions they have
+     finished. See /portal/shared/earlySubmit.js. The Sweet level scores ten
+     points per question, so progress is counted in points, not questions. */
+  let MMTSubmit = null;
+  import("/portal/shared/earlySubmit.js").then(m=>{
+    MMTSubmit = m.MMTSubmit;
+    MMTSubmit.register({
+      progress:()=>({ attempted: attemptedMax(), correct: scoreSoFar(), quizLength: maxScore() }),
+      finish:()=>finishQuiz()
+    });
+  }).catch(e=>console.warn("Early submit unavailable:", e&&e.message));
+
+  // Points on offer in the questions the student has already answered.
+  function attemptedMax(){
+    const per = state.level === "sweet" ? 10 : 1;
+    return state.questions.reduce((n,q)=>n+(q.attempted ? per : 0), 0);
+  }
+  // The denominator to report: points attempted after an early submit,
+  // the full quiz otherwise.
+  function reportedMax(){ return MMTSubmit ? MMTSubmit.total() : maxScore(); }
+
   // Compact achievement record (NO typed answers stored), claim-rule compatible.
   function achievementPayload(){
-    const score = scoreSoFar(), max = maxScore();
+    const score = scoreSoFar(), max = reportedMax();
     const pct = max ? Math.round((score/max)*100) : 0;
     let xp = 5; if(pct >= 80) xp += 5; if(pct === 100) xp += 10;
+    // A part-finished attempt earns XP for what was done, not the whole quiz.
+    if(MMTSubmit) xp = MMTSubmit.scaleXP(xp);
     const s = currentStudent || {};
     return {
       tool: QUIZ_TOOL,
@@ -1217,7 +1242,8 @@
       xpEarned: xp,
       masteryTopic: "rounding-whole-numbers",
       createdAt: serverTimestamp(),
-      createdAtClient: new Date().toISOString()
+      createdAtClient: new Date().toISOString(),
+      ...(MMTSubmit ? MMTSubmit.fields() : {})
     };
   }
   async function saveResult(){
@@ -1242,7 +1268,7 @@
     }
   }
   function finishQuiz(){
-    const score = scoreSoFar(), max = maxScore(), pct = Math.round((score/max)*1000)/10;
+    const score = scoreSoFar(), max = reportedMax(), pct = max ? Math.round((score/max)*1000)/10 : 0;
     finishTitle.textContent = `Score: ${score} / ${max}`;
     finishSub.textContent = state.demoMode ? `Level: ${levelPretty(state.level)} • Demo mode • ${pct}%` : `Level: ${levelPretty(state.level)} • Student code: ${state.studentCode} • ${pct}%`;
     buildSummaryRows();

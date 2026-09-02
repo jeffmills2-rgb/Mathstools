@@ -326,6 +326,20 @@ function parseAnswer(raw){
 /* ============================ state ============================ */
 let student=null, levelKey=null, questions=[], idx=0, score=0, locked=false, typeTags=[];
 
+/* ---- Finish & submit (shared) ------------------------------------------
+   Lets a student who has run out of time submit the questions they have
+   finished. See /portal/shared/earlySubmit.js. A question counts once it has
+   been checked — scoring is on the first attempt, so retries don't add to it. */
+let attemptedCount=0;
+let MMTSubmit=null;
+import("/portal/shared/earlySubmit.js").then(m=>{
+  MMTSubmit=m.MMTSubmit;
+  MMTSubmit.register({
+    progress:()=>({ attempted:attemptedCount, correct:score, quizLength:QUIZ_LEN }),
+    finish:()=>finish()
+  });
+}).catch(e=>console.warn("Early submit unavailable:", e&&e.message));
+
 const $=id=>document.getElementById(id);
 const quizCard=$("quizCard"), levelBanner=$("levelBanner"), qCounter=$("qCounter"), progressFill=$("progressFill");
 const promptEl=$("prompt"), diagramWrap=$("diagramWrap"), ansLabel=$("ansLabel"), ansInput=$("ansInput"), ansUnit=$("ansUnit");
@@ -358,7 +372,8 @@ $("toMenuBtn").addEventListener("click",()=>{ hideModal($("certModal")); showMod
 function startLevel(key){
   levelKey=key; hideModal($("levelModal"));
   questions=Array.from({length:QUIZ_LEN},()=>generateQuestion(key));
-  idx=0; score=0; typeTags=[];
+  idx=0; score=0; attemptedCount=0; typeTags=[];
+  if(MMTSubmit) MMTSubmit.reset();
   const cfg=LEVELS[key];
   levelBanner.textContent="Level: "+cfg.name;
   levelBanner.style.background=BANNER_BG[key];
@@ -407,8 +422,10 @@ function check(){
   const correct=Math.abs(val-q.answer)<1e-9;
   if(!q._checkedOnce){                       // score + tag on the FIRST attempt only
     q._checkedOnce=true;
+    attemptedCount++;
     typeTags.push(`${q.levelKey}${q.obtuse?"-obtuse":""}${q.mode==="missing"?"-missing":"-area"}${correct?"":"-wrong"}`);
     if(correct) score++;
+    if(MMTSubmit) MMTSubmit.refresh();
   }
   locked=true; ansInput.disabled=true; checkBtn.disabled=true; nextBtn.disabled=false;
   if(correct){
@@ -434,12 +451,13 @@ function next(){
 /* -------- finish + save -------- */
 async function finish(){
   progressFill.style.width="100%";
-  const pct=Math.round((score/QUIZ_LEN)*100);
+  const total = MMTSubmit ? MMTSubmit.total() : QUIZ_LEN;
+  const pct = total ? Math.round((score/total)*100) : 0;
   const cfg=LEVELS[levelKey];
   $("certIcon").textContent = pct>=80?"🏆":pct>=50?"🎉":"💪";
   $("certText").textContent = pct>=80?"Excellent!":pct>=50?"Nice work!":"Keep practising!";
-  $("certScore").textContent = `Score: ${score} / ${QUIZ_LEN}  (${pct}%) — ${cfg.name}`;
-  const cert = `Area of a Triangle Quiz — ${cfg.name}\nScore: ${score}/${QUIZ_LEN} (${pct}%)`;
+  $("certScore").textContent = `Score: ${score} / ${total}  (${pct}%) — ${cfg.name}`;
+  const cert = `Area of a Triangle Quiz — ${cfg.name}\nScore: ${score}/${total} (${pct}%)`;
   const save=$("saveStatus");
   const mode=Client.getMode();
   if(mode==="registered"){ save.textContent="Saving…"; }
@@ -449,8 +467,9 @@ async function finish(){
     try{
       const r=await Client.saveAchievement({
         tool:TOOL_ID, topic:TOPIC, level:cfg.name, levelKey,
-        score, total:QUIZ_LEN, percent:pct,
-        masteryTopic:MASTERY_TOPIC, types:typeTags, certificateText:cert
+        score, total, percent:pct,
+        masteryTopic:MASTERY_TOPIC, types:typeTags, certificateText:cert,
+        ...(MMTSubmit ? MMTSubmit.fields() : {})
       });
       save.textContent = r&&r.saved ? "Saved to your dashboard ✓" : "Not saved";
     }catch(e){ save.textContent="Save failed (result still counts locally)"; }

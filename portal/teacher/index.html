@@ -252,7 +252,7 @@ import { ADVENTURE_NPCS, ADVENTURE_STAGES, ADVENTURE_BADGES, getStageTopics, npc
 import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 // Chart.js is loaded as a classic global script in <head>; referenced as `Chart`.
 import { getEnabledTools } from "../shared/mmtToolRegistry.js";
-import { normaliseAchievement, summarise, rollupByStudent, toCSV, summaryText } from "../shared/resultUtils.js";
+import { normaliseAchievement, summarise, rollupByStudent, toCSV, summaryText, partialLabel } from "../shared/resultUtils.js";
 
 const $ = (id)=>document.getElementById(id);
 let teacher=null, students=[], all=[], attemptsByCode=new Map();
@@ -1190,7 +1190,9 @@ function renderTaskCompletion(){
 function heatColour(p){ let r,g; if(p<50){ r=220; g=Math.round(60+(p/50)*150); } else { r=Math.round(220-((p-50)/50)*180); g=190; } return `rgba(${Math.max(0,Math.min(255,r))},${Math.max(0,Math.min(255,g))},90,.30)`; }
 function renderTopicMastery(recs){
   const byTopic=new Map();
-  recs.forEach(r=>{ const t=r.topic||"(untagged)"; const e=byTopic.get(t)||{sum:0,n:0}; e.sum+=Number(r.percent)||0; e.n++; byTopic.set(t,e); });
+  // A part-finished attempt below the coverage floor is still in the results
+  // table, but it doesn't stand in for mastery of the topic.
+  recs.filter(r=>r.countsToMastery!==false).forEach(r=>{ const t=r.topic||"(untagged)"; const e=byTopic.get(t)||{sum:0,n:0}; e.sum+=Number(r.percent)||0; e.n++; byTopic.set(t,e); });
   const topics=[...byTopic.entries()].map(([t,e])=>({topic:t,avg:Math.round(e.sum/e.n),n:e.n})).filter(x=>x.n>=3);
   const weak=topics.slice().sort((a,b)=>a.avg-b.avg).slice(0,8).map(x=>({label:`${x.topic} (${x.n})`, bar:x.avg, val:`${x.avg}%`, cls:x.avg>=70?"hi":x.avg>=50?"mid":"lo"}));
   anRank("anTopicAcc", weak, {empty:"Not enough attempts per topic yet (need 3+ each)."});
@@ -1216,7 +1218,7 @@ function resultsTable(rows){
     <td>${esc(r.studentName||r.studentCode)}</td><td>${esc(r.className||"—")}</td>
     <td>${esc(r.tool||"—")}</td><td>${esc(r.topic||"—")}</td>
     <td>${r.missionKind?`<span class="badge kind">${esc(r.missionKind)}</span>`:"—"}</td>
-    <td>${r.score}/${r.total}</td><td class="pct ${pctClass(r.percent)}">${r.percent}%</td><td>${esc(r.dateLabel)}</td></tr>`).join("");
+    <td>${r.score}/${r.total}${r.partial?` <span class="badge partial">${esc(partialLabel(r))}</span>`:""}</td><td class="pct ${pctClass(r.percent)}">${r.percent}%</td><td>${esc(r.dateLabel)}</td></tr>`).join("");
   return head+body+"</tbody></table>";
 }
 
@@ -1274,8 +1276,8 @@ function taskCompleters(assignmentId){
   const byStu=new Map();
   for(const a of all){ const r=a.raw||{}; if(r.adventureTaskId!==assignmentId && r.levelKey!==assignmentId) continue;
     const k=a.studentCode||a.studentName||"?"; const cur=byStu.get(k);
-    if(!cur){ byStu.set(k,{studentCode:a.studentCode,studentName:a.studentName,percent:a.percent,attempts:1}); }
-    else { cur.attempts++; if(a.percent>cur.percent) cur.percent=a.percent; } }
+    if(!cur){ byStu.set(k,{studentCode:a.studentCode,studentName:a.studentName,percent:a.percent,attempts:1,partial:a.partial,label:partialLabel(a)}); }
+    else { cur.attempts++; if(a.percent>cur.percent){ cur.percent=a.percent; cur.partial=a.partial; cur.label=partialLabel(a); } } }
   return byStu;
 }
 function openTaskDetail(t){
@@ -1287,12 +1289,12 @@ function openTaskDetail(t){
   const completers=taskCompleters(t.id);
   const roster=students.filter(s=>(s.className||"")===className);
   const PASS=60;
-  const doneRows=roster.map(s=>{ const info=completers.get(s.studentCode); return { name:s.name||s.studentName||s.studentCode, code:s.studentCode, done:Boolean(info), percent:info?info.percent:null, attempts:info?info.attempts:0 }; })
+  const doneRows=roster.map(s=>{ const info=completers.get(s.studentCode); return { name:s.name||s.studentName||s.studentCode, code:s.studentCode, done:Boolean(info), percent:info?info.percent:null, attempts:info?info.attempts:0, partial:info?info.partial:false, label:info?info.label:"" }; })
     .sort((a,b)=> (a.done===b.done? (a.name||"").localeCompare(b.name||"") : (a.done?-1:1)));
-  for(const [code,info] of completers){ if(!roster.some(s=>s.studentCode===code)) doneRows.push({name:info.studentName||code,code,done:true,percent:info.percent,attempts:info.attempts}); }
+  for(const [code,info] of completers){ if(!roster.some(s=>s.studentCode===code)) doneRows.push({name:info.studentName||code,code,done:true,percent:info.percent,attempts:info.attempts,partial:info.partial,label:info.label}); }
   const doneCount=doneRows.filter(r=>r.done).length;
   const body=doneRows.map(r=>`<tr><td>${esc(r.name)}</td><td><span class="codechip">${esc(r.code||"—")}</span></td>
-    <td>${r.done?'<span class="badge ok">done</span>':'<span class="badge support">not yet</span>'}</td>
+    <td>${r.done?(r.partial?`<span class="badge partial">${esc(r.label||"partial")}</span>`:'<span class="badge ok">done</span>'):'<span class="badge support">not yet</span>'}</td>
     <td>${r.percent!=null?`<span class="pct ${r.percent>=70?'hi':r.percent>=PASS?'mid':'lo'}">${r.percent}%</span>`:"—"}</td>
     <td>${r.attempts||"—"}</td></tr>`).join("");
   openModal(head(`${esc(npcLabel)}: ${esc(topicName)}`)+`

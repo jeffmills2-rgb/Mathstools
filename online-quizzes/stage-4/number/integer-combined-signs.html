@@ -714,6 +714,24 @@
   let score = 0;
   let answered = false;
 
+  /* ---- Finish & submit (shared) ----------------------------------------
+     Lets a student who has run out of time submit the questions they have
+     finished. See /portal/shared/earlySubmit.js. Loaded dynamically so the
+     quiz still runs if the module can't be reached. */
+  let attemptedCount=0;            // questions finished with, not the current one
+  let MMTSubmit=null;
+  import("/portal/shared/earlySubmit.js").then(m=>{
+    MMTSubmit=m.MMTSubmit;
+    MMTSubmit.register({
+      progress:()=>({ attempted:attemptedCount, correct:score, quizLength:TOTAL_Q }),
+      finish:()=>showCertificate()
+    });
+  }).catch(e=>console.warn("Early submit unavailable:", e&&e.message));
+
+  // The denominator to report: what was attempted after an early submit,
+  // the full quiz length otherwise.
+  function effectiveTotal(){ return MMTSubmit ? MMTSubmit.total() : TOTAL_Q; }
+
   let Q = null;
   let stepState = 0;    // 0..4
   let hintsUsed = 0;
@@ -1285,7 +1303,9 @@
     }
 
     const correct = isCorrect(student, Q.res);
+    attemptedCount++;
     if (correct) score++;
+    if (MMTSubmit) MMTSubmit.refresh();
 
     lockAnswerUI(correct);
     await playFullSolutionAfterAnswer();
@@ -1346,6 +1366,8 @@
 
     qIndex = 0;
     score = 0;
+    attemptedCount = 0;
+    if (MMTSubmit) MMTSubmit.reset();
 
     loadQuestion();
   }
@@ -1353,16 +1375,18 @@
   function showCertificate(){
     barFill.style.width = `100%`;
 
-    const line1 = `You completed ${LEVEL.label} and got ${score} out of ${TOTAL_Q}.`;
+    const total = effectiveTotal();
+    const line1 = `You completed ${LEVEL.label} and got ${score} out of ${total}.`;
     certBig.textContent = line1;
 
     certOverlay.style.display = "";
     if(window.MMTSave) window.MMTSave({
       tool:"integer-combined-signs-student-quiz", topic:"integers",
-      level:LEVEL.label, levelKey:LEVEL.label, score, total:TOTAL_Q,
-      percent:Math.round((score/TOTAL_Q)*100), masteryTopic:"integer-combined-signs",
+      level:LEVEL.label, levelKey:LEVEL.label, score, total,
+      percent:total?Math.round((score/total)*100):0, masteryTopic:"integer-combined-signs",
       types:["level:"+LEVEL.label],
-      certificateText:`Integer Combined Signs — ${LEVEL.label}: ${score}/${TOTAL_Q}`
+      certificateText:`Integer Combined Signs — ${LEVEL.label}: ${score}/${total}`,
+      ...(MMTSubmit ? MMTSubmit.fields() : {})
     });
   }
 

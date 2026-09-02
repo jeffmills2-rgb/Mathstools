@@ -1753,6 +1753,7 @@
     setInputState('ok');
     showMessage('ok', t('correct'));
     state.solved[state.qIndex] = true;
+    if(MMTSubmit) MMTSubmit.refresh();
     buildLocks();
     nextBtn.disabled = false;
     nextBtn.focus();
@@ -1761,30 +1762,53 @@
     dropConfetti();
   }
 
+  /* ---- Finish & submit (shared) ----------------------------------------
+     Lets a student who has run out of time submit the locks they have already
+     broken. See /portal/shared/earlySubmit.js. A lock only opens on a correct
+     answer, so a finished question is a solved one and coverage is what tells
+     the teacher how far the student got. */
+  let MMTSubmit = null;
+  import("/portal/shared/earlySubmit.js").then(m=>{
+    MMTSubmit = m.MMTSubmit;
+    MMTSubmit.register({
+      progress:()=>{
+        const solved = state.solved.filter(Boolean).length;
+        return { attempted:solved, correct:solved, quizLength:TOTAL_QUESTIONS };
+      },
+      finish:()=>showCertificate()
+    });
+  }).catch(e=>console.warn("Early submit unavailable:", e&&e.message));
+
+  function showCertificate(){
+    const lvlLabel = plainLevelLabel(state.level);
+    state.completionMessage = buildCompletionMessage(state.level);
+    finishTitle.innerHTML = state.language === 'fa' ? `Congratulations, you broke the locks for Collecting Like Terms, Level: ${lvlLabel}<br><span class="faText">تبریک! قفل‌های جمع کردن عبارات هم‌جنس را باز کردید.</span>` : (state.language === 'ar' ? `Congratulations, you broke the locks for Collecting Like Terms, Level: ${lvlLabel}<br><span class="faText">تهانينا! لقد فتحت أقفال تجميع الحدود المتشابهة.</span>` : `Congratulations, you broke the locks for Collecting Like Terms, Level: ${lvlLabel}`);
+    finishSub.innerHTML = t('finishSub');
+    finishCodeEl.textContent = state.completionMessage;
+    copyMsg.className = 'msg';
+    copyMsg.innerHTML = t('copyTip');
+    finishOverlay.classList.add('show');
+    if(window.MMTSave){
+      const solvedCount = state.solved.filter(Boolean).length;
+      const total = MMTSubmit ? MMTSubmit.total() : TOTAL_QUESTIONS;
+      window.MMTSave({
+        tool:"collecting-like-terms-student-quiz", topic:"algebra",
+        level:plainLevelLabel(state.level), levelKey:state.level,
+        score:solvedCount, total,
+        percent:total?Math.round((solvedCount/total)*100):0,
+        masteryTopic:"collecting-like-terms",
+        types:["level:"+state.level],
+        certificateText:"Collecting Like Terms — "+plainLevelLabel(state.level),
+        ...(MMTSubmit ? MMTSubmit.fields() : {})
+      });
+    }
+  }
+
   function goNext(){
     if(!state.solved[state.qIndex]) return;
 
     if(state.qIndex === TOTAL_QUESTIONS - 1){
-      const lvlLabel = plainLevelLabel(state.level);
-      state.completionMessage = buildCompletionMessage(state.level);
-      finishTitle.innerHTML = state.language === 'fa' ? `Congratulations, you broke the locks for Collecting Like Terms, Level: ${lvlLabel}<br><span class="faText">تبریک! قفل‌های جمع کردن عبارات هم‌جنس را باز کردید.</span>` : (state.language === 'ar' ? `Congratulations, you broke the locks for Collecting Like Terms, Level: ${lvlLabel}<br><span class="faText">تهانينا! لقد فتحت أقفال تجميع الحدود المتشابهة.</span>` : `Congratulations, you broke the locks for Collecting Like Terms, Level: ${lvlLabel}`);
-      finishSub.innerHTML = t('finishSub');
-      finishCodeEl.textContent = state.completionMessage;
-      copyMsg.className = 'msg';
-      copyMsg.innerHTML = t('copyTip');
-      finishOverlay.classList.add('show');
-      if(window.MMTSave){
-        const solvedCount = state.solved.filter(Boolean).length;
-        window.MMTSave({
-          tool:"collecting-like-terms-student-quiz", topic:"algebra",
-          level:plainLevelLabel(state.level), levelKey:state.level,
-          score:solvedCount, total:TOTAL_QUESTIONS,
-          percent:Math.round((solvedCount/TOTAL_QUESTIONS)*100),
-          masteryTopic:"collecting-like-terms",
-          types:["level:"+state.level],
-          certificateText:"Collecting Like Terms — "+plainLevelLabel(state.level)
-        });
-      }
+      showCertificate();
       return;
     }
 
@@ -1827,6 +1851,7 @@
     state.level = level;
     state.qIndex = 0;
     state.solved = Array(TOTAL_QUESTIONS).fill(false);
+    if(MMTSubmit) MMTSubmit.reset();
 
     const prefix = 'CLT';
     state.completionCode = makeCompletionCode(prefix);

@@ -217,7 +217,7 @@ import { COLLECTIONS } from "../shared/firebaseConfig.js";
 import { getDb } from "../shared/codeExchangeClient.js";
 import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 import { getEnabledTools } from "../shared/mmtToolRegistry.js";
-import { normaliseAchievement, summarise, formatDate } from "../shared/resultUtils.js";
+import { normaliseAchievement, summarise, formatDate, partialLabel } from "../shared/resultUtils.js";
 
 const $ = (id) => document.getElementById(id);
 let all = [], current = null, tasks = [];
@@ -315,7 +315,9 @@ function rankTitle(level){ const t=[[1,"Number Novice"],[3,"Maths Explorer"],[5,
 function dayKey(t){ const d=new Date(t); return d.getFullYear()+"-"+d.getMonth()+"-"+d.getDate(); }
 function currentStreak(){ const days=new Set(all.filter(r=>r.time).map(r=>dayKey(r.time))); if(!days.size) return 0; const d=new Date(); d.setHours(0,0,0,0); if(!days.has(dayKey(d.getTime()))){ d.setDate(d.getDate()-1); if(!days.has(dayKey(d.getTime()))) return 0; } let s=0; while(days.has(dayKey(d.getTime()))){ s++; d.setDate(d.getDate()-1); } return s; }
 function weekStart(){ const d=new Date(); d.setHours(0,0,0,0); const dow=(d.getDay()+6)%7; d.setDate(d.getDate()-dow); return d.getTime(); }
-function topicStats(){ const m=new Map(); all.forEach(r=>{ const t=r.topic||"General"; const e=m.get(t)||{topic:t,attempts:0,best:0,sum:0}; e.attempts++; e.best=Math.max(e.best, r.percent||0); e.sum+=r.percent||0; m.set(t,e); }); return [...m.values()].map(e=>({...e, avg:Math.round(e.sum/e.attempts), mastered:e.best>=80})); }
+// Every attempt is counted and shown, but a part-finished one below the
+// coverage floor can't set a best score or mark a topic mastered.
+function topicStats(){ const m=new Map(); all.forEach(r=>{ const t=r.topic||"General"; const e=m.get(t)||{topic:t,attempts:0,best:0,sum:0,counted:0}; e.attempts++; if(r.countsToMastery!==false){ e.counted++; e.best=Math.max(e.best, r.percent||0); e.sum+=r.percent||0; } m.set(t,e); }); return [...m.values()].map(e=>({...e, avg:e.counted?Math.round(e.sum/e.counted):0, mastered:e.best>=80})); }
 
 function renderDashboard(){
   const s=summarise(all); const xp=s.totalXp; const li=levelInfo(xp);
@@ -359,7 +361,7 @@ function renderXpChart(){
 }
 function renderWins(s){
   const cut=Date.now()-30*86400000;
-  const wins=all.filter(r=>r.time>=cut && r.percent>=80).slice(0,5);
+  const wins=all.filter(r=>r.time>=cut && r.percent>=80 && r.countsToMastery!==false).slice(0,5);
   const chips = wins.length
     ? wins.map(r=>`<span class="win-chip"><span class="wp">${r.percent}%</span> ${esc(r.topic||r.tool||"Quiz")} · ${esc(r.dateLabel)}</span>`).join("")
     : `<p class="hint">No wins in the last month yet — aim for 80%+ and they'll show up here. You've got this! 💪</p>`;
@@ -434,7 +436,7 @@ function table(rows, advMode){
   const body = rows.map(r=>`<tr>
     <td>${esc(r.tool||"—")}</td><td>${esc(r.topic||"—")}</td>
     ${advMode?`<td>${r.missionKind?`<span class="badge kind">${esc(r.missionKind)}</span>`:"—"}</td>`:""}
-    <td>${r.score}/${r.total}</td>
+    <td>${r.score}/${r.total}${r.partial?` <span class="badge partial">${esc(partialLabel(r))}</span>`:""}</td>
     <td class="pct ${pctClass(r.percent)}">${r.percent}%</td>
     <td>${r.xpEarned||0}</td><td>${esc(r.dateLabel)}</td></tr>`).join("");
   return head+body+"</tbody></table>";

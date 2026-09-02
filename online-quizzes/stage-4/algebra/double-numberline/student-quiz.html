@@ -890,6 +890,23 @@
   let questions = [];
   let qIndex = 0;
   let score = 0;
+
+  /* ---- Finish & submit (shared) ----------------------------------------
+     Lets a student who has run out of time submit the questions they have
+     finished. See /portal/shared/earlySubmit.js. This quiz only moves on once
+     a question is right, so a finished question is a correct one and coverage
+     is what tells the teacher how far the student got. */
+  let attemptedCount = 0;
+  let MMTSubmit = null;
+  import("/portal/shared/earlySubmit.js").then(m=>{
+    MMTSubmit = m.MMTSubmit;
+    MMTSubmit.register({
+      progress:()=>({ attempted:attemptedCount, correct:score, quizLength:QUIZ_LEN }),
+      finish:()=>showCertificate()
+    });
+  }).catch(e=>console.warn("Early submit unavailable:", e&&e.message));
+
+  function effectiveTotal(){ return MMTSubmit ? MMTSubmit.total() : QUIZ_LEN; }
   let phase = 'awaiting';
   let db = null;
   let firebaseReady = false;
@@ -1019,7 +1036,7 @@
   }
   function achievementTypeSummary(){
     const summary = new Map();
-    questions.slice(0, QUIZ_LEN).forEach(q => {
+    questions.slice(0, effectiveTotal()).forEach(q => {
       let key = 'Question type';
       if(q.mode === 'addsub') key = q.isAdd ? 'Addition equations' : 'Subtraction equations';
       if(q.mode === 'mult') key = 'Multiplication equations';
@@ -1033,7 +1050,7 @@
   }
   function certificatePlainText(){
     const cfg = LEVELS[levelKey];
-    return `You completed level "${cfg.name}" in ${QUIZ_TOPIC} and got a score of ${score} out of ${QUIZ_LEN}.`;
+    return `You completed level "${cfg.name}" in ${QUIZ_TOPIC} and got a score of ${score} out of ${effectiveTotal()}.`;
   }
 
   function masteryLevelFromPercent(percent){
@@ -1108,7 +1125,7 @@
     }
 
     const cfg = LEVELS[levelKey];
-    const percent = Math.round((score / QUIZ_LEN) * 100);
+    const percent = effectiveTotal() ? Math.round((score / effectiveTotal()) * 100) : 0;
     const xpDetails = calculateXpDetails(percent, levelKey);
     const xpAwarded = xpDetails.xpAwarded;
     recentBadges = buildBadgeList(percent);
@@ -1122,7 +1139,8 @@
       level: levelKey,
       englishLevel: cfg.name,
       score,
-      total: QUIZ_LEN,
+      total: effectiveTotal(),
+      ...(MMTSubmit ? MMTSubmit.fields() : {}),
       percent,
       xpAwarded,
       xpBase: xpDetails.baseXp,
@@ -1498,12 +1516,14 @@
   function hideFeedback(){ feedbackOk.classList.remove('show'); feedbackBad.classList.remove('show'); }
 
   function startQuiz(key){
-    levelKey = key; questions = []; qIndex = 0; score = 0; phase = 'awaiting'; achievementSaveStarted = false;
+    levelKey = key; questions = []; qIndex = 0; score = 0; attemptedCount = 0; phase = 'awaiting'; achievementSaveStarted = false;
+    if(MMTSubmit) MMTSubmit.reset();
     ensureQuestionExists(0); setBanner(); setProgress(); hideModal(levelModalBack); renderCurrentQuestion();
   }
   function resetQuizSameLevel(){
     if(!levelKey) return;
-    questions = []; qIndex = 0; score = 0; phase = 'awaiting'; achievementSaveStarted = false;
+    questions = []; qIndex = 0; score = 0; attemptedCount = 0; phase = 'awaiting'; achievementSaveStarted = false;
+    if(MMTSubmit) MMTSubmit.reset();
     ensureQuestionExists(0); setProgress(); renderCurrentQuestion();
   }
   function backToLevels(){
@@ -1531,7 +1551,7 @@
 
   function showCertificate(){
     const cfg = LEVELS[levelKey];
-    const percent = Math.round((score / QUIZ_LEN) * 100);
+    const percent = effectiveTotal() ? Math.round((score / effectiveTotal()) * 100) : 0;
     progressFill.style.width = '100%';
     recentBadges = buildBadgeList(percent);
 
@@ -1547,11 +1567,11 @@
       certWrap.classList.add('platformMode');
       completionIcon.className = 'completionIcon logged';
       completionIcon.textContent = '✅';
-      certText.textContent = `You completed ${QUIZ_TOPIC}, Level ${cfg.name}, and got ${score} out of ${QUIZ_LEN}.`;
+      certText.textContent = `You completed ${QUIZ_TOPIC}, Level ${cfg.name}, and got ${score} out of ${effectiveTotal()}.`;
       certSub.textContent = `Ready to save this result to ${currentStudent.studentName}'s dashboard. Your teacher will be able to view it once submitted.`;
       completionMeta.style.display = 'grid';
       completionMeta.innerHTML = `
-        <div class="miniStat"><div class="label">Score</div><div class="value">${score}/${QUIZ_LEN} (${percent}%)</div></div>
+        <div class="miniStat"><div class="label">Score</div><div class="value">${score}/${effectiveTotal()} (${percent}%)</div></div>
         <div class="miniStat"><div class="label">Mastery</div><div class="value">${masteryLevelFromPercent(percent)}</div></div>
         <div class="miniStat"><div class="label">XP earned</div><div class="value">+${calculateXp(percent)} XP</div></div>
         <div class="miniStat"><div class="label">XP rule</div><div class="value">${getBaseXpFromPercent(percent)} × ${getDifficultyMultiplier(levelKey)}</div></div>
@@ -1578,7 +1598,7 @@
       certWrap.classList.remove('platformMode');
       completionIcon.className = 'completionIcon guest';
       completionIcon.textContent = '🏆';
-      certText.textContent = `You completed ${QUIZ_TOPIC}, Level ${cfg.name}, and got ${score} out of ${QUIZ_LEN}. Paste a screenshot into Google Classroom.`;
+      certText.textContent = `You completed ${QUIZ_TOPIC}, Level ${cfg.name}, and got ${score} out of ${effectiveTotal()}. Paste a screenshot into Google Classroom.`;
       certSub.textContent = 'Screenshot this and paste into Google Classroom. Next time, enter your student code to save your progress online.';
       featurePreview.style.display = 'block';
       featurePreview.innerHTML = `
@@ -1626,7 +1646,7 @@
     const text =
 `🏆 Mills Maths Tools – ${QUIZ_TOPIC}
 Level: ${cfg.name}
-Score: ${score} / ${QUIZ_LEN}
+Score: ${score} / ${effectiveTotal()}
 Completed: ${nowStamp()}
 ${currentStudent ? `Student: ${currentStudent.studentName} (${currentStudent.className || 'No class'})\n` : ''}
 (Submit a screenshot or paste this into Google Classroom.)`;
@@ -1660,7 +1680,7 @@ ${currentStudent ? `Student: ${currentStudent.studentName} (${currentStudent.cla
 
   function markCorrect(q){
     q.status = 'correct'; q.solved = true;
-    if(!q.countedCorrect){ q.countedCorrect = true; score++; }
+    if(!q.countedCorrect){ q.countedCorrect = true; score++; attemptedCount++; if(MMTSubmit) MMTSubmit.refresh(); }
   }
 
   function submitAnswer(){

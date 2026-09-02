@@ -2532,6 +2532,19 @@
   let levelKey = null, cfg = null;
   let bank = [], qIndex = 0, quizDone = false;
 
+  /* ---- Finish & submit (shared) ----------------------------------------
+     Lets a student who has run out of time submit the questions they have
+     finished. See /portal/shared/earlySubmit.js. A question is "done" once it
+     is right or the student has used all three tries. */
+  let MMTSubmit = null;
+  import("/portal/shared/earlySubmit.js").then(m=>{
+    MMTSubmit = m.MMTSubmit;
+    MMTSubmit.register({
+      progress:()=>{ const s = scores(); return { attempted:s.done, correct:s.score, quizLength:bank.length }; },
+      finish:()=>finish()
+    });
+  }).catch(e=>console.warn("Early submit unavailable:", e&&e.message));
+
   const round2 = v => Math.round(v*100)/100;
   const perimOf = sh => round2(sh.edges.reduce((t,e) => t + e.len, 0));
 
@@ -2730,6 +2743,7 @@
       return;
     }
     q.tries++;
+    if (MMTSubmit) setTimeout(() => MMTSubmit.refresh(), 0);
     if (Math.abs(v - q.answer) < 0.005){
       q.correct = true; q.done = true;
       /* READ-ONLY, not disabled: a disabled input drops focus and stops
@@ -2774,14 +2788,20 @@
   }
 
   function scores(){
-    let first = 0, perimT = 0, perimS = 0, sideT = 0, sideS = 0;
+    let first = 0, perimT = 0, perimS = 0, sideT = 0, sideS = 0, done = 0;
+    // Only questions the student has finished with count towards the tallies,
+    // so an early submit reports what was actually attempted. On a full finish
+    // every question is done, so this is unchanged.
     bank.forEach(q => {
+      if (!q.done) return;
+      done++;
       const won = q.correct && q.tries <= 1;
       if (won) first++;
       if (q.kind === "side"){ sideT++; if (won) sideS++; }
       else { perimT++; if (won) perimS++; }
     });
-    return { total:bank.length, score:first, perimT, perimS, sideT, sideS };
+    const total = MMTSubmit ? MMTSubmit.total() : bank.length;
+    return { total, done, score:first, perimT, perimS, sideT, sideS };
   }
 
   /* ==================================================================
@@ -2805,7 +2825,8 @@
       percent: s.total ? Math.round((s.score/s.total)*100) : 0,
       masteryTopic:"perimeter-plane-shapes",
       types:["perimeter:"+s.perimS+"/"+s.perimT, "missing-side:"+s.sideS+"/"+s.sideT, "level:"+levelKey],
-      certificateText:`Perimeter of Plane Shapes — ${cfg.name}: ${s.score}/${s.total}`
+      certificateText:`Perimeter of Plane Shapes — ${cfg.name}: ${s.score}/${s.total}`,
+      ...(MMTSubmit ? MMTSubmit.fields() : {})
     });
   }
 
@@ -2847,6 +2868,7 @@ ${window.MMTAuth ? window.MMTAuth.shareLine() : "Submit a screenshot or paste th
     quizDone = false;
     bank = buildBank();
     qIndex = 0;
+    if (MMTSubmit) MMTSubmit.reset();
     hideModals();
     const b = $("levelBanner");
     b.textContent = `Level: ${cfg.name}`;

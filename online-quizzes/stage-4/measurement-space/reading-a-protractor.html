@@ -446,6 +446,26 @@ import { exchangeOnApp } from "/portal/shared/quizClient.js";
   let levelKey = null;
   let qIndex = 0;
   let score = 0;
+
+  /* ---- Finish & submit (shared) ----------------------------------------
+     Lets a student who has run out of time submit the questions they have
+     finished. See /portal/shared/earlySubmit.js. A question is finished once
+     it has been marked right or wrong; the one on screen doesn't count until
+     then, and a retry can't count it twice. */
+  let MMTSubmit = null;
+  import("/portal/shared/earlySubmit.js").then(m=>{
+    MMTSubmit = m.MMTSubmit;
+    MMTSubmit.register({
+      progress:()=>({
+        attempted: qIndex + ((phase === 'correct' || phase === 'incorrect') ? 1 : 0),
+        correct: score,
+        quizLength: QUIZ_LEN
+      }),
+      finish:()=>showCertificate()
+    });
+  }).catch(e=>console.warn("Early submit unavailable:", e&&e.message));
+
+  function effectiveTotal(){ return MMTSubmit ? MMTSubmit.total() : QUIZ_LEN; }
   let phase = 'awaiting';
 
   const state = {
@@ -776,6 +796,7 @@ import { exchangeOnApp } from "/portal/shared/quizClient.js";
     levelKey = nextLevelKey;
     qIndex = 0;
     score = 0;
+    if(MMTSubmit) MMTSubmit.reset();
     achievementSavedForRun = !currentStudent || guestMode;
     const cfg = LEVELS[levelKey];
     levelBanner.textContent = `Level: ${cfg.name}`;
@@ -801,6 +822,7 @@ import { exchangeOnApp } from "/portal/shared/quizClient.js";
     if(Number.isFinite(guess) && guess === state.question.answer){
       phase = 'correct';
       score += 1;
+      if(MMTSubmit) setTimeout(() => MMTSubmit.refresh(), 0);
       answerInput.classList.remove('bad');
       answerInput.classList.add('ok');
       feedbackBad.classList.remove('show');
@@ -928,8 +950,9 @@ import { exchangeOnApp } from "/portal/shared/quizClient.js";
   async function saveAchievement(){
     if(achievementSavedForRun || !currentStudent || !levelKey) return true;
     const cfg = LEVELS[levelKey];
-    const percent = Math.round((score / QUIZ_LEN) * 100);
-    const xpAwarded = calculateXp(percent);
+    const percent = Math.round((score / effectiveTotal()) * 100);
+    // A part-finished attempt earns XP for what was done, not the whole quiz.
+    const xpAwarded = MMTSubmit ? MMTSubmit.scaleXP(calculateXp(percent)) : calculateXp(percent);
     recentBadges = buildBadgeList(percent);
     const completedAtClient = new Date().toISOString();
     try{
@@ -941,8 +964,9 @@ import { exchangeOnApp } from "/portal/shared/quizClient.js";
         level:levelKey,
         englishLevel:cfg.name,
         score,
-        total:QUIZ_LEN,
+        total:effectiveTotal(),
         percent,
+        ...(MMTSubmit ? MMTSubmit.fields() : {}),
         xpAwarded,
         badgesEarned:recentBadges.map(b => b.id),
         masteryLevel:masteryLevelFromPercent(percent),
@@ -977,7 +1001,7 @@ import { exchangeOnApp } from "/portal/shared/quizClient.js";
       lastTopic:TOPIC_NAME,
       lastLevel:cfg.name,
       lastScore:score,
-      lastTotal:QUIZ_LEN,
+      lastTotal:effectiveTotal(),
       lastPercent:percent,
       totalQuizCompletions:increment(1)
     },{ merge:true });
@@ -988,7 +1012,7 @@ import { exchangeOnApp } from "/portal/shared/quizClient.js";
       latestLevel:levelKey,
       latestEnglishLevel:cfg.name,
       latestScore:score,
-      latestTotal:QUIZ_LEN,
+      latestTotal:effectiveTotal(),
       latestPercent:percent,
       masteryLevel:masteryLevelFromPercent(percent),
       attempts:increment(1),
@@ -1007,7 +1031,7 @@ import { exchangeOnApp } from "/portal/shared/quizClient.js";
 
   function showCertificate(){
     const cfg = LEVELS[levelKey];
-    const percent = Math.round((score / QUIZ_LEN) * 100);
+    const percent = Math.round((score / effectiveTotal()) * 100);
     recentBadges = buildBadgeList(percent);
     completionMeta.style.display = 'none';
     featurePreview.style.display = 'none';
@@ -1021,11 +1045,11 @@ import { exchangeOnApp } from "/portal/shared/quizClient.js";
       certModalHead.textContent = 'Quiz complete';
       completionIcon.className = 'completionIcon logged';
       completionIcon.textContent = '✅';
-      certText.textContent = `You completed ${TOPIC_NAME}, Level ${cfg.name}, and got ${score} out of ${QUIZ_LEN}.`;
+      certText.textContent = `You completed ${TOPIC_NAME}, Level ${cfg.name}, and got ${score} out of ${effectiveTotal()}.`;
       certSub.textContent = `Ready to save this result to ${currentStudent.name}'s dashboard.`;
       completionMeta.style.display = 'grid';
       completionMeta.innerHTML = `
-        <div class="miniStat"><div class="label">Score</div><div class="value">${score}/${QUIZ_LEN} (${percent}%)</div></div>
+        <div class="miniStat"><div class="label">Score</div><div class="value">${score}/${effectiveTotal()} (${percent}%)</div></div>
         <div class="miniStat"><div class="label">Mastery</div><div class="value">${masteryLevelFromPercent(percent)}</div></div>
         <div class="miniStat"><div class="label">XP earned</div><div class="value">+${calculateXp(percent)} XP</div></div>
         <div class="miniStat"><div class="label">Badges</div><div class="value">${recentBadges.map(b => `${b.icon} ${b.name}`).join(', ')}</div></div>
@@ -1050,7 +1074,7 @@ import { exchangeOnApp } from "/portal/shared/quizClient.js";
       certModalHead.textContent = 'Certificate';
       completionIcon.className = 'completionIcon';
       completionIcon.textContent = '🏆';
-      certText.textContent = `You completed ${TOPIC_NAME}, Level ${cfg.name}, and got ${score} out of ${QUIZ_LEN}.`;
+      certText.textContent = `You completed ${TOPIC_NAME}, Level ${cfg.name}, and got ${score} out of ${effectiveTotal()}.`;
       certSub.textContent = 'Screenshot this and paste into Google Classroom. Next time, enter your student code to save your progress online.';
       featurePreview.style.display = 'block';
       featurePreview.innerHTML = `<div class="featurePreviewTitle">Student code not used</div><div class="featureItem"><span>✓</span> Your score is shown here, but it has not been saved online.</div>`;
@@ -1065,9 +1089,9 @@ import { exchangeOnApp } from "/portal/shared/quizClient.js";
 
   function certificateText(){
     const cfg = LEVELS[levelKey];
-    const percent = Math.round((score / QUIZ_LEN) * 100);
+    const percent = Math.round((score / effectiveTotal()) * 100);
     const who = currentStudent && !guestMode ? `${currentStudent.name} (${currentStudent.className})` : 'Student';
-    return `${who} completed ${TOPIC_NAME} - Level ${cfg.name}. Score: ${score}/${QUIZ_LEN} (${percent}%).`;
+    return `${who} completed ${TOPIC_NAME} - Level ${cfg.name}. Score: ${score}/${effectiveTotal()} (${percent}%).`;
   }
 
   async function submitCompletion(backToMenu){

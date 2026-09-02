@@ -1158,24 +1158,46 @@
     answerInput.focus();
   }
 
+  /* ---- Finish & submit (shared) ----------------------------------------
+     Lets a student who has run out of time submit the questions they have
+     finished. See /portal/shared/earlySubmit.js. This quiz lets students move
+     freely between questions, so "attempted" is every non-blank answer. */
+  let MMTSubmit = null;
+  import("/portal/shared/earlySubmit.js").then(m=>{
+    MMTSubmit = m.MMTSubmit;
+    MMTSubmit.register({
+      progress:()=>({
+        attempted: answers.filter(a => String(a).trim() !== "").length,
+        correct: correct.filter(Boolean).length,
+        quizLength: QUESTIONS_PER_LEVEL
+      }),
+      finish:()=>showCertificate()
+    });
+  }).catch(e=>console.warn("Early submit unavailable:", e&&e.message));
+
   function maybeShowCertificate(){
     // Completion rule: attempted all 20 (non-blank)
     const allAttempted = answers.every(a => String(a).trim() !== "");
     if (!allAttempted) return;
+    showCertificate();
+  }
 
+  function showCertificate(){
     const score = correct.filter(Boolean).length;
+    const total = MMTSubmit ? MMTSubmit.total() : QUESTIONS_PER_LEVEL;
     const levelText = LEVELS[level]?.label ?? "Level";
     certMainText.textContent =
-      `You completed ${levelText} and got ${score} out of 20.` + (window.MMTAuth ? window.MMTAuth.certTail() : " Paste a screenshot into Google Classroom.");
+      `You completed ${levelText} and got ${score} out of ${total}.` + (window.MMTAuth ? window.MMTAuth.certTail() : " Paste a screenshot into Google Classroom.");
 
     certModal.style.display = "flex";
     copyStatus.textContent = "";
     if(window.MMTSave) window.MMTSave({
       tool:"negatives-on-the-number-line-student-quiz", topic:"integers",
-      level:levelText, levelKey:String(level), score, total:20,
-      percent:Math.round((score/20)*100), masteryTopic:"negatives-on-the-number-line",
+      level:levelText, levelKey:String(level), score, total,
+      percent:total?Math.round((score/total)*100):0, masteryTopic:"negatives-on-the-number-line",
       types:["level:"+level],
-      certificateText:`Negatives on the Number Line — ${levelText}: ${score}/20`
+      certificateText:`Negatives on the Number Line — ${levelText}: ${score}/${total}`,
+      ...(MMTSubmit ? MMTSubmit.fields() : {})
     });
   }
 
@@ -1184,6 +1206,7 @@
     const raw = answerInput.value;
 
     answers[current] = raw;
+    if (MMTSubmit) setTimeout(() => MMTSubmit.refresh(), 0);
 
     const parsed = normalizeToS2(raw);
 
@@ -1253,6 +1276,7 @@
     level = Number(lvl);
     questions = generateQuestionsForLevel(level);
     current = 0;
+    if (MMTSubmit) MMTSubmit.reset();
 
     answers = Array(QUESTIONS_PER_LEVEL).fill("");
     correct = Array(QUESTIONS_PER_LEVEL).fill(false);

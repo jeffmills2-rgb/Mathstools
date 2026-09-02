@@ -93,8 +93,7 @@ function isPartial(){ return partial; }
 function paint(){
   if (!btn) return;
   const p = read();
-  const min = cfg.minAttempts == null ? 1 : cfg.minAttempts;
-  const ready = !!p && p.attempted >= min && !submitted;
+  const ready = !!p && p.attempted >= minAttempts() && !submitted;
   btn.disabled = !ready;
   btn.style.opacity = ready ? "1" : ".45";
   btn.style.cursor = ready ? "pointer" : "not-allowed";
@@ -103,9 +102,18 @@ function paint(){
     : "Finish at least one question first";
 }
 
+/** Where the button goes, in order of preference: a slot the quiz provides for
+ *  it, the slot the sign-in chip already uses (every platform-template quiz has
+ *  one, and it sits in the page's own header), or pinned as a last resort. */
+function findSlot(){
+  return document.getElementById("mmtSubmitSlot")
+      || document.getElementById("mmtAuthSlot")
+      || null;
+}
+
 function ensureButton(){
   if (btn) return btn;
-  const slot = document.getElementById("mmtSubmitSlot");
+  const slot = findSlot();
   btn = document.createElement("button");
   btn.type = "button";
   btn.id = "mmtSubmitBtn";
@@ -114,7 +122,7 @@ function ensureButton(){
     "display:inline-flex;align-items:center;gap:7px;font-family:" + UIFONT +
     ";font-weight:900;font-size:13px;line-height:1;white-space:nowrap;border:none;" +
     "border-radius:999px;padding:9px 15px;background:#f59e0b;color:#1f2937;" +
-    (slot ? "" : "position:fixed;top:10px;left:10px;z-index:40;");
+    (slot ? "margin-right:8px;" : "position:fixed;top:10px;left:10px;z-index:40;");
   btn.addEventListener("click", confirmSubmit);
   (slot || document.body).appendChild(btn);
   paint();
@@ -123,9 +131,14 @@ function ensureButton(){
 
 /* ---- the confirm dialog ------------------------------------------------- */
 
+function minAttempts(){ return cfg && cfg.minAttempts != null ? cfg.minAttempts : 1; }
+
 function confirmSubmit(){
   const p = read();
-  if (!p || submitted) return;
+  // Never submit an attempt with nothing in it — the button is disabled until a
+  // question is finished, and this keeps a stray call from reaching a quiz that
+  // hasn't started yet.
+  if (!p || submitted || p.attempted < minAttempts()) return;
 
   const back = document.createElement("div");
   back.style.cssText =
@@ -172,7 +185,7 @@ function confirmSubmit(){
  *  end screen — which saves exactly as it does on a normal finish. */
 function submit(){
   const p = read();
-  if (!p || submitted) return;
+  if (!p || submitted || p.attempted < minAttempts()) return;
   snapshot = p;
   partial = true;
   submitted = true;

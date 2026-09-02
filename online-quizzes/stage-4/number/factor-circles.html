@@ -1443,6 +1443,7 @@
         dropConfetti();
 
         state.solved[state.qIndex] = true;
+        if(MMTSubmit) MMTSubmit.refresh();
         buildLocks();
       } else {
         state.stepDone[3] = false;
@@ -1471,6 +1472,7 @@
     state.qIndex = 0;
     state.solved = Array(state.totalQuestions).fill(false);
     state.completionCode = makeCompletionCode();
+    if(MMTSubmit) MMTSubmit.reset();
 
     finishOverlay.classList.remove('show');
     levelOverlay.classList.remove('show');
@@ -1499,26 +1501,49 @@
     renderStep1();
   }
 
+  /* ---- Finish & submit (shared) ----------------------------------------
+     Lets a student who has run out of time submit the locks they have already
+     broken. See /portal/shared/earlySubmit.js. A lock only opens on a correct
+     answer, so a finished question is a solved one and coverage is what tells
+     the teacher how far the student got. */
+  let MMTSubmit = null;
+  import("/portal/shared/earlySubmit.js").then(m=>{
+    MMTSubmit = m.MMTSubmit;
+    MMTSubmit.register({
+      progress:()=>{
+        const solved = state.solved.filter(Boolean).length;
+        return { attempted:solved, correct:solved, quizLength:state.totalQuestions };
+      },
+      finish:()=>showCertificate()
+    });
+  }).catch(e=>console.warn("Early submit unavailable:", e&&e.message));
+
+  function showCertificate(){
+    finishCodeEl.textContent = state.completionCode;
+    copyMsg.className = 'msg';
+    copyMsg.textContent = 'Tip: paste the code into Google Classroom, a form, or your notes.';
+    finishOverlay.classList.add('show');
+    if(window.MMTSave){
+      const solvedCount = state.solved.filter(Boolean).length;
+      const total = MMTSubmit ? MMTSubmit.total() : state.totalQuestions;
+      window.MMTSave({
+        tool:"factor-circles-student-quiz", topic:"number",
+        level:String(state.level||"").replace(/^./,c=>c.toUpperCase()), levelKey:state.level,
+        score:solvedCount, total,
+        percent:total?Math.round((solvedCount/total)*100):0,
+        masteryTopic:"factors-and-products",
+        types:["level:"+state.level],
+        certificateText:"Escape the Factor Circle Room — "+state.completionCode,
+        ...(MMTSubmit ? MMTSubmit.fields() : {})
+      });
+    }
+  }
+
   function nextQuestion(){
     if(!state.solved[state.qIndex]) return;
 
     if(state.qIndex === state.totalQuestions - 1){
-      finishCodeEl.textContent = state.completionCode;
-      copyMsg.className = 'msg';
-      copyMsg.textContent = 'Tip: paste the code into Google Classroom, a form, or your notes.';
-      finishOverlay.classList.add('show');
-      if(window.MMTSave){
-        const solvedCount = state.solved.filter(Boolean).length;
-        window.MMTSave({
-          tool:"factor-circles-student-quiz", topic:"number",
-          level:String(state.level||"").replace(/^./,c=>c.toUpperCase()), levelKey:state.level,
-          score:solvedCount, total:state.totalQuestions,
-          percent:Math.round((solvedCount/state.totalQuestions)*100),
-          masteryTopic:"factors-and-products",
-          types:["level:"+state.level],
-          certificateText:"Escape the Factor Circle Room — "+state.completionCode
-        });
-      }
+      showCertificate();
       return;
     }
 

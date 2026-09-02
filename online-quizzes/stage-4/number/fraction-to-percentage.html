@@ -521,6 +521,25 @@
 
   /* ===================== state ===================== */
   let levelKey=null, bank=[], qIndex=0, score=0;
+
+  /* ---- Finish & submit (shared) ----------------------------------------
+     Lets a student who has run out of time submit the questions they have
+     finished. See /portal/shared/earlySubmit.js. Loaded dynamically so the
+     quiz still runs if the module can't be reached. */
+  let attemptedCount=0;            // questions finished with, not the current one
+  let MMTSubmit=null;
+  import("/portal/shared/earlySubmit.js").then(m=>{
+    MMTSubmit=m.MMTSubmit;
+    MMTSubmit.register({
+      progress:()=>({ attempted:attemptedCount, correct:score, quizLength:QUIZ_LEN }),
+      finish:()=>showCertificate()
+    });
+  }).catch(e=>console.warn("Early submit unavailable:", e&&e.message));
+
+  // The denominator to report: what was attempted after an early submit,
+  // the full quiz length otherwise.
+  function effectiveTotal(){ return MMTSubmit ? MMTSubmit.total() : QUIZ_LEN; }
+
   let phase=PH.ESTIMATE, estimate=null, estimateMoved=false, answered=false, usedReveal=false;
   const typeTags=new Set();
 
@@ -630,7 +649,9 @@
 
   function finishQuestion(correct){
     answered=true;
+    attemptedCount++;
     if(correct) score++;
+    if(MMTSubmit) MMTSubmit.refresh();
     const cur=q();
     typeTags.add("kind:"+cur.kind);
     if(cur.improper) typeTags.add("improper");
@@ -668,22 +689,25 @@
   function showCertificate(){
     const cfg=LEVELS[levelKey];
     progressFill.style.width="100%";
-    qCounter.textContent="Question "+QUIZ_LEN+" / "+QUIZ_LEN;
-    certText.textContent = "You completed level "+cfg.name+" on Fraction to Percentage and received a score of "+score+" out of "+QUIZ_LEN+".";
+    const shownTotal = effectiveTotal();
+    qCounter.textContent="Question "+shownTotal+" / "+shownTotal;
+    certText.textContent = "You completed level "+cfg.name+" on Fraction to Percentage and received a score of "+score+" out of "+shownTotal+".";
     certModalBack.classList.add("show");
     if(window.MMTSave) window.MMTSave({
       tool:"fraction-to-percentage-student-quiz", topic:"fdp",
-      level:cfg.name, levelKey, score, total:QUIZ_LEN,
-      percent:Math.round((score/QUIZ_LEN)*100), masteryTopic:"fraction-to-percentage",
+      level:cfg.name, levelKey, score, total:shownTotal,
+      percent:shownTotal?Math.round((score/shownTotal)*100):0, masteryTopic:"fraction-to-percentage",
       types:["level:"+levelKey].concat(Array.from(typeTags)),
-      certificateText:"Fraction to Percentage — "+cfg.name+": "+score+"/"+QUIZ_LEN
+      certificateText:"Fraction to Percentage — "+cfg.name+": "+score+"/"+shownTotal,
+      ...(MMTSubmit ? MMTSubmit.fields() : {})
     });
   }
 
   function startLevel(key){
     levelKey=key;
     bank=buildBank(key);
-    qIndex=0; score=0; typeTags.clear();
+    qIndex=0; score=0; attemptedCount=0; typeTags.clear();
+    if(MMTSubmit) MMTSubmit.reset();
     levelBanner.textContent="Level: "+LEVELS[key].name;
     levelModalBack.classList.remove("show");
     certModalBack.classList.remove("show");
@@ -746,7 +770,7 @@
   $("sameLevelBtn").addEventListener("click", () => certModalBack.classList.remove("show"));
   $("copyBtn").addEventListener("click", async () => {
     const cfg=LEVELS[levelKey]||{name:"—"};
-    const text="🏆 Mills Maths Tools – Fraction to Percentage\nLevel: "+cfg.name+"\nScore: "+score+" / "+QUIZ_LEN+"\n\n"+certText.textContent;
+    const text="🏆 Mills Maths Tools – Fraction to Percentage\nLevel: "+cfg.name+"\nScore: "+score+" / "+effectiveTotal()+"\n\n"+certText.textContent;
     try{ await navigator.clipboard.writeText(text); $("copyBtn").textContent="Copied!";
       setTimeout(()=>$("copyBtn").textContent="Copy to clipboard",1200); }
     catch(e){ window.prompt("Copy this text:", text); }

@@ -7,6 +7,16 @@ import { toolIdForAchievement } from "./mmtToolRegistry.js";
 
 export function num(v, d = 0) { const n = Number(v); return Number.isFinite(n) ? n : d; }
 
+/** Below this share of a quiz, a part-finished attempt is recorded and still
+ *  earns XP, but doesn't count towards mastery, win chips or topic averages.
+ *  Kept in step with COVERAGE_FLOOR in /portal/shared/earlySubmit.js. */
+export const COVERAGE_FLOOR = 50;
+
+/** A short label for a part-finished attempt, e.g. "Partial · 7 of 15". */
+export function partialLabel(r = {}) {
+  return r.partial ? `Partial · ${num(r.attempted)} of ${num(r.quizLength)}` : "";
+}
+
 /** ms since epoch for a record's date-ish fields (newest-first sorting). */
 export function recordTime(r = {}) {
   const c = r.createdAt;
@@ -42,6 +52,16 @@ export function normaliseAchievement(r = {}) {
     topic: r.topic || r.masteryTopic || "",
     missionKind: r.missionKind || "",
     score, total, percent,
+    // Shape of the attempt. A quiz submitted early records how far the student
+    // got; older records have none of this and read as complete, which they are.
+    partial: r.completion === "partial",
+    quizLength: r.quizLength != null ? num(r.quizLength) : total,
+    attempted: r.attempted != null ? num(r.attempted) : total,
+    coverage: r.coverage != null ? num(r.coverage) : 100,
+    // Below the coverage floor a part-finished attempt is still shown and still
+    // earns XP, but it can't stand in for mastery of the topic.
+    countsToMastery: r.countsToMastery != null ? !!r.countsToMastery
+                     : (r.coverage != null ? num(r.coverage) >= COVERAGE_FLOOR : true),
     xpEarned: num(r.xpEarned),
     time: recordTime(r),
     dateLabel: formatDate(r),
@@ -53,9 +73,14 @@ export function normaliseAchievement(r = {}) {
 export function summarise(records = []) {
   const n = records.length;
   const totalXp = records.reduce((a, r) => a + num(r.xpEarned), 0);
-  const avg = n ? Math.round(records.reduce((a, r) => a + num(r.percent), 0) / n) : 0;
-  const best = records.reduce((m, r) => Math.max(m, num(r.percent)), 0);
-  return { attempts: n, averagePercent: avg, bestPercent: best, totalXp };
+  // Every attempt counts as an attempt and earns its XP, but a part-finished
+  // one below the coverage floor doesn't move the average or the best — three
+  // right answers out of fifteen questions isn't a 100%.
+  const counted = records.filter(r => r.countsToMastery !== false);
+  const c = counted.length;
+  const avg = c ? Math.round(counted.reduce((a, r) => a + num(r.percent), 0) / c) : 0;
+  const best = counted.reduce((m, r) => Math.max(m, num(r.percent)), 0);
+  return { attempts: n, averagePercent: avg, bestPercent: best, totalXp, counted: c, partials: n - c };
 }
 
 /** Per-student rollup for the teacher table. */

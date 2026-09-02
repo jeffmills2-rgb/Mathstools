@@ -175,7 +175,7 @@
   function updateToggleLabel(){const boxes=Array.from(typesGrid.querySelectorAll('input[type=checkbox]'));if(!boxes.length){toggleAllTypesBtn.textContent=tr('deselectAll');return}toggleAllTypesBtn.textContent=boxes.every(b=>b.checked)?tr('deselectAll'):tr('selectAll')}
   function openTypeSelect(level){state.pendingLevel=level;typesGrid.innerHTML='';TYPES.filter(t=>t.level===level).forEach(t=>{const lab=document.createElement('label');lab.className='chk';const inp=document.createElement('input');inp.type='checkbox';inp.value=t.id;inp.checked=true;const span=document.createElement('span');span.className='typeText';span.innerHTML=state.language==='en'?`<span>${t.label}</span>`:`<span class="typeAlt">${trType(t.id,t.label)}</span><span>${t.label}</span>`;lab.appendChild(inp);lab.appendChild(span);typesGrid.appendChild(lab)});countInp.value=String(state.quizLength||QUIZ_LENGTH);typesWarn.classList.remove('show');updateToggleLabel();hideOverlay(levelOverlay);showOverlay(typeOverlay)}
   function selectedIds(){return Array.from(typesGrid.querySelectorAll('input[type=checkbox]:checked')).map(x=>x.value)}
-  function begin(){const ids=selectedIds();if(!ids.length){typesWarn.classList.add('show');return}let n=Number(countInp.value);if(!Number.isFinite(n))n=QUIZ_LENGTH;n=clamp(Math.round(n),5,60);state.quizLength=n;state.activeTypeIds=ids;start(state.pendingLevel,ids,n)}
+  function begin(){if(MMTSubmit)MMTSubmit.reset();const ids=selectedIds();if(!ids.length){typesWarn.classList.add('show');return}let n=Number(countInp.value);if(!Number.isFinite(n))n=QUIZ_LENGTH;n=clamp(Math.round(n),5,60);state.quizLength=n;state.activeTypeIds=ids;start(state.pendingLevel,ids,n)}
   function start(level,ids,n){reseed();state.level=level;state.questions=genQuestions(level,n,ids);state.index=0;state.records=[];state.score=0;state.answered=false;hideOverlay(levelOverlay);hideOverlay(typeOverlay);showQuestion()}
   function resetShell(){state.level=null;state.questions=[];state.index=0;state.records=[];state.score=0;state.answered=false;barFill.style.width='0%';qBox.textContent='—';qBox.className='qBox';choiceGrid.style.display='none';tfGrid.style.display='none';answerRow.style.display='flex';ansInput.value='';ansInput.disabled=true;badge.className='badge';badge.textContent='';retryBtn.style.display='none';nextBtn.style.display='none';prevBtn.style.display='none';skipBtn.style.display='inline-block';updateHeader()}
   
@@ -228,7 +228,7 @@
   }
 
   function showQuestion(){const q=state.questions[state.index];state.answered=!!state.records[state.index];qLabel.innerHTML=questionInstructionHTML(q);const boxHTML=questionBoxHTML(q);qBox.innerHTML=boxHTML;const plainLen=stripHTML(boxHTML).length;let wordClass=q.type==='word_problems'?'word '+(plainLen>170?'extraLong':plainLen>115?'long':''):q.mode==='tf'?'verify':q.mode==='mc'?'mcPrompt':'';qBox.className='qBox '+wordClass;choiceGrid.innerHTML='';tfGrid.innerHTML='';choiceGrid.style.display='none';tfGrid.style.display='none';answerRow.style.display=q.mode==='input'||q.mode==='quad'?'flex':'none';ansInput.value='';ansInput.disabled=false;ansInput.classList.remove('correct','wrong');badge.className='badge';badge.textContent='';retryBtn.style.display='none';nextBtn.style.display='none';skipBtn.style.display='inline-block';prevBtn.style.display=state.index>0?'inline-block':'none';if(q.mode==='mc'){choiceGrid.style.display='grid';q.choices.forEach(c=>{const b=document.createElement('button');b.className='choiceBtn';b.type='button';b.innerHTML=c;b.addEventListener('click',()=>markChoice(c));choiceGrid.appendChild(b)});}else if(q.mode==='tf'){tfGrid.style.display='flex';[{val:true,txt:tr('true')},{val:false,txt:tr('false')}].forEach(o=>{const b=document.createElement('button');b.className='choiceBtn';b.type='button';b.dataset.val=String(o.val);b.innerHTML=bilingual(o.txt,o.val?'True':'False');b.addEventListener('click',()=>markTF(o.val));tfGrid.appendChild(b)});}else{setTimeout(()=>ansInput.focus(),30)}if(state.records[state.index])restoreRecord();barFill.style.width=`${(state.index/state.questions.length)*100}%`;updateHeader();applyQuestionAnimation()}
-  function mark(ok,skipped=false,userAnswer=''){if(state.answered)return;const q=state.questions[state.index];state.answered=true;state.records[state.index]={type:q.type,label:q.label,ok,skipped,answer:q.answerHTML,userAnswer};state.score=state.records.filter(r=>r&&r.ok).length;if(ok)celebrate();badge.className='badge show '+(ok?'ok':'bad');badge.innerHTML=ok?tr('correct'):(skipped?tr('skipped'):`${tr('incorrect')} <span class="correctAnswer">${tr('correctAnswer')} ${q.mode==='tf'?(q.tf?tr('true'):tr('false')):q.answerHTML}</span>`);ansInput.disabled=true;ansInput.classList.remove('correct','wrong');if(q.mode==='input'||q.mode==='quad')ansInput.classList.add(ok?'correct':'wrong');skipBtn.style.display='none';nextBtn.style.display='inline-block';retryBtn.style.display=ok||skipped?'none':'inline-block';prevBtn.style.display=state.index>0?'inline-block':'none';barFill.style.width=`${((state.index+1)/state.questions.length)*100}%`;nextBtn.focus()}
+  function mark(ok,skipped=false,userAnswer=''){if(state.answered)return;const q=state.questions[state.index];state.answered=true;state.records[state.index]={type:q.type,label:q.label,ok,skipped,answer:q.answerHTML,userAnswer};state.score=state.records.filter(r=>r&&r.ok).length;if(MMTSubmit)MMTSubmit.refresh();if(ok)celebrate();badge.className='badge show '+(ok?'ok':'bad');badge.innerHTML=ok?tr('correct'):(skipped?tr('skipped'):`${tr('incorrect')} <span class="correctAnswer">${tr('correctAnswer')} ${q.mode==='tf'?(q.tf?tr('true'):tr('false')):q.answerHTML}</span>`);ansInput.disabled=true;ansInput.classList.remove('correct','wrong');if(q.mode==='input'||q.mode==='quad')ansInput.classList.add(ok?'correct':'wrong');skipBtn.style.display='none';nextBtn.style.display='inline-block';retryBtn.style.display=ok||skipped?'none':'inline-block';prevBtn.style.display=state.index>0?'inline-block':'none';barFill.style.width=`${((state.index+1)/state.questions.length)*100}%`;nextBtn.focus()}
   function markChoice(c){const q=state.questions[state.index];const ok=String(c)===String(q.correctChoice);choiceGrid.querySelectorAll('.choiceBtn').forEach(b=>{b.disabled=true;if(b.innerHTML===q.correctChoice)b.classList.add('correct');else if(b.innerHTML===c)b.classList.add('wrong')});mark(ok,false,c)}
   function markTF(val){const q=state.questions[state.index];const ok=val===q.tf;tfGrid.querySelectorAll('.choiceBtn').forEach(b=>{b.disabled=true;const isTrue=b.dataset.val==='true';if(isTrue===q.tf)b.classList.add('correct');else if(isTrue===val)b.classList.add('wrong')});mark(ok,false,val?tr('true'):tr('false'))}
   function submit(){if(state.answered){next();return}const q=state.questions[state.index];if(q.mode==='input'||q.mode==='quad')mark(answerOK(ansInput.value,q),false,ansInput.value)}
@@ -285,6 +285,32 @@
       if(menu){ menu.style.display = 'inline-block'; menu.className = 'btn'; menu.style.background='#fee2e2'; menu.style.color='#991b1b'; menu.textContent = tr('menu'); }
     }
   }
+
+
+  /* ---- Finish & submit (shared) ----------------------------------------
+     Lets a student who has run out of time submit the questions they have
+     finished. See /portal/shared/earlySubmit.js. On an early submit the quiz
+     is trimmed to the questions actually attempted, so every figure the finish
+     screen works out — score line, breakdown, XP — is out of that number. */
+  let MMTSubmit=null;
+  import("/portal/shared/earlySubmit.js").then(m=>{
+    MMTSubmit=m.MMTSubmit;
+    MMTSubmit.register({
+      progress:()=>({
+        attempted: state.records.filter(Boolean).length,
+        correct: state.records.filter(r=>r&&r.ok).length,
+        quizLength: state.questions.length
+      }),
+      finish:()=>{
+        if(MMTSubmit.isPartial()){
+          const done = state.records.filter(Boolean).length;
+          state.questions = state.questions.slice(0,done);
+          state.records = state.records.slice(0,done);
+        }
+        finish();
+      }
+    });
+  }).catch(e=>console.warn("Early submit unavailable:", e&&e.message));
 
   function finish(){
     barFill.style.width='100%';
@@ -585,13 +611,14 @@
           score:state.score,
           total,
           percent,
-          xpEarned: xp.xpEarned,
+          xpEarned: window.MMTSubmit ? window.MMTSubmit.scaleXP(xp.xpEarned) : xp.xpEarned,
           baseXP: xp.baseXP,
           xpMultiplier: xp.multiplier,
           xpRuleVersion: xp.xpRuleVersion,
           xpMultiplierReason: xp.xpMultiplierReason,
           streakEligible: true,
           masteryTopic: 'Equations',
+          ...(window.MMTSubmit ? window.MMTSubmit.fields() : {}),
           studentCode:currentStudent.studentCode,
           studentName:currentStudent.name || '',
           className:currentStudent.className || '',

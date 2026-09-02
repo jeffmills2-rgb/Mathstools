@@ -693,6 +693,24 @@
   let qIndex = 0;
   let score = 0;
 
+  /* ---- Finish & submit (shared) ----------------------------------------
+     Lets a student who has run out of time submit the questions they have
+     finished. See /portal/shared/earlySubmit.js. Loaded dynamically so the
+     quiz still runs if the module can't be reached. */
+  let attemptedCount=0;            // questions finished with, not the current one
+  let MMTSubmit=null;
+  import("/portal/shared/earlySubmit.js").then(m=>{
+    MMTSubmit=m.MMTSubmit;
+    MMTSubmit.register({
+      progress:()=>({ attempted:attemptedCount, correct:score, quizLength:QUIZ_LEN }),
+      finish:()=>showCertificate()
+    });
+  }).catch(e=>console.warn("Early submit unavailable:", e&&e.message));
+
+  // The denominator to report: what was attempted after an early submit,
+  // the full quiz length otherwise.
+  function effectiveTotal(){ return MMTSubmit ? MMTSubmit.total() : QUIZ_LEN; }
+
   // phases for Enter-key behaviour
   // awaiting: user typing answer
   // revealing: animation/reveal is playing
@@ -1154,6 +1172,8 @@
 
     qIndex = 0;
     score = 0;
+    attemptedCount = 0;
+    if (MMTSubmit) MMTSubmit.reset();
 
     setBanner();
     setProgress();
@@ -1181,7 +1201,9 @@
     resetInputStyles();
     answerInput.classList.add(correct ? "ok" : "bad");
 
+    attemptedCount++;
     if (correct) score++;
+    if (MMTSubmit) MMTSubmit.refresh();
 
     // lock input while revealing
     lockForReveal();
@@ -1210,14 +1232,16 @@
 
   function showCertificate(){
     const L = LEVELS[levelKey].name;
-    certLine1.textContent = `You completed ${L} and got ${score} out of ${QUIZ_LEN}.` + (window.MMTAuth ? window.MMTAuth.certTail() : " Paste a screenshot into Google Classroom.");
+    const total = effectiveTotal();
+    certLine1.textContent = `You completed ${L} and got ${score} out of ${total}.` + (window.MMTAuth ? window.MMTAuth.certTail() : " Paste a screenshot into Google Classroom.");
     showModal(certModal);
     if(window.MMTSave) window.MMTSave({
       tool:"integer-addition-student-quiz", topic:"integers",
-      level:L, levelKey, score, total:QUIZ_LEN,
-      percent:Math.round((score/QUIZ_LEN)*100), masteryTopic:"integer-addition",
+      level:L, levelKey, score, total,
+      percent:total?Math.round((score/total)*100):0, masteryTopic:"integer-addition",
       types:["level:"+levelKey],
-      certificateText:`Integer Add/Subtract — ${L}: ${score}/${QUIZ_LEN}`
+      certificateText:`Integer Add/Subtract — ${L}: ${score}/${total}`,
+      ...(MMTSubmit ? MMTSubmit.fields() : {})
     });
   }
 
