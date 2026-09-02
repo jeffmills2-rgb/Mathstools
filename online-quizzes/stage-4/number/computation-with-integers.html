@@ -223,6 +223,21 @@
       border-radius: 999px;
       transition: width .25s ease;
     }
+    .mmtSubmitSlot{
+      display:flex;
+      align-items:center;
+    }
+    .mmtSubmitSlot:empty{ display:none; }
+    .partialNote{
+      margin-top: 6px;
+      padding: 8px 12px;
+      border-radius: 10px;
+      background: #fef3c7;
+      color: #92400e;
+      font-weight: 800;
+      font-size: 15px;
+      line-height: 1.4;
+    }
     .qCounter{
       font-weight: 1000;
       font-size: 20px;
@@ -777,6 +792,7 @@
       <div class="progressRow">
         <div class="bar"><div id="barFill"></div></div>
         <div id="qCounter" class="qCounter">Question 0/0</div>
+        <div id="mmtSubmitSlot" class="mmtSubmitSlot"></div>
       </div>
 
       <div class="stage">
@@ -886,6 +902,7 @@
           <div id="platformSub" class="platformSub"></div>
           <div id="xpLine" class="xpLine" style="display:none"></div>
           <div id="guestPrompt" class="guestPrompt" style="display:none"></div>
+          <div id="partialNote" class="partialNote" style="display:none"></div>
           <div id="saveStatus" class="saveStatus"></div>
           <div class="muted" id="scoreBreakdownLabel">Score breakdown:</div>
         </div>
@@ -1970,6 +1987,7 @@ function scaleHardExpressions(){
   const platformSub = document.getElementById("platformSub");
   const xpLine = document.getElementById("xpLine");
   const guestPrompt = document.getElementById("guestPrompt");
+  const partialNote = document.getElementById("partialNote");
   const saveStatus = document.getElementById("saveStatus");
   const loggedSubmitBtn = document.getElementById("loggedSubmitBtn");
   const loggedSubmitMenuBtn = document.getElementById("loggedSubmitMenuBtn");
@@ -2114,6 +2132,25 @@ function scaleHardExpressions(){
   let currentAnswer = null;
   let lastBuiltMode = null;
   let interactionApi = null;
+
+  /* ---- Finish & submit (shared) ------------------------------------------
+     Lets a student who has run out of time submit the questions they HAVE
+     finished. The module owns the button, the confirm dialog and the partial
+     fields; this quiz only says how to read its own progress. Loaded
+     dynamically so the page still works if the module can't be reached. */
+  let MMTSubmit = null;
+  import("/portal/shared/earlySubmit.js").then(m => {
+    MMTSubmit = m.MMTSubmit;
+    MMTSubmit.register({
+      // scoreByType only counts a question once it has been marked, so this is
+      // always "finished with", never the question currently on screen.
+      progress: () => {
+        const t = currentScoreTotals();
+        return { attempted: t.total, correct: t.correct, quizLength: totalQuestions };
+      },
+      finish: () => finish()
+    });
+  }).catch(e => console.warn("Early submit unavailable:", e && e.message));
 
 
   const teacherBuilderOverlay = document.getElementById("teacherBuilderOverlay");
@@ -2262,6 +2299,7 @@ function scaleHardExpressions(){
   }
 
   function initScoreMap(){
+    if (MMTSubmit) MMTSubmit.reset();
     scoreByType = new Map();
     for (const t of selectedTypes){
       scoreByType.set(t, { correct:0, total:0, skipped:0 });
@@ -2840,6 +2878,7 @@ function scaleHardExpressions(){
 
     hasMarked = true;
     showPostMarkButtons();
+    if (MMTSubmit) MMTSubmit.refresh();
   }
 
   function goNext(){
@@ -2899,8 +2938,18 @@ function scaleHardExpressions(){
   }
   function configureFinishScreen(correct,total){
     const xp = calculateXP(correct,total);
+    const partial = Boolean(MMTSubmit && MMTSubmit.isPartial());
     const registered = window.MMTFirebase && window.MMTFirebase.mode === 'registered' && window.MMTFirebase.currentStudent;
-    if(xpLine){ xpLine.style.display = 'inline-flex'; xpLine.textContent = `XP earned: ${xp.xpEarned} XP`; }
+    const shownXP = MMTSubmit ? MMTSubmit.scaleXP(xp.xpEarned) : xp.xpEarned;
+    if(xpLine){ xpLine.style.display = 'inline-flex'; xpLine.textContent = `XP earned: ${shownXP} XP`; }
+    // An early submit ends the attempt, so don't offer a way back into it.
+    if(closeBtn) closeBtn.style.display = partial ? 'none' : '';
+    if(partialNote){
+      partialNote.style.display = partial ? 'block' : 'none';
+      partialNote.textContent = partial
+        ? `You submitted after ${total} of ${totalQuestions} questions. Your teacher will see this as a part-finished attempt.`
+        : '';
+    }
     if(saveStatus){ saveStatus.textContent=''; saveStatus.className='saveStatus'; }
     if(registered){
       if(platformSub) platformSub.textContent = `Result ready to save to your dashboard. Your teacher will be able to view this result.`;
@@ -2921,6 +2970,9 @@ function scaleHardExpressions(){
     if(achievementSaveStarted){ if(backToMenuAfter) hardBackToMenu(); else setModalState(null); return; }
     const { total, correct } = currentScoreTotals();
     const xp = calculateXP(correct,total);
+    // A part-finished attempt earns XP for what was done, not for the whole quiz.
+    const xpEarned = MMTSubmit ? MMTSubmit.scaleXP(xp.xpEarned) : xp.xpEarned;
+    const attemptShape = MMTSubmit ? MMTSubmit.fields() : { completion:'complete' };
     if(saveStatus){ saveStatus.textContent = 'Saving result...'; saveStatus.className = 'saveStatus show info'; }
     try{
       if(!window.MMTFirebase || window.MMTFirebase.mode !== 'registered') throw new Error('No student code is active.');
@@ -2932,11 +2984,12 @@ function scaleHardExpressions(){
         score: correct,
         total,
         percent: xp.percent,
-        xpEarned: xp.xpEarned,
+        xpEarned,
         xpBase: xp.xpBase,
         xpMultiplier: xp.xpMultiplier,
         xpRuleVersion: xp.xpRuleVersion,
         masteryTopic: QUIZ_TOPIC,
+        ...attemptShape,
         assignmentMode: Boolean(window.MMTAssignment?.assignmentMode),
         assignmentSource: window.MMTAssignment?.source || '',
         assignmentId: window.MMTAssignment?.id || '',
@@ -2946,7 +2999,7 @@ function scaleHardExpressions(){
         certificateText: `${L().copyTitle(levelLabelPlain(currentLevel))} - ${correct}/${total}`
       });
       achievementSaveStarted = true;
-      if(saveStatus){ saveStatus.textContent = `Result saved to your dashboard. XP earned: ${xp.xpEarned}.`; saveStatus.className = 'saveStatus show ok'; }
+      if(saveStatus){ saveStatus.textContent = `Result saved to your dashboard. XP earned: ${xpEarned}.`; saveStatus.className = 'saveStatus show ok'; }
       setTimeout(() => { if(backToMenuAfter) hardBackToMenu(); else setModalState(null); }, 450);
     }catch(err){
       console.error(err);
@@ -3132,8 +3185,10 @@ function scaleHardExpressions(){
     hardBackToMenu();
     openTeacherBuilder();
   }
+  // Was outside the IIFE, where scaleHardExpressions isn't in scope — so this
+  // threw on load and hard expressions never re-scaled on resize or rotate.
+  window.addEventListener("resize", scaleHardExpressions);
 })();
-window.addEventListener("resize", scaleHardExpressions);
 </script>
   <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "c7e5713b5e4f4993907eb285797dc89b"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
