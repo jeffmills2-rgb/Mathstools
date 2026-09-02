@@ -16,6 +16,347 @@
 > §2 "TWO folders", §3 deploy paths and §5's `mathstools-main 2` heading below
 > describe the OLD layout — this block supersedes them.
 >
+> **NEW (2026-09-02, session — being pushed): THE WORKING PAD.** A drag-and-drop
+> scratchpad beside the figure, shared by the teaching tool (Settings → **Working
+> pad**, off by default) and the student quiz (always on, every level). One
+> source: it lives in the TOOL between sections 5 and 6 and the quiz's extractor
+> carries it across with the engine — edit it in the tool, re-cut, rebuild.
+>
+> * **WHAT IT IS FOR.** Adding a dozen sides is not the skill; keeping track of
+>   WHICH ONES YOU HAVE ALREADY USED is where the marks go, and on paper it is
+>   invisible. Drag a side off the figure and it lands in the pad as a number
+>   and the side turns GREEN, so what is left to count is obvious at a glance.
+> * **THE PAD NEVER ADDS FOR YOU.** Dropping one number on another opens "What
+>   is the sum?" and the two only become one when the student says what they
+>   make — the same combine-by-answering rule as the **Row & Column
+>   Challenge** (`games/row-column-challenge.html`), deliberately, so a class
+>   meets the mechanic twice. A wrong sum shakes the box and changes nothing.
+> * **A `?` CANNOT BE DRAGGED IN.** It has to be found first, which keeps the
+>   sides-before-adding order intact even at the levels where the animation is
+>   switched off. Dropping a number outside the pad sends it back to the figure.
+> * **THE HOST HANDS IT `SRC`** — `{edges, unit, busy, render}` — so nothing in
+>   the pad knows which page it is on. `render()` is how the green gets back
+>   onto a rebuilt board: the engine's `render()` ends with
+>   `if (window.__PAD__) window.__PAD__.paint()`, and `resetWalk()` calls
+>   `PAD.reset()` so a new figure starts a clean pad.
+> * **TWO TRAPS.** (1) The pad can be switched on BEFORE the first figure
+>   exists, so `repaint()` must not call `render()` with `S.shape` null.
+>   (2) A drag that starts on a side also arrives as a CLICK on it when you let
+>   go — which opens the side editor — so any click within 320 ms of a real
+>   drag is swallowed in the capture phase.
+> * **Verified**: `padcheck.mjs`, 19 checks driving the real mouse — every side
+>   dragged in, the green count, no side twice, the sum prompt refusing a wrong
+>   answer, joining down to one tile that equals the perimeter, undo, a new
+>   figure clearing the pad, a `?` refused, and switching the pad off clearing
+>   the green. Plus 20 more inside the quiz's own harness.
+
+> **NEW (2026-09-02, session — being pushed): PERIMETER OF PLANE SHAPES —
+> STUDENT QUIZ.** `online-quizzes/stage-4/measurement-space/perimeter-plane-shapes.html`,
+> the third page of the family and the one the tool's "Tools ▾" menu finally
+> points at in full (both rows are now live). Registered in
+> `portal/shared/mmtToolRegistry.js` as `perimeter-plane-shapes-quiz`, writing
+> `tool: "perimeter-plane-shapes-student-quiz"`, so a teacher can set it from
+> the dashboard.
+>
+> * **THE LEVEL IS HOW MUCH OF THE TOOL THE STUDENT KEEPS.** That is the whole
+>   design and it is a teacher decision (2026-09-02), not an accident of
+>   difficulty. **Sweet** hands over the teaching tool entire: click a `?` and
+>   the side flies across, trace the perimeter and the number sentence builds
+>   term by term. **Mild** is the same tool with a wider bank and NO number
+>   sentence. **Medium** takes the clicking away — the figure is to be READ —
+>   and the trace becomes a plain blue line. **Spicy** is the worksheet's spicy
+>   bank (staircases, combs, decimals), read-only, half missing sides.
+> * **THE TOTAL IS NEVER ON THE SCREEN.** The engine's `paintTotal` and
+>   `paintFormula` are replaced with empty functions and `paintExpression`
+>   stops at "= ?", because the tool's running total IS this page's answer.
+>   A headless check re-derives every perimeter and fails if that number can
+>   be found in the visible text before the student has answered — a perimeter
+>   is always longer than any one side, so it can never be a label by
+>   coincidence.
+> * **"Reveal all sides" IS GONE ON PURPOSE.** Sweet and Mild students click
+>   each side themselves; there is no button that does it for them.
+> * **SWEET IS WHOLE NUMBERS AND NO COMPOSITES** (teacher decision 2026-09-02):
+>   the worksheet's Medium bank with L, T and the cross taken out, scale fixed
+>   at 1. The cross went with the other two because it is a harder composite
+>   than either.
+> * **ENTER MARKS, THEN MOVES ON — AND THE BOX MUST STAY FOCUSABLE.** A
+>   `disabled` input drops focus and stops firing `keydown`, so the second
+>   Enter went nowhere. It is `readOnly` and refocused instead.
+> * **THE WORKING PAD IS ON AT EVERY LEVEL.** It is not a difficulty setting,
+>   it is the workbench — see the 2026-09-02 working-pad block.
+> * **THE ENGINE IS THE TEACHING TOOL'S, COPIED.** Everything above the quiz
+>   layer is lifted from `interactive-tools/.../perimeter-plane-shapes/` so a
+>   figure behaves identically in class and in the quiz. Only FOUR things were
+>   patched: `chooseKey` reads the level's pool, `resetWalk` drops the predict
+>   row and the side editor, and both the walk's stop-at-a-missing-side rule
+>   and the click target now ask `QUIZ.stopAtMissing()` / `QUIZ.canAnimate()`.
+>   Fix a shape in one place and port it to all three files.
+> * **TWO SIDES TO FIND IS THE MOST ANY FIGURE ASKS.** A regular pentagon can
+>   legitimately carry one number and four tick marks, but four clicks to
+>   start a question is a chore, not a lesson. A third of figures come fully
+>   labelled so students cannot answer by reflex.
+> * **A MISSING-SIDE QUESTION SHOWS EXACTLY ONE `?`.** Otherwise it has no
+>   single answer. The sides a derivation reads from are always labelled, so
+>   re-knowing the others can never strand the one that is kept; a check
+>   asserts both.
+> * **ONLY THE FIRST ATTEMPT SCORES.** A wrong answer goes red and stays
+>   editable so the student finishes the thinking, but the dashboard number
+>   means what it says. Once a question is settled every side is revealed, so
+>   they can see where it went wrong.
+> * **Verified** through Playwright: 77 checks — every level's bank re-derived
+>   from its own geometry, the pools obeyed, what each level lets the student
+>   hold (clickable sides, the number sentence, whether the trace stops at a
+>   `?`), the answer never on screen, marking and the score, the certificate
+>   and the exact save payload, the fit at 1366x768, and zero label collisions
+>   over 24 generated papers. Harness: `check.mjs` in the session scratch.
+
+> **NEW (2026-09-01, session — being pushed): PERIMETER OF PLANE SHAPES —
+> WORKSHEET CREATOR.** `worksheet-creators/stage-4/measurement-space/perimeter-plane-shapes.html`,
+> the printable sibling of the teaching tool and cross-listed under the same
+> outcome (**MA4-LEN-C-01**). Same shell, A4 machinery and trilingual EN/AR/FA
+> convention as the Unit Conversion creator; the tool's "Tools ▾" menu is now a
+> single live row pointing at it, with only Student Quiz still greyed out.
+>
+> * **THE FIGURES ARE THE TEACHING TOOL'S OWN.** The whole geometry section is
+>   lifted from `interactive-tools/.../perimeter-plane-shapes/`, with
+>   `applyReasoning` taking the missing-side mode as an ARGUMENT instead of
+>   reading tool state. Fix a shape in one place and port it to the other.
+> * **FIVE SECTIONS, AND THE ORDER IS THE POINT.** **A Find the missing side**
+>   asks for one length and explicitly *no perimeter* — the commonest Year 7
+>   error is adding four numbers when the figure has six sides, so the sides
+>   get a section of their own. **B** is perimeter with every side labelled,
+>   pure addition. **C** puts the two steps together. **D Work backwards**
+>   gives the perimeter and takes a side away. **E Use it** is short Australian
+>   contexts. Teacher choice 2026-09-01: no "use the shortcut" section.
+> * **EQUAL SIDES ARE MARKED, NOT REPEATED — IN EVERY SECTION.** Teacher
+>   feedback 2026-09-01: three `17.5 cm` labels crammed into one notch. So
+>   `markEqualSides` groups edges by their LENGTH on the finished figure (not
+>   by the builder's `cls`, which composites do not set), gives each class its
+>   own tick count, and prints the value ONCE — the rest carry the marks alone
+>   (`e.hide`). Capped at three classes; nobody counts four tick marks. A side
+>   printed in another unit is left out of the grouping, because its text does
+>   not match its partners'.
+> * **THE MARKS ARE NOT OPTIONAL.** The toggles for equal-side and right-angle
+>   marks were REMOVED (teacher feedback 2026-09-01): without them an
+>   unlabelled side cannot be assumed equal and the question has no answer.
+>   Headless checks assert every hidden side has a visible equal partner with
+>   the same tick count, that no two different lengths share a tick count, and
+>   that everything printed is still enough to answer the question.
+> * **WORK BACKWARDS HAS TWO SHAPES.** An equal-sided figure (square, rhombus,
+>   equilateral, regular polygon) gets NO side labelled and P ÷ n is the
+>   question; everything else has every side but one, and the answer is P minus
+>   the rest.
+> * **THE ANSWER KEY GIVES THE REASON.** `whyOf` prints "equal to the 9 cm
+>   side", "4 + 3 = 7 cm" or "16 − 9 = 7 cm" under every answer, so the key can
+>   be handed to a student. Do not reduce it to bare numbers.
+> * **FOUR THINGS MAKE THE PAGE FILL, AND THE LAYOUT REPEATABLE.** Teacher
+>   feedback 2026-09-01 was that the spacing was hit and miss and re-generating
+>   gave a different fit each time. Measured, the causes were:
+>   (1) every figure had its OWN viewBox aspect, so one card was half again as
+>   tall as its neighbour and the grid row stretched to the tallest — now a
+>   FIXED `VBW × VBH` box, and every figure card is exactly the same height;
+>   (2) the worksheet and the key shared one pagination while a key card runs
+>   up to 138px taller than the blank one it mirrors (the reason line), so the
+>   worksheet reserved the KEY's height and left ~100mm of every page blank —
+>   the two halves are now paginated SEPARATELY, same questions, same order;
+>   (3) heights that varied per run — the randomly chosen reasoning prompt and
+>   the word cards — are now pinned (probe the TALLEST prompt, and
+>   `.qCard.word` has a min-height), which makes the page count identical on
+>   every press of Generate;
+>   (4) whatever the questions leave is taken by the reasoning box, or by a
+>   ruled **Working** box when the prompt is off, and neither carries a
+>   max-height any more. Worksheet waste is now 3mm in every configuration.
+> * **PACKING IS MAXIMIN, THEN DE-WIDOWED.** Rows only fit a page in whole
+>   numbers, so tightening the cap does nothing until it crosses a threshold —
+>   searching for the first cap that still fits just returns greedy. Every cap
+>   is tried and the packing with the FULLEST emptiest page wins. A uniform cap
+>   still cannot say "three rows here but stop before the word problems there",
+>   so `deWidow` then pulls whole rows back off the second-to-last page until
+>   the last one carries its weight, and re-derives the "continued" flags.
+>   9, 9, 6, 1 became 9, 9, 4, 3.
+> * **THE PACKER WALKS REAL ROW HEIGHTS.** Every card is measured in the probe,
+>   per half, and the pages are filled row by row. Sampling one row drops a
+>   card under the page footer.
+> * **NOT THE SAME SHAPE TWICE RUNNING**, and the Sweet tier is four shapes,
+>   not two — squares and rectangles were a third of every paper.
+> * **THE LABEL SOLVER IS THE TOOL'S, AND SO ARE ITS TRAPS.** Real metrics from
+>   a hidden `#probeText`; most-constrained-first placement with each label free
+>   to sit either side of its own line; then relaxation; then the type steps
+>   down. **`#probeText` MUST carry `text-anchor:middle; dominant-baseline:middle`**
+>   — a start-anchored probe hands the solver an offset of half the label width
+>   and every box lands wrong, which is exactly the bug that put labels outside
+>   their figures on the first run. And `PADX` must be wide enough to hold a
+>   whole label outside the figure, or the clamp drags numbers back over the
+>   shape's own edge.
+> * **Verified** through Playwright: 115 checks including every generated answer
+>   re-derived from the geometry at all four levels, the shape tick-list obeyed,
+>   nine different papers checked for label collisions / labels outside their
+>   figure / cards under the page footer, the answer key mirroring the worksheet
+>   question for question, all three languages with the units staying Western,
+>   and the control panel's warnings and reset. Harness: `check.mjs` in the
+>   session scratch, not the repo.
+
+> **NEW (2026-09-01, session — being pushed): PERIMETER OF PLANE SHAPES.** A
+> Stage 4 teaching tool at
+> `interactive-tools/stage-4/measurement-space/perimeter-plane-shapes/index.html`,
+> filed under **MA4-LEN-C-01**. Self-contained inline CSS/JS, same shell and
+> tokens as the Unit Conversion tool. It takes the perimeter trace from the
+> Area Model Splitter and drops the grid entirely: plane shapes drawn TO SCALE
+> from their own side lengths. Teacher choice 2026-09-01: its "Tools ▾" menu is
+> ONE live row — the **Worksheet Creator** — with Student Quiz greyed out; the
+> Splitter links back. No Firebase, no registry entry, no student quiz yet.
+>
+> * **THE TRACE REFUSES TO WALK PAST AN UNLABELLED SIDE.** This is the whole
+>   tool. The walk stops dead at a `?` side, that side pulses, and the prompt
+>   asks for it to be clicked; resolving it resumes the walk automatically from
+>   the same index. The common Year 7 error is not adding wrongly, it is adding
+>   four numbers when the figure has six sides, so the tool makes that
+>   impossible rather than marking it afterwards. `S.waitingOn` holds the index;
+>   `resolveEdge` re-enters `runWalk()` only when it matches.
+> * **A MISSING SIDE IS FOUND, NOT GUESSED.** Clicking a `?` flies a GHOST of
+>   the side it comes from across the figure and lays it on top. THREE forms,
+>   all declared per shape as `derive`:
+>   `{type:'copy', from:[i]}` for an equal side; `{type:'sum', from:[i,j,...]}`
+>   for a long side, where the ghosts land END TO END so they visibly cover it;
+>   and `{type:'part', whole:w, others:[...]}` for a SHORT side, where the other
+>   pieces fly onto the (labelled) long side and stop short.
+>   **THE `part` SEQUENCE HAS FIVE BEATS AND THEY ARE ALL LOAD-BEARING**
+>   (teacher feedback 2026-09-01): the known pieces fly on → they slide TOGETHER
+>   and become ONE number with a pop (`5 + 6` becomes `11`) → the unknown flies
+>   ACROSS and takes the room that is left → `11 + ? = 15` → the answer pops in
+>   place and flies HOME with another pop. The pieces are packed to the START of
+>   the long side. **THE GAP NEVER MOVES** (teacher feedback 2026-09-02): it
+>   keeps the unknown's OWN slot, directly across the figure from the side it
+>   stands for. It does not have to move — the pieces TILE the long side, so
+>   taking the unknown's slot out always leaves one clear stretch. Packing them
+>   to the long side's `A` end is packing to a WINDING direction, not to a place
+>   on the screen, and on a U-shape it threw the gap to the opposite corner from
+>   the side being found, where it read as a different side altogether.
+>   What cannot always be drawn is the merged BAR: with the unknown at one END
+>   the known pieces are already side by side and merge where they truly are;
+>   with it in the MIDDLE they sit on either side of it, so nothing is merged
+>   and the prompt does the adding instead. A tidier picture is not worth a
+>   misleading one. Harness check 11 asserts the gap lands within 6% of the
+>   long side's length of the side it stands for, and it FAILS on the old
+>   packing — verified before the fix was accepted.
+>   Subtraction as "what room is left", never as a rule. The animation IS the
+>   justification; do not replace it with a printed one.
+> * **EVERY NUMBER IN A `part` RUN SITS INSIDE THE FIGURE.** The long side's own
+>   number is outside it, and two numbers on one line collide.
+> * **WHAT IS MISSING IS A SETTING, NOT A DIFFERENT SHAPE.** Every composite
+>   declares `groups {whole, parts[]}` (a long side and the shorter sides that
+>   tile it) and `pairs [i,j]` (simply equal sides); `applyReasoning` reads
+>   `S.missMode` — mix / whole / part — and decides what to hide. Groups and
+>   pairs NEVER share an edge, which is what guarantees the source of a
+>   derivation is itself labelled. Teacher feedback 2026-09-01: leaving only the
+>   long sides missing trains one move; the short-side case is the one that
+>   catches students out.
+> * **SIX COMPOSITES, FROM THE TEXTBOOK PAGES.** L, T and cross; then the
+>   harder group — staircase (3–4 steps), U (one notch) and E (two notches).
+>   The notch is the point of the last two: **P = 2(W + H) breaks there.** A
+>   step can be pushed out to the enclosing rectangle, a notch cannot, so each
+>   notch adds its depth TWICE and `boxFormula` says so on the card. A headless
+>   check asserts the box rule for L/T/cross/staircase and asserts it FAILS for
+>   U/E.
+> * **THE GHOSTS ARE ORDERED GEOMETRICALLY, NOT BY HAND.** `sortAlong` projects
+>   each piece's midpoint onto the long side's own unit vector; `slotsAlong`
+>   then lays the lengths end to end, rescaled to fill it exactly so rounding
+>   can never make a piece overshoot. That is what makes the `part` gap appear
+>   in its TRUE position, and it survives every rotation. Hand-listed ordering
+>   broke as soon as `rot90` was applied.
+> * **A LONG THIN FIGURE IS NEVER TURNED ON ITS SIDE.** `turnFor` allows the
+>   quarter turns only when the figure is roughly as wide as it is tall; a 2:1
+>   comb rotated to portrait is bound by the board's height, renders at half
+>   the size, and takes the room its numbers need with it. An elongated figure
+>   gets the half turn instead, which costs no scale. Related: the viewBox
+>   WIDTH follows the figure's own aspect ratio (`computeFit`) and the board's
+>   max-width is derived from it, so a portrait figure is never letterboxed
+>   inside a landscape box.
+> * **THE NOTCH MUST BE A BITE, NOT A SLOT.** A notch three deep and six wide
+>   has to hold three numbers in three units of depth. `comb().dims()` keeps
+>   each gap within one unit of the depth and derives H from W, so every notch
+>   has a roughly square mouth — which is also how a textbook draws one.
+> * **THE GHOST'S NUMBER IS OFFSET ALONG THE LINE'S OWN NORMAL** —
+>   `translate(0,-27) rotate(-ang)`, in that order. Offsetting in screen space
+>   (`rotate(-ang) translate(0,-25)`) puts the number on top of a vertical side.
+> * **A CSS `transform` REPLACES AN SVG `transform` ATTRIBUTE.** A pop keyframe
+>   put on the group that carries `translate()/rotate()` parks the ghost at the
+>   ghost layer's ORIGIN, and `animation-fill-mode: both` leaves it there for
+>   the rest of the lesson — the stray orange bar teachers reported. Every
+>   ghost is therefore built as `g` (position) > `.ghostInner` (scale) > line +
+>   label wrapper > `text` (its own pop), and a keyframe only ever touches
+>   `.ghostInner` or the `text`. Harness check 9 samples the whole sequence and
+>   fails if any flying number leaves the figure's box.
+> * **WHICH SIDE A FLYING NUMBER FACES IS A QUESTION ABOUT THE ANGLE IT LANDS
+>   AT.** A segment is symmetric, so `nearestAngle` may settle a ghost 180°
+>   round from the angle it was asked for; asking `labelSide` at the requested
+>   angle put two numbers of the same run on opposite sides of one line. A
+>   ghost carries `pin = {nx, ny, want}` (+1 outside, −1 inside) and `applyPin`
+>   recomputes the side from the RESTING angle inside `moveGhost`.
+> * **EVERY RESET RETIRES THE RUNNING ANIMATION.** `S.resolveToken` is bumped
+>   by `abandonAnimation()`, `resolveEdge` checks `alive()` after every await,
+>   and the ghost layer is swept — otherwise "New numbers" pressed mid-flight
+>   stranded the numbers on screen and the abandoned sequence carried on
+>   editing a figure that no longer existed. Harness check 10 covers it.
+> * **LABEL PLACEMENT IS SOLVED, NOT COMPUTED.** A twelve-sided figure with
+>   3 cm sides puts its numbers on top of each other. `solveLabels` sizes the
+>   type from the SHORTEST side, then places most-constrained-first over three
+>   sweeps — each label choosing which SIDE of its own line to sit on (the
+>   inside of a notch is often the only place a number fits, which is where a
+>   textbook puts it) and how far to slide along it — then relaxes the rest
+>   apart, `out` being allowed to go NEGATIVE so the two walls of a notch can
+>   pass back across their own lines instead of deadlocking. If nothing packs,
+>   the type steps down until it does. Verified at zero collisions and zero
+>   spill over 2160 generated figures.
+> * **TWO TRAPS COST HOURS HERE; BOTH ARE STILL LIVE.**
+>   (1) `.sideLabel` MUST NOT declare `font-size` in CSS — a CSS declaration
+>   beats an SVG presentation attribute, so the solver sized every label at
+>   16px and the browser drew all of them at 27px, and the solver reported
+>   success while the screen showed overlaps.
+>   (2) `measureText`'s probe returns `getBBox()` in the PROBE'S OWN user
+>   space, so its parked x/y must be subtracted from the offsets — leave them
+>   in and every label inherits the probe's parking spot and the layout is
+>   silently wrong. The probe is parked at (200,290) rather than the origin
+>   only so its hidden box does not hang off the left edge and read as spill.
+> * **EVERY OUTLINE IS COUNTER-CLOCKWISE IN y-UP, AND MUST STAY SO.** Outward
+>   normals are `(-Dy, Dx)` from the winding, NOT "away from the centroid" —
+>   the centroid rule puts the L-shape's step labels inside the notch. Builders
+>   hand back CCW polygons; `rot90` preserves it, reflections do not, which is
+>   why the L has two hand-written outlines (notch top-right, notch top-left)
+>   and only ever gets rotated. A non-CCW outline logs a console warning.
+> * **THE L IS PARAMETRISED BY ITS FOUR LABELLED SIDES** (`a` top, `b` step
+>   across, `c` step down, `d` short right), so `W = a + b` and `H = c + d` are
+>   exactly the two sides to find, every labelled side is independently
+>   editable, and no edit can produce an invalid figure. Its formula reveal is
+>   `2 × (W + H)` — the same perimeter as the rectangle around it.
+> * **THE TRAPEZIUM IS PARAMETRISED BY WHAT IS DRAWN** (`a`, `b`, `h`) and the
+>   sloping side is COMPUTED, never stored. Storing `L` alongside `a` and `b`
+>   let an edit change the base while the slant kept its old label. Defaults
+>   come from Pythagorean triples so the slant starts whole.
+> * **THE FORMULA COMES LAST.** The addition builds term by term as the walk
+>   goes; only when it closes does `2(l + w)` / `4s` / `n × s` appear, so the
+>   shortcut is a compression of something already seen. Settings toggles:
+>   missing sides, running total, formula reveal, predict first, edit lengths,
+>   equal-side marks, right-angle marks.
+> * **THE FIGURE YIELDS TO THE NUMBERS ON A SHORT SCREEN.** The board's WIDTH is
+>   capped from the height budget (`--boardH × 1.7241`, the viewBox is
+>   1000×580) — capping height alone letterboxes a small figure inside a wide
+>   box. Under `max-height:820px` the hint and the eyebrow go and the reserve
+>   drops, so the running total and the formula reveal stay above the fold at
+>   1366×768.
+> * **Verified headlessly** (jsdom, ~274k checks over all three missing-side
+>   modes: CCW winding, simple polygons, every drawn side equal to its label,
+>   every derived side equal to its copy / sum / whole-minus-others sources,
+>   the pieces of a long side genuinely TILING it end to end, outward normals
+>   genuinely outward, each mode producing only its own kind of thinking, the
+>   enclosing-rectangle rule holding for L/T/cross/staircase and failing for
+>   U/E, and the same again after every legal edit) and driven through
+>   Playwright: 43 behaviour checks across three viewports (the walk pausing
+>   and resuming, predict-first, the length editor refusing an impossible
+>   triangle, every display toggle), all 18 shapes traced end to end, and a
+>   dedicated label sweep of 2160 figures. Harnesses live in the session
+>   scratch, not the repo: `check.mjs`, `behave.mjs`, `shots.mjs`, `labels.mjs`.
+
 > **NEW (2026-08-31, session — being pushed): COMPLETE THE SQUARE — WORKSHEET
 > CREATOR.** `worksheet-creators/stage-5/algebra/complete-the-square.html`, the
 > first Stage 5 worksheet creator. Same shell, same A4 machinery and the same
@@ -950,6 +1291,21 @@ portal/PLACEMENT.md , portal/README.md   migration + structure notes
   tool's "Tools ▾" menu). Read BOTH 2026-08-31 header blocks before touching the
   tile colours, the proof's opening algebra steps, the exact-answer arithmetic
   or the drawn radical.
+- **Perimeter of Plane Shapes family (2026-09-01):** teacher tool
+  `interactive-tools/stage-4/measurement-space/perimeter-plane-shapes/`, filed
+  under **MA4-LEN-C-01**, 18 shapes over four groups (quadrilaterals,
+  triangles, regular polygons, and six composite figures), and its worksheet
+  creator `worksheet-creators/stage-4/measurement-space/perimeter-plane-shapes.html`
+  (five sections, same figures, answers with reasons) and its student quiz
+  `online-quizzes/stage-4/measurement-space/perimeter-plane-shapes.html`
+  (registered as `perimeter-plane-shapes-quiz`; the level decides how much of
+  the teaching tool the student keeps), beside the
+  **Length worksheet creator**
+  (`worksheet-creators/stage-4/measurement-space/length/`), whose Basic
+  question types it was built from. Teaching tool ONLY so far (no quiz), and it
+  touches neither Firebase nor the registry. Read the 2026-09-01 header block
+  before touching the winding rule, the ghost transforms, the L-shape or
+  trapezium parametrisation, or the board's height budget.
 - **Unit Conversion family (2026-08-31):** teacher tool
   `interactive-tools/stage-4/measurement-space/unit-conversion-number-line/`
   and worksheet creator

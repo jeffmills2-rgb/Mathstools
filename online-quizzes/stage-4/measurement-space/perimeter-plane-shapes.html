@@ -1,0 +1,3008 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>"Perimeter of Plane Shapes" – Student Quiz</title>
+  <style>
+    :root{
+      --bg:#f8fafc;
+      --card:#ffffff;
+      --ink:#0f172a;
+      --muted:#64748b;
+      --border:#e2e8f0;
+      --shadow:0 18px 45px rgba(15,23,42,.13);
+      --blue:#2563eb;
+      --blue-dark:#1d4ed8;
+      --green:#22c55e;
+      --green-dark:#15803d;
+      --purple:#7c3aed;
+      --purple-dark:#5b21b6;
+      --orange:#f97316;
+      --orange-dark:#c2410c;
+      --line:#334155;
+      --line-soft:#94a3b8;
+      --pink:#db2777;
+      --uiFont:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      --mathFont:"STIX Two Math","Cambria Math","Latin Modern Math","Times New Roman",Georgia,serif;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0; font-family:var(--uiFont); background:var(--bg); color:var(--ink);
+      padding-bottom:44px;
+    }
+
+    .wrap{ max-width:1180px; margin:16px auto 26px; padding:0 14px; }
+    .card{
+      background:var(--card); border-radius:22px; box-shadow:var(--shadow);
+      padding:14px 16px 12px; position:relative;
+    }
+
+    /* ---------- the top row ---------- */
+    .topRow{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .backBtn,.resetBtn{
+      appearance:none; border:1px solid var(--border); background:#fff; color:var(--line);
+      font-family:inherit; font-weight:900; font-size:.86rem; padding:8px 13px;
+      border-radius:11px; cursor:pointer; transition:.16s ease;
+    }
+    .backBtn:hover,.resetBtn:hover{ background:#f1f5f9; transform:translateY(-1px); }
+    .levelBannerWrap{ flex:1 1 auto; display:flex; justify-content:center; min-width:0; }
+    .levelBanner{
+      font-weight:1000; font-size:.95rem; letter-spacing:-.01em; color:#fff;
+      padding:8px 18px; border-radius:999px; background:linear-gradient(135deg,#64748b,#334155);
+      white-space:nowrap;
+    }
+    .levelBanner.lvl-sweet { background:linear-gradient(135deg,#22c55e,#0f766e); }
+    .levelBanner.lvl-mild  { background:linear-gradient(135deg,#2563eb,#1e3a8a); }
+    .levelBanner.lvl-medium{ background:linear-gradient(135deg,#f59e0b,#b45309); }
+    .levelBanner.lvl-spicy { background:linear-gradient(135deg,#f97316,#c2410c); }
+
+    /* ---------- progress ---------- */
+    .progressRow{ display:flex; align-items:center; gap:12px; margin:11px 0 9px; }
+    .progressTrack{ flex:1 1 auto; height:9px; border-radius:999px; background:#e2e8f0; overflow:hidden; }
+    .progressFill{ height:100%; width:0; border-radius:999px; background:linear-gradient(90deg,#7c3aed,#2563eb); transition:width .3s ease; }
+    .qCounter{ font-weight:900; font-size:.82rem; color:var(--muted); white-space:nowrap; }
+
+    /* ---------- the question ---------- */
+    .questionRow{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
+    .qLabel{ font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; font-weight:950; color:var(--muted); }
+    .qBox{ font-weight:850; font-size:clamp(1rem,2vw,1.16rem); color:var(--line); }
+    .qBox b{ color:var(--purple-dark); }
+
+    .stage{ display:flex; flex-direction:column; gap:9px; min-width:0; }
+
+    /* ---------- the answer ---------- */
+    .answerRow{ display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; }
+    .answerLabel{ font-weight:900; font-size:1rem; color:var(--line); }
+    .answerInput{
+      width:150px; height:50px; border:2px solid var(--border); border-radius:14px;
+      padding:0 13px; font-family:var(--mathFont); font-size:1.35rem; font-weight:800;
+      color:var(--ink); outline:none; text-align:center; background:#fff;
+    }
+    .answerInput:focus{ border-color:var(--blue); box-shadow:0 0 0 4px rgba(37,99,235,.17); }
+    .answerInput.good{ border-color:var(--green); background:#f0fdf4; color:var(--green-dark); }
+    .answerInput.bad{ border-color:#f87171; background:#fef2f2; }
+    .answerInput:disabled{ opacity:1; }
+    .answerUnit{ font-weight:900; font-size:1rem; color:var(--muted); min-width:2ch; }
+
+    .feedback{ text-align:center; font-weight:850; font-size:.92rem; min-height:1.3em; }
+    .vGood{ color:var(--green-dark); }
+    .vOk{ color:var(--blue-dark); }
+    .vBad{ color:#b91c1c; }
+
+    .hintMini{ text-align:center; font-size:.76rem; font-weight:700; color:var(--muted); margin:1px 0 0; }
+
+    /* ---------- the board ---------- */
+    .svgCard{ position:relative; background:white; border:1px solid var(--border); border-radius:22px; padding:6px clamp(6px,1.6vw,14px) 2px; }
+    /* The figure yields to the words: on a short projector the board shrinks
+       so the running total and the formula reveal stay above the fold.  The
+       WIDTH is capped from the height budget (the viewBox is 1000x580, so
+       x1.724) -- capping height alone just letterboxes a small figure inside
+       a wide box. */
+    .svgCard{ --boardH:clamp(196px, calc(100dvh - 486px), 52vh); }
+    .board{ display:block; margin:0 auto; height:auto;
+      width:100%; max-width:calc(var(--boardH) * 1.7241);   /* JS retunes this to the figure */
+      touch-action:manipulation; user-select:none; -webkit-user-select:none; }
+    .board text{ font-family:var(--mathFont); }
+
+    /* the shape itself */
+    .shapeFill{ fill:#eff6ff; stroke:none; }
+    .edgeLine{ fill:none; stroke:#1e293b; stroke-width:3.6; stroke-linecap:round; }
+    .edgeLine.unknown{ stroke:var(--orange); stroke-width:4.4; stroke-dasharray:11 9; }
+    .edgeLine.resolving{ stroke:var(--orange); stroke-width:5; stroke-dasharray:none; }
+    .edgeLine.waiting{ animation:edgePulse 1.15s ease-in-out infinite; }
+    @keyframes edgePulse{ 0%,100%{ stroke-opacity:1; stroke-width:4.4; } 50%{ stroke-opacity:.4; stroke-width:6.4; } }
+
+    .tickMark{ stroke:#475569; stroke-width:2.6; stroke-linecap:round; }
+    .rightMark{ fill:none; stroke:#94a3b8; stroke-width:2.2; }
+
+    .measProbe{ visibility:hidden; pointer-events:none; text-anchor:middle; dominant-baseline:middle; }
+    /* NO font-size here: the solver sets it per label as an attribute, and a
+       CSS declaration would beat that attribute and silently undo it. */
+    .sideLabel{ font-weight:700; fill:#0f172a; text-anchor:middle; dominant-baseline:middle;
+      paint-order:stroke; stroke:#fff; stroke-width:5px; stroke-linejoin:round; }
+    .sideLabel.unknown{ fill:var(--orange-dark); font-weight:800; font-family:var(--uiFont); }
+    .sideLabel.justFound{ animation:foundPop .62s cubic-bezier(.2,.75,.3,1.25) both; transform-box:fill-box; transform-origin:center; }
+    @keyframes foundPop{ 0%{ opacity:0; transform:scale(.4);} 62%{ opacity:1; transform:scale(1.22);} 100%{ opacity:1; transform:scale(1);} }
+    .sideLabel.editable{ cursor:text; }
+
+    .hitLine{ stroke:transparent; stroke-width:34; fill:none; cursor:pointer; }
+    .hitLine.noHit{ cursor:default; pointer-events:none; }
+
+    .tracePath{ fill:none; stroke:var(--purple); stroke-width:9; stroke-linecap:round; stroke-linejoin:round; opacity:0; }
+    .tracePath.on{ opacity:1; }
+
+    .ghostLine{ fill:none; stroke:var(--orange); stroke-width:8; stroke-linecap:round; opacity:.95;
+      filter:drop-shadow(0 0 6px rgba(255,255,255,.95)); }
+    .ghostLabel{ font-size:27px; font-weight:800; fill:var(--orange-dark); text-anchor:middle; dominant-baseline:middle;
+      paint-order:stroke; stroke:#fff; stroke-width:6px; stroke-linejoin:round; }
+    /* the room left over on a long side, before it has a number */
+    .ghostLine.gap{ stroke-dasharray:11 9; stroke-width:7; }
+    .ghostLabel.gap{ font-family:var(--uiFont); font-size:30px; }
+    /* NEVER put this on the group that carries translate()/rotate(): a CSS
+       transform replaces the transform attribute and the ghost jumps to the
+       layer's origin, where `both` keeps it for good. It goes on .ghostInner. */
+    .gapIn{ animation:gapPop .42s cubic-bezier(.2,.75,.3,1.25) both;
+      transform-box:fill-box; transform-origin:center; }
+    @keyframes gapPop{ 0%{ opacity:0; transform:scale(.5);} 62%{ opacity:1; transform:scale(1.12);} 100%{ opacity:1; transform:scale(1);} }
+    /* the moment two numbers become one is the moment worth noticing */
+    .popNum{ animation:popNum .5s cubic-bezier(.2,.75,.3,1.3) both;
+      transform-box:fill-box; transform-origin:center; }
+    @keyframes popNum{ 0%{ transform:scale(.55);} 58%{ transform:scale(1.32);} 100%{ transform:scale(1);} }
+    .fadeOut{ animation:fadeOut .32s ease forwards; }
+    @keyframes fadeOut{ to{ opacity:0; } }
+    /* the long side a piece is being taken out of */
+    .edgeLine.wholeHi{ stroke:var(--blue); stroke-width:6.5; animation:wholeGlow 1.25s ease-in-out infinite; }
+    @keyframes wholeGlow{ 0%,100%{ stroke-opacity:1; } 50%{ stroke-opacity:.42; } }
+    .sideLabel.wholeHi{ fill:var(--blue-dark); font-weight:900; }
+
+    .cornerDot{ fill:#1e293b; }
+
+    /* the quiz carries a question line, an answer row and four buttons under
+       the figure, so the board gets a smaller share of the screen than it
+       does on the teaching tool */
+    .svgCard{ --boardH:clamp(180px, calc(100dvh - 520px), 42vh); }
+
+    /* the figure is to be read, not operated, above Mild */
+    .board.noClick .hitLine{ cursor:default; }
+
+    /* only Sweet builds a number sentence; everywhere else the line would be
+       an empty band of white under the prompt */
+    .exprLine:empty{ display:none; min-height:0; }
+
+    /* ---------- narration ---------- */
+    .narrate{
+      background:white; border:1px solid var(--border); border-radius:20px;
+      padding:12px 18px; display:flex; flex-direction:column; gap:5px; align-items:center; text-align:center;
+    }
+    .navRow{ display:flex; gap:10px; justify-content:center; align-items:center; flex-wrap:wrap; padding-bottom:3px; }
+    .navBtn{
+      appearance:none; border:1px solid var(--border); background:#fff; color:var(--line);
+      font-weight:900; font-size:.94rem; padding:10px 16px; border-radius:13px; cursor:pointer;
+      transition:.16s ease; box-shadow:0 6px 16px rgba(15,23,42,.08);
+    }
+    .navBtn:hover:not(:disabled){ transform:translateY(-1px); background:#f8fafc; }
+    .navBtn:disabled{ opacity:.4; cursor:not-allowed; transform:none; }
+    .navBtn.next{ background:var(--purple); border-color:var(--purple); color:#fff; box-shadow:0 8px 20px rgba(124,58,237,.24); min-width:196px; }
+    .navBtn.next:hover:not(:disabled){ background:#6d28d9; }
+    .navBtn.lock{ background:var(--orange); border-color:var(--orange); color:#fff; box-shadow:0 8px 20px rgba(249,115,22,.24); }
+    .navBtn.lock:hover:not(:disabled){ background:#ea580c; }
+
+    .stepCount{ font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; font-weight:950; color:var(--muted); }
+    .stepPrompt{ font-size:clamp(1rem,1.9vw,1.14rem); font-weight:800; color:var(--line); line-height:1.35; min-height:1.35em; }
+    .stepPrompt b{ color:var(--orange-dark); }
+
+    .exprLine{
+      font-family:var(--mathFont); font-size:clamp(1.08rem,2.2vw,1.5rem); font-weight:800; color:var(--line);
+      line-height:1.3; min-height:1.3em; display:flex; align-items:center; justify-content:center;
+      gap:.28em; flex-wrap:wrap;
+    }
+    .exprLine .term{ animation:termIn .3s ease both; }
+    .exprLine .op{ color:var(--line-soft); }
+    .exprLine .res{ color:var(--purple); font-weight:900; }
+    @keyframes termIn{ from{ opacity:0; transform:translateY(7px) scale(.85);} to{ opacity:1; transform:none;} }
+
+    /* ==================================================================
+       THE WORKING PAD
+       A side length is not a number until a student has done something with
+       it.  Dragging a side off the figure and into the pad is that
+       something: the side turns GREEN on the figure, so what is still to be
+       counted is visible at a glance, and the numbers in the pad can only be
+       joined by SAYING WHAT THEY MAKE.  The same combine-by-answering
+       mechanic as the Row & Column Challenge, so a class meets it twice.
+       ================================================================== */
+    .boardRow{ display:flex; gap:12px; align-items:stretch; min-width:0; }
+    .boardRow > .svgCard{ flex:1 1 auto; min-width:0; }
+    .padCard{
+      flex:0 0 clamp(230px, 26vw, 320px); display:flex; flex-direction:column; gap:8px;
+      background:#fff; border:1px solid var(--border); border-radius:22px; padding:11px 12px 10px;
+    }
+    .padCard[hidden]{ display:none; }
+    .padHead{ display:flex; align-items:flex-start; justify-content:space-between; gap:8px; }
+    .padHead strong{ display:block; font-size:.95rem; font-weight:1000; letter-spacing:-.02em; }
+    .padHead small{ display:block; font-size:.7rem; font-weight:700; color:var(--muted); line-height:1.3; margin-top:2px; }
+    .padBtns{ display:flex; gap:5px; flex:0 0 auto; }
+    .padBtn{
+      appearance:none; border:1px solid var(--border); background:#fff; color:var(--line);
+      font-family:inherit; font-weight:900; font-size:.72rem; padding:5px 9px;
+      border-radius:9px; cursor:pointer; transition:.14s ease;
+    }
+    .padBtn:hover:not(:disabled){ background:#f1f5f9; }
+    .padBtn:disabled{ opacity:.4; cursor:not-allowed; }
+
+    .padArea{
+      position:relative; flex:1 1 auto; min-height:150px; overflow:hidden; touch-action:none;
+      border:2px dashed #cbd5e1; border-radius:18px;
+      background:
+        linear-gradient(90deg,rgba(148,163,184,.10) 1px,transparent 1px),
+        linear-gradient(180deg,rgba(148,163,184,.10) 1px,transparent 1px),
+        linear-gradient(180deg,#fff,#f8fafc);
+      background-size:28px 28px, 28px 28px, auto;
+    }
+    .padArea.over{ border-color:#86efac; background-color:#f0fdf4; }
+    .padEmpty{
+      position:absolute; inset:0; display:grid; place-items:center; text-align:center;
+      padding:14px; font-size:.78rem; font-weight:800; color:var(--line-soft); line-height:1.4;
+      pointer-events:none;
+    }
+    .padArea:not(:empty) .padEmpty{ opacity:1; }
+
+    .padTile{
+      position:absolute; min-width:58px; height:56px; padding:0 10px; border-radius:15px;
+      display:grid; place-items:center; cursor:grab; user-select:none; touch-action:none;
+      font-family:var(--mathFont); font-size:1.45rem; font-weight:900; color:#0f172a;
+      background:linear-gradient(180deg,#fffdf8,#f8fafc);
+      border:1px solid #e5e7eb; box-shadow:0 7px 16px rgba(15,23,42,.15), inset 0 0 0 1px rgba(255,255,255,.7);
+      transition:box-shadow .14s ease, transform .14s ease, border-color .14s ease;
+      z-index:1;
+    }
+    .padTile.sum{ background:linear-gradient(180deg,#eef2ff,#fbfdff); border-color:#a5b4fc; color:#3730a3; }
+    .padTile.dragging{ z-index:20; cursor:grabbing; transform:scale(1.05) rotate(1.5deg);
+      box-shadow:0 16px 34px rgba(15,23,42,.27); }
+    .padTile.target{ border-color:#86efac; box-shadow:0 0 0 4px rgba(22,163,74,.2), 0 10px 22px rgba(15,23,42,.16); }
+    .padTile.popIn{ animation:padPop .3s cubic-bezier(.2,.75,.3,1.3) both; }
+    @keyframes padPop{ 0%{ transform:scale(.5); opacity:0; } 62%{ transform:scale(1.14); opacity:1; } 100%{ transform:scale(1); } }
+
+    .padFly{
+      position:fixed; z-index:1200; pointer-events:none; min-width:58px; height:56px; padding:0 10px;
+      border-radius:15px; display:grid; place-items:center; font-family:var(--mathFont);
+      font-size:1.45rem; font-weight:900; color:#0f172a; transform:translate(-50%,-50%) rotate(2deg);
+      background:linear-gradient(180deg,#fffdf8,#f8fafc); border:1px solid #e5e7eb;
+      box-shadow:0 18px 36px rgba(15,23,42,.3);
+    }
+
+    .padFoot{ font-size:.76rem; font-weight:850; color:var(--muted); line-height:1.35; min-height:2.2em; }
+    .padFoot.done{ color:var(--green-dark); }
+
+    /* a side that has been taken into the pad is accounted for */
+    .edgeLine.accounted{ stroke:#16a34a; }
+    .sideLabel.accounted{ fill:#15803d; font-weight:900; }
+    .board.padOn .hitLine:not(.noHit){ cursor:grab; }
+    .board.padOn .hitLine.draggable{ cursor:grab; pointer-events:stroke; }
+
+    /* ---- the sum prompt ---- */
+    .padOverlay{
+      position:fixed; inset:0; z-index:1300; display:none; align-items:center; justify-content:center;
+      padding:18px; background:rgba(15,23,42,.55); -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px);
+    }
+    .padOverlay.on{ display:flex; }
+    .padBox{
+      background:#fff; border-radius:22px; box-shadow:0 30px 80px rgba(15,23,42,.35);
+      width:min(430px,100%); padding:20px 22px 18px; font-family:var(--uiFont);
+    }
+    .padBox h2{ margin:0; font-size:1.3rem; font-weight:1000; letter-spacing:-.03em; }
+    .padBox p{ margin:5px 0 14px; font-size:.85rem; font-weight:700; color:var(--muted); }
+    .padSum{
+      display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap;
+      background:#f8fafc; border:1px solid var(--border); border-radius:16px; padding:14px;
+      font-family:var(--mathFont); font-size:1.5rem; font-weight:900;
+    }
+    .padSumCard{
+      min-width:56px; height:56px; padding:0 10px; border-radius:14px; display:grid; place-items:center;
+      background:#fffdf8; border:1px solid #e5e7eb; box-shadow:0 5px 12px rgba(15,23,42,.13);
+    }
+    .padBox label{ display:block; margin-top:12px; font-family:var(--uiFont); font-weight:900; font-size:.82rem; }
+    .padBox input{
+      width:100%; height:52px; margin-top:6px; border:2px solid var(--border); border-radius:14px;
+      padding:0 13px; font-family:var(--mathFont); font-size:1.4rem; font-weight:900;
+      text-align:center; outline:none; box-sizing:border-box;
+    }
+    .padBox input:focus{ border-color:var(--blue); box-shadow:0 0 0 4px rgba(37,99,235,.17); }
+    .padMsg{ min-height:1.3em; margin-top:8px; font-family:var(--uiFont); font-weight:850; font-size:.82rem; color:#b91c1c; }
+    .padActions{ display:flex; gap:8px; justify-content:flex-end; margin-top:12px; }
+    .padActions button{
+      appearance:none; border:1px solid var(--border); background:#f3f4f6; color:var(--line);
+      font-family:inherit; font-weight:900; font-size:.9rem; padding:10px 17px; border-radius:12px; cursor:pointer;
+    }
+    .padActions .go{ background:var(--blue); border-color:var(--blue); color:#fff; }
+    .padShake{ animation:padShake .4s ease; }
+    @keyframes padShake{ 10%,90%{ transform:translateX(-2px);} 20%,80%{ transform:translateX(4px);}
+      30%,50%,70%{ transform:translateX(-7px);} 40%,60%{ transform:translateX(7px);} }
+
+    @media (max-width:900px){
+      .boardRow{ flex-direction:column; }
+      .padCard{ flex:1 1 auto; }
+      .padArea{ min-height:170px; }
+    }
+
+
+    /* ---------- modals ---------- */
+    .overlay{
+      position:fixed; inset:0; background:rgba(15,23,42,.5); z-index:900;
+      opacity:0; pointer-events:none; transition:opacity .18s ease;
+    }
+    .overlay.on{ opacity:1; pointer-events:auto; }
+    .modal{
+      position:fixed; left:50%; top:50%; transform:translate(-50%,-46%) scale(.97);
+      width:min(520px,calc(100vw - 32px)); max-height:min(86vh,760px); overflow:auto;
+      background:#fff; border-radius:22px; box-shadow:0 30px 80px rgba(15,23,42,.3);
+      z-index:901; opacity:0; pointer-events:none; transition:.2s ease;
+    }
+    .modal.on{ opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1); }
+    .modalHead{ font-weight:1000; font-size:1.28rem; padding:20px 22px 4px; }
+    .modalBody{ padding:8px 22px 18px; }
+    .modalActions{ display:flex; gap:9px; flex-wrap:wrap; padding:0 22px 20px; }
+
+    .levelList{ display:grid; gap:9px; }
+    .levelRow{
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      border:1px solid var(--border); border-left-width:7px; border-radius:15px; padding:12px 14px;
+    }
+    .levelRow.lvl-sweet { border-left-color:#22c55e; }
+    .levelRow.lvl-mild  { border-left-color:#2563eb; }
+    .levelRow.lvl-medium{ border-left-color:#f59e0b; }
+    .levelRow.lvl-spicy { border-left-color:#f97316; }
+    .levelName{ font-weight:1000; font-size:1.02rem; }
+    .levelSub{ font-weight:650; font-size:.8rem; color:var(--muted); line-height:1.35; }
+    .levelLen{ font-weight:800; font-size:.72rem; color:var(--line-soft); margin-top:2px; }
+    .startBtn,.btn{
+      appearance:none; border:1px solid var(--border); background:#fff; color:var(--line);
+      font-family:inherit; font-weight:900; font-size:.9rem; padding:10px 17px;
+      border-radius:12px; cursor:pointer; transition:.16s ease; white-space:nowrap;
+    }
+    .startBtn{ background:var(--purple); border-color:var(--purple); color:#fff; }
+    .startBtn:hover{ background:#6d28d9; }
+    .btn.primary{ background:var(--blue); border-color:var(--blue); color:#fff; }
+    .btn.danger{ background:#fee2e2; border-color:#fecaca; color:#b91c1c; }
+    .btn:hover,.startBtn:hover{ transform:translateY(-1px); }
+
+    .certWrap{ display:flex; gap:14px; align-items:flex-start; }
+    .trophyBox{ font-size:2.4rem; line-height:1; }
+    .certText{ font-weight:950; font-size:1.02rem; line-height:1.35; }
+    .certSub{ font-weight:700; font-size:.84rem; color:var(--muted); margin-top:5px; }
+    .certBreakdown{ margin-top:10px; font-weight:800; font-size:.95rem; color:var(--line); line-height:1.55; }
+
+    .mmtFooter{
+      position:fixed; left:0; right:0; bottom:0; height:44px; z-index:30;
+      display:flex; align-items:center; justify-content:center;
+      background:#0f172a; color:#cbd5e1; font-size:.78rem; font-weight:700;
+    }
+    .mmtFooter a{ color:#93c5fd; font-weight:900; text-decoration:none; }
+
+    @media (max-width:760px){
+      .answerInput{ width:130px; }
+      .levelRow{ flex-direction:column; align-items:stretch; }
+    }
+    @media (prefers-reduced-motion:reduce){
+      *{ animation-duration:.001ms !important; transition-duration:.001ms !important; }
+    }
+  </style>
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "c7e5713b5e4f4993907eb285797dc89b"}'></script><!-- End Cloudflare Web Analytics -->
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="topRow">
+        <button id="backToLevelsBtn" class="backBtn" title="Back to level menu">← Levels</button>
+        <div class="levelBannerWrap"><div id="levelBanner" class="levelBanner">Level: —</div></div>
+        <span id="mmtAuthSlot"></span><button id="resetQuizBtn" class="resetBtn" title="Start this level again">Reset</button>
+      </div>
+
+      <div class="progressRow">
+        <div class="progressTrack" aria-label="progress"><div id="progressFill" class="progressFill"></div></div>
+        <div id="qCounter" class="qCounter">Question 1 / 15</div>
+      </div>
+
+      <div class="stage">
+        <div class="questionRow">
+          <div class="qLabel">Question:</div>
+          <div id="qBox" class="qBox">—</div>
+        </div>
+
+        <div class="boardRow">
+          <div id="svgCard" class="svgCard">
+            <svg id="board" class="board" viewBox="0 0 1000 580" role="img" aria-label="The figure"></svg>
+          </div>
+
+          <aside class="padCard" id="padCard" aria-label="Working pad">
+            <div class="padHead">
+              <div><strong>Working pad</strong><small>Drag a side in. Drop one number on another to add them.</small></div>
+              <div class="padBtns">
+                <button class="padBtn" id="padUndo" type="button">Undo</button>
+                <button class="padBtn" id="padClear" type="button">Clear</button>
+              </div>
+            </div>
+            <div class="padArea" id="padArea"></div>
+            <div class="padFoot" id="padFoot"></div>
+          </aside>
+        </div>
+
+        <div class="narrate">
+          <div id="stepPrompt" class="stepPrompt">Choose a level to begin.</div>
+          <div id="exprLine" class="exprLine"></div>
+        </div>
+
+        <div class="answerRow">
+          <div id="answerLabel" class="answerLabel">Perimeter =</div>
+          <input id="answerInput" class="answerInput" inputmode="decimal" autocomplete="off" placeholder="Type…" />
+          <div id="answerUnit" class="answerUnit">cm</div>
+        </div>
+
+        <div id="feedback" class="feedback"></div>
+
+        <div class="navRow">
+          <button id="prevBtn" class="navBtn" type="button">← Previous</button>
+          <button id="traceBtn" class="navBtn lock" type="button">Trace the perimeter ▶</button>
+          <button id="enterBtn" class="navBtn next" type="button">Enter</button>
+          <button id="nextBtn" class="navBtn" type="button">Next →</button>
+        </div>
+
+        <p class="hintMini">
+          A correct answer locks in green. A wrong one stays editable &mdash; but only your
+          <b>first</b> attempt scores, so think before you press Enter.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="mmtFooter">
+    This tool and more can be found at&nbsp;<a href="https://www.millsmathstools.au">www.millsmathstools.au</a>
+  </div>
+
+  <div class="padOverlay" id="padOverlay" role="dialog" aria-modal="true" aria-label="What is the sum?">
+    <div class="padBox" id="padBox">
+      <h2>What is the sum?</h2>
+      <p>Enter the total for these two numbers.</p>
+      <div class="padSum">
+        <span class="padSumCard" id="padSumA">0</span><span>+</span>
+        <span class="padSumCard" id="padSumB">0</span><span>=</span><span>?</span>
+      </div>
+      <label for="padSumInput">Enter the sum</label>
+      <input id="padSumInput" inputmode="decimal" autocomplete="off" />
+      <div class="padMsg" id="padMsg"></div>
+      <div class="padActions">
+        <button id="padSumNo" type="button">Cancel</button>
+        <button id="padSumGo" class="go" type="button">Combine</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="overlay" class="overlay"></div>
+
+  <div id="levelModal" class="modal" role="dialog" aria-modal="true" aria-label="Choose your level">
+    <div class="modalHead">Choose your level</div>
+    <div class="modalBody">
+      <div class="levelList">
+        <div class="levelRow lvl-sweet">
+          <div><div class="levelName">Sweet</div><div class="levelSub"></div><div class="levelLen"></div></div>
+          <button class="startBtn" data-level="sweet">Start</button>
+        </div>
+        <div class="levelRow lvl-mild">
+          <div><div class="levelName">Mild</div><div class="levelSub"></div><div class="levelLen"></div></div>
+          <button class="startBtn" data-level="mild">Start</button>
+        </div>
+        <div class="levelRow lvl-medium">
+          <div><div class="levelName">Medium</div><div class="levelSub"></div><div class="levelLen"></div></div>
+          <button class="startBtn" data-level="medium">Start</button>
+        </div>
+        <div class="levelRow lvl-spicy">
+          <div><div class="levelName">Spicy</div><div class="levelSub"></div><div class="levelLen"></div></div>
+          <button class="startBtn" data-level="spicy">Start</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="certModal" class="modal" role="dialog" aria-modal="true" aria-label="Certificate">
+    <div class="modalHead">Certificate</div>
+    <div class="modalBody">
+      <div class="certWrap">
+        <div class="trophyBox">🏆</div>
+        <div>
+          <div id="certLine1" class="certText">You completed the quiz.</div>
+          <div class="certSub">Screenshot this and paste into Google Classroom.</div>
+          <div id="certBreakdown" class="certBreakdown"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modalActions">
+      <button id="copyBtn" class="btn primary">Copy to clipboard</button>
+      <button id="closeCertBtn" class="btn">Close</button>
+      <button id="backToMenuBtn" class="btn danger">Back to level menu</button>
+    </div>
+  </div>
+
+<script>
+(function(){
+  "use strict";
+
+  const SVGNS = "http://www.w3.org/2000/svg";
+  const $ = id => document.getElementById(id);
+
+  const VB = { w:1000, h:580, padX:92, padY:68 };
+
+  const board   = $("board");
+  const svgCard = $("svgCard");
+
+  const rnd  = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+  const pick = a => a[Math.floor(Math.random()*a.length)];
+  const dgt  = v => Number(Number(v).toFixed(2)).toString();
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const easeIO = t => t<.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2;
+
+  /* ==================================================================
+     1.  GEOMETRY HELPERS   (unit space is y-UP; the SVG is y-DOWN)
+     ================================================================== */
+
+  const P = (x,y) => ({x,y});
+
+  /* Shoelace.  Positive => counter-clockwise in y-up coords, which is what
+     every outward-normal calculation below assumes.  Concave shapes (the
+     L) need this: "point away from the centroid" is wrong for a notch. */
+  function signedArea(pts){
+    let s = 0;
+    for (let i=0;i<pts.length;i++){
+      const a = pts[i], b = pts[(i+1)%pts.length];
+      s += a.x*b.y - b.x*a.y;
+    }
+    return s/2;
+  }
+
+  /* A LONG THIN FIGURE TURNED ON ITS SIDE IS BOUND BY THE BOARD'S HEIGHT and
+     loses nearly half its size -- and the room its numbers need goes with it.
+     So the quarter turns are only offered to a figure that is roughly as wide
+     as it is tall; an elongated one gets the half turn instead, which changes
+     the picture without costing any scale. */
+  function turnFor(raw, W, H){
+    const ar = W/H;
+    return (ar > 1.55 || ar < 0.645) ? ((raw % 2) ? (raw+1)%4 : raw) : raw;
+  }
+
+  function rot90(pts, times){
+    let out = pts.map(p => P(p.x,p.y));
+    for (let t=0;t<((times%4)+4)%4;t++) out = out.map(p => P(-p.y, p.x));
+    return out;
+  }
+
+  /* Triangle from three side lengths: base c on the x-axis, apex above. */
+  function triFromSides(c, a, b){
+    // c = AB (base), a = BC (right side), b = CA (left side)
+    const cx = (c*c + b*b - a*a) / (2*c);
+    const cy2 = b*b - cx*cx;
+    if (cy2 <= 0) return null;
+    return [P(0,0), P(c,0), P(cx, Math.sqrt(cy2))];
+  }
+
+  function regularPts(n, s){
+    const R = s / (2*Math.sin(Math.PI/n));
+    const start = -90 + 180/n;                 // gives a horizontal bottom edge
+    const out = [];
+    for (let k=0;k<n;k++){
+      const th = (start + k*360/n) * Math.PI/180;
+      out.push(P(R*Math.cos(th), R*Math.sin(th)));
+    }
+    return out;                                 // increasing angle => CCW
+  }
+
+  /* ==================================================================
+     2.  THE SHAPE CATALOGUE
+     -------------------------------------------------------------------
+     Every builder returns
+        { pts, edges, name, formula(unit), note }
+     and every edge is
+        { len, known, derive, cls, param }
+     where  derive = {type:'copy', from:[i]}  |  {type:'sum', from:[i,j]}
+            cls    = equal-length class, used for the tick marks
+            param  = which dimension this side edits (null = not editable)
+     ================================================================== */
+
+  const PARA_ANGLE = 63;                        // degrees, for parallelogram/rhombus
+  const TRIPLES = [[3,4,5],[6,8,10],[5,12,13],[9,12,15],[8,15,17],[12,16,20]];
+  const SCALENE = [[6,7,9],[5,8,10],[7,9,12],[9,10,13],[8,11,15],[6,9,11],[10,12,15],[7,8,11],[9,11,14]];
+
+  /* helper: mark exactly one of a pair of equal edges as the known one */
+  function oneOf(a,b){ return Math.random()<.5 ? [a,b] : [b,a]; }
+
+  const SHAPES = {
+
+    /* ---------------- square ---------------- */
+    square: {
+      label:"Square", family:"quad",
+      dims(){ return { s: rnd(4,15) }; },
+      build(d){
+        const s = d.s;
+        const pts = [P(0,0),P(s,0),P(s,s),P(0,s)];
+        const known = rnd(0,3);
+        const edges = [0,1,2,3].map(i => ({
+          len:s, cls:"a", param:"s",
+          known: i===known,
+          derive: i===known ? null : {type:"copy", from:[known]}
+        }));
+        return { pts, edges,
+          note:"All four sides of a square are the same length." };
+      },
+      formula(d,u,P){ return { html:`4 &times; ${d.s} = ${dgt(P)} ${u}`, note:"Four equal sides, so multiply instead of adding." }; },
+      valid(d){ return d.s>0; }
+    },
+
+    /* ---------------- rectangle ---------------- */
+    rectangle: {
+      label:"Rectangle", family:"quad",
+      dims(){ const l = rnd(7,18); return { l, w: rnd(3, Math.max(4,l-2)) }; },
+      build(d){
+        const {l,w} = d;
+        const pts = [P(0,0),P(l,0),P(l,w),P(0,w)];
+        const [kl,ul] = oneOf(0,2);              // the l-pair: bottom & top
+        const [kw,uw] = oneOf(1,3);              // the w-pair: right & left
+        const edges = [
+          {len:l, cls:"a", param:"l"},
+          {len:w, cls:"b", param:"w"},
+          {len:l, cls:"a", param:"l"},
+          {len:w, cls:"b", param:"w"}
+        ];
+        edges.forEach((e,i)=>{ e.known = (i===kl||i===kw); });
+        edges[ul].derive = {type:"copy", from:[kl]};
+        edges[uw].derive = {type:"copy", from:[kw]};
+        return { pts, edges, note:"Opposite sides of a rectangle are equal." };
+      },
+      formula(d,u,P){ return { html:`2 &times; (${d.l} + ${d.w}) = ${dgt(P)} ${u}`, note:"One long plus one short, doubled." }; },
+      valid(d){ return d.l>0 && d.w>0; }
+    },
+
+    /* ---------------- parallelogram ---------------- */
+    parallelogram: {
+      label:"Parallelogram", family:"quad",
+      dims(){ const a = rnd(8,18); return { a, b: rnd(4, Math.max(5,a-3)) }; },
+      build(d){
+        const {a,b} = d, th = PARA_ANGLE*Math.PI/180;
+        const dx = b*Math.cos(th), dy = b*Math.sin(th);
+        const pts = [P(0,0),P(a,0),P(a+dx,dy),P(dx,dy)];
+        const [ka,ua] = oneOf(0,2);
+        const [kb,ub] = oneOf(1,3);
+        const edges = [
+          {len:a, cls:"a", param:"a"},
+          {len:b, cls:"b", param:"b"},
+          {len:a, cls:"a", param:"a"},
+          {len:b, cls:"b", param:"b"}
+        ];
+        edges.forEach((e,i)=>{ e.known = (i===ka||i===kb); });
+        edges[ua].derive = {type:"copy", from:[ka]};
+        edges[ub].derive = {type:"copy", from:[kb]};
+        return { pts, edges, note:"Opposite sides of a parallelogram are equal." };
+      },
+      formula(d,u,P){ return { html:`2 &times; (${d.a} + ${d.b}) = ${dgt(P)} ${u}`, note:"Same shortcut as a rectangle &mdash; the slant does not change the sides." }; },
+      valid(d){ return d.a>0 && d.b>0; }
+    },
+
+    /* ---------------- rhombus ---------------- */
+    rhombus: {
+      label:"Rhombus", family:"quad",
+      dims(){ return { s: rnd(5,15) }; },
+      build(d){
+        const s = d.s, th = PARA_ANGLE*Math.PI/180;
+        const dx = s*Math.cos(th), dy = s*Math.sin(th);
+        const pts = [P(0,0),P(s,0),P(s+dx,dy),P(dx,dy)];
+        const known = rnd(0,3);
+        const edges = [0,1,2,3].map(i => ({
+          len:s, cls:"a", param:"s",
+          known: i===known,
+          derive: i===known ? null : {type:"copy", from:[known]}
+        }));
+        return { pts, edges, note:"A rhombus has four equal sides &mdash; a pushed-over square." };
+      },
+      formula(d,u,P){ return { html:`4 &times; ${d.s} = ${dgt(P)} ${u}`, note:"Four equal sides, exactly like a square." }; },
+      valid(d){ return d.s>0; }
+    },
+
+    /* ---------------- kite ---------------- */
+    kite: {
+      label:"Kite", family:"quad",
+      dims(){ const a = rnd(4,10); return { a, b: a + rnd(3,9) }; },
+      build(d){
+        const {a,b} = d;
+        const w  = 0.62*Math.min(a,b);
+        const h1 = Math.sqrt(Math.max(.01, a*a - w*w));   // short pair, near the top
+        const h2 = Math.sqrt(Math.max(.01, b*b - w*w));   // long pair, near the bottom
+        // CCW, y-up: bottom tip -> right -> top tip -> left
+        const pts = [P(0,0), P(w,h2), P(0,h2+h1), P(-w,h2)];
+        const edges = [
+          {len:b, cls:"b", param:"b"},   // bottom-right
+          {len:a, cls:"a", param:"a"},   // top-right
+          {len:a, cls:"a", param:"a"},   // top-left
+          {len:b, cls:"b", param:"b"}    // bottom-left
+        ];
+        const [ka,ua] = oneOf(1,2);
+        const [kb,ub] = oneOf(0,3);
+        edges.forEach((e,i)=>{ e.known = (i===ka||i===kb); });
+        edges[ua].derive = {type:"copy", from:[ka]};
+        edges[ub].derive = {type:"copy", from:[kb]};
+        return { pts, edges, note:"A kite has two pairs of equal sides, and the equal sides are next to each other." };
+      },
+      formula(d,u,P){ return { html:`2 &times; (${d.a} + ${d.b}) = ${dgt(P)} ${u}`, note:"Two of each, so add one of each and double." }; },
+      valid(d){ return d.a>0 && d.b>0 && Math.abs(d.a-d.b)>0.001; }
+    },
+
+    /* ---------------- trapezium ----------------
+       Parametrised by what is DRAWN -- the bottom a, the top b and the
+       height h -- and the sloping side is then computed, never stored.
+       That keeps an edited length honest: change the bottom and the slant
+       really does change with it.  The defaults come from Pythagorean
+       triples so the slant starts as a whole number.
+         isosceles  -- the equal legs give a missing side to find;
+         right      -- every side is labelled, and there is no shortcut.  */
+    trapezium: {
+      label:"Trapezium", family:"quad",
+      dims(){
+        const t = pick(TRIPLES), b = rnd(5,12);
+        return Math.random() < 0.62
+          ? { kind:"iso",   b, h:t[1], a: b + 2*t[0] }
+          : { kind:"right", b, h:t[1], a: b + t[0] };
+      },
+      build(d){
+        if (d.kind === "iso"){
+          const {a,b,h} = d, p = (a-b)/2, L = Math.hypot(p,h);
+          const pts = [P(0,0),P(a,0),P(a-p,h),P(p,h)];
+          const edges = [
+            {len:a, cls:null, param:"a", known:true},
+            {len:L, cls:"a",  param:null, known:true},
+            {len:b, cls:null, param:"b", known:true},
+            {len:L, cls:"a",  param:null, known:true}
+          ];
+          const [kL,uL] = oneOf(1,3);
+          edges[uL].known = false;
+          edges[uL].derive = {type:"copy", from:[kL]};
+          return { pts, edges, note:"An isosceles trapezium has one pair of equal sloping sides." };
+        }
+        const {a,b,h} = d, L = Math.hypot(a-b, h);
+        const pts = [P(0,0),P(a,0),P(b,h),P(0,h)];
+        const edges = [
+          {len:a, cls:null, param:"a",  known:true},
+          {len:L, cls:null, param:null, known:true},
+          {len:b, cls:null, param:"b",  known:true},
+          {len:h, cls:null, param:"h",  known:true}
+        ];
+        return { pts, edges, note:"Every side of this trapezium is different &mdash; there is no shortcut, just add them." };
+      },
+      formula(d,u,Per){
+        if (d.kind === "iso"){
+          const L = Math.hypot((d.a-d.b)/2, d.h);
+          return { html:`${d.a} + ${d.b} + 2 &times; ${dgt(L)} = ${dgt(Per)} ${u}`, note:"Only the two sloping sides pair up." };
+        }
+        const L = Math.hypot(d.a-d.b, d.h);
+        return { html:`${d.a} + ${d.b} + ${dgt(d.h)} + ${dgt(L)} = ${dgt(Per)} ${u}`, note:"No equal sides, so no shortcut &mdash; add all four." };
+      },
+      valid(d){ return d.a>d.b && d.b>0 && d.h>0; }
+    },
+
+    /* ---------------- triangles ---------------- */
+    triScalene: {
+      label:"Scalene triangle", family:"tri",
+      dims(){ const t = pick(SCALENE); return { c:t[0], a:t[1], b:t[2] }; },
+      build(d){
+        const pts = triFromSides(d.c, d.a, d.b);
+        const edges = [
+          {len:d.c, cls:null, param:"c", known:true},
+          {len:d.a, cls:null, param:"a", known:true},
+          {len:d.b, cls:null, param:"b", known:true}
+        ];
+        return { pts, edges, note:"Three different sides &mdash; every one has to be added." };
+      },
+      formula(d,u,P){ return { html:`${d.c} + ${d.a} + ${d.b} = ${dgt(P)} ${u}`, note:"No equal sides, so there is nothing to shorten." }; },
+      valid(d){ const {a,b,c}=d; return a+b>c && b+c>a && c+a>b && a>0 && b>0 && c>0; }
+    },
+
+    triIsosceles: {
+      label:"Isosceles triangle", family:"tri",
+      dims(){ const L = rnd(7,15); return { L, b: rnd(Math.max(3,L-5), Math.min(2*L-3, L+5)) }; },
+      build(d){
+        const pts = triFromSides(d.b, d.L, d.L);
+        const edges = [
+          {len:d.b, cls:null, param:"b", known:true},
+          {len:d.L, cls:"a",  param:"L"},
+          {len:d.L, cls:"a",  param:"L"}
+        ];
+        const [k,u] = oneOf(1,2);
+        edges[k].known = true; edges[u].known = false;
+        edges[u].derive = {type:"copy", from:[k]};
+        return { pts, edges, note:"The two sloping sides of an isosceles triangle are equal." };
+      },
+      formula(d,u,P){ return { html:`${d.b} + 2 &times; ${d.L} = ${dgt(P)} ${u}`, note:"The base, plus the equal pair doubled." }; },
+      valid(d){ return d.L>0 && d.b>0 && 2*d.L > d.b; }
+    },
+
+    triEquilateral: {
+      label:"Equilateral triangle", family:"tri",
+      dims(){ return { s: rnd(5,16) }; },
+      build(d){
+        const pts = triFromSides(d.s, d.s, d.s);
+        const known = rnd(0,2);
+        const edges = [0,1,2].map(i => ({
+          len:d.s, cls:"a", param:"s",
+          known: i===known,
+          derive: i===known ? null : {type:"copy", from:[known]}
+        }));
+        return { pts, edges, note:"All three sides of an equilateral triangle are equal." };
+      },
+      formula(d,u,P){ return { html:`3 &times; ${d.s} = ${dgt(P)} ${u}`, note:"Three equal sides." }; },
+      valid(d){ return d.s>0; }
+    },
+
+    /* ---------------- regular polygons ---------------- */
+    pentagon: regular(5,"Regular pentagon"),
+    hexagon:  regular(6,"Regular hexagon"),
+    octagon:  regular(8,"Regular octagon"),
+
+    /* ================= RECTILINEAR COMPOSITES =================
+       Every composite is described the same two ways, and `applyReasoning`
+       then decides what to hide -- which is why "what's missing" is one
+       SETTING rather than a different shape each time:
+
+         groups  {whole, parts[]}   a long side and the shorter sides that
+                                    tile it.  Either the long side is the
+                                    unknown (ADD the parts) or one part is
+                                    (take the others OFF the long side).
+         pairs   [i,j]              two sides that are simply equal.
+
+       Groups and pairs never share an edge, so the source of a derivation
+       is always itself labelled.
+       ========================================================= */
+
+    /* ---------------- L-shape ----------------
+       Parametrised by the FOUR LABELLED SIDES, so every one of them is
+       independently editable and the figure can never become invalid:
+         a = the short top,   b = the step across,
+         c = the step down,   d = the short right side
+       and then  W = a + b,  H = c + d.                                  */
+    lshape: {
+      label:"L-shape", family:"comp",
+      dims(){
+        return { a:rnd(3,9), b:rnd(3,10), c:rnd(3,9), d:rnd(3,10),
+                 variant: Math.random()<.5 ? "A" : "B", turn: rnd(0,3) };
+      },
+      build(d){
+        const a=d.a, b=d.b, c=d.c, dd=d.d, W=a+b, H=c+dd;
+        let pts, edges, groups;
+        if (d.variant === "A"){
+          pts = [P(0,0), P(W,0), P(W,dd), P(a,dd), P(a,H), P(0,H)];
+          edges = [
+            {len:W,  param:null}, {len:dd, param:"d"}, {len:b, param:"b"},
+            {len:c,  param:"c"},  {len:a,  param:"a"}, {len:H, param:null}
+          ];
+          groups = [ {whole:0, parts:[4,2]}, {whole:5, parts:[1,3]} ];
+        } else {
+          pts = [P(0,0), P(W,0), P(W,H), P(W-a,H), P(W-a,dd), P(0,dd)];
+          edges = [
+            {len:W,  param:null}, {len:H, param:null}, {len:a, param:"a"},
+            {len:c,  param:"c"},  {len:b, param:"b"},  {len:dd, param:"d"}
+          ];
+          groups = [ {whole:0, parts:[2,4]}, {whole:1, parts:[3,5]} ];
+        }
+        applyReasoning(edges, groups, [], 0);
+        return { pts: rot90(pts, turnFor(d.turn, W, H)), edges,
+          note:"The two longest sides of an L-shape are each made of two shorter ones." };
+      },
+      formula(d,u,Per){ return boxFormula(d.a+d.b, d.c+d.d, 0, 0, u, Per); },
+      valid(d){ return d.a>0 && d.b>0 && d.c>0 && d.d>0; }
+    },
+
+    /* ---------------- T-shape ----------------
+       a = left overhang, b = stem width, c = right overhang,
+       h1 = bar depth, h2 = stem height.  The top is a THREE-part side,
+       which is where a composite stops being a two-number question.     */
+    tshape: {
+      label:"T-shape", family:"comp",
+      dims(){
+        return { a:rnd(2,7), b:rnd(2,7), c:rnd(2,7), h1:rnd(2,7), h2:rnd(3,9), turn:rnd(0,3) };
+      },
+      build(d){
+        const {a,b,c,h1,h2} = d, W=a+b+c, H=h1+h2;
+        const pts = [P(a,0),P(a+b,0),P(a+b,h2),P(W,h2),P(W,H),P(0,H),P(0,h2),P(a,h2)];
+        const edges = [
+          {len:b,  param:"b"},  {len:h2, param:"h2"}, {len:c,  param:"c"},  {len:h1, param:"h1"},
+          {len:W,  param:null}, {len:h1, param:"h1"}, {len:a,  param:"a"},  {len:h2, param:"h2"}
+        ];
+        applyReasoning(edges, [ {whole:4, parts:[6,0,2]} ], [ [1,7], [3,5] ], 1);
+        return { pts: rot90(pts, turnFor(d.turn, W, H)), edges,
+          note:"The long side runs right across the top of the T &mdash; <b>three</b> shorter sides make it up." };
+      },
+      formula(d,u,Per){ return boxFormula(d.a+d.b+d.c, d.h1+d.h2, 0, 0, u, Per); },
+      valid(d){ return d.a>0 && d.b>0 && d.c>0 && d.h1>0 && d.h2>0; }
+    },
+
+    /* ---------------- cross ----------------
+       Twelve sides and not one of them needs adding: every side has an
+       equal partner straight across the shape.  The work is COUNTING.   */
+    cross: {
+      label:"Cross", family:"comp",
+      dims(){
+        return { a:rnd(2,6), n:rnd(2,6), c:rnd(2,6), b:rnd(2,6), m:rnd(2,6), e:rnd(2,6), turn:rnd(0,3) };
+      },
+      build(d){
+        const {a,n,c,b,m,e} = d, W=a+n+c, H=b+m+e;
+        const pts = [
+          P(a,0), P(a+n,0), P(a+n,b), P(W,b), P(W,b+m), P(a+n,b+m),
+          P(a+n,H), P(a,H), P(a,b+m), P(0,b+m), P(0,b), P(a,b)
+        ];
+        const edges = [
+          {len:n, param:"n"}, {len:b, param:"b"}, {len:c, param:"c"}, {len:m, param:"m"},
+          {len:c, param:"c"}, {len:e, param:"e"}, {len:n, param:"n"}, {len:e, param:"e"},
+          {len:a, param:"a"}, {len:m, param:"m"}, {len:a, param:"a"}, {len:b, param:"b"}
+        ];
+        applyReasoning(edges, [], [[0,6],[1,11],[2,4],[3,9],[5,7],[8,10]], 2);
+        return { pts: rot90(pts, turnFor(d.turn, W, H)), edges,
+          note:"Twelve sides, and every one has an equal partner across the cross." };
+      },
+      formula(d,u,Per){ return boxFormula(d.a+d.n+d.c, d.b+d.m+d.e, 0, 0, u, Per); },
+      valid(d){ return d.a>0 && d.n>0 && d.c>0 && d.b>0 && d.m>0 && d.e>0; }
+    },
+
+    /* ---------------- staircase ----------------
+       Three or four steps.  Both long sides are n-part sides, so this is
+       the figure where "count the pieces first" earns its keep.         */
+    staircase: {
+      label:"Staircase", family:"comp",
+      dims(){
+        const n = rnd(3,4), o = { n, turn:rnd(0,3) };
+        for (let i=0;i<n;i++){ o["w"+i] = rnd(2,5); o["h"+i] = rnd(2,5); }
+        return o;
+      },
+      build(d){
+        const n = d.n, ws = [], hs = [];
+        for (let i=0;i<n;i++){ ws.push(d["w"+i]); hs.push(d["h"+i]); }
+        const W = ws.reduce((a,b)=>a+b,0), H = hs.reduce((a,b)=>a+b,0);
+        const pts = [P(0,0), P(W,0)];
+        const edges = [{len:W, param:null}];
+        let x = W, y = 0;
+        const vParts = [], hParts = [];
+        for (let i=n-1;i>=0;i--){
+          y += hs[i]; pts.push(P(x,y)); vParts.push(edges.length); edges.push({len:hs[i], param:"h"+i});
+          x -= ws[i]; pts.push(P(x,y)); hParts.push(edges.length); edges.push({len:ws[i], param:"w"+i});
+        }
+        edges.push({len:H, param:null});            // the closing left-hand side
+        applyReasoning(edges, [ {whole:0, parts:hParts}, {whole:edges.length-1, parts:vParts} ], [], 0);
+        return { pts: rot90(pts, turnFor(d.turn, W, H)), edges,
+          note:`Every step counts. The two long sides are each made of ${n} shorter ones.` };
+      },
+      formula(d,u,Per){
+        let W=0,H=0; for (let i=0;i<d.n;i++){ W += d["w"+i]; H += d["h"+i]; }
+        return boxFormula(W, H, 0, 0, u, Per);
+      },
+      valid(d){
+        for (let i=0;i<d.n;i++) if (!(d["w"+i]>0) || !(d["h"+i]>0)) return false;
+        return true;
+      }
+    },
+
+    /* ---------------- U-shape and E-shape ----------------
+       A rectangle with k notches cut into one side.  These are the ones
+       that BREAK the enclosing-rectangle shortcut: a notch you cannot
+       push out adds its depth twice, so P = 2(W + H) + 2kd.             */
+    ushape: comb(1, "U-shape"),
+    eshape: comb(2, "E-shape")
+  };
+
+  /* P = 2(W + H) for any rectilinear figure whose steps can be pushed out;
+     every notch that CANNOT be pushed out adds its depth twice. */
+  function boxFormula(W, H, notches, depth, u, Per){
+    if (!notches) return {
+      html:`2 &times; (${dgt(W)} + ${dgt(H)}) = ${dgt(Per)} ${u}`,
+      note:`Push the steps out and you get a rectangle ${dgt(W)} by ${dgt(H)} &mdash; the perimeter does not change.`
+    };
+    return {
+      html:`2 &times; (${dgt(W)} + ${dgt(H)}) + ${2*notches} &times; ${dgt(depth)} = ${dgt(Per)} ${u}`,
+      note:`The rectangle around it is ${dgt(W)} by ${dgt(H)}, but a notch cannot be pushed out &mdash; each one adds its depth <b>twice</b>.`
+    };
+  }
+
+  function comb(k, label){
+    const NL = k===1 ? "one notch" : k+" notches";
+    return {
+      label, family:"comp", notches:k,
+      dims(){
+        /* Fewer, bigger pieces on the E: five cramped sides leave the
+           numbers nowhere to go, and a notch deeper than about half the
+           height puts the two walls' labels on top of each other. */
+        /* THE NOTCH MUST BE A BITE, NOT A SLOT.  A notch three deep and six
+           wide has to hold three numbers -- two walls and a floor -- in three
+           units of depth, and they land on top of each other however they are
+           placed.  Keeping the gap close to the depth gives every notch a
+           roughly square mouth, which is how a textbook draws one. */
+        const o = { H:0, turn:rnd(0,3) };
+        o.dd = rnd(4, k===1 ? 7 : 6);
+        let W = 0;
+        for (let i=0;i<=k;i++){ o["l"+i] = rnd(3, k===1 ? 8 : 6); W += o["l"+i]; }
+        for (let i=0;i<k;i++) { o["g"+i] = rnd(Math.max(3,o.dd-1), o.dd+1); W += o["g"+i]; }
+        o.H = Math.max(o.dd+5, Math.min(24, Math.round(W*(0.66 + Math.random()*0.42))));
+        return o;
+      },
+      build(d){
+        const legs = [], gaps = [];
+        for (let i=0;i<=k;i++) legs.push(d["l"+i]);
+        for (let i=0;i<k;i++)  gaps.push(d["g"+i]);
+        const H = d.H, dep = Math.min(d.dd, H-1);
+        const W = legs.reduce((a,b)=>a+b,0) + gaps.reduce((a,b)=>a+b,0);
+
+        const pts = [P(0,0), P(W,0), P(W,H)];
+        const edges = [{len:W, param:null}, {len:H, param:"H"}];
+        const parts = [], vPairs = [];
+        let x = W;
+        for (let i=k;i>=1;i--){
+          x -= legs[i];      pts.push(P(x,H));       parts.push(edges.length); edges.push({len:legs[i], param:"l"+i});
+          const vA = edges.length;
+                             pts.push(P(x,H-dep));                             edges.push({len:dep, param:"dd"});
+          x -= gaps[i-1];    pts.push(P(x,H-dep));   parts.push(edges.length); edges.push({len:gaps[i-1], param:"g"+(i-1)});
+          const vB = edges.length;
+                             pts.push(P(x,H));                                 edges.push({len:dep, param:"dd"});
+          vPairs.push([vA,vB]);
+        }
+        pts.push(P(0,H));
+        parts.push(edges.length); edges.push({len:legs[0], param:"l0"});
+        edges.push({len:H, param:"H"});                     // the closing left-hand side
+        applyReasoning(edges, [ {whole:0, parts} ], [[1, edges.length-1]].concat(vPairs), 1);
+
+        return { pts: rot90(pts, turnFor(d.turn, W, H)), edges,
+          note:`A rectangle with ${NL} cut out of it. The long side runs past every notch.` };
+      },
+      formula(d,u,Per){
+        let W = 0;
+        for (let i=0;i<=k;i++) W += d["l"+i];
+        for (let i=0;i<k;i++)  W += d["g"+i];
+        return boxFormula(W, d.H, k, Math.min(d.dd, d.H-1), u, Per);
+      },
+      valid(d){
+        if (!(d.H>1) || !(d.dd>0) || d.dd>=d.H) return false;
+        for (let i=0;i<=k;i++) if (!(d["l"+i]>0)) return false;
+        for (let i=0;i<k;i++)  if (!(d["g"+i]>0)) return false;
+        return true;
+      }
+    };
+  }
+
+  /* Decide what to hide.  A group either loses its LONG side (add the
+     parts back up) or one of its PARTS (take the others off the long
+     side); `S.missMode` picks, and "mix" throws a coin per group so one
+     figure can carry both kinds of thinking at once. */
+  function applyReasoning(edges, groups, pairs, nCopies){
+    edges.forEach(e => { e.known = true; e.derive = null; });
+    groups.forEach(g => {
+      const m = S.missMode === "mix" ? (Math.random()<.5 ? "whole" : "part") : S.missMode;
+      if (m === "whole"){
+        edges[g.whole].known = false;
+        edges[g.whole].derive = {type:"sum", from:g.parts.slice()};
+      } else {
+        const k = g.parts[rnd(0, g.parts.length-1)];
+        edges[k].known = false;
+        edges[k].derive = {type:"part", whole:g.whole, others:g.parts.filter(x => x!==k)};
+      }
+    });
+    const pool = pairs.slice();
+    for (let n=0; n<nCopies && pool.length; n++){
+      const p = pool.splice(rnd(0,pool.length-1),1)[0];
+      const src = Math.random()<.5 ? p[0] : p[1], dst = src===p[0] ? p[1] : p[0];
+      if (!edges[src].known || !edges[dst].known) continue;
+      edges[dst].known = false;
+      edges[dst].derive = {type:"copy", from:[src]};
+    }
+  }
+
+  function regular(n, label){
+    const NAMES = {5:"pentagon",6:"hexagon",8:"octagon"};
+    return {
+      label, family:"reg", n,
+      dims(){ return { s: rnd(3,12) }; },
+      build(d){
+        const pts = regularPts(n, d.s);
+        const known = rnd(0,n-1);
+        const edges = [];
+        for (let i=0;i<n;i++) edges.push({
+          len:d.s, cls:"a", param:"s",
+          known: i===known,
+          derive: i===known ? null : {type:"copy", from:[known]}
+        });
+        return { pts, edges,
+          note:`A regular ${NAMES[n]} has ${n} equal sides.` };
+      },
+      formula(d,u,P){ return { html:`${n} &times; ${d.s} = ${dgt(P)} ${u}`, note:`${n} equal sides &mdash; count them, then multiply.` }; },
+      valid(d){ return d.s>0; }
+    };
+  }
+
+  const SHAPE_KEYS = Object.keys(SHAPES);
+
+  /* ==================================================================
+     3.  STATE
+     ================================================================== */
+
+  const S = {
+    key:"rectangle",
+    unit:"cm",
+    missMode:"mix",            // composites: hide the long side, a short one, or either
+    dims:{},
+    shape:null,            // {pts, edges, note}
+    fit:{k:1, ox:0, oy:0},
+    vb:{ w:1000, h:580 },
+
+    walking:false,
+    walkToken:0,
+    walkIdx:0,             // next edge to trace
+    traced:[],             // edge indices already traced, in order
+    total:0,
+    finished:false,
+    waitingOn:null,        // edge index the walk has stopped at
+    resolving:false,
+
+    justFound:null,
+    resolveToken:0,          // a stale animation must not outlive its figure
+    predictLocked:false,
+    predictValue:null,
+    editing:null,
+    labelPos:{},
+
+    opt:{ missing:true, expr:true, formula:true, predict:false, edit:false, ticks:true, right:true, pad:false }
+  };
+
+  /* ==================================================================
+     4.  BUILD / RESET
+     ================================================================== */
+
+  /* QUIZ: the pool is the level's, not a dropdown's. */
+  function chooseKey(){ return pick(QUIZ.pool()); }
+
+  function newShape(){
+    S.key = chooseKey();
+    S.dims = SHAPES[S.key].dims();
+    S.dims.__key = S.key;
+    rebuild();
+  }
+
+  function newNumbers(){
+    const def = SHAPES[S.key];
+    S.dims = def.dims();
+    S.dims.__key = S.key;
+    rebuild();
+  }
+
+  function rebuild(){
+    const def = SHAPES[S.key];
+    S.shape = def.build(S.dims);
+
+    // every builder hands back a CCW polygon; the outward normals depend
+    // on it, so shout rather than silently drawing the labels inside out
+    if (signedArea(S.shape.pts) <= 0) console.warn("[perimeter] non-CCW outline from", S.key);
+
+    if (!S.opt.missing) S.shape.edges.forEach(e => { e.known = true; });
+    resetWalk();
+    computeFit();
+    render();
+    updateChrome();
+  }
+
+  /* A teacher pressing "New numbers" mid-animation used to leave the flying
+     numbers on screen for ever, and the abandoned sequence carried on editing
+     a figure that no longer existed.  Every reset now retires the running
+     animation and sweeps the ghost layer. */
+  function abandonAnimation(){
+    S.resolveToken++;
+    S.resolving = false;
+    if (LAYERS) LAYERS.ghost.innerHTML = "";
+  }
+
+  function resetWalk(){
+    S.walkToken++;
+    abandonAnimation();
+    if (window.__PAD__) window.__PAD__.reset();   // a new figure, a clean pad
+    S.walking = false;
+    S.walkIdx = 0;
+    S.traced = [];
+    S.total = 0;
+    S.finished = false;
+    S.waitingOn = null;
+    S.resolving = false;
+    S.justFound = null;
+    S.predictLocked = false;
+    S.predictValue = null;
+  }
+
+  function startAgain(){
+    // put the missing sides back, keep the numbers
+    S.shape = SHAPES[S.key].build(S.dims);
+    if (!S.opt.missing) S.shape.edges.forEach(e => { e.known = true; });
+    resetWalk();
+    computeFit();
+    render();
+    updateChrome();
+  }
+
+  /* THE BOARD TAKES THE SHAPE OF THE FIGURE.  A fixed landscape viewBox
+     letterboxes a portrait figure -- an E-shape turned on its side ended up
+     half the size with its numbers on top of each other -- so the viewBox
+     width follows the figure's own aspect ratio and the element's max-width
+     is derived from it, leaving the drawing as large as the height budget
+     allows whichever way round it is. */
+  function computeFit(){
+    const pts = S.shape.pts;
+    const xs = pts.map(p=>p.x), ys = pts.map(p=>p.y);
+    const minx=Math.min.apply(null,xs), maxx=Math.max.apply(null,xs);
+    const miny=Math.min.apply(null,ys), maxy=Math.max.apply(null,ys);
+    const w = (maxx-minx)||1, h = (maxy-miny)||1;
+    const innerH = VB.h - 2*VB.padY;
+    /* A PORTRAIT FIGURE STILL NEEDS LANDSCAPE ROOM, because the numbers are
+       written across.  The floor keeps enough margin either side of a tall
+       figure for its labels; the drawing itself is unaffected, it is bound
+       by the height. */
+    const vbW = Math.max(560, Math.min(VB.w, Math.round(innerH*(w/h)) + 2*VB.padX));
+    S.vb = { w: vbW, h: VB.h };
+    const k = Math.min((vbW - 2*VB.padX)/w, innerH/h);
+    S.fit = {
+      k,
+      ox: (vbW - k*w)/2 - k*minx,
+      oy: (VB.h + k*h)/2 + k*miny
+    };
+    board.setAttribute("viewBox", `0 0 ${vbW} ${VB.h}`);
+    board.style.maxWidth = `calc(var(--boardH) * ${(vbW/VB.h).toFixed(4)})`;
+  }
+
+  const SX = p => S.fit.ox + S.fit.k*p.x;
+  const SY = p => S.fit.oy - S.fit.k*p.y;
+  const scr = p => P(SX(p), SY(p));
+
+  /* Screen geometry of edge i */
+  function edgeGeom(i){
+    const pts = S.shape.pts, n = pts.length;
+    const A = scr(pts[i]), B = scr(pts[(i+1)%n]);
+    const dx = B.x-A.x, dy = B.y-A.y;
+    const len = Math.hypot(dx,dy) || 1;
+    return {
+      A, B, dx, dy, len,
+      mid: P((A.x+B.x)/2, (A.y+B.y)/2),
+      ux: dx/len, uy: dy/len,
+      nx: -dy/len, ny: dx/len,                 // outward, given CCW in y-up
+      ang: Math.atan2(dy,dx)*180/Math.PI
+    };
+  }
+
+  /* ==================================================================
+     5.  RENDER
+     ================================================================== */
+
+  function el(tag, attrs, txt){
+    const e = document.createElementNS(SVGNS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (txt != null) e.textContent = txt;
+    return e;
+  }
+
+  let LAYERS = null;
+  function ensureLayers(){
+    if (LAYERS) return LAYERS;
+    const mk = cls => { const g = el("g",{class:cls}); board.appendChild(g); return g; };
+    LAYERS = {
+      fill:  mk("lyFill"),
+      trace: mk("lyTrace"),
+      edge:  mk("lyEdge"),
+      marks: mk("lyMarks"),
+      label: mk("lyLabel"),
+      ghost: mk("lyGhost"),
+      hit:   mk("lyHit")
+    };
+    return LAYERS;
+  }
+
+  function labelText(e, i){
+    if (!e.known) return "?";
+    return `${dgt(e.len)} ${S.unit}`;
+  }
+
+  /* ==================================================================
+     LABEL PLACEMENT
+     -------------------------------------------------------------------
+     A twelve-sided figure with 2 cm sides puts its numbers on top of each
+     other, so placement is SOLVED rather than computed once:
+
+       - the type size follows the SHORTEST side, because that is the one
+         with no room;
+       - each label starts clear of its own line along that line's outward
+         normal;
+       - any two that still overlap push each other apart, and each label
+         takes the push in its OWN frame -- outwards along its normal, and
+         a little along its own side.  Sliding is capped at 38% of the side
+         so a number never drifts far enough to look like it belongs to a
+         neighbour.
+
+     Positions are cached in S.labelPos so the length editor opens exactly
+     where the number actually ended up.
+     ================================================================== */
+  /* REAL METRICS, NOT AN ESTIMATE.  A guess at how wide "12 cm" is in a maths
+     serif was out by a fifth either way, so the solver thought it had
+     separated numbers the browser then drew on top of each other.  A hidden
+     probe in the SVG gives the true box; jsdom has no getBBox, so the old
+     estimate stays as the fallback for the headless checks. */
+  let MEAS = null; const MCACHE = {};
+  const PROBE = { x:200, y:290 };      // parked inside the board, never at the origin
+  function measureText(txt, fs, unknown){
+    const key = `${fs.toFixed(1)}|${unknown?1:0}|${txt}`;
+    if (MCACHE[key]) return MCACHE[key];
+    let r = null;
+    try {
+      // parked well inside the board: at the origin its box hangs off the
+      // left edge, which reads as the drawing overflowing when it is not
+      if (!MEAS){ MEAS = el("text",{ class:"measProbe", x:PROBE.x, y:PROBE.y }); board.appendChild(MEAS); }
+      MEAS.setAttribute("font-size", fs);
+      MEAS.setAttribute("font-family", unknown ? "var(--uiFont)" : "var(--mathFont)");
+      MEAS.setAttribute("font-weight", unknown ? 800 : 700);
+      MEAS.textContent = txt;
+      const b = MEAS.getBBox();
+      /* getBBox is in the probe's OWN user space, so the box carries the
+         probe's x/y.  Take them off, or every label inherits the probe's
+         parking spot as an offset and the whole layout shifts. */
+      if (b.width > 0) r = { w:b.width, h:b.height,
+                             ox:b.x + b.width/2  - PROBE.x,
+                             oy:b.y + b.height/2 - PROBE.y };
+    } catch(_){ /* jsdom */ }
+    if (!r) r = { w: 0.60*fs*txt.length + 9, h: fs*1.22, ox:0, oy:0 };
+    MCACHE[key] = r;
+    return r;
+  }
+
+  function labelScale(){
+    let minPx = Infinity;
+    for (let i=0;i<S.shape.pts.length;i++) minPx = Math.min(minPx, edgeGeom(i).len);
+    /* Start generous: the shrink loop below finds the largest size that
+       actually fits, so there is no reason to guess small up front. */
+    return { fs: Math.max(19, Math.min(27, minPx*0.32)), minPx };
+  }
+
+  /* Try at full size, and step the type down until nothing overlaps.  The
+     placement heuristics get a twelve-sided figure almost all the way there;
+     this is the guarantee behind them, and it only ever bites on the E. */
+  function solveLabels(){
+    const sc = labelScale();
+    let best = null;
+    let fallback = null;
+    for (const mul of [1, .95, .9, .85, .8, .76, .72, .68, .64, .6, .56]){
+      const r = attemptLabels(sc.fs*mul);
+      if (!r.clashes){ best = r; break; }
+      // if nothing packs cleanly, keep the best layout that is still READABLE
+      // rather than shrinking the numbers away to win the argument
+      if (mul >= 0.72 && (!fallback || r.clashes < fallback.clashes)) fallback = r;
+    }
+    best = best || fallback;
+    S.labelPos = {};
+    best.items.forEach(t => { S.labelPos[t.i] = best.at(t); });
+    S.lastSolve = { clashes: best.clashes, fs: best.fs };   // read by the label harness
+    S.lastBoxes = {};
+    best.items.forEach(t => {
+      const p = best.at(t), cx = p.x + t.ox, cy = p.y + t.oy;
+      S.lastBoxes[t.i] = { l:cx-t.w/2, r:cx+t.w/2, t:cy-t.h/2, b:cy+t.h/2 };
+    });
+    return { items:best.items, at:best.at, fs:best.fs, minPx: sc.minPx };
+  }
+
+  function attemptLabels(fs){
+    const n = S.shape.pts.length;
+    const items = [];
+    for (let i=0;i<n;i++){
+      const g = edgeGeom(i), e = S.shape.edges[i];
+      const txt = labelText(e, i);
+      const m = measureText(txt, e.known ? fs : fs*1.1, !e.known);
+      /* Room for the white halo.  Do not inflate this "just to be safe": at
+         +16/+12 the twelve-sided figures become unpackable, the shrink loop
+         runs all the way down and the numbers end up at 10px. */
+      const w = m.w + 13, h = m.h + 9;
+      items.push({ i, g, txt, fs, w, h, ox:m.ox, oy:m.oy,
+        base: 11 + fs*0.32 + Math.abs(g.nx)*w/2 + Math.abs(g.ny)*h/2,
+        dir: 1, out: 0, slide: 0, maxSlide: g.len*0.44 });
+    }
+    /* dir = +1 outside the figure, -1 inside it.  The inside of a notch is
+       often the only place a number fits, which is exactly where a textbook
+       puts it; the white halo on .sideLabel keeps it readable over a line. */
+    const BW = (S.vb ? S.vb.w : VB.w);
+    const at = t => {
+      const x = t.g.mid.x + t.g.nx*t.dir*(t.base+t.out) + t.g.ux*t.slide;
+      const y = t.g.mid.y + t.g.ny*t.dir*(t.base+t.out) + t.g.uy*t.slide;
+      return P(
+        Math.max(t.w/2 - t.ox + 4, Math.min(BW    - t.w/2 - t.ox - 4, x)),
+        Math.max(t.h/2 - t.oy + 4, Math.min(VB.h  - t.h/2 - t.oy - 4, y))
+      );
+    };
+    const boxOf = t => {
+      const p = at(t), cx = p.x + t.ox, cy = p.y + t.oy;
+      return { l:cx-t.w/2, r:cx+t.w/2, t:cy-t.h/2, b:cy+t.h/2 };
+    };
+    const over = (A,B) => Math.max(0, Math.min(A.r,B.r)-Math.max(A.l,B.l))
+                        * Math.max(0, Math.min(A.b,B.b)-Math.max(A.t,B.t));
+
+    /* MOST CONSTRAINED FIRST: the shortest sides have the least room, so
+       they choose their side and their offset before the roomy ones do.
+       Three sweeps, because an early choice made with an empty board is
+       often worth revising once its neighbours have landed.  Sliding ALONG
+       a side is cheap -- a number that has moved towards one end still
+       plainly belongs to that side -- so the notch walls end up at the
+       mouth of the notch, which is exactly where a textbook puts them. */
+    let placed = [];
+    const byRoom = items.slice().sort((a,b) => a.g.len - b.g.len);
+    for (let sweep=0; sweep<3; sweep++){
+      for (const t of byRoom){
+        const rivals = placed.filter(o => o !== t);
+        let best = null;
+        for (const dir of [1,-1]) for (const sl of [0,.14,-.14,.26,-.26,.36,-.36,.44,-.44]){
+          t.dir = dir; t.slide = sl*t.g.len; t.out = 0;
+          const bx = boxOf(t);
+          let cost = rivals.reduce((c,o) => c + over(bx, boxOf(o)), 0);
+          cost += (dir === 1 ? 0 : t.w*t.h*0.12);   // prefer the outside
+          cost += Math.abs(sl)*t.w*0.12;            // and, mildly, the middle
+          if (!best || cost < best.cost) best = { cost, dir, slide:t.slide };
+        }
+        t.dir = best.dir; t.slide = best.slide; t.out = 0;
+        if (placed.indexOf(t) < 0) placed.push(t);
+      }
+    }
+
+    /* then nudge apart whatever is still touching */
+    for (let iter=0; iter<130; iter++){
+      let moved = false;
+      for (let a=0;a<items.length;a++) for (let b=a+1;b<items.length;b++){
+        const A = items[a], B = items[b], ba = boxOf(A), bb = boxOf(B);
+        if (Math.min(ba.r,bb.r) - Math.max(ba.l,bb.l) <= 0) continue;
+        if (Math.min(ba.b,bb.b) - Math.max(ba.t,bb.t) <= 0) continue;
+        const pa = P((ba.l+ba.r)/2, (ba.t+ba.b)/2), pb = P((bb.l+bb.r)/2, (bb.t+bb.b)/2);
+        moved = true;
+        let dx = pa.x-pb.x, dy = pa.y-pb.y, dl = Math.hypot(dx,dy);
+        if (dl < 0.01){ dx = A.g.nx*A.dir; dy = A.g.ny*A.dir; dl = 1; }
+        dx /= dl; dy /= dl;
+        [[A, 1], [B, -1]].forEach(([T, sgn]) => {
+          const px = sgn*dx, py = sgn*dy;
+          /* `out` may go NEGATIVE, far enough to carry the number back across
+             its own line.  Clamped at zero the two walls of a notch deadlock:
+             each is pushed towards the other's side and neither can leave. */
+          T.out   = Math.max(-2.2*T.base, T.out + 0.9 + 2.6*(px*T.g.nx*T.dir + py*T.g.ny*T.dir));
+          T.slide = Math.max(-T.maxSlide, Math.min(T.maxSlide, T.slide + 3.0*(px*T.g.ux + py*T.g.uy)));
+        });
+      }
+      if (!moved) break;
+    }
+    let clashes = 0;
+    for (let a=0;a<items.length;a++) for (let b=a+1;b<items.length;b++)
+      if (over(boxOf(items[a]), boxOf(items[b])) > 0) clashes++;
+    return { items, at, fs, clashes };
+  }
+
+  function render(){
+    const L = ensureLayers();
+    ["fill","trace","edge","marks","label","hit"].forEach(k => { L[k].innerHTML = ""; });
+
+    const pts = S.shape.pts, n = pts.length, edges = S.shape.edges;
+    const sol = solveLabels();
+    const tick = Math.max(6, Math.min(10, sol.minPx*0.16));   // marks shrink with the sides too
+    const rSize = Math.max(7, Math.min(15, sol.minPx*0.26));
+
+    /* --- fill --- */
+    L.fill.appendChild(el("polygon",{
+      class:"shapeFill",
+      points: pts.map(p => `${SX(p).toFixed(1)},${SY(p).toFixed(1)}`).join(" ")
+    }));
+
+    /* --- edges, ticks, right angles, labels, hit areas --- */
+    for (let i=0;i<n;i++){
+      const g = edgeGeom(i), e = edges[i];
+
+      let cls = "edgeLine";
+      if (!e.known) cls += " unknown";
+      if (S.waitingOn === i) cls += " waiting";
+      const line = el("line", { class:cls, x1:g.A.x.toFixed(1), y1:g.A.y.toFixed(1), x2:g.B.x.toFixed(1), y2:g.B.y.toFixed(1) });
+      line.dataset.edge = i;
+      L.edge.appendChild(line);
+
+      /* equal-side marks: only where a class actually has a partner */
+      if (S.opt.ticks && e.cls){
+        const count = edges.filter(x => x.cls === e.cls).length;
+        if (count > 1){
+          const marks = e.cls === "a" ? 1 : 2;
+          for (let m=0;m<marks;m++){
+            const off = (m-(marks-1)/2)*(tick*0.9);
+            const px = g.mid.x + g.ux*off, py = g.mid.y + g.uy*off;
+            L.marks.appendChild(el("line",{
+              class:"tickMark",
+              x1:(px+g.nx*tick).toFixed(1), y1:(py+g.ny*tick).toFixed(1),
+              x2:(px-g.nx*tick).toFixed(1), y2:(py-g.ny*tick).toFixed(1)
+            }));
+          }
+        }
+      }
+
+      /* label, wherever the solver settled it */
+      let lcls = "sideLabel";
+      if (!e.known) lcls += " unknown";
+      if (S.justFound === i) lcls += " justFound";
+      if (S.opt.edit && e.known && e.param) lcls += " editable";
+      const lp = S.labelPos[i];
+      const t = el("text",{ class:lcls, x:lp.x.toFixed(1), y:lp.y.toFixed(1),
+        "font-size": (e.known ? sol.fs : sol.fs*1.1).toFixed(1) }, labelText(e,i));
+      t.dataset.edge = i;
+      L.label.appendChild(t);
+
+      /* trace overlay path, drawn but hidden until the walk reaches it */
+      const tp = el("path",{ class:"tracePath", d:`M ${g.A.x.toFixed(1)} ${g.A.y.toFixed(1)} L ${g.B.x.toFixed(1)} ${g.B.y.toFixed(1)}` });
+      tp.dataset.edge = i;
+      tp.style.strokeDasharray = g.len;
+      tp.style.strokeDashoffset = S.traced.indexOf(i) >= 0 ? 0 : g.len;
+      if (S.traced.indexOf(i) >= 0) tp.classList.add("on");
+      L.trace.appendChild(tp);
+
+      /* click target: the whole side plus its label */
+      /* QUIZ: a "?" is clickable only where the level lets the student send
+         the side across.  Higher up the figure is to be read, not operated. */
+      const hitActive = ((!e.known) && QUIZ.canAnimate()) || (S.opt.edit && e.known && e.param);
+      const hl = el("line",{
+        class:"hitLine" + (hitActive ? "" : " noHit"),
+        x1:g.A.x.toFixed(1), y1:g.A.y.toFixed(1), x2:g.B.x.toFixed(1), y2:g.B.y.toFixed(1)
+      });
+      hl.dataset.edge = i;
+      L.hit.appendChild(hl);
+    }
+
+    /* --- right-angle marks --- */
+    if (S.opt.right){
+      for (let i=0;i<n;i++){
+        const prev = (i-1+n)%n;
+        const a = edgeGeom(prev), b = edgeGeom(i);
+        const dot = (-a.ux)*(b.ux) + (-a.uy)*(b.uy);
+        if (Math.abs(dot) < 0.02){
+          const v = scr(pts[i]), s = rSize;
+          const p1 = P(v.x - a.ux*s, v.y - a.uy*s);
+          const p2 = P(v.x + b.ux*s, v.y + b.uy*s);
+          const cor = P(p1.x + b.ux*s, p1.y + b.uy*s);
+          L.marks.appendChild(el("polyline",{ class:"rightMark",
+            points:`${p1.x.toFixed(1)},${p1.y.toFixed(1)} ${cor.x.toFixed(1)},${cor.y.toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)}` }));
+        }
+      }
+    }
+
+    /* --- corner dots --- */
+    for (let i=0;i<n;i++){
+      const v = scr(pts[i]);
+      L.marks.appendChild(el("circle",{ class:"cornerDot", cx:v.x.toFixed(1), cy:v.y.toFixed(1), r:Math.max(2.6, tick*0.4).toFixed(1) }));
+    }
+
+    /* the board was just rebuilt from scratch, so the working pad has to put
+       its green back on the sides it has already taken */
+    if (window.__PAD__) window.__PAD__.paint();
+  }
+
+
+  /* ==================================================================
+     THE WORKING PAD
+     -------------------------------------------------------------------
+     Adding a dozen side lengths in your head is not the skill; keeping
+     track of WHICH ONES YOU HAVE ALREADY USED is where the marks go, and
+     it is invisible on paper.  So the pad makes it visible.
+
+       · Drag a side off the figure and it lands in the pad as a number.
+         That side turns GREEN, so what is left to count is obvious.
+       · Drop one number on another and the pad ASKS WHAT THEY MAKE.  It
+         will not add them for you -- the same combine-by-answering rule
+         as the Row & Column Challenge, so a class meets it twice.
+       · Every side green and one number left: that number is the
+         perimeter, and the student built it.
+
+     `SRC` is how the pad reaches the figure: the host hands it a way to
+     read the edges and to re-render.  Nothing in here knows whether it is
+     sitting in the teaching tool or the quiz.
+     ================================================================== */
+  const PAD = (function(){
+    "use strict";
+    let SRC = null;                       // { edges(), unit(), busy() }
+    let on = false;
+    let tiles = [], nextId = 1, history = [];
+    let dragging = null, fly = null, pending = null;
+
+    const $p = id => document.getElementById(id);
+    const num = v => Number(Number(v).toFixed(2));
+    const show = v => String(num(v));
+
+    function area(){ return $p("padArea"); }
+    function edges(){ return SRC ? SRC.edges() : []; }
+
+    /* ---------------- what the figure shows ---------------- */
+
+    /* every edge index sitting in the pad, whether on its own or folded
+       into a sum */
+    function accounted(){
+      const s = new Set();
+      tiles.forEach(t => t.src.forEach(i => s.add(i)));
+      return s;
+    }
+    function has(i){ return accounted().has(i); }
+
+    /* called at the end of every render, because the engine rebuilds the
+       whole board and would otherwise wipe the green */
+    function paint(){
+      const board = document.getElementById("board");
+      if (!board) return;
+      board.classList.toggle("padOn", on);
+      const acc = accounted();
+      board.querySelectorAll("[data-edge]").forEach(n => {
+        const i = Number(n.dataset.edge);
+        const inPad = acc.has(i);
+        n.classList.toggle("accounted", inPad);
+        if (n.classList.contains("hitLine")){
+          const e = edges()[i];
+          const can = on && e && e.known && !inPad;
+          n.classList.toggle("draggable", !!can);
+          if (can) n.classList.remove("noHit");
+        }
+      });
+      paintFoot();
+    }
+
+    function paintFoot(){
+      const foot = $p("padFoot");
+      if (!foot) return;
+      const es = edges(), acc = accounted();
+      if (!es.length){ foot.textContent = ""; foot.className = "padFoot"; return; }
+      const done = es.filter((e,i) => acc.has(i)).length;
+      if (done === es.length && tiles.length === 1){
+        foot.textContent = `Every side is in the pad and there is one number left — that is the perimeter, all the way round.`;
+        foot.className = "padFoot done";
+      } else if (done === es.length){
+        foot.textContent = `All ${es.length} sides are in the pad. Now join them until one number is left.`;
+        foot.className = "padFoot done";
+      } else {
+        foot.textContent = `${done} of ${es.length} sides in the pad. Drag the rest in — a ? has to be found first.`;
+        foot.className = "padFoot";
+      }
+      const u = $p("padUndo"), c = $p("padClear");
+      if (u) u.disabled = !history.length;
+      if (c) c.disabled = !tiles.length;
+    }
+
+    /* ---------------- the tiles ---------------- */
+
+    function snapshot(){
+      history.push(JSON.stringify(tiles));
+      if (history.length > 40) history.shift();
+    }
+    function undo(){
+      if (!history.length) return;
+      tiles = JSON.parse(history.pop());
+      renderTiles(); repaint();
+    }
+    function clear(){
+      if (!tiles.length) return;
+      snapshot(); tiles = []; renderTiles(); repaint();
+    }
+    function reset(){                       // a new figure: the pad starts over
+      tiles = []; history = []; pending = null; closeSum();
+      renderTiles();
+      const foot = $p("padFoot"); if (foot){ foot.textContent = ""; foot.className = "padFoot"; }
+    }
+    /* re-rendering is how the green gets back onto the figure — but only once
+       there IS a figure; the pad can be switched on before the first one. */
+    function repaint(){
+      if (SRC && SRC.render && edges().length) SRC.render(); else paint();
+    }
+
+    function freeSpot(){
+      const a = area(); if (!a) return { x:14, y:14 };
+      const w = a.clientWidth, h = a.clientHeight;
+      for (let r=0; r<80; r++){
+        const x = 12 + Math.random()*Math.max(1, w-84);
+        const y = 12 + Math.random()*Math.max(1, h-70);
+        if (!tiles.some(t => Math.abs(t.x-x) < 66 && Math.abs(t.y-y) < 62)) return { x, y };
+      }
+      return { x: 12 + Math.random()*Math.max(1,w-84), y: 12 + Math.random()*Math.max(1,h-70) };
+    }
+
+    function addTile(v, src, at){
+      const spot = at || freeSpot();
+      const t = { id:nextId++, v:num(v), src:src.slice(),
+                  x:Math.max(4, spot.x), y:Math.max(4, spot.y), fresh:true };
+      tiles.push(t);
+      return t;
+    }
+
+    function renderTiles(){
+      const a = area(); if (!a) return;
+      a.innerHTML = tiles.length ? "" :
+        '<div class="padEmpty">Drag a side length off the figure and drop it here.</div>';
+      const w = a.clientWidth || 260, h = a.clientHeight || 170;
+      tiles.forEach(t => {
+        const el2 = document.createElement("div");
+        el2.className = "padTile" + (t.src.length > 1 ? " sum" : "") + (t.fresh ? " popIn" : "");
+        el2.dataset.tile = t.id;
+        el2.textContent = show(t.v);
+        t.x = Math.min(Math.max(2, t.x), Math.max(2, w-70));
+        t.y = Math.min(Math.max(2, t.y), Math.max(2, h-60));
+        el2.style.left = t.x + "px";
+        el2.style.top  = t.y + "px";
+        el2.title = t.src.length > 1 ? `${t.src.length} sides` : "one side";
+        a.appendChild(el2);
+        t.fresh = false;
+      });
+    }
+
+    /* ---------------- dragging ---------------- */
+
+    function makeFly(text){
+      fly = document.createElement("div");
+      fly.className = "padFly";
+      fly.textContent = text;
+      document.body.appendChild(fly);
+    }
+    function moveFly(x, y){ if (fly){ fly.style.left = x + "px"; fly.style.top = y + "px"; } }
+    function killFly(){ if (fly){ fly.remove(); fly = null; } }
+
+    function tileUnder(x, y, notId){
+      const a = area(); if (!a) return null;
+      for (const n of a.querySelectorAll(".padTile")){
+        const id = Number(n.dataset.tile);
+        if (id === notId) continue;
+        const r = n.getBoundingClientRect();
+        if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom)
+          return tiles.find(t => t.id === id) || null;
+      }
+      return null;
+    }
+    function overPad(x, y){
+      const a = area(); if (!a) return false;
+      const r = a.getBoundingClientRect();
+      return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+    }
+
+    function onDown(ev){
+      if (!on || !SRC || (SRC.busy && SRC.busy())) return;
+      if (ev.button !== undefined && ev.button !== 0) return;
+
+      const tileEl = ev.target.closest && ev.target.closest(".padTile");
+      if (tileEl){
+        const t = tiles.find(x => x.id === Number(tileEl.dataset.tile));
+        if (!t) return;
+        const r = tileEl.getBoundingClientRect();
+        dragging = { kind:"tile", t, el:tileEl, moved:false,
+                     dx:ev.clientX - r.left - r.width/2, dy:ev.clientY - r.top - r.height/2,
+                     x0:ev.clientX, y0:ev.clientY };
+        ev.preventDefault();
+        return;
+      }
+
+      const edgeEl = ev.target.closest && ev.target.closest("[data-edge]");
+      if (!edgeEl) return;
+      const i = Number(edgeEl.dataset.edge);
+      const e = edges()[i];
+      if (!e || !e.known || has(i)) return;          // a ? must be found first
+      dragging = { kind:"edge", i, v:e.len, moved:false, x0:ev.clientX, y0:ev.clientY };
+    }
+
+    function onMove(ev){
+      if (!dragging) return;
+      const far = Math.abs(ev.clientX - dragging.x0) > 6 || Math.abs(ev.clientY - dragging.y0) > 6;
+      if (!dragging.moved && !far) return;
+      if (!dragging.moved){
+        dragging.moved = true;
+        if (dragging.kind === "edge") makeFly(show(dragging.v));
+        else dragging.el.classList.add("dragging");
+      }
+      ev.preventDefault();
+
+      if (dragging.kind === "edge"){
+        moveFly(ev.clientX, ev.clientY);
+        const a = area();
+        if (a) a.classList.toggle("over", overPad(ev.clientX, ev.clientY));
+        return;
+      }
+      const a = area(), r = a.getBoundingClientRect();
+      dragging.t.x = ev.clientX - r.left - dragging.dx - 29;
+      dragging.t.y = ev.clientY - r.top  - dragging.dy - 28;
+      dragging.el.style.left = dragging.t.x + "px";
+      dragging.el.style.top  = dragging.t.y + "px";
+      const over = tileUnder(ev.clientX, ev.clientY, dragging.t.id);
+      a.querySelectorAll(".padTile").forEach(n =>
+        n.classList.toggle("target", over && Number(n.dataset.tile) === over.id));
+    }
+
+    function onUp(ev){
+      const d = dragging; dragging = null;
+      const a = area(); if (a) a.classList.remove("over");
+      if (!d) return;
+      if (!d.moved){ killFly(); return; }             // a click, not a drag
+      lastDragEnd = performance.now();                 // ...so the click that follows is not one
+
+      if (d.kind === "edge"){
+        killFly();
+        if (overPad(ev.clientX, ev.clientY)){
+          const r = a.getBoundingClientRect();
+          snapshot();
+          addTile(d.v, [d.i], { x:ev.clientX - r.left - 29, y:ev.clientY - r.top - 28 });
+          renderTiles(); repaint();
+        }
+        return;
+      }
+
+      d.el.classList.remove("dragging");
+      a.querySelectorAll(".padTile").forEach(n => n.classList.remove("target"));
+
+      /* dropped outside the pad: the number goes back to the figure */
+      if (!overPad(ev.clientX, ev.clientY)){
+        snapshot();
+        tiles = tiles.filter(t => t.id !== d.t.id);
+        renderTiles(); repaint();
+        return;
+      }
+      const over = tileUnder(ev.clientX, ev.clientY, d.t.id);
+      if (over) openSum(d.t, over);
+      else { renderTiles(); paintFoot(); }
+    }
+
+    /* ---------------- the sum prompt ----------------
+       The pad never adds for the student.  Two numbers only become one
+       when somebody says what they make. */
+    function openSum(a, b){
+      pending = { a:a.id, b:b.id, want:num(a.v + b.v) };
+      $p("padSumA").textContent = show(a.v);
+      $p("padSumB").textContent = show(b.v);
+      $p("padMsg").textContent = "";
+      const inp = $p("padSumInput");
+      inp.value = "";
+      $p("padOverlay").classList.add("on");
+      setTimeout(() => { try{ inp.focus(); }catch(e){} }, 40);
+    }
+    function closeSum(){
+      const o = $p("padOverlay");
+      if (o) o.classList.remove("on");
+      pending = null;
+    }
+    function cancelSum(){ closeSum(); renderTiles(); paintFoot(); }
+    function submitSum(){
+      if (!pending) return;
+      const raw = String($p("padSumInput").value || "").trim();
+      const v = Number(raw);
+      if (!raw || !isFinite(v)){
+        $p("padMsg").textContent = "Type a number first.";
+        shake(); return;
+      }
+      if (Math.abs(v - pending.want) > 0.005){
+        $p("padMsg").textContent = "Not that one — try the addition again.";
+        shake(); return;
+      }
+      const a = tiles.find(t => t.id === pending.a), b = tiles.find(t => t.id === pending.b);
+      closeSum();
+      if (!a || !b){ renderTiles(); return; }
+      snapshot();
+      const spot = { x:(a.x + b.x)/2, y:(a.y + b.y)/2 };
+      tiles = tiles.filter(t => t.id !== a.id && t.id !== b.id);
+      addTile(v, a.src.concat(b.src), spot);
+      renderTiles(); repaint();
+    }
+    function shake(){
+      const box = $p("padBox");
+      box.classList.remove("padShake"); void box.offsetWidth; box.classList.add("padShake");
+    }
+
+    /* ---------------- wiring ---------------- */
+
+    function init(src){
+      SRC = src;
+      document.addEventListener("pointerdown", onDown, true);
+      document.addEventListener("pointermove", onMove, { passive:false });
+      document.addEventListener("pointerup", onUp);
+      document.addEventListener("pointercancel", onUp);
+      /* A drag that began on a side would otherwise ALSO arrive as a click on
+         it -- which in the teaching tool opens the side editor the moment you
+         let go.  Any click within a moment of a real drag is swallowed. */
+      document.addEventListener("click", ev => {
+        if (performance.now() - lastDragEnd < 320){
+          ev.stopPropagation(); ev.preventDefault(); lastDragEnd = 0;
+        }
+      }, true);
+      const bind = (id, fn, ev2) => { const n = $p(id); if (n) n.addEventListener(ev2 || "click", fn); };
+      bind("padUndo", undo);
+      bind("padClear", clear);
+      bind("padSumGo", submitSum);
+      bind("padSumNo", cancelSum);
+      bind("padSumInput", ev => {
+        if (ev.key === "Enter"){ ev.preventDefault(); submitSum(); }
+        if (ev.key === "Escape"){ ev.preventDefault(); cancelSum(); }
+      }, "keydown");
+      window.addEventListener("resize", () => { if (on) renderTiles(); });
+    }
+    let lastDragEnd = 0;
+
+    function enable(v){
+      on = !!v;
+      const card = $p("padCard");
+      if (card) card.hidden = !on;
+      if (!on) reset(); else renderTiles();
+      repaint();
+    }
+
+    return { init, enable, reset, paint, has, isOn:() => on,
+             tiles:() => tiles.map(t => ({ v:t.v, src:t.src.slice() })),
+             undo, clear,
+             /* headless hooks */
+             _add:(i) => { const e = edges()[i]; if (!e || !e.known || has(i)) return false;
+                           snapshot(); addTile(e.len, [i]); renderTiles(); repaint(); return true; },
+             _join:(k, j) => { if (!tiles[k] || !tiles[j]) return false; openSum(tiles[k], tiles[j]); return true; },
+             _answer:(v) => { $p("padSumInput").value = String(v); submitSum(); },
+             _pending:() => pending && { want:pending.want } };
+  })();
+  window.__PAD__ = PAD;
+
+  /* ==================================================================
+     6.  THE MISSING-SIDE ANIMATION
+     -------------------------------------------------------------------
+     A ghost is a copy of a KNOWN side -- its line and its number -- that
+     flies across the figure and lands exactly where it is needed.  Three
+     kinds of reasoning, three journeys:
+
+       copy  one equal side flies onto the unknown one.
+       sum   the parts fly onto the unknown LONG side and land END TO END,
+             so together they visibly cover it.
+       part  the OTHER parts fly onto the long side (which is labelled)
+             and stop short.  What is left over is a gap the length of the
+             unknown -- and that gap then flies BACK and becomes the label.
+             Subtraction as "what room is left", not as a rule.
+     ================================================================== */
+
+  /* an edge and its number as a free-floating group we can move */
+  /* The label sits in its OWN wrapper.  The wrapper carries the offset and the
+     counter-rotation, which leaves the <text> free for a CSS scale — otherwise
+     a pop animation and the counter-rotation fight over the same transform.
+     `side` is +1 for the label outside the line, -1 for inside.
+     A CSS `transform` REPLACES an element's transform attribute, so the group
+     that carries translate()/rotate() must never be the one a keyframe scales.
+     The scale goes on an inner group instead; putting it on `g` parked the
+     merged bar at the layer's origin for the rest of the lesson. */
+  function makeGhost(lenPx, text, gap, side){
+    const g = el("g",{});
+    const inner = el("g",{ class:"ghostInner" });
+    inner.appendChild(el("line",{ class:"ghostLine" + (gap?" gap":""),
+      x1:(-lenPx/2).toFixed(1), y1:0, x2:(lenPx/2).toFixed(1), y2:0 }));
+    const w = el("g",{});
+    const t = el("text",{ class:"ghostLabel" + (gap?" gap":""), x:0, y:0 }, text);
+    w.appendChild(t);
+    inner.appendChild(w);
+    g.appendChild(inner);
+    ensureLayers().ghost.appendChild(g);
+    return { g, inner, w, t, len:lenPx, side: side || 1, pin:null };
+  }
+
+  /* Which way is "outside"?  A local offset (0,d) under rotate(a) lands at
+     (-d sin a, d cos a); compare that with the edge's outward normal. */
+  function labelSide(ang, nx, ny){
+    const a = ang*Math.PI/180;
+    return ((-Math.sin(a))*nx + Math.cos(a)*ny) > 0 ? 1 : -1;
+  }
+
+  /* ...and which way a ghost's number should face is a question about the
+     angle it ENDS at, not the one it was asked for.  A segment is symmetric,
+     so `moveGhost` may settle it 180 deg round; asking at the wrong angle put
+     two numbers of the same run on opposite sides of the same line.  A ghost
+     therefore carries `pin` -- the edge it belongs to and whether the number
+     wants to be outside (+1) or inside (-1) -- and the side is recomputed
+     whenever its resting angle is known. */
+  function applyPin(gh, ang){
+    if (gh.pin) gh.side = gh.pin.want * labelSide(ang, gh.pin.nx, gh.pin.ny);
+    return gh.side;
+  }
+
+  function popLabel(gh){
+    gh.t.classList.remove("popNum");
+    void gh.t.getBoundingClientRect();
+    gh.t.classList.add("popNum");
+  }
+
+  /* Put the number clear of the line ALONG THE LINE'S OWN NORMAL, then undo
+     the rotation so it stays upright.  Offsetting in screen space instead
+     lands the number on top of a vertical side. */
+  function setGhostAt(gh, mid, ang){
+    gh.g.setAttribute("transform", `translate(${mid.x.toFixed(2)},${mid.y.toFixed(2)}) rotate(${ang.toFixed(2)})`);
+    gh.w.setAttribute("transform", `translate(0,${(27*gh.side).toFixed(1)}) rotate(${(-ang).toFixed(2)})`);
+  }
+
+  /* a segment is symmetric, so bring the target angle within 90 deg of the
+     source before interpolating -- otherwise a side can spin the long way */
+  function nearestAngle(dst, src){
+    let a = dst;
+    while (a - src >  90) a -= 180;
+    while (a - src < -90) a += 180;
+    return a;
+  }
+
+  function moveGhost(gh, from, to, dur){
+    return new Promise(resolve => {
+      const a0 = from.ang, a1 = nearestAngle(to.ang, a0);
+      applyPin(gh, a1);                     // face the way it will face on landing
+      const t0 = performance.now();
+      // lift the ghost off its path so the motion reads as a move, not a fade
+      const dx = to.mid.x - from.mid.x, dy = to.mid.y - from.mid.y;
+      const dl = Math.hypot(dx,dy) || 1;
+      const lift = Math.min(46, dl*0.16);
+      const cx = (from.mid.x + to.mid.x)/2 + (-dy/dl)*lift;
+      const cy = (from.mid.y + to.mid.y)/2 + ( dx/dl)*lift;
+      function frame(now){
+        const raw = Math.min(1, (now-t0)/dur), t = easeIO(raw), it = 1-t;
+        setGhostAt(gh,
+          P(it*it*from.mid.x + 2*it*t*cx + t*t*to.mid.x,
+            it*it*from.mid.y + 2*it*t*cy + t*t*to.mid.y),
+          a0 + (a1-a0)*t);
+        if (raw < 1) requestAnimationFrame(frame); else resolve(gh);
+      }
+      requestAnimationFrame(frame);
+    });
+  }
+
+  async function flyFromEdge(fromIdx, to, lenPx, text, dur, pin){
+    const src = edgeGeom(fromIdx);
+    const gh = makeGhost(lenPx, text, false, 1);
+    gh.pin = pin || null;
+    applyPin(gh, src.ang);
+    setGhostAt(gh, src.mid, src.ang);
+    await moveGhost(gh, { mid:src.mid, ang:src.ang }, to, dur);
+    return gh;
+  }
+
+  /* Lay a run of lengths end to end along one edge, starting at its A end.
+     The lengths are rescaled to fill it exactly, which absorbs any rounding
+     so the pieces never overshoot the side they are supposed to cover. */
+  function slotsAlong(g, lens){
+    const total = lens.reduce((a,b) => a+b, 0) || 1;
+    const scale = g.len / total;
+    const out = []; let acc = 0;
+    for (const L of lens){
+      const px = L*scale;
+      out.push({ mid:P(g.A.x + g.ux*(acc + px/2), g.A.y + g.uy*(acc + px/2)), ang:g.ang, px });
+      acc += px;
+    }
+    return out;
+  }
+
+  /* order edges by where they sit along another edge's own direction, so a
+     figure's pieces land in their true positions under any rotation */
+  function sortAlong(g, idxs){
+    return idxs.slice().sort((p,q) => {
+      const gp = edgeGeom(p), gq = edgeGeom(q);
+      return ((gp.mid.x-g.A.x)*g.ux + (gp.mid.y-g.A.y)*g.uy)
+           - ((gq.mid.x-g.A.x)*g.ux + (gq.mid.y-g.A.y)*g.uy);
+    });
+  }
+
+  const lenOf = i => S.shape.edges[i].len;
+  const withUnit = v => `${dgt(v)} ${S.unit}`;
+
+  async function resolveEdge(idx){
+    const e = S.shape.edges[idx];
+    if (!e || e.known || S.resolving) return;
+    S.resolving = true;
+    const token = ++S.resolveToken;
+    const alive = () => token === S.resolveToken;
+    const L = ensureLayers();
+
+    const tgt = edgeGeom(idx);
+    const der = e.derive;
+    const ghosts = [];
+    const lit = [];                                  // things to un-highlight after
+
+    /* highlight the target while it is being worked out */
+    const tl = L.edge.querySelector(`line[data-edge="${idx}"]`);
+    if (tl){ tl.classList.remove("waiting"); tl.classList.add("resolving"); }
+
+    function light(i){
+      const ln = L.edge.querySelector(`line[data-edge="${i}"]`);
+      const lb = L.label.querySelector(`text[data-edge="${i}"]`);
+      if (ln){ ln.classList.add("wholeHi"); lit.push(ln); }
+      if (lb){ lb.classList.add("wholeHi"); lit.push(lb); }
+    }
+
+    if (der && der.type === "copy"){
+      const from = der.from[0];
+      setPrompt(`That side has no number &mdash; but it is <b>equal</b> to the side coming across now.`);
+      flashSource(from);
+      await sleep(320);
+      if (!alive()) return;
+      ghosts.push(await flyFromEdge(from, { mid:tgt.mid, ang:tgt.ang }, tgt.len, withUnit(lenOf(from)), 1000,
+                                    { nx:tgt.nx, ny:tgt.ny, want:1 }));   // outside, where the ? was
+      await sleep(430);
+      if (!alive()) return;
+    }
+
+    /* ---- the unknown is the LONG side: the parts fly on and fill it ---- */
+    else if (der && der.type === "sum"){
+      const src = sortAlong(tgt, der.from);
+      const slots = slotsAlong(tgt, src.map(lenOf));
+      const dur = src.length > 2 ? 620 : 820;
+      setPrompt(src.length === 2
+        ? `That long side is <b>made of</b> the two sides coming across now.`
+        : `That long side is <b>made of</b> ${src.length} shorter sides &mdash; here they come.`);
+      for (let s=0;s<src.length;s++){
+        flashSource(src[s]);
+        await sleep(s ? 150 : 280);
+        if (!alive()) return;
+        // inside the figure: the ? for this very side is already sitting outside it
+        ghosts.push(await flyFromEdge(src[s], slots[s], slots[s].px, withUnit(lenOf(src[s])), dur,
+                                      { nx:tgt.nx, ny:tgt.ny, want:-1 }));
+      }
+      const parts = src.map(lenOf);
+      setPrompt(`${parts.map(dgt).join(" + ")} = <b>${withUnit(e.len)}</b> &mdash; now that side has a number.`);
+      await sleep(1000);
+      if (!alive()) return;
+    }
+
+    /* ---- the unknown is a PIECE of a longer side ----
+       Teacher feedback 2026-09-01: the pieces should not merely sit there and
+       leave a gap.  They fly onto the long side, MERGE into one number with a
+       pop, the unknown then flies across and joins them to complete the long
+       side, the subtraction is read off, and the answer flies HOME.  Every
+       combination pops, because that is the moment worth noticing.
+       All of these labels sit INSIDE the figure: the long side's own number is
+       outside it, and two numbers on the same line collide. */
+    else if (der && der.type === "part"){
+      const w = der.whole, wg = edgeGeom(w);
+      // every number in this run sits INSIDE the figure: the long side's own
+      // number is outside it, and two numbers on one line collide
+      const inPin = { nx:wg.nx, ny:wg.ny, want:-1 };
+      const order = sortAlong(wg, der.others.concat([idx]));
+      const slots = slotsAlong(wg, order.map(lenOf));
+      const others = der.others.map(lenOf);
+      const sum = others.reduce((a2,b2) => a2+b2, 0);
+      const askSlot = order.indexOf(idx);
+
+      light(w);
+      setPrompt(`This side is a <b>piece</b> of the ${withUnit(lenOf(w))} side. Watch how much of it the other ${others.length === 1 ? "piece takes" : "pieces take"} up.`);
+      await sleep(760);
+      if (!alive()) return;
+
+      /* 1. the known pieces move into their places on the long side */
+      const laid = [];
+      for (let s2=0; s2<order.length; s2++){
+        if (order[s2] === idx) continue;
+        flashSource(order[s2]);
+        await sleep(150);
+        if (!alive()) return;
+        const gh = await flyFromEdge(order[s2], slots[s2], slots[s2].px,
+                                     withUnit(lenOf(order[s2])), 660, inPin);
+        popLabel(gh);
+        ghosts.push(gh); laid.push({ gh, s:s2 });
+      }
+      await sleep(320);
+      if (!alive()) return;
+
+      /* 2. THE KNOWN PIECES BECOME ONE NUMBER, with a pop.
+         The pieces tile the long side, so removing the unknown's own slot
+         always leaves ONE clear stretch -- the gap never needs moving, and
+         moving it is exactly what went wrong before.  Teacher feedback
+         2026-09-02: the gap must finish IN LINE with the side it stands for,
+         directly across the figure from it.
+         What cannot always be drawn is the merged BAR.  With the unknown at
+         one END the known pieces are already side by side and merge where
+         they truly are.  With it in the MIDDLE they sit on either side of it,
+         and no single bar can span them without dragging the gap off the
+         side it belongs to -- so nothing is merged there and the prompt does
+         the adding instead.  A tidier picture is not worth a misleading one. */
+      let merged = null;
+      const gap = slots[askSlot];
+      if (laid.length > 1){
+        const atEnd = askSlot === 0 || askSlot === order.length - 1;
+        setPrompt(`${others.map(dgt).join(" + ")} = <b>${withUnit(sum)}</b> of the ${withUnit(lenOf(w))} is taken up.`);
+        if (atEnd){
+          const span = laid.reduce((a2, l) => a2 + slots[l.s].px, 0);
+          const base = askSlot === 0 ? wg.len - span : 0;
+          const mid  = P(wg.A.x + wg.ux*(base + span/2), wg.A.y + wg.uy*(base + span/2));
+          laid.forEach(l => l.gh.g.classList.add("fadeOut"));
+          merged = makeGhost(span, withUnit(sum), false, 1);
+          merged.pin = inPin;
+          applyPin(merged, wg.ang);
+          setGhostAt(merged, mid, wg.ang);
+          popLabel(merged);
+          merged.inner.classList.add("gapIn");
+          ghosts.push(merged);
+        } else {
+          laid.forEach(l => popLabel(l.gh));
+        }
+        await sleep(1000);
+        if (!alive()) return;
+      } else {
+        merged = laid[0].gh;
+      }
+
+      /* 3. the unknown flies ACROSS and takes the room that is left */
+      setPrompt(`So the side we want is whatever is <b>left over</b> &mdash; here it comes.`);
+      await sleep(280);
+      if (!alive()) return;
+      const gapGhost = await flyFromEdge(idx, gap, gap.px, "?", 700, inPin);
+      if (!alive()) return;
+      gapGhost.g.querySelector(".ghostLine").classList.add("gap");
+      gapGhost.t.classList.add("gap");
+      popLabel(gapGhost);
+      ghosts.push(gapGhost);
+      await sleep(560);
+      if (!alive()) return;
+
+      setPrompt(`${dgt(sum)} + <b>?</b> = ${withUnit(lenOf(w))}`);
+      await sleep(1000);
+      if (!alive()) return;
+
+      /* 4. the answer, with a pop */
+      setPrompt(`<b>?</b> = ${dgt(lenOf(w))} &minus; ${dgt(sum)} = <b>${withUnit(e.len)}</b>`);
+      gapGhost.t.textContent = withUnit(e.len);
+      gapGhost.t.classList.remove("gap");
+      gapGhost.g.querySelector(".ghostLine").classList.remove("gap");
+      popLabel(gapGhost);
+      await sleep(1050);
+      if (!alive()) return;
+
+      /* 5. and it goes home, with a pop */
+      lit.forEach(n => n.classList.remove("wholeHi"));
+      lit.length = 0;
+      ghosts.filter(g2 => g2 !== gapGhost).forEach(g2 => g2.g.remove());
+      ghosts.length = 0; ghosts.push(gapGhost);
+      gapGhost.pin = { nx:tgt.nx, ny:tgt.ny, want:1 };          // outside, where its label will live
+      await moveGhost(gapGhost, gap, { mid:tgt.mid, ang:tgt.ang }, 700);
+      if (!alive()) return;
+      popLabel(gapGhost);
+      await sleep(520);
+      if (!alive()) return;
+    }
+
+    else {
+      await sleep(120);
+      if (!alive()) return;
+    }
+
+    /* the side is now known */
+    e.known = true;
+    S.justFound = idx;
+    lit.forEach(n => n.classList.remove("wholeHi"));
+    ghosts.forEach(gh => gh.g.remove());
+    render();
+    setTimeout(() => { if (S.justFound === idx){ S.justFound = null; render(); } }, 700);
+
+    S.resolving = false;
+    updateChrome();
+
+    /* if the trace was stopped here, carry straight on */
+    if (S.waitingOn === idx){
+      S.waitingOn = null;
+      await sleep(280);
+      if (!alive()) return;
+      runWalk();
+    } else if (!allKnown()){
+      setPrompt(missingPrompt());
+    } else {
+      setPrompt(`Every side has a number now. Trace the perimeter to add them up.`);
+    }
+  }
+
+  function flashSource(i){
+    const line = ensureLayers().edge.querySelector(`line[data-edge="${i}"]`);
+    if (!line) return;
+    line.classList.add("waiting");
+    setTimeout(()=>line.classList.remove("waiting"), 900);
+  }
+
+  function allKnown(){ return S.shape.edges.every(e => e.known); }
+  function missingCount(){ return S.shape.edges.filter(e => !e.known).length; }
+
+  /* The count already sits in the chip above the shape, so the sentence here
+     carries the REASON instead -- that is the bit worth reading aloud. */
+  function missingPrompt(){
+    if (!missingCount()) return "";
+    return `${S.shape.note} <b>Click a ? side</b> to find it.`;
+  }
+
+  /* ==================================================================
+     7.  THE PERIMETER WALK
+     ================================================================== */
+
+  async function runWalk(){
+    if (S.resolving) return;
+    const token = ++S.walkToken;
+    S.walking = true;
+    S.finished = false;
+    updateChrome();
+
+    const n = S.shape.edges.length;
+    while (S.walkIdx < n){
+      const i = S.walkIdx;
+      const e = S.shape.edges[i];
+
+      if (!e.known && QUIZ.stopAtMissing()){
+        /* THE POINT OF THE WHOLE TOOL: we do not walk past a side we do
+           not know.  Stop, glow, and wait for it to be worked out.
+           QUIZ: only at Sweet and Mild, where the student may click a side
+           and find it.  Higher up the trace is a plain blue line -- it
+           carries no numbers, so walking past a "?" gives nothing away. */
+        S.walking = false;
+        S.waitingOn = i;
+        render();
+        setPrompt(`Stop &mdash; this side has no number. <b>Click it</b> and we will find it, then the trace carries on.`);
+        updateChrome();
+        return;
+      }
+
+      const g = edgeGeom(i);
+      const path = ensureLayers().trace.querySelector(`path[data-edge="${i}"]`);
+      const dur = Math.max(260, Math.min(1000, 90 + g.len*1.7));
+      if (path){
+        path.classList.add("on");
+        path.style.transition = "none";
+        path.style.strokeDashoffset = g.len;
+        void path.getBoundingClientRect();
+        path.style.transition = `stroke-dashoffset ${dur}ms linear`;
+        path.style.strokeDashoffset = 0;
+      }
+      await sleep(dur);
+      if (token !== S.walkToken) return;
+
+      S.traced.push(i);
+      S.total += e.len;
+      S.walkIdx++;
+      paintExpression();
+      paintTotal(true);
+      await sleep(150);
+      if (token !== S.walkToken) return;
+    }
+
+    S.walking = false;
+    S.finished = true;
+    setPrompt(`All the way round and back to the start &mdash; that is the perimeter.`);
+    paintExpression(true);
+    paintTotal(true);
+    paintFormula();
+    paintPredictFeedback();
+    updateChrome();
+  }
+
+  /* ==================================================================
+     THE QUIZ LAYER
+     -------------------------------------------------------------------
+     Everything above this line is the teaching tool's own engine, copied
+     across so a figure behaves here EXACTLY as it does on the board in
+     front of the class.  What changes is how much of the tool a student
+     is allowed to hold:
+
+       Sweet   the whole tool.  Click a "?" and the side flies across;
+               trace the perimeter and the number sentence builds up --
+               but the total never appears.  That is the answer.
+       Mild    the same tool, no number sentence.  A wider bank.
+       Medium  the figure is to be READ.  No clicking sides across, and
+               the trace is a plain blue line.  Two questions in seven
+               ask for a missing side instead of a perimeter.
+       Spicy   the hardest bank -- staircases, combs, decimals -- read
+               only, and half the questions are missing sides.
+
+     Nothing here ever prints the total or a missing length before the
+     student has answered.  The tool's own `paintTotal` and `paintFormula`
+     are replaced with silence for exactly that reason.
+     ================================================================== */
+
+  /* ---- the banks, taken from the worksheet creator so a class meets the
+     same figures on paper and on screen ---- */
+  const POOL_SWEET  = ["square","rectangle","triEquilateral","rhombus"];
+  const POOL_MILD   = ["square","rectangle","parallelogram","rhombus","kite","trapezium",
+                       "triScalene","triIsosceles","triEquilateral"];
+  const POOL_MEDIUM = ["pentagon","hexagon","octagon","lshape","tshape","cross",
+                       "parallelogram","kite","trapezium","triScalene"];
+  /* Sweet is the worksheet's Medium bank with the composites taken out
+     (teacher decision 2026-09-02: no L or T — and the cross is a harder
+     composite than either, so it goes with them) and whole numbers only. */
+  const POOL_SWEET_Q = POOL_MEDIUM.filter(k => ["lshape","tshape","cross"].indexOf(k) < 0);
+  const POOL_SPICY  = ["staircase","ushape","eshape","cross","octagon","lshape","tshape"];
+  const uniq = a => a.filter((v,i) => a.indexOf(v) === i);
+  const POOL_MIX = uniq(POOL_SWEET.concat(POOL_MILD, POOL_MEDIUM));
+
+  /* `sideShare` is how many of the questions ask for a length rather than a
+     perimeter; `labelled` is how often a figure comes with every side already
+     printed, so students cannot answer by reflex. */
+  const LEVELS = {
+    sweet:  { name:"Sweet",  len:15, pool:POOL_SWEET_Q, scale:[1],          units:["cm"],
+              animate:true,  sentence:true,  sideShare:0,    labelled:0.34,
+              sub:"Regular polygons and quadrilaterals, whole numbers. Click a ? to send the side across." },
+    mild:   { name:"Mild",   len:15, pool:POOL_MIX,    scale:[1,1,1,0.5],   units:["cm"],
+              animate:true,  sentence:false, sideShare:0,    labelled:0.34,
+              sub:"Every quadrilateral, triangle and polygon. No number sentence." },
+    medium: { name:"Medium", len:15, pool:POOL_MIX,    scale:[1,1,1,0.5],   units:["cm","m"],
+              animate:false, sentence:false, sideShare:0.30, labelled:0.34,
+              sub:"The same figures, read not operated. Some ask for a missing side." },
+    spicy:  { name:"Spicy",  len:10, pool:POOL_SPICY,  scale:[0.5,1.5,2.5], units:["cm","m","mm"],
+              animate:false, sentence:false, sideShare:0.50, labelled:0.25,
+              sub:"Staircases, combs and decimals. Half are missing sides." }
+  };
+  const LEVEL_ORDER = ["sweet","mild","medium","spicy"];
+
+  let levelKey = null, cfg = null;
+  let bank = [], qIndex = 0, quizDone = false;
+
+  const round2 = v => Math.round(v*100)/100;
+  const perimOf = sh => round2(sh.edges.reduce((t,e) => t + e.len, 0));
+
+  /* what the engine asks us about the level it is drawing for */
+  const QUIZ = {
+    pool: () => (cfg ? cfg.pool : POOL_MIX),
+    canAnimate: () => !!(cfg && cfg.animate) && !quizDone,
+    stopAtMissing: () => !!(cfg && cfg.animate)
+  };
+
+  /* ==================================================================
+     THE ENGINE'S NARRATION, REWRITTEN SO IT NEVER GIVES THE GAME AWAY
+     ================================================================== */
+
+  function setPrompt(html){ $("stepPrompt").innerHTML = html; }
+
+  /* Sweet builds the addition as the trace goes -- and STOPS there.  The
+     tool's version appends "= 48 cm" when the walk finishes; that is the
+     answer, so this one never does. */
+  function paintExpression(){
+    const box = $("exprLine");
+    if (!cfg || !cfg.sentence || S.traced.length === 0){ box.innerHTML = ""; return; }
+    box.innerHTML = S.traced
+      .map(i => `<span class="term">${dgt(S.shape.edges[i].len)}</span>`)
+      .join(`<span class="op">+</span>`)
+      + (S.finished ? `<span class="op">=</span><span class="term res">?</span>` : "");
+  }
+  function paintTotal(){}                 // the total IS the answer
+  function paintFormula(){}               // and so is the shortcut
+  function paintPredictFeedback(){}
+
+  function updateChrome(){
+    const q = bank[qIndex];
+    const busy = S.walking || S.resolving;
+    $("traceBtn").disabled = busy || !q;
+    $("traceBtn").textContent = S.finished ? "Trace again ▶" : "Trace the perimeter ▶";
+    $("prevBtn").disabled = busy || qIndex === 0;
+    $("nextBtn").disabled = busy || !q || !q.done;
+    $("enterBtn").disabled = busy || !q;
+    if (q && !q.done && !busy && !S.waitingOn && !S.walking) paintIdlePrompt();
+  }
+
+  function paintIdlePrompt(){
+    const q = bank[qIndex];
+    if (!q || q.done) return;
+    const miss = missingCount();
+    if (q.kind === "side"){
+      setPrompt(`Work out the side marked <b>?</b> from the lengths you can see.`);
+    } else if (miss && cfg.animate){
+      setPrompt(`${miss === 1 ? "One side has" : miss + " sides have"} no number. <b>Click</b> to send the side across, then add all the way round.`);
+    } else if (miss){
+      setPrompt(`${miss === 1 ? "One side is" : miss + " sides are"} not labelled &mdash; work them out before you add.`);
+    } else {
+      setPrompt(`Add every side to find the perimeter.`);
+    }
+  }
+
+  /* ==================================================================
+     MAKING THE PAPER
+     ================================================================== */
+
+  function makeQuestion(kind){
+    for (let t=0; t<80; t++){
+      const key = pick(cfg.pool);
+      const def = SHAPES[key];
+      const dims = def.dims(); dims.__key = key;
+      S.missMode = "mix";
+      const shape = def.build(dims);
+      if (signedArea(shape.pts) <= 0) continue;      // the normals depend on it
+
+      /* one factor for the whole figure, so equal sides, sums and the
+         perimeter all stay exact while the numbers pick up a decimal */
+      const f = pick(cfg.scale);
+      if (f !== 1){
+        shape.pts = shape.pts.map(p => P(p.x*f, p.y*f));
+        shape.edges.forEach(e => { e.len = round2(e.len*f); });
+      }
+      const unit = pick(cfg.units);
+      const missing = shape.edges.map((e,i) => e.known ? -1 : i).filter(i => i >= 0);
+
+      if (kind === "side"){
+        if (!missing.length) continue;
+        /* ONE "?" only, or the question has no single answer.  The sides a
+           derivation reads from are always labelled, so re-knowing the
+           others can never strand the one that is kept. */
+        const keep = pick(missing);
+        shape.edges.forEach((e,i) => { if (i !== keep && !e.known){ e.known = true; e.derive = null; } });
+        return { kind, key, dims, shape, unit, ask:keep, answer:round2(shape.edges[keep].len),
+                 done:false, correct:false, tries:0, typed:"" };
+      }
+
+      if (missing.length && Math.random() < cfg.labelled)
+        shape.edges.forEach(e => { e.known = true; e.derive = null; });
+      else if (missing.length > 2){
+        /* A regular pentagon can legitimately carry one number and four tick
+           marks, but four clicks to start a question is a chore, not a
+           lesson.  Two sides to find is the most any figure asks for. */
+        const keep = missing.slice().sort(() => Math.random()-0.5).slice(0,2);
+        shape.edges.forEach((e,i) => {
+          if (!e.known && keep.indexOf(i) < 0){ e.known = true; e.derive = null; }
+        });
+      }
+      return { kind:"perimeter", key, dims, shape, unit, ask:null, answer:perimOf(shape),
+               done:false, correct:false, tries:0, typed:"" };
+    }
+    return null;
+  }
+
+  function buildBank(){
+    const n = cfg.len;
+    const sides = Math.round(n * cfg.sideShare);
+    const kinds = [];
+    for (let i=0;i<n;i++) kinds.push(i < sides ? "side" : "perimeter");
+    for (let i=kinds.length-1;i>0;i--){ const j = rnd(0,i); const t=kinds[i]; kinds[i]=kinds[j]; kinds[j]=t; }
+
+    const out = [];
+    let lastKey = null;
+    for (const k of kinds){
+      let q = null;
+      for (let t=0;t<12;t++){                     // never the same figure twice running
+        q = makeQuestion(k);
+        if (q && q.key !== lastKey) break;
+      }
+      if (!q) q = makeQuestion(k === "side" ? "perimeter" : k);
+      if (!q) continue;
+      lastKey = q.key;
+      out.push(q);
+    }
+    return out;
+  }
+
+  /* ==================================================================
+     SHOWING ONE
+     ================================================================== */
+
+  function showQuestion(){
+    const q = bank[qIndex];
+    if (!q) return;
+    if (window.__PAD__) window.__PAD__.reset();   // a fresh question, a fresh pad
+    S.key = q.key; S.dims = q.dims; S.shape = q.shape; S.unit = q.unit;
+    S.opt.expr = cfg.sentence;
+    S.opt.formula = false; S.opt.predict = false; S.opt.edit = false;
+    S.opt.ticks = true; S.opt.right = true;
+    resetWalk();
+    computeFit();
+    render();
+
+    board.classList.toggle("noClick", !cfg.animate);
+    $("qCounter").textContent = `Question ${qIndex+1} / ${bank.length}`;
+    $("progressFill").style.width = `${(qIndex / bank.length) * 100}%`;
+    $("qBox").innerHTML = q.kind === "side"
+      ? `Find the length of the side marked <b>?</b>.`
+      : `Find the <b>perimeter</b> of this figure.`;
+    $("answerLabel").textContent = q.kind === "side" ? "Missing side =" : "Perimeter =";
+    $("answerUnit").textContent = q.unit;
+    const inp = $("answerInput");
+    inp.value = q.typed || "";
+    inp.readOnly = !!q.correct;
+    inp.className = "answerInput" + (q.correct ? " good" : (q.tries ? " bad" : ""));
+    $("feedback").innerHTML = q.done ? verdictText(q) : "";
+    paintExpression();
+    updateChrome();
+    paintIdlePrompt();
+    setTimeout(() => { try{ inp.focus(); }catch(e){} }, 40);
+  }
+
+  function verdictText(q){
+    if (q.correct && q.tries <= 1) return `<span class="vGood">Correct &mdash; ${dgt(q.answer)} ${q.unit}.</span>`;
+    if (q.correct) return `<span class="vOk">${dgt(q.answer)} ${q.unit} &mdash; right, on attempt ${q.tries}. That one does not score.</span>`;
+    return `<span class="vBad">Not yet &mdash; have another go.</span>`;
+  }
+
+  /* ==================================================================
+     MARKING.  Only the FIRST attempt scores, so the dashboard number
+     means what it says; a wrong answer stays editable so the student
+     finishes the thinking rather than being marched past it.
+     ================================================================== */
+
+  function readAnswer(){
+    const raw = String($("answerInput").value || "")
+      .replace(/[a-zA-Z\s]+$/,"").replace(/,/g,"").trim();
+    if (!raw) return null;
+    const v = Number(raw);
+    return isFinite(v) ? v : null;
+  }
+
+  function submitAnswer(){
+    const q = bank[qIndex];
+    if (!q) return;
+    if (q.correct){ nextQuestion(); return; }        // Enter again moves on
+
+    const v = readAnswer();
+    q.typed = $("answerInput").value;
+    if (v === null){
+      $("feedback").innerHTML = `<span class="vBad">Type a number first.</span>`;
+      return;
+    }
+    q.tries++;
+    if (Math.abs(v - q.answer) < 0.005){
+      q.correct = true; q.done = true;
+      /* READ-ONLY, not disabled: a disabled input drops focus and stops
+         firing keydown, so the second Enter that should move the student on
+         went nowhere. */
+      $("answerInput").readOnly = true;
+      $("answerInput").className = "answerInput good";
+      $("answerInput").focus();
+      revealTruth(q);
+    } else {
+      $("answerInput").className = "answerInput bad";
+      if (q.tries >= 3){
+        q.done = true;                                // let them move on
+        $("feedback").innerHTML = `<span class="vBad">Not quite. The answer is ${dgt(q.answer)} ${q.unit}` +
+          ` &mdash; press <b>Next</b>, or keep trying.</span>`;
+        revealTruth(q);
+        updateChrome();
+        return;
+      }
+    }
+    $("feedback").innerHTML = verdictText(q);
+    updateChrome();
+  }
+
+  /* once a question is settled the figure stops hiding anything: every
+     side gets its number, so the student can see WHERE they went wrong */
+  function revealTruth(q){
+    q.shape.edges.forEach(e => { e.known = true; });
+    render();
+    paintExpression();
+  }
+
+  function nextQuestion(){
+    if (qIndex >= bank.length - 1){ finish(); return; }
+    qIndex++;
+    showQuestion();
+  }
+  function prevQuestion(){
+    if (qIndex === 0) return;
+    qIndex--;
+    showQuestion();
+  }
+
+  function scores(){
+    let first = 0, perimT = 0, perimS = 0, sideT = 0, sideS = 0;
+    bank.forEach(q => {
+      const won = q.correct && q.tries <= 1;
+      if (won) first++;
+      if (q.kind === "side"){ sideT++; if (won) sideS++; }
+      else { perimT++; if (won) perimS++; }
+    });
+    return { total:bank.length, score:first, perimT, perimS, sideT, sideS };
+  }
+
+  /* ==================================================================
+     THE END
+     ================================================================== */
+
+  function finish(){
+    quizDone = true;
+    const s = scores();
+    $("progressFill").style.width = "100%";
+    $("certLine1").textContent =
+      `You completed "Perimeter of Plane Shapes" — ${cfg.name}.`;
+    $("certBreakdown").innerHTML =
+      (s.sideT ? `Perimeters: ${s.perimS} / ${s.perimT}<br>Missing sides: ${s.sideS} / ${s.sideT}<br>` : "")
+      + `<b>Total: ${s.score} / ${s.total}</b>`;
+    showModal($("certModal"));
+
+    if (window.MMTSave) window.MMTSave({
+      tool:"perimeter-plane-shapes-student-quiz", topic:"measurement-space",
+      level:cfg.name, levelKey, score:s.score, total:s.total,
+      percent: s.total ? Math.round((s.score/s.total)*100) : 0,
+      masteryTopic:"perimeter-plane-shapes",
+      types:["perimeter:"+s.perimS+"/"+s.perimT, "missing-side:"+s.sideS+"/"+s.sideT, "level:"+levelKey],
+      certificateText:`Perimeter of Plane Shapes — ${cfg.name}: ${s.score}/${s.total}`
+    });
+  }
+
+  function nowStamp(){
+    const d = new Date();
+    return d.toLocaleDateString() + " " + d.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
+  }
+
+  async function copyCertificate(){
+    const s = scores();
+    const text =
+`🏆 Mills Maths Tools – "Perimeter of Plane Shapes" Student Quiz
+Level: ${cfg.name}
+${s.sideT ? `Perimeters: ${s.perimS} / ${s.perimT}\nMissing sides: ${s.sideS} / ${s.sideT}\n` : ""}Total: ${s.score} / ${s.total}
+Completed: ${nowStamp()}
+
+${window.MMTAuth ? window.MMTAuth.shareLine() : "Submit a screenshot or paste this into Google Classroom."}`;
+    try{
+      await navigator.clipboard.writeText(text);
+      $("copyBtn").textContent = "Copied!";
+      setTimeout(() => $("copyBtn").textContent = "Copy to clipboard", 1200);
+    } catch(e){ window.prompt("Copy this text:", text); }
+  }
+
+  /* ==================================================================
+     MODALS AND STARTING
+     ================================================================== */
+
+  function showModal(m){ $("overlay").classList.add("on"); m.classList.add("on"); }
+  function hideModals(){
+    $("overlay").classList.remove("on");
+    $("levelModal").classList.remove("on");
+    $("certModal").classList.remove("on");
+  }
+
+  function startLevel(key){
+    levelKey = key;
+    cfg = LEVELS[key];
+    quizDone = false;
+    bank = buildBank();
+    qIndex = 0;
+    hideModals();
+    const b = $("levelBanner");
+    b.textContent = `Level: ${cfg.name}`;
+    b.className = "levelBanner lvl-" + key;
+    showQuestion();
+  }
+
+  function backToLevels(){
+    quizDone = true;
+    hideModals();
+    showModal($("levelModal"));
+  }
+
+  /* ==================================================================
+     EVENTS
+     ================================================================== */
+
+  board.addEventListener("click", ev => {
+    if (!cfg || !cfg.animate || quizDone) return;
+    const t = ev.target.closest("[data-edge]");
+    if (!t) return;
+    const i = Number(t.dataset.edge);
+    const e = S.shape.edges[i];
+    if (!e || e.known) return;
+    resolveEdge(i);
+  });
+
+  $("traceBtn").addEventListener("click", () => {
+    if (S.finished){
+      S.walkToken++; S.walkIdx = 0; S.traced = []; S.total = 0; S.finished = false;
+      render();
+    }
+    runWalk();
+  });
+
+  $("enterBtn").addEventListener("click", submitAnswer);
+  $("nextBtn").addEventListener("click", nextQuestion);
+  $("prevBtn").addEventListener("click", prevQuestion);
+  $("answerInput").addEventListener("keydown", ev => {
+    if (ev.key === "Enter"){ ev.preventDefault(); submitAnswer(); }
+  });
+  $("answerInput").addEventListener("input", () => {
+    const q = bank[qIndex];
+    if (q) q.typed = $("answerInput").value;
+  });
+
+  $("backToLevelsBtn").addEventListener("click", backToLevels);
+  $("resetQuizBtn").addEventListener("click", () => { if (levelKey) startLevel(levelKey); });
+  $("copyBtn").addEventListener("click", copyCertificate);
+  $("closeCertBtn").addEventListener("click", hideModals);
+  $("backToMenuBtn").addEventListener("click", backToLevels);
+  document.querySelectorAll(".startBtn").forEach(b =>
+    b.addEventListener("click", () => startLevel(b.dataset.level)));
+
+  document.addEventListener("keydown", ev => {
+    if (ev.key === "Escape" && $("certModal").classList.contains("on")) hideModals();
+  });
+
+  /* ==================================================================
+     GO
+     ================================================================== */
+  /* THE WORKING PAD IS ON AT EVERY LEVEL.  Keeping track of which sides you
+     have already counted is the part that goes wrong, and it is invisible on
+     paper — so it is not a difficulty setting, it is the workbench. */
+  PAD.init({ edges: () => (S.shape ? S.shape.edges : []),
+             unit:  () => S.unit,
+             busy:  () => S.walking || S.resolving,
+             render: () => render() });
+  PAD.enable(true);
+
+  LEVEL_ORDER.forEach(k => {
+    const el2 = document.querySelector(`.levelRow.lvl-${k} .levelSub`);
+    if (el2) el2.textContent = LEVELS[k].sub;
+    const n = document.querySelector(`.levelRow.lvl-${k} .levelLen`);
+    if (n) n.textContent = LEVELS[k].len + " questions";
+  });
+  showModal($("levelModal"));
+
+  /* exposed for the headless checks only */
+  window.__PQUIZ__ = { S, SHAPES, LEVELS, QUIZ, PAD, edgeGeom, signedArea, perimOf,
+    startLevel, showQuestion, submitAnswer, nextQuestion, prevQuestion, scores,
+    bank:() => bank, index:() => qIndex, cfg:() => cfg,
+    answer:(v) => { $("answerInput").value = String(v); submitAnswer(); } };
+
+})();
+
+</script>
+
+<!-- ===== MMT student-code login + secure save + sign-in banner ===== -->
+<div id="mmtLoginOverlay" style="position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(15,23,42,.55);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <div style="background:#fff;border-radius:22px;box-shadow:0 20px 60px rgba(0,0,0,.28);max-width:460px;width:100%;overflow:hidden;">
+    <div style="font-weight:1000;font-size:22px;padding:20px 22px 6px;color:#111827;">Student login</div>
+    <div style="padding:6px 22px 20px;">
+      <p style="color:#6b7280;font-weight:600;font-size:15px;line-height:1.45;margin:0 0 14px;">Enter your MMT student code so your result saves to your teacher&rsquo;s dashboard. No code? Press <b>Skip</b> to do the quiz without saving.</p>
+      <label for="mmtCodeInput" style="display:block;font-weight:900;color:#111827;margin-bottom:6px;">Student code</label>
+      <input id="mmtCodeInput" autocomplete="off" placeholder="enter code here" style="width:100%;height:52px;border:2px solid #e5e7eb;border-radius:14px;padding:0 14px;font-size:20px;font-weight:900;outline:none;text-transform:uppercase;box-sizing:border-box;" />
+      <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
+        <button id="mmtLoginBtn" type="button" style="flex:1;min-width:120px;border:none;border-radius:14px;padding:13px 18px;font-weight:1000;font-size:16px;cursor:pointer;background:#2563eb;color:#fff;">Start</button>
+        <button id="mmtSkipBtn" type="button" style="flex:1;min-width:120px;border:none;border-radius:14px;padding:13px 18px;font-weight:1000;font-size:16px;cursor:pointer;background:#f3f4f6;color:#111827;">Skip student code</button>
+      </div>
+      <div id="mmtLoginMsg" style="margin-top:10px;font-weight:900;font-size:14px;min-height:18px;"></div>
+    </div>
+  </div>
+</div>
+<div id="mmtSaveStatus" style="display:none;position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:2147483001;background:#111827;color:#fff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-weight:900;font-size:14px;padding:10px 18px;border-radius:999px;box-shadow:0 10px 30px rgba(0,0,0,.3);"></div>
+<script>
+/* MMT student-code login + secure achievement save + sign-in banner.
+   Self-contained: shows a login overlay on load (above the quiz's own menu),
+   dynamically imports the shared secure quiz client so the page still runs
+   offline/locally (demo mode = no save), and exposes window.MMTSave(payload)
+   for the quiz to call when a student finishes. Never stores typed answers.
+
+   It also paints a status chip — "Signed in as NAME", or "Guest mode" with a
+   Sign in button — into #mmtAuthSlot if the page provides one, otherwise pinned
+   top-right; and it keeps every .certSub line honest, so the certificate only
+   mentions Google Classroom when the result is NOT going to a dashboard. */
+(function(){
+  "use strict";
+  var MMT=null, tried=false, mode="pending", student=null;
+  var UIFONT="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
+  function normalise(c){ return String(c||"").trim().toUpperCase().replace(/[^A-Z0-9-]/g,""); }
+  function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  async function load(){
+    if(tried) return MMT; tried=true;
+    try{ var mod=await import("/portal/shared/quizClient.js"); MMT=mod.MMTQuiz; MMT.init(); }
+    catch(e){ MMT=null; console.warn("MMT quiz client unavailable — demo mode only:", e&&e.message); }
+    return MMT;
+  }
+  var overlay=document.getElementById("mmtLoginOverlay");
+  var codeInput=document.getElementById("mmtCodeInput");
+  var loginBtn=document.getElementById("mmtLoginBtn");
+  var skipBtn=document.getElementById("mmtSkipBtn");
+  var msg=document.getElementById("mmtLoginMsg");
+  var statusEl=document.getElementById("mmtSaveStatus");
+  function hideOverlay(){ if(overlay) overlay.style.display="none"; }
+  function openOverlay(){
+    if(!overlay) return;
+    if(msg){ msg.textContent=""; }
+    overlay.style.display="flex";
+    setTimeout(function(){ try{ codeInput.focus(); codeInput.select(); }catch(e){} }, 60);
+  }
+  function showStatus(t){ if(!statusEl) return; statusEl.textContent=t; statusEl.style.display="block"; }
+
+  /* ---- who am I: the chip in the banner ---- */
+  var chip=null;
+  function studentName(){
+    if(!student) return "";
+    return student.name || [student.firstName,student.surname].filter(Boolean).join(" ") || student.studentCode || "";
+  }
+  function ensureChip(){
+    if(chip) return chip;
+    var slot=document.getElementById("mmtAuthSlot");
+    chip=document.createElement("div");
+    chip.id="mmtAuthChip";
+    // a slotted chip sits in the page's own flow, so it stays behind the quiz's
+    // modals rather than bleeding over them; the unslotted fallback pins itself
+    // top-right at a z-index below the usual modal layer
+    chip.style.cssText="display:inline-flex;align-items:center;gap:8px;font-family:"+UIFONT
+      +";font-weight:900;font-size:13px;line-height:1;white-space:nowrap;"
+      + (slot ? "" : "position:fixed;top:10px;right:10px;z-index:40;");
+    (slot||document.body).appendChild(chip);
+    return chip;
+  }
+  function paintChip(){
+    var c=ensureChip();
+    if(mode==="pending"){ c.innerHTML=""; return; }
+    if(mode==="registered"){
+      c.innerHTML='<span style="display:inline-flex;align-items:center;gap:7px;background:#dcfce7;color:#166534;'
+        +'border:1px solid #86efac;border-radius:999px;padding:7px 13px;">'
+        +'<span aria-hidden="true" style="font-size:9px;">&#9679;</span>Signed in as '+esc(studentName())+'</span>';
+      return;
+    }
+    c.innerHTML='<span style="display:inline-flex;align-items:center;gap:7px;background:#f3f4f6;color:#4b5563;'
+      +'border:1px solid #e5e7eb;border-radius:999px;padding:7px 13px;">'
+      +'<span aria-hidden="true" style="font-size:9px;">&#9675;</span>Guest mode</span>'
+      +'<button type="button" id="mmtChipSignIn" style="border:none;border-radius:999px;padding:7px 14px;'
+      +'font-family:inherit;font-weight:900;font-size:13px;cursor:pointer;background:#2563eb;color:#fff;">Sign in</button>';
+    var b=document.getElementById("mmtChipSignIn");
+    if(b) b.addEventListener("click", openOverlay);
+  }
+
+  /* ---- the certificate line: Google Classroom only when nothing is being saved ---- */
+  function paintCert(text){
+    var els=document.querySelectorAll(".certSub");
+    for(var i=0;i<els.length;i++) els[i].textContent=text;
+  }
+  function certResting(){
+    paintCert(mode==="registered"
+      ? "This result saves to "+studentName()+"'s dashboard."
+      : "Screenshot this and paste into Google Classroom.");
+  }
+  function setMode(m, profile){
+    mode=m; student=profile||null;
+    paintChip(); certResting();
+  }
+
+  async function doLogin(){
+    msg.style.color="#6b7280"; msg.textContent="Checking…";
+    var code=normalise(codeInput.value); codeInput.value=code;
+    if(!code){ msg.style.color="#dc2626"; msg.textContent="Please type your student code, or press Skip."; return; }
+    await load();
+    if(!MMT){ msg.style.color="#dc2626"; msg.textContent="Login isn’t available here — press Skip to do the quiz."; return; }
+    try{
+      var r=await MMT.signIn(code);
+      if(r&&r.ok){ setMode("registered", r.profile); msg.style.color="#16a34a";
+        msg.textContent="Signed in as "+(studentName()||code); setTimeout(hideOverlay,450); }
+      else { msg.style.color="#dc2626"; msg.textContent=(r&&r.error)||"Could not sign in."; }
+    }catch(e){ msg.style.color="#dc2626"; msg.textContent="Could not sign in. You can Skip to continue."; }
+  }
+  if(loginBtn) loginBtn.addEventListener("click", doLogin);
+  if(skipBtn) skipBtn.addEventListener("click", function(){
+    setMode("skip", null);
+    if(MMT){ try{MMT.skipDemo();}catch(e){} }
+    hideOverlay();
+  });
+  if(codeInput){
+    codeInput.addEventListener("keydown", function(e){ if(e.key==="Enter"){ e.preventDefault(); e.stopPropagation(); doLogin(); } });
+    setTimeout(function(){ try{ codeInput.focus(); }catch(e){} }, 60);
+  }
+
+  window.MMTSave=async function(payload){
+    payload=payload||{};
+    if(mode!=="registered"){
+      paintCert("Screenshot this and paste into Google Classroom.");
+      showStatus("Not saved — no student code"); return {skipped:true};
+    }
+    showStatus("Saving…");
+    paintCert("Saving to "+studentName()+"'s dashboard…");
+    try{
+      await load();
+      if(MMT&&MMT.getMode&&MMT.getMode()==="registered"){
+        var r=await MMT.saveAchievement(payload);
+        var ok=!!(r&&r.saved);
+        showStatus(ok ? "Saved to your dashboard ✓" : "Not saved");
+        paintCert(ok ? "Saved to "+studentName()+"'s dashboard ✓ — your teacher can see this result."
+                     : "Could not save this one — screenshot it and send it to your teacher.");
+        return r;
+      }
+      showStatus("Not saved");
+      paintCert("Could not save this one — screenshot it and send it to your teacher.");
+      return {skipped:true};
+    }catch(e){
+      showStatus("Save failed (your result still counts locally)");
+      paintCert("Could not save this one — screenshot it and send it to your teacher.");
+      return {error:true};
+    }
+  };
+  window.MMTMode=function(){ return mode; };
+  // helpers so a quiz's own certificate / clipboard text can drop the Google
+  // Classroom instruction when the result is already going to a dashboard
+  function certTail(){ return mode==="registered" ? "" : " Paste a screenshot into Google Classroom."; }
+  function shareLine(){
+    return mode==="registered"
+      ? "Saved to "+studentName()+"'s dashboard — your teacher can see this result."
+      : "Submit a screenshot or paste this into Google Classroom.";
+  }
+  window.MMTAuth={ mode:function(){ return mode; }, student:function(){ return student; },
+                   name:studentName, signedIn:function(){ return mode==="registered"; },
+                   signIn:openOverlay, certTail:certTail, shareLine:shareLine };
+  paintChip();
+  load(); /* warm up so sign-in is instant */
+})();
+</script>
+
+</body>
+</html>

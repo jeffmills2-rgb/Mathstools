@@ -1,0 +1,2067 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Perimeter of Plane Shapes — Worksheet Generator</title>
+
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --ink:#111827;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --shadow:0 14px 40px rgba(0,0,0,.10);
+      --radius:18px;
+
+      --blue:#2563eb;
+      --green:#16a34a;
+      --red:#dc2626;
+
+      --sweet1:#4ade80;  --sweet2:#16a34a;
+      --mild1:#facc15;   --mild2:#d97706;
+      --medium1:#fb923c; --medium2:#ea580c;
+      --spicy1:#f87171;  --spicy2:#b91c1c;
+
+      --footer-h:44px;
+      --mathFont:"Cambria Math","STIX Two Math","STIXGeneral","Times New Roman",serif;
+      --uiFont:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0; background:var(--bg); color:var(--ink);
+      font-family:var(--uiFont); padding-bottom:var(--footer-h);
+    }
+
+    .wrap{ max-width:1280px; margin:14px auto 32px; padding:0 14px; }
+    .card{ background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px; }
+
+    .title{ margin:0 0 4px; font-size:28px; font-weight:1000; letter-spacing:.2px; }
+    .subtitle{ margin:0 0 14px; color:var(--muted); font-weight:850; font-size:15px; line-height:1.35; }
+    .subtitle a{ color:var(--blue); text-decoration:none; font-weight:1000; }
+
+    .controls{ display:grid; gap:10px; }
+    .band{
+      border:1px solid var(--border); border-radius:18px; padding:12px 14px;
+      background:linear-gradient(180deg,#ffffff,#f9fafb);
+    }
+    .bandHead{
+      font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+      font-weight:1000; color:var(--muted); margin:0 0 9px;
+    }
+    .bandGrid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; align-items:end; }
+    .bandRow{ display:flex; gap:16px 22px; flex-wrap:wrap; align-items:center; }
+
+    label{ display:block; margin:0 0 7px; font-size:15px; font-weight:950; }
+    select, input[type="number"]{
+      border:2px solid #e5e7eb; border-radius:14px; padding:12px 13px;
+      font-size:15px; font-weight:900; background:#fff; color:var(--ink); width:100%;
+      font-family:inherit;
+    }
+    select:focus, input[type="number"]:focus{ outline:none; border-color:var(--blue); box-shadow:0 0 0 4px rgba(37,99,235,.14); }
+
+    /* the shape-family picker, same idea as the Conversions picker */
+    .pairBox{ grid-column:1 / -1; }
+    .pairHead{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
+    .pairHead label{ margin:0; }
+    .pairHint{ font-size:12.5px; font-weight:800; color:var(--muted); }
+    .pairAll{
+      margin-left:auto; border:2px solid var(--border); background:#fff; border-radius:11px;
+      padding:6px 11px; font-size:12.5px; font-weight:1000; color:var(--ink); cursor:pointer; font-family:inherit;
+    }
+    .pairAll:hover{ border-color:#c7ccd4; }
+    #pairWrap{ display:grid; grid-template-columns:repeat(auto-fit,minmax(228px,1fr)); gap:8px; }
+    .pairChk{
+      display:flex; align-items:flex-start; gap:9px; border:1.6px solid var(--border);
+      border-radius:13px; padding:9px 11px; cursor:pointer; background:#fff;
+      font-size:13.5px; font-weight:950; line-height:1.25;
+    }
+    .pairChk input{ margin:2px 0 0; width:17px; height:17px; accent-color:var(--blue); flex:0 0 auto; }
+    .pairChk small{ display:block; font-weight:800; font-size:11.5px; color:var(--muted); margin-top:2px; }
+    .pairChk.off{ opacity:.42; }
+    .pairChk:hover{ border-color:#c7ccd4; }
+
+    /* the section cards */
+    .secGrid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(224px,1fr)); gap:10px; }
+    .secOpt{ border:1.6px solid var(--border); border-radius:14px; padding:10px 12px 11px; background:#fff; }
+    .secOpt.off{ opacity:.45; }
+    .cntRow{ display:flex; align-items:center; gap:9px; margin-top:9px; }
+    .cntRow label{ margin:0; font-size:12.5px; color:var(--muted); font-weight:900; white-space:nowrap; }
+    .cntRow input{ width:78px; padding:8px 9px; border-radius:11px; }
+
+    .sw{ display:flex; align-items:center; gap:10px; cursor:pointer; user-select:none; font-size:14.5px; font-weight:950; margin:0; }
+    .sw input{ position:absolute; opacity:0; width:0; height:0; }
+    .sw .track{ position:relative; width:46px; height:26px; border-radius:999px; background:#cbd5e1; transition:.16s ease; flex:0 0 auto; }
+    .sw .track::after{ content:""; position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:#fff; box-shadow:0 2px 5px rgba(0,0,0,.28); transition:.16s ease; }
+    .sw input:checked + .track{ background:var(--green); }
+    .sw input:checked + .track::after{ transform:translateX(20px); }
+
+    .totalRow{ display:flex; align-items:center; gap:10px; margin-top:11px; font-size:13.5px; font-weight:950; color:var(--muted); }
+    .pill{ background:#eef2ff; color:#3730a3; border:1.4px solid #c7d2fe; border-radius:999px; padding:4px 12px; font-weight:1000; font-size:13px; }
+    .pill.zero{ background:#fef2f2; color:#991b1b; border-color:#fecaca; }
+
+    .note{ margin:9px 0 0; font-size:12.5px; font-weight:800; color:var(--muted); line-height:1.45; }
+    .note b{ color:var(--ink); font-weight:1000; }
+    .note.warn{ color:var(--red); font-weight:950; font-size:14px; }
+
+    .btnRow{ display:flex; gap:10px; flex-wrap:wrap; margin-top:2px; }
+    button.primary, button.ghost, button.danger{
+      border-radius:14px; padding:13px 18px; font-size:15px; font-weight:1000; cursor:pointer;
+      border:2px solid transparent; font-family:inherit;
+    }
+    button.primary{ background:var(--blue); color:#fff; }
+    button.primary:hover{ background:#1d4ed8; }
+    button.ghost{ background:#fff; color:var(--ink); border-color:var(--border); }
+    button.ghost:hover{ border-color:#c7ccd4; }
+    button.danger{ background:#fff; color:var(--red); border-color:#fecaca; }
+    button.danger:hover{ background:#fef2f2; }
+
+    .outWrap{ margin-top:8px; }
+
+    /* =====================================================================
+       THE PAPER
+       The figure IS the question here, so a card is a picture with somewhere
+       to write underneath, and the column count is what controls how big the
+       pictures print.
+       ===================================================================== */
+    .page{
+      margin:14px auto 0; background:#fff; border:1px solid var(--border);
+      border-radius:18px; box-shadow:0 10px 26px rgba(15,23,42,.08); overflow:hidden;
+      width:210mm; max-width:100%; height:297mm;
+      display:flex; flex-direction:column;
+    }
+    .pageHeader{
+      padding:9px 13px 7px; border-bottom:2px solid #111827;
+      display:flex; align-items:flex-end; justify-content:space-between; gap:10px;
+    }
+    .hdrTitle{ font-weight:1000; font-size:15px; line-height:1.1; }
+    .hdrSub{ color:var(--muted); font-weight:850; font-size:11px; margin-top:2px; white-space:nowrap; }
+    .nameDate{ display:flex; gap:8px; align-items:flex-end; }
+    .lineField{ display:flex; flex-direction:column; gap:3px; width:116px; }
+    .lineLabel{ font-size:10px; font-weight:950; color:var(--muted); }
+    .lineBox{ height:19px; border-bottom:1.6px solid #111827; }
+
+    .sheet{ padding:8px 13px 10px; flex:1 1 auto; display:flex; flex-direction:column; min-height:0; }
+
+    .section{ margin-bottom:9px; }
+    .secHead{
+      display:flex; align-items:baseline; gap:9px;
+      border-bottom:1.6px solid #111827; padding-bottom:3px; margin-bottom:7px;
+    }
+    .secLetter{
+      font-weight:1000; font-size:14px; letter-spacing:.02em;
+      background:#111827; color:#fff; border-radius:5px; padding:1px 7px; flex:0 0 auto;
+    }
+    .secText{ font-weight:900; font-size:13.5px; color:#111827; line-height:1.3; }
+    .secCont{ margin-left:auto; font-size:11px; font-weight:900; color:var(--muted); flex:0 0 auto; }
+
+    /* bilingual lines: chosen language on top, English beneath.
+       Numerals and every unit stay Western and LTR.                        */
+    .tl{ display:block; }
+    .tl[lang="ar"], .tl[lang="fa"]{ font-size:1.05em; }
+    .el{ display:block; font-size:.84em; opacity:.72; font-weight:750; margin-top:1px; }
+    bdi{ unicode-bidi:isolate; }
+
+    .qGrid{ display:grid; gap:8px 9px; grid-template-columns:repeat(var(--cols,3),1fr); }
+    .qCard{
+      border:1.2px solid #d7dce3; border-radius:10px; padding:5px 7px 6px;
+      display:flex; flex-direction:column; gap:4px;
+      break-inside:avoid; page-break-inside:avoid; background:#fff; min-width:0;
+    }
+    .qTop{ display:flex; align-items:center; gap:6px; width:100%; }
+    .qNum{
+      width:20px; height:20px; border-radius:999px; color:#fff;
+      display:flex; align-items:center; justify-content:center;
+      font-size:11px; font-weight:1000; flex:0 0 auto;
+    }
+    .qNum.sweet{ background:linear-gradient(180deg,var(--sweet1),var(--sweet2)); }
+    .qNum.mild{ background:linear-gradient(180deg,var(--mild1),var(--mild2)); }
+    .qNum.medium{ background:linear-gradient(180deg,var(--medium1),var(--medium2)); }
+    .qNum.spicy{ background:linear-gradient(180deg,var(--spicy1),var(--spicy2)); }
+
+    .qGiven{
+      font-family:var(--mathFont); font-weight:1000; font-size:13px; color:#111827;
+      background:#eef2ff; border:1.2px solid #c7d2fe; border-radius:7px; padding:1px 7px;
+      white-space:nowrap;
+    }
+    .qGiven .u{ font-family:var(--uiFont); font-size:.78em; }
+
+    .qFig{ width:100%; }
+    .qFig svg{ display:block; width:100%; height:auto; }
+    .qWord{ font-size:12.5px; font-weight:850; line-height:1.4; flex:1 1 auto; }
+    /* a word card is a fixed height for the same reason a figure card is:
+       a two-line question and a three-line one must not paginate differently */
+    .qCard.word{ min-height:28.5mm; }
+    .qWord bdi{ font-family:var(--mathFont); font-weight:1000; }
+    .qFoot{ display:flex; align-items:center; gap:6px; width:100%; flex-wrap:wrap; }
+    .qAsk{ font-family:var(--mathFont); font-weight:1000; font-size:14px; flex:0 0 auto; }
+    .qAsk .u{ font-family:var(--uiFont); font-size:.76em; font-weight:1000; }
+
+    .ansLine{
+      display:inline-block; vertical-align:bottom;
+      border-bottom:1.7px solid #111827; height:1.35em;
+      min-width:54px; flex:1 1 auto;
+    }
+    .ansLine.full{ display:block; width:100%; min-width:0; height:1.5em; }
+    .ansKey{
+      font-family:var(--mathFont); font-weight:1000; font-size:14.5px; color:var(--green);
+      display:inline-flex; align-items:baseline; gap:.25em; flex-wrap:wrap; line-height:1.2;
+    }
+    .ansKey .u{ font-family:var(--uiFont); font-size:.76em; }
+    .ansKey.full{ display:flex; width:100%; }
+    /* the answer key earns its keep by saying WHY, not just what */
+    .ansWhy{
+      font-family:var(--uiFont); font-size:10.5px; font-weight:850; color:#4b5563;
+      line-height:1.3; width:100%; margin-top:1px;
+    }
+    .ansWhy b{ color:var(--green); font-weight:1000; }
+
+    /* Whatever the questions do not use becomes somewhere to work.  With the
+       reasoning prompt off there was nothing stretchy on the page and the
+       bottom third printed blank. */
+    .workBox{
+      border:1.4px dashed #b6c0cd; border-radius:10px; padding:7px 11px 9px;
+      flex:1 1 auto; min-height:0; display:flex; flex-direction:column;
+      break-inside:avoid; page-break-inside:avoid;
+    }
+    .workBox .exHead{ color:#64748b; }
+    .workBox .ruled{ margin-top:5px; }
+
+    /* --- the reasoning block --- */
+    .explainBox{
+      border:1.6px solid #4f46e5; border-radius:10px; padding:8px 11px 9px;
+      background:rgba(79,70,229,.035); break-inside:avoid; page-break-inside:avoid;
+      /* NO max-height: the packer reserves only its natural size, so the cap
+         did nothing on a full page and left a sparse one printing blank. */
+      flex:1 1 auto; display:flex; flex-direction:column; min-height:0;
+    }
+    .exHead{
+      font-size:11px; font-weight:1000; letter-spacing:.1em; text-transform:uppercase;
+      color:#4338ca; margin-bottom:4px;
+    }
+    .exText{ font-size:13px; font-weight:850; line-height:1.4; color:#111827; }
+    .exText b{ font-weight:1000; }
+    .ruled{
+      flex:1 1 auto; min-height:30px; margin-top:8px;
+      background-image:repeating-linear-gradient(to bottom,
+        transparent 0, transparent 27px, #a5b4c4 27px, #a5b4c4 28.2px);
+    }
+    .exKey{
+      margin-top:auto; font-size:11px; font-weight:850; line-height:1.35;
+      color:var(--green); background:rgba(22,163,74,.08);
+      border:1.2px solid rgba(22,163,74,.35); border-radius:8px; padding:5px 7px;
+    }
+
+    /* the optional formula reminder — off by default, on purpose */
+    .ladder{
+      border:1.4px dashed #94a3b8; border-radius:9px; padding:5px 9px 6px;
+      margin-bottom:8px; display:flex; align-items:center; justify-content:center;
+      gap:5px 14px; flex-wrap:wrap; break-inside:avoid;
+    }
+    .ladder .lu{ font-family:var(--mathFont); font-weight:1000; font-size:13px; }
+    .ladder .lop{ font-family:var(--uiFont); font-weight:900; font-size:11.5px; color:var(--muted); white-space:nowrap; }
+
+    .pageFooter{
+      padding:5px 13px 6px; border-top:1px solid rgba(229,231,235,.95);
+      display:flex; align-items:center; justify-content:space-between;
+      font-weight:900; color:var(--muted); font-size:10px;
+    }
+    .pageFooter a{ color:#2563eb; text-decoration:none; font-weight:1000; }
+
+    .measure{ position:absolute; left:-10000px; top:0; width:210mm; visibility:hidden; }
+    /* the hidden text probe the label solver measures against */
+    .probeSvg{ position:absolute; left:-10000px; top:0; width:400px; height:80px; }
+    /* The probe MUST be anchored exactly like a real label: getBBox comes back
+       in the probe's own user space, so a start-anchored probe hands the solver
+       an offset of half the label width and every box lands wrong. */
+    #probeText{ text-anchor:middle; dominant-baseline:middle; }
+
+    .mmtFooter{
+      position:fixed; left:0; right:0; bottom:0; height:var(--footer-h);
+      display:flex; align-items:center; justify-content:center; padding:0 12px;
+      background:rgba(255,255,255,.92); border-top:1px solid rgba(229,231,235,.95);
+      backdrop-filter:blur(8px); z-index:500; font-weight:900; color:#111827;
+      text-align:center; font-size:13px;
+    }
+    .mmtFooter a{ color:#2563eb; text-decoration:none; font-weight:950; }
+
+    @media print{
+      @page{ size:A4; margin:8mm 7mm; }
+      html, body{ width:210mm; height:auto; }
+      body{ background:#fff; padding-bottom:0; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+
+      .wrap{ max-width:none; margin:0; padding:0; }
+      .card{ box-shadow:none; border-radius:0; padding:0; }
+      .controls, .title, .subtitle, .mmtFooter{ display:none !important; }
+
+      .page{
+        margin:0; border:none; border-radius:0; box-shadow:none;
+        width:auto; height:281mm; page-break-after:always;
+      }
+      .page:last-child{ page-break-after:auto; }
+
+      .pageHeader{ padding:0 0 1.6mm; }
+      .sheet{ padding:2.4mm 0 0; }
+      .pageFooter{ padding:1.4mm 0 0; }
+    }
+  </style>
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "c7e5713b5e4f4993907eb285797dc89b"}'></script><!-- End Cloudflare Web Analytics -->
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1 class="title">Perimeter of Plane Shapes — Worksheet Generator</h1>
+      <p class="subtitle">Printable A4 worksheets from the <a href="/interactive-tools/stage-4/measurement-space/perimeter-plane-shapes/">Perimeter of Plane Shapes</a> teaching tool. The sides come before the adding: a section that only asks for a missing length, then perimeter with everything labelled, then perimeter where sides have to be found first, then working backwards from a perimeter. Every figure is drawn to scale. Worksheet language prints every instruction bilingually for EAL/D students; the numerals and units stay Western and LTR.</p>
+
+      <div class="controls">
+        <div class="band">
+          <p class="bandHead">The paper</p>
+          <div class="bandGrid">
+            <div>
+              <label for="levelSel">Level</label>
+              <select id="levelSel">
+                <option value="sweet">Sweet &mdash; squares and rectangles, small whole numbers</option>
+                <option value="mild">Mild &mdash; all quadrilaterals and triangles</option>
+                <option value="medium">Medium &mdash; regular polygons and L and T shapes</option>
+                <option value="spicy">Spicy &mdash; harder composites and decimals</option>
+                <option value="mixed" selected>Mixed &mdash; a ladder of all four</option>
+              </select>
+            </div>
+            <div>
+              <label for="unitSel">Units</label>
+              <select id="unitSel">
+                <option value="cm" selected>cm</option>
+                <option value="m">m</option>
+                <option value="mm">mm</option>
+                <option value="mix">Mixed across the page</option>
+              </select>
+            </div>
+            <div>
+              <label for="densitySel">Question size</label>
+              <select id="densitySel">
+                <option value="roomy">Large</option>
+                <option value="normal" selected>Medium</option>
+                <option value="tight">Small &mdash; fit the most on a page</option>
+              </select>
+            </div>
+            <div>
+              <label for="langSel">Worksheet language</label>
+              <select id="langSel">
+                <option value="en">English only</option>
+                <option value="ar">Arabic + English (العربية)</option>
+                <option value="fa">Farsi / Persian + English (فارسی)</option>
+              </select>
+            </div>
+            <div class="pairBox">
+              <div class="pairHead">
+                <label>Shapes</label>
+                <span class="pairHint">Tick the families this paper should draw from.</span>
+                <button type="button" id="pairAllBtn" class="pairAll">Untick all</button>
+              </div>
+              <div id="pairWrap"></div>
+            </div>
+          </div>
+          <p class="note"><b>Shapes</b> says which figures may appear and <b>Level</b> chooses the numbers on them &mdash; they work independently, so a class on squares and rectangles alone can still meet spicy decimals, and a Sweet paper can still be all composites.</p>
+        </div>
+
+        <div class="band">
+          <p class="bandHead">Sections &mdash; and how many of each</p>
+          <div class="secGrid">
+            <div class="secOpt" data-for="kFind">
+              <label class="sw"><input type="checkbox" id="kFind" checked /><span class="track"></span><span>Find the missing side</span></label>
+              <div class="cntRow"><label for="nFind">How many</label><input id="nFind" type="number" min="0" max="40" value="3" /></div>
+            </div>
+            <div class="secOpt" data-for="kPerim">
+              <label class="sw"><input type="checkbox" id="kPerim" checked /><span class="track"></span><span>Perimeter &mdash; every side labelled</span></label>
+              <div class="cntRow"><label for="nPerim">How many</label><input id="nPerim" type="number" min="0" max="40" value="3" /></div>
+            </div>
+            <div class="secOpt" data-for="kMissing">
+              <label class="sw"><input type="checkbox" id="kMissing" checked /><span class="track"></span><span>Perimeter &mdash; sides missing</span></label>
+              <div class="cntRow"><label for="nMissing">How many</label><input id="nMissing" type="number" min="0" max="40" value="3" /></div>
+            </div>
+            <div class="secOpt" data-for="kBack">
+              <label class="sw"><input type="checkbox" id="kBack" checked /><span class="track"></span><span>Work backwards</span></label>
+              <div class="cntRow"><label for="nBack">How many</label><input id="nBack" type="number" min="0" max="40" value="3" /></div>
+            </div>
+            <div class="secOpt" data-for="kWord">
+              <label class="sw"><input type="checkbox" id="kWord" checked /><span class="track"></span><span>Use it</span></label>
+              <div class="cntRow"><label for="nWord">How many</label><input id="nWord" type="number" min="0" max="20" value="3" /></div>
+            </div>
+          </div>
+          <div class="totalRow"><span>On the paper:</span><span class="pill" id="totalPill">0 questions</span></div>
+          <p class="note">The order is the teaching. <b>Find the missing side</b> asks for one length and <em>no perimeter at all</em> &mdash; the commonest error is adding four numbers when the figure has six sides, so the sides are worth a section of their own. <b>Every side labelled</b> is then pure addition. <b>Sides missing</b> puts the two steps together. <b>Work backwards</b> gives the perimeter and takes a side away. Each section climbs its own ladder.</p>
+        </div>
+
+        <div class="band">
+          <p class="bandHead">Options</p>
+          <div class="bandRow">
+            <label class="sw"><input type="checkbox" id="mixUnitToggle" /><span class="track"></span><span>One side in a different unit</span></label>
+            <label class="sw"><input type="checkbox" id="formulaToggle" /><span class="track"></span><span>Formula reminder</span></label>
+            <label class="sw"><input type="checkbox" id="reasonToggle" checked /><span class="track"></span><span>Reasoning prompt on each page</span></label>
+            <label class="sw"><input type="checkbox" id="keyToggle" checked /><span class="track"></span><span>Answer key pages</span></label>
+          </div>
+          <p class="note">With the <b>reasoning prompt</b> off, whatever the questions leave becomes a ruled <b>Working</b> box, so no page prints half empty. Equal sides always carry <b>tick marks</b> and square corners a <b>right-angle mark</b> &mdash; they are not optional, because without them an unlabelled side cannot be assumed equal and the question has no answer. Sides that are equal print their length <b>once</b> and the marks account for the rest. <b>One side in a different unit</b> prints a single length in mm on a cm figure &mdash; the answer must be converted first, and it only appears from Medium up. The <b>formula reminder</b> prints <bdi>P = 2(l + w)</bdi>, <bdi>4s</bdi> and <bdi>n &times; s</bdi> at the top of page one; it is off by default because the shortcut is meant to be earned, not handed over. The answer key gives the <b>reason</b> for every missing side, not just the number.</p>
+        </div>
+
+        <div class="btnRow">
+          <button id="genBtn" class="primary">Generate worksheet</button>
+          <button id="printBtn" class="ghost">Print (Ctrl+P)</button>
+          <button id="resetBtn" class="danger">Reset</button>
+        </div>
+      </div>
+
+      <div id="out" class="outWrap"></div>
+    </div>
+  </div>
+
+  <svg class="probeSvg" id="probeSvg" aria-hidden="true"><text id="probeText" x="180" y="40"></text></svg>
+
+  <div class="mmtFooter">
+    This tool and more can be found at&nbsp;
+    <a href="https://www.millsmathstools.au">www.millsmathstools.au</a>
+  </div>
+<script>
+(() => {
+  "use strict";
+
+  /* ==================================================================
+     PERIMETER OF PLANE SHAPES — WORKSHEET GENERATOR
+     -------------------------------------------------------------------
+     Built from the same figures as the teaching tool, and in the same
+     order, because the order IS the teaching:
+
+       A  find ONE missing side, and do not add anything at all;
+       B  perimeter with every side labelled — pure addition;
+       C  perimeter where sides have to be found first — the two steps
+          together, which is where the marks are actually lost;
+       D  work backwards from a perimeter;
+       E  use it.
+
+     Section A exists because the commonest Year 7 error is not adding
+     badly, it is adding four numbers when the figure has six sides. The
+     answer key gives the REASON for every missing side, not just the
+     number, so it can be handed to a student.
+     ================================================================== */
+
+  const SITE = "https://www.millsmathstools.au";
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
+
+  /* ===================== worksheet language (EN / Arabic / Farsi) =====================
+     Same convention as the other creators: the chosen language on top, English
+     beneath. Every numeral and every unit stays Western and LTR, isolated with
+     <bdi> so it does not flip inside a right-to-left sentence.             */
+  let LANG = "en";
+  try{ LANG = localStorage.getItem("mmt-perim-ws-lang") || "en"; }catch(_){ }
+  function TR(o){
+    if(o == null) return "";
+    if(typeof o === "string") o = { en:o };
+    if(LANG === "en" || !o[LANG]) return o.en || "";
+    return '<span class="tl" dir="rtl" lang="' + LANG + '">' + o[LANG] + '</span>'
+         + '<span class="el">' + (o.en || "") + '</span>';
+  }
+
+  const WS = {
+    name:{ en:"Name", ar:"الاسم", fa:"نام" },
+    date:{ en:"Date", ar:"التاريخ", fa:"تاریخ" },
+    find:{ en:"Find the length of the side marked ?. Do not work out the perimeter.",
+      ar:"أوجد طول الضلع المعلَّم بـ ?. لا توجد المحيط.",
+      fa:"طول ضلعی را که با ? مشخص شده پیدا کن. محیط را حساب نکن." },
+    perim:{ en:"Find the perimeter of each shape.",
+      ar:"أوجد محيط كل شكل.",
+      fa:"محیط هر شکل را پیدا کن." },
+    missing:{ en:"Find the perimeter. Not every side is labelled — find those first.",
+      ar:"أوجد المحيط. ليست كل الأضلاع مكتوبة — أوجدها أولًا.",
+      fa:"محیط را پیدا کن. اندازهٔ همهٔ ضلع‌ها نوشته نشده — اول آن‌ها را پیدا کن." },
+    back:{ en:"The perimeter is given. Find the side marked ?.",
+      ar:"المحيط معطى. أوجد الضلع المعلَّم بـ ?.",
+      fa:"محیط داده شده است. ضلعی را که با ? مشخص شده پیدا کن." },
+    word:{ en:"Answer each question. Show your working.",
+      ar:"أجب عن كل سؤال. أظهر خطوات الحل.",
+      fa:"به هر پرسش پاسخ بده. راه حل خود را بنویس." },
+    cont:{ en:"continued", ar:"تابع", fa:"ادامه" },
+    think:{ en:"Something to argue with", ar:"شيء تناقشه", fa:"چیزی برای بحث" },
+    remember:{ en:"Remember", ar:"تذكَّر", fa:"به یاد داشته باش" },
+    working:{ en:"Working", ar:"الحل", fa:"راه حل" }
+  };
+
+  /* ===================== SMALL HELPERS ===================== */
+  const rnd  = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+  const pick = a => a[Math.floor(Math.random()*a.length)];
+  const dgt  = v => Number(Number(v).toFixed(2)).toString();
+  const U    = s => '<span class="u">' + s + '</span>';
+  const SVGNS = "http://www.w3.org/2000/svg";
+
+  /* ===================== GEOMETRY (y-UP, counter-clockwise) =====================
+     Lifted from the teaching tool so the printed figures and the projected
+     ones are literally the same shapes.  Outward normals come from the
+     WINDING, not from the centroid — "away from the middle" puts an
+     L-shape's step labels inside the notch.                              */
+  const P = (x,y) => ({x,y});
+
+  /* Shoelace.  Positive => counter-clockwise in y-up coords, which is what
+     every outward-normal calculation below assumes.  Concave shapes (the
+     L) need this: "point away from the centroid" is wrong for a notch. */
+  function signedArea(pts){
+    let s = 0;
+    for (let i=0;i<pts.length;i++){
+      const a = pts[i], b = pts[(i+1)%pts.length];
+      s += a.x*b.y - b.x*a.y;
+    }
+    return s/2;
+  }
+
+  /* A LONG THIN FIGURE TURNED ON ITS SIDE IS BOUND BY THE BOARD'S HEIGHT and
+     loses nearly half its size -- and the room its numbers need goes with it.
+     So the quarter turns are only offered to a figure that is roughly as wide
+     as it is tall; an elongated one gets the half turn instead, which changes
+     the picture without costing any scale. */
+  function turnFor(raw, W, H){
+    const ar = W/H;
+    return (ar > 1.55 || ar < 0.645) ? ((raw % 2) ? (raw+1)%4 : raw) : raw;
+  }
+
+  function rot90(pts, times){
+    let out = pts.map(p => P(p.x,p.y));
+    for (let t=0;t<((times%4)+4)%4;t++) out = out.map(p => P(-p.y, p.x));
+    return out;
+  }
+
+  /* Triangle from three side lengths: base c on the x-axis, apex above. */
+  function triFromSides(c, a, b){
+    // c = AB (base), a = BC (right side), b = CA (left side)
+    const cx = (c*c + b*b - a*a) / (2*c);
+    const cy2 = b*b - cx*cx;
+    if (cy2 <= 0) return null;
+    return [P(0,0), P(c,0), P(cx, Math.sqrt(cy2))];
+  }
+
+  function regularPts(n, s){
+    const R = s / (2*Math.sin(Math.PI/n));
+    const start = -90 + 180/n;                 // gives a horizontal bottom edge
+    const out = [];
+    for (let k=0;k<n;k++){
+      const th = (start + k*360/n) * Math.PI/180;
+      out.push(P(R*Math.cos(th), R*Math.sin(th)));
+    }
+    return out;                                 // increasing angle => CCW
+  }
+
+  /* ==================================================================
+     2.  THE SHAPE CATALOGUE
+     -------------------------------------------------------------------
+     Every builder returns
+        { pts, edges, name, formula(unit), note }
+     and every edge is
+        { len, known, derive, cls, param }
+     where  derive = {type:'copy', from:[i]}  |  {type:'sum', from:[i,j]}
+            cls    = equal-length class, used for the tick marks
+            param  = which dimension this side edits (null = not editable)
+     ================================================================== */
+
+  const PARA_ANGLE = 63;                        // degrees, for parallelogram/rhombus
+  const TRIPLES = [[3,4,5],[6,8,10],[5,12,13],[9,12,15],[8,15,17],[12,16,20]];
+  const SCALENE = [[6,7,9],[5,8,10],[7,9,12],[9,10,13],[8,11,15],[6,9,11],[10,12,15],[7,8,11],[9,11,14]];
+
+  /* helper: mark exactly one of a pair of equal edges as the known one */
+  function oneOf(a,b){ return Math.random()<.5 ? [a,b] : [b,a]; }
+
+  const SHAPES = {
+
+    /* ---------------- square ---------------- */
+    square: {
+      label:"Square", family:"quad",
+      dims(){ return { s: rnd(4,15) }; },
+      build(d){
+        const s = d.s;
+        const pts = [P(0,0),P(s,0),P(s,s),P(0,s)];
+        const known = rnd(0,3);
+        const edges = [0,1,2,3].map(i => ({
+          len:s, cls:"a", param:"s",
+          known: i===known,
+          derive: i===known ? null : {type:"copy", from:[known]}
+        }));
+        return { pts, edges,
+          note:"All four sides of a square are the same length." };
+      },
+      formula(d,u,P){ return { html:`4 &times; ${d.s} = ${dgt(P)} ${u}`, note:"Four equal sides, so multiply instead of adding." }; },
+      valid(d){ return d.s>0; }
+    },
+
+    /* ---------------- rectangle ---------------- */
+    rectangle: {
+      label:"Rectangle", family:"quad",
+      /* Never thinner than 3:1.  In a fixed card the figure is fitted by its
+         longest side, so a 16 by 3 rectangle prints as a sliver. */
+      dims(){ const l = rnd(7,18); return { l, w: rnd(Math.max(3, Math.ceil(l/3)), Math.max(4, l-2)) }; },
+      build(d){
+        const {l,w} = d;
+        const pts = [P(0,0),P(l,0),P(l,w),P(0,w)];
+        const [kl,ul] = oneOf(0,2);              // the l-pair: bottom & top
+        const [kw,uw] = oneOf(1,3);              // the w-pair: right & left
+        const edges = [
+          {len:l, cls:"a", param:"l"},
+          {len:w, cls:"b", param:"w"},
+          {len:l, cls:"a", param:"l"},
+          {len:w, cls:"b", param:"w"}
+        ];
+        edges.forEach((e,i)=>{ e.known = (i===kl||i===kw); });
+        edges[ul].derive = {type:"copy", from:[kl]};
+        edges[uw].derive = {type:"copy", from:[kw]};
+        return { pts, edges, note:"Opposite sides of a rectangle are equal." };
+      },
+      formula(d,u,P){ return { html:`2 &times; (${d.l} + ${d.w}) = ${dgt(P)} ${u}`, note:"One long plus one short, doubled." }; },
+      valid(d){ return d.l>0 && d.w>0; }
+    },
+
+    /* ---------------- parallelogram ---------------- */
+    parallelogram: {
+      label:"Parallelogram", family:"quad",
+      dims(){ const a = rnd(8,18); return { a, b: rnd(4, Math.max(5,a-3)) }; },
+      build(d){
+        const {a,b} = d, th = PARA_ANGLE*Math.PI/180;
+        const dx = b*Math.cos(th), dy = b*Math.sin(th);
+        const pts = [P(0,0),P(a,0),P(a+dx,dy),P(dx,dy)];
+        const [ka,ua] = oneOf(0,2);
+        const [kb,ub] = oneOf(1,3);
+        const edges = [
+          {len:a, cls:"a", param:"a"},
+          {len:b, cls:"b", param:"b"},
+          {len:a, cls:"a", param:"a"},
+          {len:b, cls:"b", param:"b"}
+        ];
+        edges.forEach((e,i)=>{ e.known = (i===ka||i===kb); });
+        edges[ua].derive = {type:"copy", from:[ka]};
+        edges[ub].derive = {type:"copy", from:[kb]};
+        return { pts, edges, note:"Opposite sides of a parallelogram are equal." };
+      },
+      formula(d,u,P){ return { html:`2 &times; (${d.a} + ${d.b}) = ${dgt(P)} ${u}`, note:"Same shortcut as a rectangle &mdash; the slant does not change the sides." }; },
+      valid(d){ return d.a>0 && d.b>0; }
+    },
+
+    /* ---------------- rhombus ---------------- */
+    rhombus: {
+      label:"Rhombus", family:"quad",
+      dims(){ return { s: rnd(5,15) }; },
+      build(d){
+        const s = d.s, th = PARA_ANGLE*Math.PI/180;
+        const dx = s*Math.cos(th), dy = s*Math.sin(th);
+        const pts = [P(0,0),P(s,0),P(s+dx,dy),P(dx,dy)];
+        const known = rnd(0,3);
+        const edges = [0,1,2,3].map(i => ({
+          len:s, cls:"a", param:"s",
+          known: i===known,
+          derive: i===known ? null : {type:"copy", from:[known]}
+        }));
+        return { pts, edges, note:"A rhombus has four equal sides &mdash; a pushed-over square." };
+      },
+      formula(d,u,P){ return { html:`4 &times; ${d.s} = ${dgt(P)} ${u}`, note:"Four equal sides, exactly like a square." }; },
+      valid(d){ return d.s>0; }
+    },
+
+    /* ---------------- kite ---------------- */
+    kite: {
+      label:"Kite", family:"quad",
+      dims(){ const a = rnd(4,10); return { a, b: a + rnd(3,9) }; },
+      build(d){
+        const {a,b} = d;
+        const w  = 0.62*Math.min(a,b);
+        const h1 = Math.sqrt(Math.max(.01, a*a - w*w));   // short pair, near the top
+        const h2 = Math.sqrt(Math.max(.01, b*b - w*w));   // long pair, near the bottom
+        // CCW, y-up: bottom tip -> right -> top tip -> left
+        const pts = [P(0,0), P(w,h2), P(0,h2+h1), P(-w,h2)];
+        const edges = [
+          {len:b, cls:"b", param:"b"},   // bottom-right
+          {len:a, cls:"a", param:"a"},   // top-right
+          {len:a, cls:"a", param:"a"},   // top-left
+          {len:b, cls:"b", param:"b"}    // bottom-left
+        ];
+        const [ka,ua] = oneOf(1,2);
+        const [kb,ub] = oneOf(0,3);
+        edges.forEach((e,i)=>{ e.known = (i===ka||i===kb); });
+        edges[ua].derive = {type:"copy", from:[ka]};
+        edges[ub].derive = {type:"copy", from:[kb]};
+        return { pts, edges, note:"A kite has two pairs of equal sides, and the equal sides are next to each other." };
+      },
+      formula(d,u,P){ return { html:`2 &times; (${d.a} + ${d.b}) = ${dgt(P)} ${u}`, note:"Two of each, so add one of each and double." }; },
+      valid(d){ return d.a>0 && d.b>0 && Math.abs(d.a-d.b)>0.001; }
+    },
+
+    /* ---------------- trapezium ----------------
+       Parametrised by what is DRAWN -- the bottom a, the top b and the
+       height h -- and the sloping side is then computed, never stored.
+       That keeps an edited length honest: change the bottom and the slant
+       really does change with it.  The defaults come from Pythagorean
+       triples so the slant starts as a whole number.
+         isosceles  -- the equal legs give a missing side to find;
+         right      -- every side is labelled, and there is no shortcut.  */
+    trapezium: {
+      label:"Trapezium", family:"quad",
+      dims(){
+        const t = pick(TRIPLES), b = rnd(5,12);
+        return Math.random() < 0.62
+          ? { kind:"iso",   b, h:t[1], a: b + 2*t[0] }
+          : { kind:"right", b, h:t[1], a: b + t[0] };
+      },
+      build(d){
+        if (d.kind === "iso"){
+          const {a,b,h} = d, p = (a-b)/2, L = Math.hypot(p,h);
+          const pts = [P(0,0),P(a,0),P(a-p,h),P(p,h)];
+          const edges = [
+            {len:a, cls:null, param:"a", known:true},
+            {len:L, cls:"a",  param:null, known:true},
+            {len:b, cls:null, param:"b", known:true},
+            {len:L, cls:"a",  param:null, known:true}
+          ];
+          const [kL,uL] = oneOf(1,3);
+          edges[uL].known = false;
+          edges[uL].derive = {type:"copy", from:[kL]};
+          return { pts, edges, note:"An isosceles trapezium has one pair of equal sloping sides." };
+        }
+        const {a,b,h} = d, L = Math.hypot(a-b, h);
+        const pts = [P(0,0),P(a,0),P(b,h),P(0,h)];
+        const edges = [
+          {len:a, cls:null, param:"a",  known:true},
+          {len:L, cls:null, param:null, known:true},
+          {len:b, cls:null, param:"b",  known:true},
+          {len:h, cls:null, param:"h",  known:true}
+        ];
+        return { pts, edges, note:"Every side of this trapezium is different &mdash; there is no shortcut, just add them." };
+      },
+      formula(d,u,Per){
+        if (d.kind === "iso"){
+          const L = Math.hypot((d.a-d.b)/2, d.h);
+          return { html:`${d.a} + ${d.b} + 2 &times; ${dgt(L)} = ${dgt(Per)} ${u}`, note:"Only the two sloping sides pair up." };
+        }
+        const L = Math.hypot(d.a-d.b, d.h);
+        return { html:`${d.a} + ${d.b} + ${dgt(d.h)} + ${dgt(L)} = ${dgt(Per)} ${u}`, note:"No equal sides, so no shortcut &mdash; add all four." };
+      },
+      valid(d){ return d.a>d.b && d.b>0 && d.h>0; }
+    },
+
+    /* ---------------- triangles ---------------- */
+    triScalene: {
+      label:"Scalene triangle", family:"tri",
+      dims(){ const t = pick(SCALENE); return { c:t[0], a:t[1], b:t[2] }; },
+      build(d){
+        const pts = triFromSides(d.c, d.a, d.b);
+        const edges = [
+          {len:d.c, cls:null, param:"c", known:true},
+          {len:d.a, cls:null, param:"a", known:true},
+          {len:d.b, cls:null, param:"b", known:true}
+        ];
+        return { pts, edges, note:"Three different sides &mdash; every one has to be added." };
+      },
+      formula(d,u,P){ return { html:`${d.c} + ${d.a} + ${d.b} = ${dgt(P)} ${u}`, note:"No equal sides, so there is nothing to shorten." }; },
+      valid(d){ const {a,b,c}=d; return a+b>c && b+c>a && c+a>b && a>0 && b>0 && c>0; }
+    },
+
+    triIsosceles: {
+      label:"Isosceles triangle", family:"tri",
+      dims(){ const L = rnd(7,15); return { L, b: rnd(Math.max(3,L-5), Math.min(2*L-3, L+5)) }; },
+      build(d){
+        const pts = triFromSides(d.b, d.L, d.L);
+        const edges = [
+          {len:d.b, cls:null, param:"b", known:true},
+          {len:d.L, cls:"a",  param:"L"},
+          {len:d.L, cls:"a",  param:"L"}
+        ];
+        const [k,u] = oneOf(1,2);
+        edges[k].known = true; edges[u].known = false;
+        edges[u].derive = {type:"copy", from:[k]};
+        return { pts, edges, note:"The two sloping sides of an isosceles triangle are equal." };
+      },
+      formula(d,u,P){ return { html:`${d.b} + 2 &times; ${d.L} = ${dgt(P)} ${u}`, note:"The base, plus the equal pair doubled." }; },
+      valid(d){ return d.L>0 && d.b>0 && 2*d.L > d.b; }
+    },
+
+    triEquilateral: {
+      label:"Equilateral triangle", family:"tri",
+      dims(){ return { s: rnd(5,16) }; },
+      build(d){
+        const pts = triFromSides(d.s, d.s, d.s);
+        const known = rnd(0,2);
+        const edges = [0,1,2].map(i => ({
+          len:d.s, cls:"a", param:"s",
+          known: i===known,
+          derive: i===known ? null : {type:"copy", from:[known]}
+        }));
+        return { pts, edges, note:"All three sides of an equilateral triangle are equal." };
+      },
+      formula(d,u,P){ return { html:`3 &times; ${d.s} = ${dgt(P)} ${u}`, note:"Three equal sides." }; },
+      valid(d){ return d.s>0; }
+    },
+
+    /* ---------------- regular polygons ---------------- */
+    pentagon: regular(5,"Regular pentagon"),
+    hexagon:  regular(6,"Regular hexagon"),
+    octagon:  regular(8,"Regular octagon"),
+
+    /* ================= RECTILINEAR COMPOSITES =================
+       Every composite is described the same two ways, and `applyReasoning`
+       then decides what to hide -- which is why "what's missing" is one
+       SETTING rather than a different shape each time:
+
+         groups  {whole, parts[]}   a long side and the shorter sides that
+                                    tile it.  Either the long side is the
+                                    unknown (ADD the parts) or one part is
+                                    (take the others OFF the long side).
+         pairs   [i,j]              two sides that are simply equal.
+
+       Groups and pairs never share an edge, so the source of a derivation
+       is always itself labelled.
+       ========================================================= */
+
+    /* ---------------- L-shape ----------------
+       Parametrised by the FOUR LABELLED SIDES, so every one of them is
+       independently editable and the figure can never become invalid:
+         a = the short top,   b = the step across,
+         c = the step down,   d = the short right side
+       and then  W = a + b,  H = c + d.                                  */
+    lshape: {
+      label:"L-shape", family:"comp",
+      dims(){
+        return { a:rnd(3,9), b:rnd(3,10), c:rnd(3,9), d:rnd(3,10),
+                 variant: Math.random()<.5 ? "A" : "B", turn: rnd(0,3) };
+      },
+      build(d, mode){
+        const a=d.a, b=d.b, c=d.c, dd=d.d, W=a+b, H=c+dd;
+        let pts, edges, groups;
+        if (d.variant === "A"){
+          pts = [P(0,0), P(W,0), P(W,dd), P(a,dd), P(a,H), P(0,H)];
+          edges = [
+            {len:W,  param:null}, {len:dd, param:"d"}, {len:b, param:"b"},
+            {len:c,  param:"c"},  {len:a,  param:"a"}, {len:H, param:null}
+          ];
+          groups = [ {whole:0, parts:[4,2]}, {whole:5, parts:[1,3]} ];
+        } else {
+          pts = [P(0,0), P(W,0), P(W,H), P(W-a,H), P(W-a,dd), P(0,dd)];
+          edges = [
+            {len:W,  param:null}, {len:H, param:null}, {len:a, param:"a"},
+            {len:c,  param:"c"},  {len:b, param:"b"},  {len:dd, param:"d"}
+          ];
+          groups = [ {whole:0, parts:[2,4]}, {whole:1, parts:[3,5]} ];
+        }
+        applyReasoning(edges, groups, [], 0, mode);
+        return { pts: rot90(pts, turnFor(d.turn, W, H)), edges,
+          note:"The two longest sides of an L-shape are each made of two shorter ones." };
+      },
+      formula(d,u,Per){ return boxFormula(d.a+d.b, d.c+d.d, 0, 0, u, Per); },
+      valid(d){ return d.a>0 && d.b>0 && d.c>0 && d.d>0; }
+    },
+
+    /* ---------------- T-shape ----------------
+       a = left overhang, b = stem width, c = right overhang,
+       h1 = bar depth, h2 = stem height.  The top is a THREE-part side,
+       which is where a composite stops being a two-number question.     */
+    tshape: {
+      label:"T-shape", family:"comp",
+      dims(){
+        return { a:rnd(2,7), b:rnd(2,7), c:rnd(2,7), h1:rnd(2,7), h2:rnd(3,9), turn:rnd(0,3) };
+      },
+      build(d, mode){
+        const {a,b,c,h1,h2} = d, W=a+b+c, H=h1+h2;
+        const pts = [P(a,0),P(a+b,0),P(a+b,h2),P(W,h2),P(W,H),P(0,H),P(0,h2),P(a,h2)];
+        const edges = [
+          {len:b,  param:"b"},  {len:h2, param:"h2"}, {len:c,  param:"c"},  {len:h1, param:"h1"},
+          {len:W,  param:null}, {len:h1, param:"h1"}, {len:a,  param:"a"},  {len:h2, param:"h2"}
+        ];
+        applyReasoning(edges, [ {whole:4, parts:[6,0,2]} ], [ [1,7], [3,5] ], 1, mode);
+        return { pts: rot90(pts, turnFor(d.turn, W, H)), edges,
+          note:"The long side runs right across the top of the T &mdash; <b>three</b> shorter sides make it up." };
+      },
+      formula(d,u,Per){ return boxFormula(d.a+d.b+d.c, d.h1+d.h2, 0, 0, u, Per); },
+      valid(d){ return d.a>0 && d.b>0 && d.c>0 && d.h1>0 && d.h2>0; }
+    },
+
+    /* ---------------- cross ----------------
+       Twelve sides and not one of them needs adding: every side has an
+       equal partner straight across the shape.  The work is COUNTING.   */
+    cross: {
+      label:"Cross", family:"comp",
+      dims(){
+        return { a:rnd(2,6), n:rnd(2,6), c:rnd(2,6), b:rnd(2,6), m:rnd(2,6), e:rnd(2,6), turn:rnd(0,3) };
+      },
+      build(d, mode){
+        const {a,n,c,b,m,e} = d, W=a+n+c, H=b+m+e;
+        const pts = [
+          P(a,0), P(a+n,0), P(a+n,b), P(W,b), P(W,b+m), P(a+n,b+m),
+          P(a+n,H), P(a,H), P(a,b+m), P(0,b+m), P(0,b), P(a,b)
+        ];
+        const edges = [
+          {len:n, param:"n"}, {len:b, param:"b"}, {len:c, param:"c"}, {len:m, param:"m"},
+          {len:c, param:"c"}, {len:e, param:"e"}, {len:n, param:"n"}, {len:e, param:"e"},
+          {len:a, param:"a"}, {len:m, param:"m"}, {len:a, param:"a"}, {len:b, param:"b"}
+        ];
+        applyReasoning(edges, [], [[0,6],[1,11],[2,4],[3,9],[5,7],[8,10]], 2, mode);
+        return { pts: rot90(pts, turnFor(d.turn, W, H)), edges,
+          note:"Twelve sides, and every one has an equal partner across the cross." };
+      },
+      formula(d,u,Per){ return boxFormula(d.a+d.n+d.c, d.b+d.m+d.e, 0, 0, u, Per); },
+      valid(d){ return d.a>0 && d.n>0 && d.c>0 && d.b>0 && d.m>0 && d.e>0; }
+    },
+
+    /* ---------------- staircase ----------------
+       Three or four steps.  Both long sides are n-part sides, so this is
+       the figure where "count the pieces first" earns its keep.         */
+    staircase: {
+      label:"Staircase", family:"comp",
+      dims(){
+        const n = rnd(3,4), o = { n, turn:rnd(0,3) };
+        for (let i=0;i<n;i++){ o["w"+i] = rnd(2,5); o["h"+i] = rnd(2,5); }
+        return o;
+      },
+      build(d, mode){
+        const n = d.n, ws = [], hs = [];
+        for (let i=0;i<n;i++){ ws.push(d["w"+i]); hs.push(d["h"+i]); }
+        const W = ws.reduce((a,b)=>a+b,0), H = hs.reduce((a,b)=>a+b,0);
+        const pts = [P(0,0), P(W,0)];
+        const edges = [{len:W, param:null}];
+        let x = W, y = 0;
+        const vParts = [], hParts = [];
+        for (let i=n-1;i>=0;i--){
+          y += hs[i]; pts.push(P(x,y)); vParts.push(edges.length); edges.push({len:hs[i], param:"h"+i});
+          x -= ws[i]; pts.push(P(x,y)); hParts.push(edges.length); edges.push({len:ws[i], param:"w"+i});
+        }
+        edges.push({len:H, param:null});            // the closing left-hand side
+        applyReasoning(edges, [ {whole:0, parts:hParts}, {whole:edges.length-1, parts:vParts} ], [], 0, mode);
+        return { pts: rot90(pts, turnFor(d.turn, W, H)), edges,
+          note:`Every step counts. The two long sides are each made of ${n} shorter ones.` };
+      },
+      formula(d,u,Per){
+        let W=0,H=0; for (let i=0;i<d.n;i++){ W += d["w"+i]; H += d["h"+i]; }
+        return boxFormula(W, H, 0, 0, u, Per);
+      },
+      valid(d){
+        for (let i=0;i<d.n;i++) if (!(d["w"+i]>0) || !(d["h"+i]>0)) return false;
+        return true;
+      }
+    },
+
+    /* ---------------- U-shape and E-shape ----------------
+       A rectangle with k notches cut into one side.  These are the ones
+       that BREAK the enclosing-rectangle shortcut: a notch you cannot
+       push out adds its depth twice, so P = 2(W + H) + 2kd.             */
+    ushape: comb(1, "U-shape"),
+    eshape: comb(2, "E-shape")
+  };
+
+  /* P = 2(W + H) for any rectilinear figure whose steps can be pushed out;
+     every notch that CANNOT be pushed out adds its depth twice. */
+  function boxFormula(W, H, notches, depth, u, Per){
+    if (!notches) return {
+      html:`2 &times; (${dgt(W)} + ${dgt(H)}) = ${dgt(Per)} ${u}`,
+      note:`Push the steps out and you get a rectangle ${dgt(W)} by ${dgt(H)} &mdash; the perimeter does not change.`
+    };
+    return {
+      html:`2 &times; (${dgt(W)} + ${dgt(H)}) + ${2*notches} &times; ${dgt(depth)} = ${dgt(Per)} ${u}`,
+      note:`The rectangle around it is ${dgt(W)} by ${dgt(H)}, but a notch cannot be pushed out &mdash; each one adds its depth <b>twice</b>.`
+    };
+  }
+
+  function comb(k, label){
+    const NL = k===1 ? "one notch" : k+" notches";
+    return {
+      label, family:"comp", notches:k,
+      dims(){
+        /* Fewer, bigger pieces on the E: five cramped sides leave the
+           numbers nowhere to go, and a notch deeper than about half the
+           height puts the two walls' labels on top of each other. */
+        /* THE NOTCH MUST BE A BITE, NOT A SLOT.  A notch three deep and six
+           wide has to hold three numbers -- two walls and a floor -- in three
+           units of depth, and they land on top of each other however they are
+           placed.  Keeping the gap close to the depth gives every notch a
+           roughly square mouth, which is how a textbook draws one. */
+        const o = { H:0, turn:rnd(0,3) };
+        o.dd = rnd(4, k===1 ? 7 : 6);
+        let W = 0;
+        for (let i=0;i<=k;i++){ o["l"+i] = rnd(3, k===1 ? 8 : 6); W += o["l"+i]; }
+        for (let i=0;i<k;i++) { o["g"+i] = rnd(Math.max(3,o.dd-1), o.dd+1); W += o["g"+i]; }
+        o.H = Math.max(o.dd+5, Math.min(24, Math.round(W*(0.66 + Math.random()*0.42))));
+        return o;
+      },
+      build(d, mode){
+        const legs = [], gaps = [];
+        for (let i=0;i<=k;i++) legs.push(d["l"+i]);
+        for (let i=0;i<k;i++)  gaps.push(d["g"+i]);
+        const H = d.H, dep = Math.min(d.dd, H-1);
+        const W = legs.reduce((a,b)=>a+b,0) + gaps.reduce((a,b)=>a+b,0);
+
+        const pts = [P(0,0), P(W,0), P(W,H)];
+        const edges = [{len:W, param:null}, {len:H, param:"H"}];
+        const parts = [], vPairs = [];
+        let x = W;
+        for (let i=k;i>=1;i--){
+          x -= legs[i];      pts.push(P(x,H));       parts.push(edges.length); edges.push({len:legs[i], param:"l"+i});
+          const vA = edges.length;
+                             pts.push(P(x,H-dep));                             edges.push({len:dep, param:"dd"});
+          x -= gaps[i-1];    pts.push(P(x,H-dep));   parts.push(edges.length); edges.push({len:gaps[i-1], param:"g"+(i-1)});
+          const vB = edges.length;
+                             pts.push(P(x,H));                                 edges.push({len:dep, param:"dd"});
+          vPairs.push([vA,vB]);
+        }
+        pts.push(P(0,H));
+        parts.push(edges.length); edges.push({len:legs[0], param:"l0"});
+        edges.push({len:H, param:"H"});                     // the closing left-hand side
+        applyReasoning(edges, [ {whole:0, parts} ], [[1, edges.length-1]].concat(vPairs), 1, mode);
+
+        return { pts: rot90(pts, turnFor(d.turn, W, H)), edges,
+          note:`A rectangle with ${NL} cut out of it. The long side runs past every notch.` };
+      },
+      formula(d,u,Per){
+        let W = 0;
+        for (let i=0;i<=k;i++) W += d["l"+i];
+        for (let i=0;i<k;i++)  W += d["g"+i];
+        return boxFormula(W, d.H, k, Math.min(d.dd, d.H-1), u, Per);
+      },
+      valid(d){
+        if (!(d.H>1) || !(d.dd>0) || d.dd>=d.H) return false;
+        for (let i=0;i<=k;i++) if (!(d["l"+i]>0)) return false;
+        for (let i=0;i<k;i++)  if (!(d["g"+i]>0)) return false;
+        return true;
+      }
+    };
+  }
+
+  /* Decide what to hide.  A group either loses its LONG side (add the
+     parts back up) or one of its PARTS (take the others off the long
+     side); the caller picks, and "mix" throws a coin per group so one
+     figure can carry both kinds of thinking at once. */
+  function applyReasoning(edges, groups, pairs, nCopies, mode){
+    edges.forEach(e => { e.known = true; e.derive = null; });
+    groups.forEach(g => {
+      // "copy" reaches here only from the backwards section, which relabels
+      // everything anyway; treat anything that is not whole/part as a coin toss
+      const m = (mode === "whole" || mode === "part") ? mode : (Math.random()<.5 ? "whole" : "part");
+      if (m === "whole"){
+        edges[g.whole].known = false;
+        edges[g.whole].derive = {type:"sum", from:g.parts.slice()};
+      } else {
+        const k = g.parts[rnd(0, g.parts.length-1)];
+        edges[k].known = false;
+        edges[k].derive = {type:"part", whole:g.whole, others:g.parts.filter(x => x!==k)};
+      }
+    });
+    const pool = pairs.slice();
+    for (let n=0; n<nCopies && pool.length; n++){
+      const p = pool.splice(rnd(0,pool.length-1),1)[0];
+      const src = Math.random()<.5 ? p[0] : p[1], dst = src===p[0] ? p[1] : p[0];
+      if (!edges[src].known || !edges[dst].known) continue;
+      edges[dst].known = false;
+      edges[dst].derive = {type:"copy", from:[src]};
+    }
+  }
+
+  function regular(n, label){
+    const NAMES = {5:"pentagon",6:"hexagon",8:"octagon"};
+    return {
+      label, family:"reg", n,
+      dims(){ return { s: rnd(3,12) }; },
+      build(d){
+        const pts = regularPts(n, d.s);
+        const known = rnd(0,n-1);
+        const edges = [];
+        for (let i=0;i<n;i++) edges.push({
+          len:d.s, cls:"a", param:"s",
+          known: i===known,
+          derive: i===known ? null : {type:"copy", from:[known]}
+        });
+        return { pts, edges,
+          note:`A regular ${NAMES[n]} has ${n} equal sides.` };
+      },
+      formula(d,u,P){ return { html:`${n} &times; ${d.s} = ${dgt(P)} ${u}`, note:`${n} equal sides &mdash; count them, then multiply.` }; },
+      valid(d){ return d.s>0; }
+    };
+  }
+
+  const SHAPE_KEYS = Object.keys(SHAPES);
+
+  /* ===================== SHAPE FAMILIES ===================== */
+  const FAMILIES = {
+    quad:  { label:"Quadrilaterals", hint:"Square, rectangle, parallelogram, rhombus, kite, trapezium",
+             keys:["square","rectangle","parallelogram","rhombus","kite","trapezium"] },
+    tri:   { label:"Triangles", hint:"Scalene, isosceles and equilateral",
+             keys:["triScalene","triIsosceles","triEquilateral"] },
+    reg:   { label:"Regular polygons", hint:"Pentagon, hexagon, octagon",
+             keys:["pentagon","hexagon","octagon"] },
+    comp:  { label:"Composite figures", hint:"L-shape, T-shape and cross",
+             keys:["lshape","tshape","cross"] },
+    comp2: { label:"Composite figures — harder", hint:"Staircase, and the notched U and E shapes",
+             keys:["staircase","ushape","eshape"] }
+  };
+  const FAM_IDS = ["quad","tri","reg","comp","comp2"];
+
+  /* Level says which shapes it would LIKE; the tick-list says which are
+     allowed.  They work independently, so a paper of nothing but squares
+     can still be spicy, and a sweet paper can still be all composites. */
+  const LEVEL_SHAPES = {
+    sweet:  ["square","rectangle","triEquilateral","rhombus"],
+    mild:   ["square","rectangle","parallelogram","rhombus","kite","trapezium",
+             "triScalene","triIsosceles","triEquilateral"],
+    medium: ["pentagon","hexagon","octagon","lshape","tshape","cross",
+             "parallelogram","kite","trapezium","triScalene"],
+    spicy:  ["staircase","ushape","eshape","cross","octagon","lshape","tshape"]
+  };
+  /* Every length on a figure is multiplied by the SAME factor, so sums,
+     equal sides and perimeters all stay exact while the numbers pick up
+     a decimal place. */
+  const LEVEL_SCALE = { sweet:[1], mild:[1], medium:[1,1,0.5], spicy:[0.5,1.5,2.5] };
+  const ORDER = ["sweet","mild","medium","spicy"];
+
+  const famTicked = {};                       // famTicked[id] === false means off
+  const famOn = id => famTicked[id] !== false;
+
+  function renderFamPicker(){
+    $("pairWrap").innerHTML = FAM_IDS.map(id => {
+      const f = FAMILIES[id], on = famOn(id);
+      return '<label class="pairChk' + (on ? "" : " off") + '">'
+        + '<input type="checkbox" id="fam_' + id + '"' + (on ? " checked" : "") + ' />'
+        + '<span>' + esc(f.label) + '<small>' + esc(f.hint) + '</small></span></label>';
+    }).join("");
+    FAM_IDS.forEach(id => {
+      $("fam_" + id).addEventListener("change", function(){
+        famTicked[id] = this.checked;
+        this.parentNode.classList.toggle("off", !this.checked);
+        updateFamBtn();
+        generate(false);
+      });
+    });
+    updateFamBtn();
+  }
+  function updateFamBtn(){
+    $("pairAllBtn").textContent = FAM_IDS.some(famOn) ? "Untick all" : "Tick all";
+  }
+  function allowedKeys(){
+    const out = [];
+    FAM_IDS.forEach(id => { if(famOn(id)) out.push.apply(out, FAMILIES[id].keys); });
+    return out;
+  }
+  /* the shapes this level would like, narrowed to the ticked families —
+     and if that leaves nothing, the ticked families win */
+  function poolFor(level){
+    const allowed = allowedKeys();
+    if(!allowed.length) return [];
+    const want = LEVEL_SHAPES[level] || [];
+    const both = want.filter(k => allowed.indexOf(k) >= 0);
+    return both.length ? both : allowed;
+  }
+
+  /* ===================== BUILDING A FIGURE ===================== */
+  const UNITS = ["mm","cm","m"];
+  function unitFor(){
+    const u = $("unitSel").value;
+    return u === "mix" ? pick(UNITS) : u;
+  }
+
+  /* mode: "whole" (a long side missing) | "part" (a short side missing) |
+     "copy" (an equal side) — composites take the first two, everything
+     else only ever has equal sides to find. */
+  function buildFigure(level, mode){
+    const pool = poolFor(level);
+    if(!pool.length) return null;
+    const key = pick(pool);
+    const def = SHAPES[key];
+    const dims = def.dims();
+    const shape = def.build(dims, mode);
+    shape.key = key;
+    shape.dims = dims;
+    const f = pick(LEVEL_SCALE[level] || [1]);
+    if(f !== 1){
+      shape.pts = shape.pts.map(p => P(p.x*f, p.y*f));
+      shape.edges.forEach(e => { e.len = Math.round(e.len*f*100)/100; });
+    }
+    shape.unit = unitFor();
+    shape.level = level;
+    return shape;
+  }
+
+  const perimOf = sh => Math.round(sh.edges.reduce((t,e) => t + e.len, 0) * 100) / 100;
+  const missingIdx = sh => sh.edges.map((e,i) => e.known ? -1 : i).filter(i => i >= 0);
+
+  /* Print ONE labelled side in a different unit, so the answer has to be
+     converted before it can be added.  Never the side being asked for. */
+  function maybeAltUnit(sh, avoid){
+    if(!$("mixUnitToggle").checked) return;
+    if(sh.level === "sweet" || sh.level === "mild") return;
+    if(Math.random() > 0.55) return;
+    const cand = sh.edges.map((e,i) => i).filter(i => sh.edges[i].known && !sh.edges[i].hide && i !== avoid);
+    if(!cand.length) return;
+    const i = pick(cand), e = sh.edges[i];
+    if(sh.unit === "m"){ e.alt = { text:dgt(e.len*100) + " cm", from:"cm", k:100 }; }
+    else if(sh.unit === "cm"){ e.alt = { text:dgt(e.len*10) + " mm", from:"mm", k:10 }; }
+    else { if(e.len % 10) return; e.alt = { text:dgt(e.len/10) + " cm", from:"cm", k:0.1 }; }
+    sh.altIdx = i;
+  }
+
+  /* ===================== THE LABEL SOLVER =====================
+     A twelve-sided figure printed three to a row puts its numbers on top of
+     each other.  Same solver as the teaching tool: real font metrics from a
+     hidden probe, most-constrained-first placement with each label free to
+     sit on EITHER side of its own line and to slide along it, then a
+     relaxation pass, and the type steps down if nothing packs.
+
+     Two traps, both live:
+       - .sideLabel must not carry a font-size in CSS, because a CSS
+         declaration beats the presentation attribute the solver sets;
+       - getBBox comes back in the probe's own user space, so the probe's
+         parked x/y has to come off the offsets.
+     ================================================================== */
+  const PROBE = { x:180, y:40 };
+  const MCACHE = {};
+  function measureText(txt, fs, ui){
+    const key = fs.toFixed(1) + "|" + (ui ? 1 : 0) + "|" + txt;
+    if(MCACHE[key]) return MCACHE[key];
+    let r = null;
+    try{
+      const t = $("probeText");
+      t.setAttribute("font-size", fs);
+      t.setAttribute("font-weight", ui ? 800 : 700);
+      t.style.fontFamily = ui ? "var(--uiFont)" : "var(--mathFont)";
+      t.textContent = txt;
+      const b = t.getBBox();
+      if(b.width > 0) r = { w:b.width, h:b.height, ox:b.x + b.width/2 - PROBE.x, oy:b.y + b.height/2 - PROBE.y };
+    }catch(_){ }
+    if(!r) r = { w:0.58*fs*txt.length + 8, h:fs*1.2, ox:0, oy:0 };
+    MCACHE[key] = r;
+    return r;
+  }
+
+  /* The margin has to hold a whole label OUTSIDE the figure.  Too little and
+     the solver's clamp drags the number back over the shape's own edge, which
+     is what makes a printed figure look wrong even when nothing collides. */
+  /* Every figure gets the SAME box, so every card is the same height and the
+     page packs predictably.  A box that followed each figure's own aspect made
+     one card half again as tall as its neighbour, the grid row stretched to
+     the tallest, and re-generating gave a different fit every time. */
+  const VBW = 320, VBH = 232, PADX = 52, PADY = 34;
+
+  /* ==================================================================
+     EQUAL SIDES ARE MARKED, NOT REPEATED
+     -------------------------------------------------------------------
+     Classes come from the LENGTHS on the finished figure, not from the
+     shape builder, so a composite's equal sides are found too — three
+     17.5 cm labels crammed into one notch was the crowding this fixes.
+     Each class gets its own tick count and prints its value ONCE; the
+     rest carry the marks alone.  A side printed in another unit is left
+     out of all this, because its text does not match its partners'.
+     Capped at three classes: nobody counts four tick marks.
+     ================================================================== */
+  function markEqualSides(sh, askIdx){
+    sh.edges.forEach(e => { e.hide = false; e.ticks = 0; });
+    const by = {};
+    sh.edges.forEach((e,i) => { if(!e.alt){ const k = dgt(e.len); (by[k] = by[k] || []).push(i); } });
+    Object.keys(by).map(k => by[k]).filter(g => g.length > 1)
+      .sort((a,b) => b.length - a.length).slice(0,3)
+      .forEach((g, gi) => {
+        g.forEach(i => { sh.edges[i].ticks = gi + 1; });
+        const printable = g.filter(i => i !== askIdx && sh.edges[i].known);
+        if(!printable.length) return;                 // all unknown: leave every ?
+        const keep = printable[0];
+        g.forEach(i => { if(i !== keep && i !== askIdx && sh.edges[i].known) sh.edges[i].hide = true; });
+      });
+  }
+
+  function labelOf(sh, i){
+    const e = sh.edges[i];
+    if(!e.known) return "?";
+    if(e.alt) return e.alt.text;
+    return dgt(e.len) + " " + sh.unit;
+  }
+
+  function fitFigure(sh){
+    const xs = sh.pts.map(p=>p.x), ys = sh.pts.map(p=>p.y);
+    const minx=Math.min.apply(null,xs), maxx=Math.max.apply(null,xs);
+    const miny=Math.min.apply(null,ys), maxy=Math.max.apply(null,ys);
+    const w=(maxx-minx)||1, h=(maxy-miny)||1;
+    const vbH = VBH;
+    const k = Math.min((VBW - 2*PADX)/w, (vbH - 2*PADY)/h);
+    return { k, vbH, ox:(VBW - k*w)/2 - k*minx, oy:(vbH + k*h)/2 + k*miny };
+  }
+
+  function geomOf(sh, F, i){
+    const n = sh.pts.length;
+    const A = P(F.ox + F.k*sh.pts[i].x, F.oy - F.k*sh.pts[i].y);
+    const j = (i+1)%n;
+    const B = P(F.ox + F.k*sh.pts[j].x, F.oy - F.k*sh.pts[j].y);
+    const dx=B.x-A.x, dy=B.y-A.y, len=Math.hypot(dx,dy)||1;
+    return { A, B, len, mid:P((A.x+B.x)/2,(A.y+B.y)/2),
+             ux:dx/len, uy:dy/len, nx:-dy/len, ny:dx/len };
+  }
+
+  function solveLabels(sh, F){
+    let minPx = Infinity;
+    for(let i=0;i<sh.pts.length;i++) minPx = Math.min(minPx, geomOf(sh,F,i).len);
+    const base = Math.max(14, Math.min(19, minPx*0.30));
+    let best = null, fallback = null;
+    for(const mul of [1,.94,.88,.82,.76,.7,.64,.58]){
+      const r = attempt(sh, F, base*mul);
+      if(!r.clashes){ best = r; break; }
+      if(mul >= 0.7 && (!fallback || r.clashes < fallback.clashes)) fallback = r;
+    }
+    return best || fallback || attempt(sh, F, base*0.7);
+  }
+
+  function attempt(sh, F, fs){
+    const n = sh.pts.length, items = [];
+    for(let i=0;i<n;i++){
+      const e = sh.edges[i];
+      if(e.hide) continue;                       // an equal side the ticks already account for
+      const g = geomOf(sh,F,i), txt = labelOf(sh,i);
+      const m = measureText(txt, e.known ? fs : fs*1.12, !e.known);
+      items.push({ i, g, txt, fs, ui:!e.known, w:m.w+9, h:m.h+6, ox:m.ox, oy:m.oy,
+        base: 8 + fs*0.30 + Math.abs(g.nx)*(m.w+9)/2 + Math.abs(g.ny)*(m.h+6)/2,
+        dir:1, out:0, slide:0, maxSlide:g.len*0.44 });
+    }
+    const at = t => {
+      const x = t.g.mid.x + t.g.nx*t.dir*(t.base+t.out) + t.g.ux*t.slide;
+      const y = t.g.mid.y + t.g.ny*t.dir*(t.base+t.out) + t.g.uy*t.slide;
+      return P(Math.max(t.w/2 - t.ox + 2, Math.min(VBW   - t.w/2 - t.ox - 2, x)),
+               Math.max(t.h/2 - t.oy + 2, Math.min(F.vbH - t.h/2 - t.oy - 2, y)));
+    };
+    const boxOf = t => { const p = at(t), cx=p.x+t.ox, cy=p.y+t.oy;
+      return { l:cx-t.w/2, r:cx+t.w/2, t:cy-t.h/2, b:cy+t.h/2 }; };
+    const over = (A,B) => Math.max(0, Math.min(A.r,B.r)-Math.max(A.l,B.l))
+                        * Math.max(0, Math.min(A.b,B.b)-Math.max(A.t,B.t));
+
+    const byRoom = items.slice().sort((a,b) => a.g.len - b.g.len);
+    const placed = [];
+    for(let sweep=0; sweep<3; sweep++){
+      for(const t of byRoom){
+        const rivals = placed.filter(o => o !== t);
+        let bestP = null;
+        for(const dir of [1,-1]) for(const sl of [0,.14,-.14,.26,-.26,.36,-.36,.44,-.44]){
+          t.dir = dir; t.slide = sl*t.g.len; t.out = 0;
+          const bx = boxOf(t);
+          let cost = rivals.reduce((c,o) => c + over(bx, boxOf(o)), 0);
+          cost += (dir === 1 ? 0 : t.w*t.h*0.12);
+          cost += Math.abs(sl)*t.w*0.12;
+          if(!bestP || cost < bestP.cost) bestP = { cost, dir, slide:t.slide };
+        }
+        t.dir = bestP.dir; t.slide = bestP.slide; t.out = 0;
+        if(placed.indexOf(t) < 0) placed.push(t);
+      }
+    }
+    for(let iter=0; iter<110; iter++){
+      let moved = false;
+      for(let a=0;a<items.length;a++) for(let b=a+1;b<items.length;b++){
+        const A=items[a], B=items[b], ba=boxOf(A), bb=boxOf(B);
+        if(Math.min(ba.r,bb.r) - Math.max(ba.l,bb.l) <= 0) continue;
+        if(Math.min(ba.b,bb.b) - Math.max(ba.t,bb.t) <= 0) continue;
+        moved = true;
+        const pa = P((ba.l+ba.r)/2,(ba.t+ba.b)/2), pb = P((bb.l+bb.r)/2,(bb.t+bb.b)/2);
+        let dx=pa.x-pb.x, dy=pa.y-pb.y, dl=Math.hypot(dx,dy);
+        if(dl < 0.01){ dx=A.g.nx*A.dir; dy=A.g.ny*A.dir; dl=1; }
+        dx/=dl; dy/=dl;
+        [[A,1],[B,-1]].forEach(pair => {
+          const T=pair[0], sgn=pair[1], px=sgn*dx, py=sgn*dy;
+          T.out   = Math.max(-2.2*T.base, T.out + 0.7 + 2.2*(px*T.g.nx*T.dir + py*T.g.ny*T.dir));
+          T.slide = Math.max(-T.maxSlide, Math.min(T.maxSlide, T.slide + 2.4*(px*T.g.ux + py*T.g.uy)));
+        });
+      }
+      if(!moved) break;
+    }
+    let clashes = 0;
+    for(let a=0;a<items.length;a++) for(let b=a+1;b<items.length;b++)
+      if(over(boxOf(items[a]), boxOf(items[b])) > 0) clashes++;
+    return { items, at, fs, clashes };
+  }
+
+  /* ===================== DRAWING ===================== */
+  function figureSVG(sh){
+    const F = fitFigure(sh);
+    const sol = solveLabels(sh, F);
+    const n = sh.pts.length;
+    let minPx = Infinity;
+    for(let i=0;i<n;i++) minPx = Math.min(minPx, geomOf(sh,F,i).len);
+    const tick = Math.max(4, Math.min(7, minPx*0.15));
+    const rSize = Math.max(5, Math.min(11, minPx*0.24));
+
+    const pts = sh.pts.map(p => (F.ox + F.k*p.x).toFixed(1) + "," + (F.oy - F.k*p.y).toFixed(1)).join(" ");
+    let s = '<svg viewBox="0 0 ' + VBW + ' ' + F.vbH + '" role="img" aria-label="A shape with its side lengths labelled">';
+    s += '<polygon points="' + pts + '" fill="#eef4ff" stroke="none"/>';
+
+    for(let i=0;i<n;i++){
+      const g = geomOf(sh,F,i), e = sh.edges[i];
+      s += '<line x1="' + g.A.x.toFixed(1) + '" y1="' + g.A.y.toFixed(1)
+         + '" x2="' + g.B.x.toFixed(1) + '" y2="' + g.B.y.toFixed(1)
+         + '" fill="none" stroke="#111827" stroke-width="2.1" stroke-linecap="round"'
+         + (e.known ? "" : ' stroke-dasharray="6 5"') + '/>';
+      /* The marks are what make an unlabelled equal side readable, so they
+         are never optional: without them the question cannot be answered. */
+      if(e.ticks){
+        {
+          const marks = e.ticks;
+          for(let m=0;m<marks;m++){
+            const off = (m-(marks-1)/2)*(tick*0.95);
+            const px = g.mid.x+g.ux*off, py = g.mid.y+g.uy*off;
+            s += '<line x1="' + (px+g.nx*tick).toFixed(1) + '" y1="' + (py+g.ny*tick).toFixed(1)
+               + '" x2="' + (px-g.nx*tick).toFixed(1) + '" y2="' + (py-g.ny*tick).toFixed(1)
+               + '" stroke="#475569" stroke-width="1.6" stroke-linecap="round"/>';
+          }
+        }
+      }
+    }
+    {
+      for(let i=0;i<n;i++){
+        const a = geomOf(sh,F,(i-1+n)%n), b = geomOf(sh,F,i);
+        if(Math.abs((-a.ux)*b.ux + (-a.uy)*b.uy) < 0.02){
+          const v = b.A, p1 = P(v.x-a.ux*rSize, v.y-a.uy*rSize), p2 = P(v.x+b.ux*rSize, v.y+b.uy*rSize);
+          const cor = P(p1.x+b.ux*rSize, p1.y+b.uy*rSize);
+          s += '<polyline points="' + p1.x.toFixed(1) + ',' + p1.y.toFixed(1) + ' '
+             + cor.x.toFixed(1) + ',' + cor.y.toFixed(1) + ' ' + p2.x.toFixed(1) + ',' + p2.y.toFixed(1)
+             + '" fill="none" stroke="#9aa5b4" stroke-width="1.4"/>';
+        }
+      }
+    }
+    sol.items.forEach(t => {
+      const p = sol.at(t);
+      s += '<text x="' + p.x.toFixed(1) + '" y="' + p.y.toFixed(1) + '"'
+         + ' font-size="' + (t.ui ? t.fs*1.12 : t.fs).toFixed(1) + '"'
+         + ' font-family="' + (t.ui ? "var(--uiFont)" : "var(--mathFont)") + '"'
+         + ' font-weight="' + (t.ui ? 900 : 700) + '"'
+         + ' fill="' + (t.ui ? "#c2410c" : "#111827") + '"'
+         + ' text-anchor="middle" dominant-baseline="middle"'
+         + ' paint-order="stroke" stroke="#fff" stroke-width="3.4" stroke-linejoin="round">'
+         + esc(t.txt) + '</text>';
+    });
+    return s + '</svg>';
+  }
+
+  /* ===================== WHY A SIDE IS WHAT IT IS =====================
+     The answer key is meant to be handed to a student, so it says the
+     reason, not just the number.                                        */
+  function whyOf(sh, i){
+    const e = sh.edges[i], d = e.derive, un = " " + sh.unit;
+    if(!d) return "";
+    if(d.type === "copy"){
+      const src = sh.edges[d.from[0]];
+      return "equal to the " + dgt(src.len) + un + " side" + (src.alt ? " (" + src.alt.text + " = " + dgt(src.len) + un + ")" : "");
+    }
+    if(d.type === "sum"){
+      const parts = d.from.map(k => dgt(sh.edges[k].len));
+      return parts.join(" + ") + " = " + dgt(e.len) + un;
+    }
+    const w = sh.edges[d.whole], others = d.others.map(k => dgt(sh.edges[k].len));
+    return dgt(w.len) + " − " + others.join(" − ") + " = " + dgt(e.len) + un;
+  }
+
+  /* ===================== QUESTION MAKERS ===================== */
+  function modeForLevel(level){
+    if(level === "sweet" || level === "mild") return "copy";
+    return Math.random() < 0.5 ? "whole" : "part";
+  }
+
+  /* A — one missing side, and nothing else asked */
+  function makeFindQ(level){
+    for(let t=0;t<30;t++){
+      const sh = buildFigure(level, modeForLevel(level));
+      if(!sh) return null;
+      const miss = missingIdx(sh);
+      if(!miss.length) continue;
+      const askIdx = pick(miss);
+      // every other unknown is filled in, so exactly one ? is on the figure
+      miss.forEach(i => { if(i !== askIdx) sh.edges[i].known = true; });
+      maybeAltUnit(sh, askIdx);
+      markEqualSides(sh, askIdx);
+      return { kind:"find", level, sh, askIdx,
+               ans:sh.edges[askIdx].len, why:whyOf(sh, askIdx) };
+    }
+    return null;
+  }
+
+  /* B — every side labelled, pure addition */
+  function makePerimQ(level){
+    const sh = buildFigure(level, modeForLevel(level));
+    if(!sh) return null;
+    sh.edges.forEach(e => { e.known = true; });
+    maybeAltUnit(sh, -1);
+    markEqualSides(sh, -1);
+    const p = perimOf(sh);
+    return { kind:"perim", level, sh, ans:p,
+             why:sh.edges.map(e => dgt(e.len)).join(" + ") + " = " + dgt(p) + " " + sh.unit };
+  }
+
+  /* C — find the sides first, then add */
+  function makeMissingQ(level){
+    for(let t=0;t<30;t++){
+      const sh = buildFigure(level, modeForLevel(level));
+      if(!sh) continue;
+      const miss = missingIdx(sh);
+      if(!miss.length) continue;
+      maybeAltUnit(sh, -1);
+      markEqualSides(sh, -1);
+      const p = perimOf(sh);
+      const why = miss.map(i => "the ? side is " + dgt(sh.edges[i].len) + " " + sh.unit + " (" + whyOf(sh,i) + ")").join("; ")
+                + ". Then " + sh.edges.map(e => dgt(e.len)).join(" + ") + " = " + dgt(p) + " " + sh.unit;
+      return { kind:"missing", level, sh, ans:p, why };
+    }
+    return null;
+  }
+
+  /* D — the perimeter is given, a side is not.
+     An equal-sided figure gets NO side labelled (P ÷ n is the classic
+     question); anything else has every side but one. */
+  function makeBackQ(level){
+    const EQUAL = ["square","rhombus","triEquilateral","pentagon","hexagon","octagon"];
+    for(let t=0;t<30;t++){
+      const sh = buildFigure(level, "copy");
+      if(!sh) continue;
+      sh.edges.forEach(e => { e.known = true; e.derive = null; });
+      const p = perimOf(sh);
+      const n = sh.edges.length;
+      if(EQUAL.indexOf(sh.key) >= 0){
+        sh.edges.forEach(e => { e.known = false; });
+        markEqualSides(sh, -1);
+        return { kind:"back", level, sh, given:p, ans:sh.edges[0].len, everySide:true,
+                 why:"all " + n + " sides are equal, so " + dgt(p) + " ÷ " + n + " = " + dgt(sh.edges[0].len) + " " + sh.unit };
+      }
+      const askIdx = rnd(0, n-1);
+      sh.edges[askIdx].known = false;
+      maybeAltUnit(sh, askIdx);
+      markEqualSides(sh, askIdx);
+      const rest = sh.edges.filter((e,i) => i !== askIdx).map(e => dgt(e.len));
+      return { kind:"back", level, sh, given:p, askIdx, ans:sh.edges[askIdx].len, everySide:false,
+               why:dgt(p) + " − " + rest.join(" − ") + " = " + dgt(sh.edges[askIdx].len) + " " + sh.unit };
+    }
+    return null;
+  }
+
+  /* E — use it.  Australian contexts, and the numbers come from the level. */
+  const WORD = [
+    { lv:["sweet","mild"], two:false,
+      t:{ en:"A rectangular vegetable bed is <bdi>{A}</bdi> m long and <bdi>{B}</bdi> m wide. How many metres of edging go all the way around it?",
+          ar:"حوض خضروات مستطيل طوله <bdi>{A}</bdi> m وعرضه <bdi>{B}</bdi> m. كم مترًا من الحواف يلزم لإحاطته بالكامل؟",
+          fa:"یک باغچهٔ سبزی مستطیلی <bdi>{A}</bdi> m طول و <bdi>{B}</bdi> m عرض دارد. برای دور تا دور آن چند متر لبه لازم است؟" },
+      calc:(a,b) => 2*(a+b), unit:"m",
+      why:(a,b) => "P = 2 × (" + a + " + " + b + ") = " + (2*(a+b)) + " m" },
+    { lv:["sweet","mild"], two:false,
+      t:{ en:"A square paddock has a side of <bdi>{A}</bdi> m. How much fencing goes around the whole paddock?",
+          ar:"حقل مربّع طول ضلعه <bdi>{A}</bdi> m. كم يلزم من السياج لإحاطة الحقل كله؟",
+          fa:"یک زمین مربعی ضلعی برابر <bdi>{A}</bdi> m دارد. برای دور تا دور آن چقدر حصار لازم است؟" },
+      calc:(a) => 4*a, unit:"m",
+      why:(a) => "P = 4 × " + a + " = " + (4*a) + " m" },
+    { lv:["mild","medium"], two:false,
+      t:{ en:"A picture frame is <bdi>{A}</bdi> cm by <bdi>{B}</bdi> cm. How much framing timber goes around the outside?",
+          ar:"إطار صورة أبعاده <bdi>{A}</bdi> cm في <bdi>{B}</bdi> cm. كم يلزم من خشب الإطار لمحيطه الخارجي؟",
+          fa:"یک قاب عکس <bdi>{A}</bdi> cm در <bdi>{B}</bdi> cm است. برای دور تا دور آن چقدر چوب قاب لازم است؟" },
+      calc:(a,b) => 2*(a+b), unit:"cm",
+      why:(a,b) => "P = 2 × (" + a + " + " + b + ") = " + (2*(a+b)) + " cm" },
+    { lv:["medium","spicy"], two:true,
+      t:{ en:"A rectangular room is <bdi>{A}</bdi> m by <bdi>{B}</bdi> m. Skirting board goes around the room except for a <bdi>{C}</bdi> m doorway. How much skirting board is needed?",
+          ar:"غرفة مستطيلة أبعادها <bdi>{A}</bdi> m في <bdi>{B}</bdi> m. يوضع وزرة حول الغرفة عدا باب عرضه <bdi>{C}</bdi> m. كم يلزم من الوزرة؟",
+          fa:"یک اتاق مستطیلی <bdi>{A}</bdi> m در <bdi>{B}</bdi> m است. قرنیز دور تا دور اتاق می‌رود، به‌جز درگاهی به عرض <bdi>{C}</bdi> m. چقدر قرنیز لازم است؟" },
+      calc:(a,b,c) => 2*(a+b)-c, unit:"m",
+      why:(a,b,c) => "P = 2 × (" + a + " + " + b + ") = " + (2*(a+b)) + " m, then " + (2*(a+b)) + " − " + c + " = " + (2*(a+b)-c) + " m" },
+    { lv:["medium","spicy"], two:true,
+      t:{ en:"A netball court is <bdi>{A}</bdi> m long and <bdi>{B}</bdi> m wide. A player jogs twice around the outside. How far does she jog?",
+          ar:"ملعب كرة شبكة طوله <bdi>{A}</bdi> m وعرضه <bdi>{B}</bdi> m. تجري لاعبة حول الملعب مرتين. ما المسافة التي قطعتها؟",
+          fa:"یک زمین نت‌بال <bdi>{A}</bdi> m طول و <bdi>{B}</bdi> m عرض دارد. یک بازیکن دو دور کامل دور آن می‌دود. چه مسافتی می‌دود؟" },
+      calc:(a,b) => 4*(a+b), unit:"m",
+      why:(a,b) => "one lap is 2 × (" + a + " + " + b + ") = " + (2*(a+b)) + " m, so two laps are " + (4*(a+b)) + " m" },
+    { lv:["medium","spicy"], two:false, back:true,
+      t:{ en:"A regular hexagonal garden bed has a perimeter of <bdi>{P}</bdi> m. How long is each side?",
+          ar:"حوض حديقة على شكل سداسي منتظم محيطه <bdi>{P}</bdi> m. ما طول كل ضلع؟",
+          fa:"یک باغچهٔ شش‌ضلعی منتظم محیطی برابر <bdi>{P}</bdi> m دارد. طول هر ضلع چقدر است؟" },
+      calc:(a) => a, unit:"m",
+      why:(a) => "a regular hexagon has 6 equal sides, so " + (6*a) + " ÷ 6 = " + a + " m" },
+    { lv:["mild","medium","spicy"], two:false, back:true,
+      t:{ en:"The perimeter of a rectangular swimming pool is <bdi>{P}</bdi> m. It is <bdi>{A}</bdi> m long. How wide is it?",
+          ar:"محيط مسبح مستطيل يساوي <bdi>{P}</bdi> m، وطوله <bdi>{A}</bdi> m. ما عرضه؟",
+          fa:"محیط یک استخر مستطیلی <bdi>{P}</bdi> m است و طول آن <bdi>{A}</bdi> m است. عرض آن چقدر است؟" },
+      calc:(a,b) => b, unit:"m",
+      why:(a,b) => "2 × " + a + " = " + (2*a) + " m for the two long sides, so the two short sides are " + (2*(a+b)) + " − " + (2*a) + " = " + (2*b) + " m, and each is " + b + " m" }
+  ];
+
+  function makeWordQ(level){
+    const pool = WORD.filter(w => w.lv.indexOf(level) >= 0);
+    const t = pick(pool.length ? pool : WORD);
+    const big = level === "spicy" ? [8,26] : level === "medium" ? [6,20] : [3,14];
+    let a = rnd(big[0], big[1]), b = rnd(big[0], Math.max(big[0], a-1)), c = rnd(1, 3);
+    if(b === a) b = Math.max(big[0], a-1);
+    const P6 = 6*a;
+    const vals = { A:a, B:b, C:c, P:t.t.en.indexOf("{P}") >= 0
+      ? (t.why.length === 1 ? P6 : 2*(a+b)) : 0 };
+    const ans = t.calc(a,b,c);
+    const fill = s => String(s).replace(/\{A\}/g,a).replace(/\{B\}/g,b).replace(/\{C\}/g,c).replace(/\{P\}/g,vals.P);
+    return { kind:"word", level, text:{ en:fill(t.t.en), ar:fill(t.t.ar), fa:fill(t.t.fa) },
+             ans:ans, unit:t.unit, why:t.why(a,b,c) };
+  }
+
+  /* ===================== CARDS ===================== */
+  function cardHTML(q, isKey){
+    const badge = '<span class="qNum ' + q.level + '">' + q.idx + '</span>';
+
+    if(q.kind === "word"){
+      const foot = isKey
+        ? '<span class="ansKey full">' + dgt(q.ans) + ' ' + U(q.unit) + '</span><span class="ansWhy">' + esc(q.why) + '</span>'
+        : '<span class="ansLine full"></span><span class="ansLine full"></span>';
+      return '<div class="qCard word"><div class="qTop">' + badge + '<span class="qWord">' + TR(q.text) + '</span></div>'
+        + '<div class="qFoot">' + foot + '</div></div>';
+    }
+
+    const top = '<div class="qTop">' + badge
+      + (q.kind === "back"
+          ? '<span class="qGiven">P = ' + dgt(q.given) + ' ' + U(q.sh.unit) + '</span>'
+          : "")
+      + '</div>';
+
+    const asks = (q.kind === "find" || q.kind === "back") ? "? =" : "P =";
+    const foot = isKey
+      ? '<div class="qFoot"><span class="qAsk">' + asks + '</span>'
+        + '<span class="ansKey">' + dgt(q.ans) + ' ' + U(q.sh.unit) + '</span></div>'
+        + (q.why ? '<span class="ansWhy">' + esc(q.why) + '</span>' : "")
+      : '<div class="qFoot"><span class="qAsk">' + asks + '</span><span class="ansLine"></span>'
+        + '<span class="qAsk">' + U(q.sh.unit) + '</span></div>';
+
+    return '<div class="qCard">' + top + '<div class="qFig">' + q.svg + '</div>' + foot + '</div>';
+  }
+
+  /* ===================== SECTIONS ===================== */
+  const KINDS = {
+    find:    { head:WS.find,    cols:{ roomy:2, normal:3, tight:4 } },
+    perim:   { head:WS.perim,   cols:{ roomy:2, normal:3, tight:4 } },
+    missing: { head:WS.missing, cols:{ roomy:2, normal:3, tight:4 } },
+    back:    { head:WS.back,    cols:{ roomy:2, normal:3, tight:4 } },
+    word:    { head:WS.word,    cols:{ roomy:1, normal:1, tight:2 } }
+  };
+  const KIND_IDS  = ["find","perim","missing","back","word"];
+  const TOGGLE_ID = { find:"kFind", perim:"kPerim", missing:"kMissing", back:"kBack", word:"kWord" };
+  const COUNT_ID  = { find:"nFind", perim:"nPerim", missing:"nMissing", back:"nBack", word:"nWord" };
+  // three of each: fifteen questions, and the paper comes out at two pages
+  const DEFAULT_N = { find:3, perim:3, missing:3, back:3, word:3 };
+  const MAKE      = { find:makeFindQ, perim:makePerimQ, missing:makeMissingQ, back:makeBackQ, word:makeWordQ };
+  const SEC_LETTER = ["A","B","C","D","E","F","G","H"];
+
+  function sectionHTML(b, isKey, density){
+    const cols = KINDS[b.kind].cols[density] || 1;
+    return '<div class="section">'
+      + '<div class="secHead"><span class="secLetter">' + b.letter + '</span>'
+      + '<span class="secText">' + TR(KINDS[b.kind].head) + '</span>'
+      + (b.cont ? '<span class="secCont">' + TR(WS.cont) + '</span>' : "")
+      + '</div>'
+      + '<div class="qGrid" style="--cols:' + cols + '">'
+      + b.qs.map(q => cardHTML(q, isKey)).join("")
+      + '</div></div>';
+  }
+
+  /* Misconceptions worth a class argument.  Every one of these is a thing
+     students actually say. */
+  const REASONS = [
+    { q:{ en:"Kai finds the perimeter of an L-shape by adding the four numbers on the diagram. What has Kai missed, and what should he do first?",
+          ar:"يجد كاي محيط شكل حرف L بجمع الأعداد الأربعة المكتوبة على الرسم. ما الذي فاته؟ وماذا ينبغي أن يفعل أولًا؟",
+          fa:"کای محیط یک شکل L را با جمع کردن چهار عددی که روی شکل نوشته شده پیدا می‌کند. کای چه چیزی را از قلم انداخته و اول باید چه کار کند؟" },
+      a:"An L-shape has six sides, not four. Two of them have no number yet, so they have to be found first — each one is made of two of the sides that are labelled." },
+    { q:{ en:"Mia says a shape with a bigger area must have a bigger perimeter. Draw two rectangles that show she is wrong.",
+          ar:"تقول ميا إن الشكل ذا المساحة الأكبر لا بد أن يكون محيطه أكبر. ارسم مستطيلين يبيّنان أنها مخطئة.",
+          fa:"میا می‌گوید شکلی که مساحت بزرگ‌تری دارد حتماً محیط بزرگ‌تری هم دارد. دو مستطیل بکش که نشان دهد او اشتباه می‌کند." },
+      a:"For example 6 by 6 has area 36 and perimeter 24, while 1 by 20 has area 20 and perimeter 42 — a smaller area with a much bigger perimeter. Area and perimeter measure different things." },
+    { q:{ en:"Sam works out the perimeter of a rectangle by writing <bdi>8 × 5 = 40 cm</bdi>. What has Sam confused, and what is the perimeter really?",
+          ar:"يحسب سام محيط مستطيل فيكتب <bdi>8 × 5 = 40 cm</bdi>. ما الذي خلطه سام؟ وما المحيط الصحيح؟",
+          fa:"سام محیط یک مستطیل را با نوشتن <bdi>8 × 5 = 40 cm</bdi> حساب می‌کند. سام چه چیزی را اشتباه گرفته و محیط واقعاً چقدر است؟" },
+      a:"That is the area, not the perimeter. The perimeter is the distance around the edge: 8 + 5 + 8 + 5 = 26 cm." },
+    { q:{ en:"Two rectangles both have a perimeter of <bdi>20 cm</bdi>. Must they be the same shape? Draw two different ones to show what you mean.",
+          ar:"مستطيلان محيط كلٍّ منهما <bdi>20 cm</bdi>. هل يجب أن يكونا الشكل نفسه؟ ارسم مستطيلين مختلفين لتوضيح قصدك.",
+          fa:"محیط دو مستطیل هر دو <bdi>20 cm</bdi> است. آیا باید شکل یکسانی داشته باشند؟ دو مستطیل متفاوت بکش و منظورت را نشان بده." },
+      a:"No. 6 by 4 and 9 by 1 both have a perimeter of 20 cm and look nothing alike. The perimeter fixes the total distance around, not the shape." },
+    { q:{ en:"Jo says that cutting a notch out of a rectangle must make the perimeter smaller, because part of the shape has been removed. Is Jo right? Explain.",
+          ar:"يقول جو إن قطع تجويف من مستطيل لا بد أن يصغّر المحيط، لأن جزءًا من الشكل أُزيل. هل جو محق؟ اشرح.",
+          fa:"جو می‌گوید بریدن یک فرورفتگی از یک مستطیل حتماً محیط را کوچک‌تر می‌کند، چون بخشی از شکل برداشته شده است. آیا جو درست می‌گوید؟ توضیح بده." },
+      a:"No — the area gets smaller but the perimeter gets BIGGER. The notch takes away one piece of the edge and puts three back in its place, so the perimeter grows by twice the depth of the notch." },
+    { q:{ en:"Ana says you cannot find the perimeter of a shape when two of its sides have no numbers. Explain how you can, using a shape of your own.",
+          ar:"تقول آنا إنه لا يمكن إيجاد محيط شكل عندما لا يكون على ضلعين منه أعداد. اشرح كيف يمكن ذلك مستعينًا بشكل من عندك.",
+          fa:"آنا می‌گوید وقتی روی دو ضلع یک شکل عددی نوشته نشده نمی‌توان محیط را پیدا کرد. با شکلی از خودت توضیح بده که چطور می‌شود." },
+      a:"Every unlabelled side can be worked out from the ones that are labelled — an equal side copies its partner, a long side is the shorter ones added together, and a short side is the long one with the other pieces taken off." }
+  ];
+
+  function explainHTML(r, isKey){
+    return '<div class="explainBox">'
+      + '<div class="exHead">' + TR(WS.think) + '</div>'
+      + '<div class="exText">' + TR(r.q) + '</div>'
+      + (isKey ? '<div class="exKey">' + esc(r.a) + '</div>' : '<div class="ruled"></div>')
+      + '</div>';
+  }
+
+  function workHTML(){
+    return '<div class="workBox"><div class="exHead">' + TR(WS.working) + '</div><div class="ruled"></div></div>';
+  }
+
+  function ladderHTML(){
+    return '<div class="ladder"><span class="lop" style="font-weight:1000;color:#111827">' + TR(WS.remember) + '</span>'
+      + '<span class="lu">P = 2 × (<i>l</i> + <i>w</i>)</span><span class="lop">rectangle</span>'
+      + '<span class="lu">P = 4<i>s</i></span><span class="lop">square and rhombus</span>'
+      + '<span class="lu">P = <i>n</i> × <i>s</i></span><span class="lop">regular polygon</span>'
+      + '<span class="lop">everything else &mdash; add every side</span></div>';
+  }
+
+  /* ===================== BUILD ===================== */
+  function sectionCounts(){
+    const c = {};
+    KIND_IDS.forEach(k => {
+      c[k] = $(TOGGLE_ID[k]).checked ? Math.max(0, Math.min(40, parseInt($(COUNT_ID[k]).value, 10) || 0)) : 0;
+    });
+    return c;
+  }
+  const totalAsked = () => { const c = sectionCounts(); return KIND_IDS.reduce((t,k) => t + c[k], 0); };
+
+  const A4_CONTENT_PX = (() => {
+    const p = document.createElement("div");
+    p.style.cssText = "position:absolute;left:-10000px;top:0;height:281mm;";
+    document.body.appendChild(p);
+    const h = p.getBoundingClientRect().height;
+    p.remove();
+    return h;
+  })();
+
+  function buildPages(){
+    const level = $("levelSel").value;
+    const density = $("densitySel").value;
+    if(!allowedKeys().length) return { error:"Tick at least one family of shapes." };
+
+    const counts = sectionCounts();
+    const kinds = KIND_IDS.filter(k => counts[k] > 0);
+    if(!kinds.length) return { error:"Turn on at least one section and give it a number of questions." };
+    const count = kinds.reduce((t,k) => t + counts[k], 0);
+
+    // Every section climbs its OWN ladder, so a paper of 4 backwards
+    // questions and 20 perimeters still runs sweet → spicy inside each.
+    const byKind = {}, seen = {};
+    for(const k of kinds){
+      const n = counts[k], qs = [];
+      let prevKey = "";
+      for(let i=0;i<n;i++){
+        const lv = (level === "mixed")
+          ? ORDER[Math.min(ORDER.length-1, Math.floor(i / Math.max(1, n/ORDER.length)))]
+          : level;
+        let q = null, spare = null;
+        for(let t=0;t<26;t++){
+          const cand = MAKE[k](lv);
+          if(!cand) continue;
+          const id = k + "|" + (cand.sh ? cand.sh.key + "|" + JSON.stringify(cand.sh.edges.map(e => e.len)) : cand.text.en);
+          const skey = cand.sh ? cand.sh.key : "word";
+          // not the same question twice, and not the same SHAPE twice running —
+          // three squares in a row is a level ladder nobody reads as one
+          if(seen[id] || skey === prevKey){ spare = spare || cand; continue; }
+          seen[id] = 1; q = cand; break;
+        }
+        q = q || spare;
+        if(q){ qs.push(q); prevKey = q.sh ? q.sh.key : "word"; }
+      }
+      if(!qs.length) return { error:"Those shapes cannot make a “" + KINDS[k].head.en.split(".")[0] + "” question. Tick another family." };
+      byKind[k] = qs;
+    }
+
+    const groups = kinds.map(k => ({
+      kind:k,
+      qs:byKind[k].sort((x,y) => ORDER.indexOf(x.level) - ORDER.indexOf(y.level))
+    })).filter(g => g.qs.length);
+
+    let n = 1;
+    groups.forEach(g => g.qs.forEach(q => { q.idx = n++; if(q.sh) q.svg = figureSVG(q.sh); }));
+    groups.forEach((g,i) => { g.letter = SEC_LETTER[i]; });
+
+    const withReason = $("reasonToggle").checked;
+    const withLadder = $("formulaToggle").checked;
+    const reasons = REASONS.slice().sort(() => Math.random() - 0.5);
+
+    /* ---- pass 1: render EVERY card in a probe and read the real heights ----
+       A figure card is not a fixed height: a tall staircase next to a wide
+       rectangle can be twice its neighbour, so sampling one row and calling
+       it the row height drops a card under the page footer.  Every card is
+       measured, and the packer then walks REAL row heights.               */
+    function probeFor(isKey){
+      const html = groups.map(g => sectionHTML(
+        { kind:g.kind, letter:g.letter, cont:false, qs:g.qs }, isKey, density
+      )).join("")
+        // EVERY prompt, not just the one drawn: the tallest is what the page
+        // must reserve, and measuring only the random pick made the page count
+        // change from one press of Generate to the next
+        + (withReason ? REASONS.map(r => explainHTML(r, isKey)).join("") : "")
+        + (withLadder ? ladderHTML() : "");
+      const m = document.createElement("div");
+      m.className = "measure";
+      m.innerHTML = '<div class="sheet">' + html + '</div>';
+      document.body.appendChild(m);
+      return m;
+    }
+    // a key card can be taller than the blank one it mirrors, and both
+    // halves share one pagination, so measure both and keep the larger
+    const mS = probeFor(false), mK = probeFor(true);
+    const secsS = [...mS.querySelectorAll(".section")], secsK = [...mK.querySelectorAll(".section")];
+    const num = (x, d) => (isFinite(x) && x > 0 ? x : d);
+    const H = groups.map((g,i) => {
+      const sec = secsS[i], secK = secsK[i];
+      const headEl = sec.querySelector(".secHead");
+      const head = Math.max(headEl.getBoundingClientRect().height,
+                            secK.querySelector(".secHead").getBoundingClientRect().height)
+                 + num(parseFloat(getComputedStyle(headEl).marginBottom), 7);
+      const gridGap = num(parseFloat(getComputedStyle(sec.querySelector(".qGrid")).rowGap), 8);
+      const cS = [...sec.querySelectorAll(".qCard")], cK = [...secK.querySelectorAll(".qCard")];
+      const cols = KINDS[g.kind].cols[density] || 1;
+      // the taller of the blank card and the key card that mirrors it
+      const rowsOf = list => {
+        const card = list.map(c => Math.max(c.getBoundingClientRect().height, 40));
+        const out = [];
+        for(let j=0;j<card.length;j+=cols) out.push(Math.max.apply(null, card.slice(j, j+cols)) + gridGap);
+        return out;
+      };
+      /* The worksheet and the key are paginated SEPARATELY.  A key card runs
+         up to 138px taller than the blank one it mirrors (the reason line),
+         and one shared pagination made the worksheet reserve the KEY's height
+         — a hundred millimetres of every page left blank.  Both halves still
+         carry the same questions in the same order. */
+      return { head:num(head,24), rowsS:rowsOf(cS), rowsK:rowsOf(cK), cols,
+               gap:num(parseFloat(getComputedStyle(sec).marginBottom), 9) };
+    });
+    /* RESERVE A CONSTANT, DO NOT MEASURE.  The reasoning box stretches to
+       whatever the questions leave, so measuring the one prompt that happened
+       to be drawn made the page count wobble between 3 and 4 from one press
+       of Generate to the next.  A fixed reserve makes the layout the same
+       every time for the same section counts. */
+    const tallest = m => Math.max.apply(null,
+      [...m.querySelectorAll(".explainBox")].map(b => b.getBoundingClientRect().height).concat([0]));
+    const explainHS = withReason ? tallest(mS) + 6 : 0;
+    const explainHK = withReason ? tallest(mK) + 6 : 0;
+    const ladderH = withLadder ? mS.querySelector(".ladder").getBoundingClientRect().height + 8 : 0;
+    const sheetEl = mS.querySelector(".sheet");
+    const sheetPad = parseFloat(getComputedStyle(sheetEl).paddingTop)
+                   + parseFloat(getComputedStyle(sheetEl).paddingBottom);
+    mS.remove(); mK.remove();
+
+    const CHROME = 48 + 23;                        // page header + page footer
+    const room = e => Math.max(320, A4_CONTENT_PX - CHROME - sheetPad - e);
+
+    /* ---- pass 2: fill greedily, walking the real row heights ---- */
+    function pack(cap, which){
+      const pages = []; let page = [], used = 0;
+      const flush = () => { if(page.length) pages.push(page); page = []; used = 0; };
+      groups.forEach((g,gi) => {
+        const h = H[gi], rows = (which === "key" ? h.rowsK : h.rowsS);
+        let r = 0, first = true;
+        while(r < rows.length){
+          const lead = (pages.length === 0 && page.length === 0 ? ladderH : 0);
+          let room = cap - used - lead;
+          if(room < h.head + rows[r] + h.gap){
+            if(used === 0) room = cap - lead;       // nothing there yet — force it
+            else { flush(); room = cap; }
+          }
+          let spent = h.head + h.gap, taken = 0;
+          while(r + taken < rows.length && spent + rows[r+taken] <= room){
+            spent += rows[r+taken]; taken++;
+          }
+          if(taken === 0){ spent += rows[r]; taken = 1; }     // one row always goes
+          page.push({ type:"section", kind:g.kind, letter:g.letter, cont:!first,
+                      qs:g.qs.slice(r*h.cols, (r+taken)*h.cols) });
+          used += spent;
+          r += taken; first = false;
+        }
+      });
+      flush();
+      return pages;
+    }
+    /* GREEDY PACKING STRANDS THE LAST PAGE — 9, 9, 6, 1 with one word problem
+       alone on a sheet.  The page COUNT is already minimal, so the job is to
+       spread the rows so no page is nearly empty.  Rows only fit a page in
+       whole numbers, so tightening the cap does nothing until it crosses a
+       threshold; searching for the FIRST cap that still fits therefore just
+       returns greedy.  Instead every cap is tried and the packing with the
+       FULLEST emptiest page wins — a maximin, which is exactly "no page looks
+       abandoned". */
+    function pageHeight(p, which){
+      let t = 0;
+      p.forEach(b => {
+        if(b.type !== "section") return;
+        const gi = groups.findIndex(g => g.kind === b.kind);
+        if(gi < 0) return;
+        const h = H[gi], rows = (which === "key" ? h.rowsK : h.rowsS);
+        const avg = rows.reduce((x,y) => x+y, 0) / rows.length;
+        t += h.head + h.gap + Math.ceil(b.qs.length / h.cols) * avg;
+      });
+      return t;
+    }
+    function packBalanced(cap, which){
+      const first = pack(cap, which);
+      if(first.length < 2) return first;
+      let best = first, score = Math.min.apply(null, first.map(p => pageHeight(p, which)));
+      for(let f = 0.5; f <= 1.0; f += 0.02){
+        const p = pack(cap*f, which);
+        if(p.length > first.length) continue;
+        const sc = Math.min.apply(null, p.map(q => pageHeight(q, which)));
+        if(sc > score){ score = sc; best = p; }
+      }
+      return best;
+    }
+
+    /* A uniform cap cannot say "three rows here but stop before the word
+       problems there", so one question can still end up alone on the last
+       page.  This pulls whole rows back off the second-to-last page until the
+       last one carries its weight, refusing any move that would overflow. */
+    function deWidow(pages, which, cap){
+      for(let guard = 0; guard < 8 && pages.length > 1; guard++){
+        const hs = pages.map(p => pageHeight(p, which));
+        const avg = hs.reduce((x,y) => x+y, 0) / hs.length;
+        const last = pages.length - 1;
+        if(hs[last] >= avg*0.55) break;
+        const prev = pages[last-1];
+        const chunk = prev.filter(b => b.type === "section").pop();
+        if(!chunk) break;
+        const gi = groups.findIndex(g => g.kind === chunk.kind);
+        if(gi < 0) break;
+        const cols = H[gi].cols, rows = (which === "key" ? H[gi].rowsK : H[gi].rowsS);
+        const avgRow = rows.reduce((x,y) => x+y, 0) / rows.length;
+        if(pageHeight(pages[last], which) + avgRow + (chunk.qs.length > cols ? H[gi].head + H[gi].gap : 0) > cap) break;
+        if(chunk.qs.length <= cols){
+          prev.splice(prev.indexOf(chunk), 1);
+          pages[last].unshift(chunk);
+          if(!prev.filter(b => b.type === "section").length){ pages.splice(last-1, 1); }
+        } else {
+          const moved = chunk.qs.splice(chunk.qs.length - cols, cols);
+          pages[last].unshift({ type:"section", kind:chunk.kind, letter:chunk.letter, cont:true, qs:moved });
+        }
+      }
+      // a section's first chunk never says "continued", wherever it ended up
+      const seen = {};
+      pages.forEach(p => p.forEach(b => {
+        if(b.type !== "section") return;
+        b.cont = !!seen[b.kind];
+        seen[b.kind] = true;
+      }));
+      return pages;
+    }
+
+    function buildHalf(which, e){
+      // with no reasoning prompt the working box takes the slack, so reserve
+      // it a sensible minimum rather than letting it print as a sliver
+      const reserve = (!withReason && which === "sheet") ? 84 : e;
+      const cap = room(reserve);
+      const pages = deWidow(packBalanced(cap, which), which, cap);
+      if(withLadder && pages.length) pages[0].unshift({ type:"ladder" });
+      if(withReason) pages.forEach((p,i) => p.push({ type:"explain", reason:reasons[i % reasons.length] }));
+      else if(which === "sheet") pages.forEach(p => p.push({ type:"work" }));
+      return pages;
+    }
+    return { pagesS:buildHalf("sheet", explainHS), pagesK:buildHalf("key", explainHK),
+             level, density, count };
+  }
+
+  const LEVEL_LABEL = { sweet:"Sweet", mild:"Mild", medium:"Medium", spicy:"Spicy", mixed:"Mixed" };
+
+  function shapeLabel(){
+    const on = FAM_IDS.filter(famOn);
+    if(on.length === FAM_IDS.length) return "All shapes";
+    return on.map(id => FAMILIES[id].label).join(", ");
+  }
+
+  function pageHTML(blocks, meta, key, pageNo, total){
+    const body = blocks.map(b =>
+      b.type === "explain" ? explainHTML(b.reason, key)
+      : b.type === "work" ? workHTML()
+      : b.type === "ladder" ? ladderHTML()
+      : sectionHTML(b, key, meta.density)).join("");
+    return '<section class="page' + (key ? " isKey" : "") + '">'
+      + '<div class="pageHeader">'
+      +   '<div><div class="hdrTitle">Perimeter of Plane Shapes' + (key ? " &mdash; ANSWERS" : "") + '</div>'
+      +   '<div class="hdrSub">' + (key ? "Answer key &middot; " : "") + esc(shapeLabel()) + " &middot; " + esc(LEVEL_LABEL[meta.level]) + '</div></div>'
+      +   (key ? "" : '<div class="nameDate">'
+      +     '<div class="lineField"><span class="lineLabel">' + TR(WS.name) + '</span><span class="lineBox"></span></div>'
+      +     '<div class="lineField"><span class="lineLabel">' + TR(WS.date) + '</span><span class="lineBox"></span></div>'
+      +   '</div>')
+      + '</div>'
+      + '<div class="sheet">' + body + '</div>'
+      + '<div class="pageFooter"><span>Page ' + pageNo + ' of ' + total + '</span>'
+      +   '<span><a href="' + SITE + '">www.millsmathstools.au</a></span></div>'
+      + '</section>';
+  }
+
+  function generate(scroll){
+    const built = buildPages();
+    const out = $("out");
+    if(built.error){ out.innerHTML = '<p class="note warn">' + esc(built.error) + '</p>'; return; }
+    const key = $("keyToggle").checked;
+    const n = built.pagesS.length, m = key ? built.pagesK.length : 0;
+    const total = n + m;
+    let html = "";
+    built.pagesS.forEach((p,i) => { html += pageHTML(p, built, false, i+1, total); });
+    if(key) built.pagesK.forEach((p,i) => { html += pageHTML(p, built, true, n+i+1, total); });
+    out.innerHTML = html;
+    if(scroll && out.scrollIntoView) out.scrollIntoView({ behavior:"smooth", block:"start" });
+  }
+
+  /* ===================== WIRING ===================== */
+  function reset(){
+    $("levelSel").value = "mixed";
+    $("unitSel").value = "cm";
+    $("densitySel").value = "normal";
+    FAM_IDS.forEach(id => delete famTicked[id]);
+    KIND_IDS.forEach(k => { $(TOGGLE_ID[k]).checked = true; $(COUNT_ID[k]).value = DEFAULT_N[k]; });
+    $("mixUnitToggle").checked = false;
+    $("formulaToggle").checked = false;
+    $("reasonToggle").checked = true;
+    $("keyToggle").checked = true;
+    LANG = "en"; $("langSel").value = "en";
+    try{ localStorage.setItem("mmt-perim-ws-lang", "en"); }catch(_){ }
+    renderFamPicker();
+    syncSections();
+    $("out").innerHTML = "";
+  }
+
+  function syncSections(){
+    KIND_IDS.forEach(k => {
+      const on = $(TOGGLE_ID[k]).checked;
+      $(COUNT_ID[k]).disabled = !on;
+      const cardEl = document.querySelector('.secOpt[data-for="' + TOGGLE_ID[k] + '"]');
+      if(cardEl) cardEl.classList.toggle("off", !on);
+    });
+    const n = totalAsked();
+    const pill = $("totalPill");
+    pill.textContent = n === 1 ? "1 question" : n + " questions";
+    pill.classList.toggle("zero", n === 0);
+  }
+
+  KIND_IDS.forEach(k => {
+    $(TOGGLE_ID[k]).addEventListener("change", function(){
+      if(this.checked && (parseInt($(COUNT_ID[k]).value, 10) || 0) === 0) $(COUNT_ID[k]).value = DEFAULT_N[k];
+      syncSections();
+    });
+    $(COUNT_ID[k]).addEventListener("input", function(){
+      const v = parseInt(this.value, 10) || 0;
+      if(v === 0 && $(TOGGLE_ID[k]).checked) $(TOGGLE_ID[k]).checked = false;
+      else if(v > 0 && !$(TOGGLE_ID[k]).checked) $(TOGGLE_ID[k]).checked = true;
+      syncSections();
+    });
+  });
+
+  ["levelSel","unitSel","densitySel"].forEach(id => $(id).addEventListener("change", () => generate(false)));
+  ["mixUnitToggle","formulaToggle","reasonToggle","keyToggle"]
+    .forEach(id => $(id).addEventListener("change", () => generate(false)));
+  $("langSel").addEventListener("change", function(){
+    LANG = this.value;
+    try{ localStorage.setItem("mmt-perim-ws-lang", LANG); }catch(_){ }
+    generate(false);
+  });
+  $("genBtn").addEventListener("click", () => generate(true));
+  $("printBtn").addEventListener("click", () => window.print());
+  $("resetBtn").addEventListener("click", reset);
+  $("pairAllBtn").addEventListener("click", () => {
+    const turnOff = FAM_IDS.some(famOn);
+    FAM_IDS.forEach(id => { famTicked[id] = !turnOff; });
+    renderFamPicker();
+    generate(false);
+  });
+
+  $("langSel").value = LANG;
+  renderFamPicker();
+  syncSections();
+  generate(false);
+
+  // exposed for the headless harness only
+  window.__PWS = { SHAPES, FAMILIES, FAM_IDS, famTicked, poolFor, buildFigure, perimOf, whyOf,
+                   makeFindQ, makePerimQ, makeMissingQ, makeBackQ, makeWordQ, WORD, REASONS,
+                   buildPages, generate, signedArea, figureSVG, solveLabels, fitFigure, geomOf,
+                   setLang:v => { LANG = v; $("langSel").value = v; } };
+})();
+</script>
+</body>
+</html>

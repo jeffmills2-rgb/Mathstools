@@ -202,6 +202,14 @@ export const MMT_TOOLS = Object.freeze([
     notes: "Seeing a coefficient × factor as equal groups (lead-in to like terms). Added secure student-code login + achievements save (2026-07). masteryTopic 'number-groups'. (Page <title> was a copy-paste of the like-terms quiz — content is the groups quiz.)",
   },
   {
+    toolId: "perimeter-plane-shapes-quiz", title: "Perimeter of Plane Shapes — Student Quiz", category: "Quiz",
+    enabled: true, resultCollection: "achievements", richCollection: null,
+    achievementToolName: "perimeter-plane-shapes-student-quiz", topics: ["measurement-space"], stage: "Stage 4",
+    launchUrl: "/online-quizzes/stage-4/measurement-space/perimeter-plane-shapes.html",
+    supportsAdventureAttempts: false, supportsSkillBreakdown: false,
+    notes: "Sweet/Mild/Medium/Spicy. The LEVEL is how much of the teaching tool the student keeps: Sweet has the whole thing (click a ? to send the side across, trace builds the number sentence but never the total); Mild drops the sentence; Medium and Spicy drop the clicking too and the trace is a plain blue line. Medium is 30% missing-side questions, Spicy 50%. 15 questions, 10 at Spicy. Only the FIRST attempt scores; subtotals by kind in types[]. masteryTopic 'perimeter-plane-shapes'. Pairs with the interactive + worksheet creator.",
+  },
+  {
     toolId: "perimeter-area-rectangle-quiz", title: "Perimeter and Area of Rectangles — Student Quiz", category: "Quiz",
     enabled: true, resultCollection: "achievements", richCollection: null,
     achievementToolName: "perimeter-area-rectangle-student-quiz", topics: ["measurement-space"], stage: "Stage 4",
