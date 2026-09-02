@@ -950,6 +950,27 @@ window.MMT_TOOL_LINKS = {
 
   "MA4-LEN-C-01": [
     {
+      title: "Perimeter of Plane Shapes",
+      kind: "Teacher tool",
+      url: "/interactive-tools/stage-4/measurement-space/perimeter-plane-shapes/",
+      note: "The trace refuses to walk past an unlabelled side. Click a ? and the side it comes from flies across the figure \u2014 an equal side, the pieces of a longer one, or the room left over. 18 shapes over four groups, with a working pad for keeping track of what has been counted.",
+      tags: ["perimeter", "plane shapes", "missing side", "composite figures", "L-shape", "T-shape", "U-shape", "staircase", "cross", "regular polygons", "quadrilaterals", "triangles", "equal sides", "trace", "working pad"]
+    },
+    {
+      title: "Perimeter of Plane Shapes",
+      kind: "Student quiz",
+      url: "/online-quizzes/stage-4/measurement-space/perimeter-plane-shapes.html",
+      note: "Sweet to Spicy, where the level decides how much of the teaching tool the student keeps \u2014 Sweet hands over the whole thing, Spicy is read-only with half the questions asking for a missing side. Saves to the student dashboard.",
+      tags: ["quiz", "perimeter", "plane shapes", "missing side", "composite figures", "differentiation", "sweet mild medium spicy", "student dashboard", "working pad"]
+    },
+    {
+      title: "Perimeter of Plane Shapes",
+      kind: "Worksheet maker",
+      url: "/worksheet-creators/stage-4/measurement-space/perimeter-plane-shapes.html",
+      note: "Five sections in the order the sides come before the adding: find a missing side, perimeter with everything labelled, perimeter with sides missing, work backwards from the perimeter, then short contexts. Every figure to scale; the answer key gives the reason, not just the number. Trilingual.",
+      tags: ["worksheet generator", "printable", "perimeter", "plane shapes", "missing side", "work backwards", "composite figures", "equal sides", "answer key", "trilingual"]
+    },
+    {
       title: "Converting Units of Measurement",
       kind: "Worksheet maker",
       url: "/worksheet-creators/stage-4/measurement-space/unit-conversion.html",
