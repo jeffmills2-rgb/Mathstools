@@ -34,6 +34,25 @@
 > * **A `?` CANNOT BE DRAGGED IN.** It has to be found first, which keeps the
 >   sides-before-adding order intact even at the levels where the animation is
 >   switched off. Dropping a number outside the pad sends it back to the figure.
+> * **THE DROP TEST IS CENTRE TO CENTRE, NOT POINTER-IN-BOX** (teacher feedback
+>   2026-09-02). Asking whether the CURSOR is inside the target's rectangle is
+>   far too mean: two numbers can sit visibly on top of each other while the
+>   pointer is off the edge of both, and nothing happens. `nearestTile` measures
+>   centre to centre with a 58px reach — wide enough that a visible overlap
+>   always counts, tight enough that numbers merely parked side by side do not
+>   ask to be added — and a tile drag is judged from the DRAGGED TILE'S own
+>   centre, not from where the student grabbed it.
+> * **A SIDE CAN BE DROPPED STRAIGHT ONTO A NUMBER.** Landing it in a space
+>   first and dragging it again is a step nobody wants. If the pairing is then
+>   cancelled the newcomer is moved to a space of its own, so it is not left
+>   sitting on top of the number it did not join.
+> * **THE PAD IS TOGGLED ON SCREEN, NOT IN A MENU** (teacher feedback
+>   2026-09-02): a `.padOpenBtn` beside the figure in both hosts, plus a slim
+>   fold-away rail down the side of the panel. **FOLDING IS NOT SWITCHING OFF** —
+>   `collapse()` keeps every tile and every green side, because a student who
+>   wants a bigger figure for a moment must not lose their counting; only
+>   `enable(false)` (or a new figure) clears it. The tool starts folded, the
+>   quiz starts open.
 > * **THE HOST HANDS IT `SRC`** — `{edges, unit, busy, render}` — so nothing in
 >   the pad knows which page it is on. `render()` is how the green gets back
 >   onto a rebuilt board: the engine's `render()` ends with

@@ -68,6 +68,7 @@
 
     /* ---------- the question ---------- */
     .questionRow{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
+    .questionRow .padOpenBtn{ margin-left:auto; }
     .qLabel{ font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; font-weight:950; color:var(--muted); }
     .qBox{ font-weight:850; font-size:clamp(1rem,2vw,1.16rem); color:var(--line); }
     .qBox b{ color:var(--purple-dark); }
@@ -221,6 +222,35 @@
       background:#fff; border:1px solid var(--border); border-radius:22px; padding:11px 12px 10px;
     }
     .padCard[hidden]{ display:none; }
+
+    /* ---- folded away ----
+       The pad is toggled ON SCREEN, not buried in a settings menu (teacher
+       feedback 2026-09-02), and folding it keeps every number: a student who
+       wants a bigger figure for a moment must not lose their counting. */
+    .padCard.collapsed{ flex:0 0 46px; padding:8px 5px; }
+    .padCard.collapsed .padBody{ display:none; }
+    .padCard:not(.collapsed) .padRail{ display:none; }
+    .padBody{ display:flex; flex-direction:column; gap:8px; flex:1 1 auto; min-height:0; }
+    .padRail{
+      appearance:none; border:none; background:transparent; cursor:pointer;
+      flex:1 1 auto; display:flex; flex-direction:column; align-items:center; gap:9px;
+      padding:6px 0; font-family:inherit; font-weight:1000; font-size:.8rem;
+      color:var(--muted); border-radius:14px; transition:.14s ease;
+    }
+    .padRail:hover{ background:#f1f5f9; color:var(--line); }
+    .padRail .ico{ font-size:1rem; line-height:1; color:var(--purple); }
+    .padRail .txt{ writing-mode:vertical-rl; text-orientation:mixed; letter-spacing:.04em; white-space:nowrap; }
+
+    /* the on-screen switch that opens and closes it */
+    .padOpenBtn{
+      appearance:none; display:inline-flex; align-items:center; gap:7px;
+      border:1px solid var(--border); background:#fff; color:var(--line);
+      font-family:inherit; font-weight:900; font-size:.82rem; padding:7px 13px;
+      border-radius:11px; cursor:pointer; transition:.14s ease; white-space:nowrap;
+    }
+    .padOpenBtn:hover{ background:#f5f3ff; border-color:#c4b5fd; }
+    .padOpenBtn.on{ background:var(--purple); border-color:var(--purple); color:#fff; }
+    .padOpenBtn .ico{ font-size:.9rem; line-height:1; }
     .padHead{ display:flex; align-items:flex-start; justify-content:space-between; gap:8px; }
     .padHead strong{ display:block; font-size:.95rem; font-weight:1000; letter-spacing:-.02em; }
     .padHead small{ display:block; font-size:.7rem; font-weight:700; color:var(--muted); line-height:1.3; margin-top:2px; }
@@ -326,6 +356,10 @@
       .boardRow{ flex-direction:column; }
       .padCard{ flex:1 1 auto; }
       .padArea{ min-height:170px; }
+      /* stacked, a vertical rail makes no sense — it becomes a wide bar */
+      .padCard.collapsed{ flex:0 0 auto; padding:6px 10px; }
+      .padRail{ flex-direction:row; justify-content:center; padding:5px 0; }
+      .padRail .txt{ writing-mode:horizontal-tb; }
     }
 
 
@@ -410,6 +444,10 @@
         <div class="questionRow">
           <div class="qLabel">Question:</div>
           <div id="qBox" class="qBox">—</div>
+          <button class="padOpenBtn on" id="padOpenBtn" type="button" aria-pressed="true"
+                  title="A pad for counting the sides you have already used">
+            <span class="ico" aria-hidden="true">&#9707;</span><span>Working pad</span>
+          </button>
         </div>
 
         <div class="boardRow">
@@ -418,15 +456,23 @@
           </div>
 
           <aside class="padCard" id="padCard" aria-label="Working pad">
-            <div class="padHead">
-              <div><strong>Working pad</strong><small>Drag a side in. Drop one number on another to add them.</small></div>
-              <div class="padBtns">
-                <button class="padBtn" id="padUndo" type="button">Undo</button>
-                <button class="padBtn" id="padClear" type="button">Clear</button>
+            <button class="padRail" id="padRail" type="button" aria-expanded="true"
+                    title="Open the working pad">
+              <span class="ico" aria-hidden="true">&#9666;</span>
+              <span class="txt">Working pad</span>
+            </button>
+            <div class="padBody">
+              <div class="padHead">
+                <div><strong>Working pad</strong><small>Drag a side in. Drop one number on another to add them.</small></div>
+                <div class="padBtns">
+                  <button class="padBtn" id="padUndo" type="button">Undo</button>
+                  <button class="padBtn" id="padClear" type="button">Clear</button>
+                  <button class="padBtn" id="padHide" type="button" title="Fold the pad away">&#9656;</button>
+                </div>
               </div>
+              <div class="padArea" id="padArea"></div>
+              <div class="padFoot" id="padFoot"></div>
             </div>
-            <div class="padArea" id="padArea"></div>
-            <div class="padFoot" id="padFoot"></div>
           </aside>
         </div>
 
@@ -1151,7 +1197,7 @@
     editing:null,
     labelPos:{},
 
-    opt:{ missing:true, expr:true, formula:true, predict:false, edit:false, ticks:true, right:true, pad:false }
+    opt:{ missing:true, expr:true, formula:true, predict:false, edit:false, ticks:true, right:true }
   };
 
   /* ==================================================================
@@ -1583,6 +1629,8 @@
   }
 
 
+
+
   /* ==================================================================
      THE WORKING PAD
      -------------------------------------------------------------------
@@ -1605,7 +1653,8 @@
   const PAD = (function(){
     "use strict";
     let SRC = null;                       // { edges(), unit(), busy() }
-    let on = false;
+    let on = false;                       // the host offers the pad at all
+    let shut = true;                      // ...and the student has it folded away
     let tiles = [], nextId = 1, history = [];
     let dragging = null, fly = null, pending = null;
 
@@ -1640,7 +1689,7 @@
         n.classList.toggle("accounted", inPad);
         if (n.classList.contains("hitLine")){
           const e = edges()[i];
-          const can = on && e && e.known && !inPad;
+          const can = on && !shut && e && e.known && !inPad;
           n.classList.toggle("draggable", !!can);
           if (can) n.classList.remove("noHit");
         }
@@ -1745,16 +1794,29 @@
     function moveFly(x, y){ if (fly){ fly.style.left = x + "px"; fly.style.top = y + "px"; } }
     function killFly(){ if (fly){ fly.remove(); fly = null; } }
 
-    function tileUnder(x, y, notId){
+    /* WHICH NUMBER IS THIS ONE BEING DROPPED ON?
+       Asking whether the POINTER is inside the target's box is far too mean:
+       two tiles can sit visibly on top of each other while the cursor is off
+       the edge of both, and nothing registers.  So the test is centre to
+       centre, with a radius wider than a tile, and the NEAREST candidate
+       wins if more than one is in range. */
+    /* A tile is 56 tall and about 58-70 wide, so a 58px centre-to-centre reach
+       means the two must genuinely OVERLAP before they join -- which is the
+       mental model ("drop one on another") -- while still forgiving a cursor
+       that has wandered off the edge.  Wider than this and tiles merely
+       parked near each other start asking to be added. */
+    const SNAP = 58;
+    function nearestTile(cx, cy, notId, radius){
       const a = area(); if (!a) return null;
+      let best = null, bestD = (radius || SNAP);
       for (const n of a.querySelectorAll(".padTile")){
         const id = Number(n.dataset.tile);
         if (id === notId) continue;
         const r = n.getBoundingClientRect();
-        if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom)
-          return tiles.find(t => t.id === id) || null;
+        const d = Math.hypot(cx - (r.left + r.width/2), cy - (r.top + r.height/2));
+        if (d <= bestD){ bestD = d; best = tiles.find(t => t.id === id) || null; }
       }
-      return null;
+      return best;
     }
     function overPad(x, y){
       const a = area(); if (!a) return false;
@@ -1763,7 +1825,7 @@
     }
 
     function onDown(ev){
-      if (!on || !SRC || (SRC.busy && SRC.busy())) return;
+      if (!on || shut || !SRC || (SRC.busy && SRC.busy())) return;
       if (ev.button !== undefined && ev.button !== 0) return;
 
       const tileEl = ev.target.closest && ev.target.closest(".padTile");
@@ -1808,9 +1870,12 @@
       dragging.t.y = ev.clientY - r.top  - dragging.dy - 28;
       dragging.el.style.left = dragging.t.x + "px";
       dragging.el.style.top  = dragging.t.y + "px";
-      const over = tileUnder(ev.clientX, ev.clientY, dragging.t.id);
+      /* judged from the tile's own centre, not the cursor — what the student
+         sees is one number sitting on another, not where they grabbed it */
+      const dr = dragging.el.getBoundingClientRect();
+      const over = nearestTile(dr.left + dr.width/2, dr.top + dr.height/2, dragging.t.id);
       a.querySelectorAll(".padTile").forEach(n =>
-        n.classList.toggle("target", over && Number(n.dataset.tile) === over.id));
+        n.classList.toggle("target", !!over && Number(n.dataset.tile) === over.id));
     }
 
     function onUp(ev){
@@ -1824,9 +1889,13 @@
         killFly();
         if (overPad(ev.clientX, ev.clientY)){
           const r = a.getBoundingClientRect();
+          /* dropped ON a number?  Then it joins it there and then — having to
+             land in a space first and drag again is a step nobody wants */
+          const onto = nearestTile(ev.clientX, ev.clientY, null);
           snapshot();
-          addTile(d.v, [d.i], { x:ev.clientX - r.left - 29, y:ev.clientY - r.top - 28 });
+          const t = addTile(d.v, [d.i], { x:ev.clientX - r.left - 29, y:ev.clientY - r.top - 28 });
           renderTiles(); repaint();
+          if (onto) openSum(t, onto, true);
         }
         return;
       }
@@ -1841,7 +1910,8 @@
         renderTiles(); repaint();
         return;
       }
-      const over = tileUnder(ev.clientX, ev.clientY, d.t.id);
+      const dr2 = d.el.getBoundingClientRect();
+      const over = nearestTile(dr2.left + dr2.width/2, dr2.top + dr2.height/2, d.t.id);
       if (over) openSum(d.t, over);
       else { renderTiles(); paintFoot(); }
     }
@@ -1849,8 +1919,8 @@
     /* ---------------- the sum prompt ----------------
        The pad never adds for the student.  Two numbers only become one
        when somebody says what they make. */
-    function openSum(a, b){
-      pending = { a:a.id, b:b.id, want:num(a.v + b.v) };
+    function openSum(a, b, justArrived){
+      pending = { a:a.id, b:b.id, want:num(a.v + b.v), arrived:justArrived ? a.id : null };
       $p("padSumA").textContent = show(a.v);
       $p("padSumB").textContent = show(b.v);
       $p("padMsg").textContent = "";
@@ -1864,7 +1934,18 @@
       if (o) o.classList.remove("on");
       pending = null;
     }
-    function cancelSum(){ closeSum(); renderTiles(); paintFoot(); }
+    function cancelSum(){
+      /* a number that arrived from the figure straight onto another one is
+         left sitting on top of it if the pairing is called off, so it is
+         moved to a space of its own */
+      const stray = pending && pending.arrived;
+      closeSum();
+      if (stray){
+        const t = tiles.find(x => x.id === stray);
+        if (t){ const s2 = freeSpot(); t.x = s2.x; t.y = s2.y; }
+      }
+      renderTiles(); paintFoot();
+    }
     function submitSum(){
       if (!pending) return;
       const raw = String($p("padSumInput").value || "").trim();
@@ -1910,6 +1991,9 @@
       const bind = (id, fn, ev2) => { const n = $p(id); if (n) n.addEventListener(ev2 || "click", fn); };
       bind("padUndo", undo);
       bind("padClear", clear);
+      bind("padRail", () => collapse(false));
+      bind("padHide", () => collapse(true));
+      bind("padOpenBtn", () => collapse(!shut));
       bind("padSumGo", submitSum);
       bind("padSumNo", cancelSum);
       bind("padSumInput", ev => {
@@ -1924,11 +2008,34 @@
       on = !!v;
       const card = $p("padCard");
       if (card) card.hidden = !on;
-      if (!on) reset(); else renderTiles();
+      if (!on){ shut = true; reset(); } else renderTiles();
+      paintShut();
       repaint();
     }
 
-    return { init, enable, reset, paint, has, isOn:() => on,
+    /* FOLDING IS NOT SWITCHING OFF.  A student who wants a bigger figure for a
+       moment must not lose the numbers they have already counted, so the tiles
+       and the green sides both survive a fold — only the panel goes away. */
+    function collapse(v){
+      shut = !!v;
+      paintShut();
+      if (!shut) renderTiles();
+      repaint();
+    }
+    function paintShut(){
+      const card = $p("padCard");
+      if (card) card.classList.toggle("collapsed", shut);
+      const rail = $p("padRail");
+      if (rail) rail.setAttribute("aria-expanded", String(!shut));
+      const open = $p("padOpenBtn");
+      if (open){
+        open.setAttribute("aria-pressed", String(!shut));
+        open.classList.toggle("on", !shut);
+      }
+    }
+
+    return { init, enable, collapse, reset, paint, has,
+             isOn:() => on, isOpen:() => on && !shut,
              tiles:() => tiles.map(t => ({ v:t.v, src:t.src.slice() })),
              undo, clear,
              /* headless hooks */
@@ -2809,6 +2916,7 @@ ${window.MMTAuth ? window.MMTAuth.shareLine() : "Submit a screenshot or paste th
              busy:  () => S.walking || S.resolving,
              render: () => render() });
   PAD.enable(true);
+  PAD.collapse(false);          // the quiz opens with it out, ready to work in
 
   LEVEL_ORDER.forEach(k => {
     const el2 = document.querySelector(`.levelRow.lvl-${k} .levelSub`);
