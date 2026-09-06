@@ -28,31 +28,43 @@
 >   bubbles** is a toggle, because the same paper is wanted again once a class
 >   no longer needs the picture — with it off, every question becomes the table
 >   plus a ruled working box.
-> * **FIVE SECTIONS, AND THE SCAFFOLD COMES OFF ONE LAYER AT A TIME.**
->   **A Finish the sharing** hands over a paper where the FIRST ROUND IS ALREADY
->   DONE — the chunk is printed inside every bubble and the first table row is
->   filled in — so there is one decision left and a worked round to copy the
->   shape of. **B Share it out** is the real practice: empty bubbles, the
->   student's own chunks. **C Just the table** takes the bubbles away, and is
->   the section the whole paper exists for — that "in each" column is the digits
->   they will later write above a division bracket. **D Some left over.**
->   **E Use it.**
+> * **FOUR SECTIONS, AND THE PICTURE COMES OFF LAST** (teacher feedback
+>   2026-09-05). **A Share it out** — bubbles drawn, the student's own chunks.
+>   **B Some left over.** **C Draw your own bubbles** — an empty box and nothing
+>   else, sized from how the tool would have packed them; a student who can draw
+>   the groups themselves owns the model, and one who cannot has only been
+>   filling in someone else's. **D Use it.**
+>   A "Finish the sharing" section that pre-filled the first round WAS built and
+>   was REMOVED: reading a worked round and then continuing it is more to hold
+>   in your head at once, not less. A "just the table" section went with it —
+>   the table is now an option on every question instead of a section of its own.
+> * **THE DEFAULTS ARE BARE: ONLY THE BUBBLES** (teacher decision 2026-09-05).
+>   The table, the check sentence, the fewer-rounds prompt and the answer key
+>   all start OFF, so the plainest paper is the one a teacher gets without
+>   asking and each extra is a deliberate choice.
+> * **WHATEVER A PAGE LEAVES IS A QUESTION OF THE STUDENT'S OWN** — "Design your
+>   own question", with a sentence to fill in and ruled room. A "Working" box was
+>   there first and says nothing; writing your own division question is the same
+>   skill read backwards.
+> * **ONLY THE REMAINDER SECTION HAS REMAINDERS.** Sprinkling them through the
+>   spicy questions in other sections was tried and it contradicts the section's
+>   own heading — "share it out" with an r-box on the end is a different question.
 > * **THE KEY'S CHUNKING IS PLACE VALUE, BIGGEST FIRST** — 43 is 40 then 3, not
 >   20 + 20 + 3. `chunksOf()` is checked over every quotient to 600: the parts
 >   sum to the quotient, each is a single digit times a power of ten, and they
 >   descend. That is what makes the ladder the bridge to short division rather
 >   than just a tidy record.
-> * **SECTION A NEEDS A QUOTIENT THAT BREAKS IN TWO.** A bare 6 leaves nothing
->   to work out, so `makeQ("finish")` re-rolls until the quotient has at least
->   two place-value chunks, and the printed round is the first of them.
+> * **NOT THE SAME NUMBER OF GROUPS TWICE RUNNING.** Three ÷2 questions in a row
+>   is not a ladder, it is one question asked three times.
 > * **EVERY QUESTION ENDS WITH THE INVERSE** — `6 × ___ = 84` — so an answer can
 >   be tested rather than believed, and division and multiplication are written
 >   side by side. That is why the paper is cross-listed under MA3-MR-02.
-> * **A BUBBLE IS THE SAME SIZE ON EVERY QUESTION.** Letting the drawing fill
->   the card printed a ÷4 question with circles twice the size of a ÷6 one,
->   which reads as though the groups were different; the SVG is capped at
->   `per × 17mm`. Seven or more groups spans TWO columns, or there is no room to
->   write in them.
+> * **A BUBBLE IS 27mm ACROSS, AND THE SAME SIZE ON EVERY QUESTION** (teacher
+>   feedback 2026-09-05: young hands write large numbers and must not run out of
+>   room). The SVG is capped at `per × 27mm` — capping it is also what stops a
+>   ÷4 question printing circles twice the size of a ÷6 one, which reads as
+>   though the groups were different. Seven or more groups spans TWO columns, or
+>   there is no room to write in them.
 > * **THE CHECK LINE IS PINNED TO THE BOTTOM OF ITS CARD** (`.qFill` grows).
 >   Cards in a grid row are as tall as the tallest, so without it a short
 >   question printed a hole in its middle instead of writing room.
@@ -73,7 +85,12 @@
 >   6?" — that is a different picture and the bubbles do not model it. A check
 >   asserts every one of them asks how many in EACH group.
 > * **AR/FA WANT A FLUENT PROOFREAD**, as in the other creators.
-> * **Verified** through Playwright: 92 checks — every quotient to 600 chunked
+> * **Verified** through Playwright: 104 checks — the bare defaults and what
+>   Reset returns to, the draw-your-own space growing with the number of groups
+>   and drawing nothing for the student, every printed bubble measured between
+>   15mm and 25mm, a leftover box in the remainder section and nowhere else, no
+>   section asking the same number of groups twice running, no question ever
+>   printed as a bare sentence with nowhere to work, every quotient to 600 chunked
 >   and re-derived, 2500 generated questions satisfying d × q + r = dividend
 >   with their chunks summing to q and each section's own rules, the divisor
 >   tick-list obeyed, the key mirroring the worksheet question for question and
