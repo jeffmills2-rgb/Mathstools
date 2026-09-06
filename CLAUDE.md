@@ -31,9 +31,15 @@
 > * **FOUR SECTIONS, AND THE PICTURE COMES OFF LAST** (teacher feedback
 >   2026-09-05). **A Share it out** — bubbles drawn, the student's own chunks.
 >   **B Some left over.** **C Draw your own bubbles** — an empty box and nothing
->   else, sized from how the tool would have packed them; a student who can draw
->   the groups themselves owns the model, and one who cannot has only been
->   filling in someone else's. **D Use it.**
+>   else; a student who can draw the groups themselves owns the model, and one
+>   who cannot has only been filling in someone else's. **THE BOX GROWS TO FILL
+>   ITS CARD** (teacher feedback 2026-09-05) — cards in a grid row are as tall as
+>   the tallest, so a fixed height gave the ÷3 question visibly less room to draw
+>   in than the ÷5 beside it, and for a task that is entirely about drawing the
+>   space IS the question. Its MINIMUM still comes from how the tool would have
+>   packed them, so a ÷9 is never given less than three rows' worth, and the
+>   `.qFill` spacer is left off a draw card or the two would fight. **D Use it.**
+>   The paper opens on 4, 4, 2 and 2 questions.
 >   A "Finish the sharing" section that pre-filled the first round WAS built and
 >   was REMOVED: reading a worked round and then continuing it is more to hold
 >   in your head at once, not less. A "just the table" section went with it —
@@ -85,8 +91,9 @@
 >   6?" — that is a different picture and the bubbles do not model it. A check
 >   asserts every one of them asks how many in EACH group.
 > * **AR/FA WANT A FLUENT PROOFREAD**, as in the other creators.
-> * **Verified** through Playwright: 104 checks — the bare defaults and what
->   Reset returns to, the draw-your-own space growing with the number of groups
+> * **Verified** through Playwright: 106 checks — the bare defaults and the 4/4/2/2
+>   counts and what Reset returns to, every drawing space in a row being the same
+>   size and reaching the bottom of its card, the draw-your-own space growing with the number of groups
 >   and drawing nothing for the student, every printed bubble measured between
 >   15mm and 25mm, a leftover box in the remainder section and nowhere else, no
 >   section asking the same number of groups twice running, no question ever

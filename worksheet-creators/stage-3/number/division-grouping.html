@@ -216,9 +216,13 @@
     .leftBox{ font-size:12px; padding:5px 11px; }
     .leftBox .slot{ display:inline-block; width:52px; height:22px; border-bottom:1.6px solid #c2410c; }
 
+    /* The box GROWS to fill its card. Cards in a grid row are as tall as the
+       tallest, so a fixed height gave the ÷3 question visibly less room to draw
+       in than the ÷5 beside it — for a task that is entirely about drawing, the
+       space IS the question, and it has to be the same. */
     .drawBox{
       border:1.8px dashed #9aa3af; border-radius:14px; width:100%;
-      background:#fff;
+      background:#fff; flex:1 1 auto;
     }
     .designLine{
       display:flex; align-items:baseline; gap:8px; margin:5px 0 2px;
@@ -342,11 +346,11 @@
             </div>
             <div class="secOpt">
               <label class="sw"><input type="checkbox" id="kRem" checked /><span class="track"></span><span>B &nbsp;Some left over</span></label>
-              <div class="cntRow"><label for="nRem">How many</label><input id="nRem" type="number" min="0" max="40" value="3" /></div>
+              <div class="cntRow"><label for="nRem">How many</label><input id="nRem" type="number" min="0" max="40" value="4" /></div>
             </div>
             <div class="secOpt">
               <label class="sw"><input type="checkbox" id="kDraw" checked /><span class="track"></span><span>C &nbsp;Draw your own bubbles</span></label>
-              <div class="cntRow"><label for="nDraw">How many</label><input id="nDraw" type="number" min="0" max="40" value="3" /></div>
+              <div class="cntRow"><label for="nDraw">How many</label><input id="nDraw" type="number" min="0" max="40" value="2" /></div>
             </div>
             <div class="secOpt">
               <label class="sw"><input type="checkbox" id="kWord" checked /><span class="track"></span><span>D &nbsp;Use it</span></label>
@@ -621,10 +625,11 @@
   }
 
   function drawBoxHTML(d){
-    /* Room to draw the groups themselves — sized from how the tool would have
-       packed them, so a ÷9 question is given three rows' worth of space. */
+    /* Room to draw the groups themselves. The minimum comes from how the tool
+       would have packed them, so a ÷9 question is never given less than three
+       rows' worth; beyond that the box takes whatever the card has. */
     const rows = (PACK[d] || [d]).length;
-    return '<div class="drawBox" style="height:' + (rows * 27 + 14) + 'mm"></div>';
+    return '<div class="drawBox" style="min-height:' + (rows * 27 + 14) + 'mm"></div>';
   }
 
   function cardHTML(q, idx, opts){
@@ -659,8 +664,9 @@
     }
     /* Cards in one grid row are as tall as the tallest, so the check line is
        pushed to the BOTTOM — the spare room then reads as space to write in
-       rather than a hole in the middle of a question. */
-    body += '<div class="qFill"></div>';
+       rather than a hole in the middle of a question. On a draw-your-own card
+       the box itself does the growing, so a second spacer would only fight it. */
+    if(q.kind !== "draw") body += '<div class="qFill"></div>';
     if(opts.check){
       body += '<div class="qFoot"><span>' + TR1(WS.check) + '</span>'
             + '<span class="chk">' + q.divisor + ' × <span class="blank"></span>'
@@ -1039,7 +1045,7 @@
     $("densitySel").value = "roomy";
     LANG = "en"; $("langSel").value = "en";
     buildDivChips();
-    const def = { share:4, rem:3, draw:3, word:2 };
+    const def = { share:4, rem:4, draw:2, word:2 };
     KINDS.forEach(k => { $(TOGGLE[k]).checked = true; $(COUNT[k]).value = def[k]; });
     $("bubbleToggle").checked = true;
     ["ladderToggle","checkToggle","promptToggle","keyToggle"].forEach(id => $(id).checked = false);
