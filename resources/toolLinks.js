@@ -226,6 +226,13 @@ window.MMT_TOOL_LINKS = {
       tags: ["worksheet generator", "printable", "division", "sharing", "equal groups", "partial quotients", "chunking", "remainder", "short division", "answer key", "trilingual", "eald"]
     },
     {
+      title: "Division by Grouping \u2014 Student Quiz",
+      kind: "Student quiz",
+      url: "/online-quizzes/stage-3/number/division-grouping.html",
+      note: "Sweet to Spicy, where the level is how much of the teaching tool the student keeps \u2014 Sweet hands over the whole thing, Spicy takes the bubbles away. Saves to the student dashboard.",
+      tags: ["quiz", "division", "sharing", "equal groups", "partial quotients", "chunking", "remainder", "inverse", "word problems", "sweet mild medium spicy", "student code login", "teacher dashboard", "achievements"]
+    },
+    {
       title: "Factor Circles — Teacher Explore",
       kind: "Teacher tool",
       url: "/interactive-tools/stage-4/number/factor-circles/",
@@ -298,6 +305,14 @@ window.MMT_TOOL_LINKS = {
       url: "/worksheet-creators/stage-3/number/division-grouping.html",
       note: "Every question ends with the inverse check \u2014 6 \u00d7 ___ = 84 \u2014 so a division sentence and its multiplication are written side by side.",
       tags: ["worksheet generator", "printable", "number sentences", "division", "multiplication", "inverse", "equal groups", "partial quotients", "answer key"]
+    }
+    ,
+    {
+      title: "Division by Grouping \u2014 Student Quiz",
+      kind: "Student quiz",
+      url: "/online-quizzes/stage-3/number/division-grouping.html",
+      note: "A whole section of questions is the missing factor \u2014 6 \u00d7 ? = 84 \u2014 so a division sentence and its multiplication are answered as the same fact.",
+      tags: ["quiz", "number sentences", "division", "multiplication", "inverse", "missing factor", "equal groups", "remainder", "student code login", "teacher dashboard"]
     }
   ],
 

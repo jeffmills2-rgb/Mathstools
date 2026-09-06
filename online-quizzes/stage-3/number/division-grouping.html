@@ -1,0 +1,1396 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Division by Grouping — Student Quiz | Mills Maths Tools</title>
+
+  <style>
+    :root{
+      --bg:#f8fafc;
+      --card:#ffffff;
+      --ink:#0f172a;
+      --muted:#64748b;
+      --border:#e2e8f0;
+      --shadow:0 18px 45px rgba(15,23,42,.13);
+      --blue:#2563eb;
+      --blue-dark:#1d4ed8;
+      --green:#22c55e;
+      --green-dark:#15803d;
+      --purple:#7c3aed;
+      --purple-dark:#5b21b6;
+      --orange:#f97316;
+      --orange-dark:#c2410c;
+      --line:#334155;
+      --line-soft:#94a3b8;
+      --red:#dc2626;
+      --uiFont:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      --mathFont:"STIX Two Math","Cambria Math","Latin Modern Math","Times New Roman",Georgia,serif;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ min-height:100%; }
+    body{
+      margin:0;
+      font-family:var(--uiFont);
+      color:var(--ink);
+      background:
+        radial-gradient(circle at top left,rgba(37,99,235,.14),transparent 32rem),
+        radial-gradient(circle at top right,rgba(124,58,237,.12),transparent 34rem),
+        var(--bg);
+      overflow-x:hidden;
+    }
+    button,input,select{ font:inherit; }
+    [hidden]{ display:none !important; }
+
+    .app{ min-height:100dvh; display:flex; flex-direction:column; min-width:0; }
+
+    /* ---------- topbar (shared MMT shell) ---------- */
+    .mmtTopbar{
+      position:relative; z-index:40;
+      background:linear-gradient(135deg,#0f172a,#123b7a 55%,#2563eb);
+      color:white; padding:12px 22px;
+      display:grid; grid-template-columns:auto minmax(0,1fr) auto;
+      align-items:center; gap:14px;
+      box-shadow:0 10px 28px rgba(15,23,42,.22);
+    }
+    .mmtBrand{
+      display:flex; align-items:center; gap:12px; justify-self:start;
+      text-decoration:none; color:white; border-radius:14px; padding:6px 10px;
+      margin-left:-10px; font-weight:900; transition:background .18s ease,transform .18s ease;
+    }
+    .mmtBrand:hover{ background:rgba(255,255,255,.12); transform:translateY(-1px); }
+    .mmtBrandLogo{
+      width:40px; height:40px; border-radius:9px; background:white; color:#1d4ed8;
+      display:grid; place-items:center; font-weight:1000; letter-spacing:-.08em; flex:0 0 auto;
+    }
+    .mmtBrandText strong{ display:block; font-size:1.06rem; line-height:1; letter-spacing:-.03em; }
+    .mmtBrandText span{ display:block; font-size:.74rem; opacity:.82; font-weight:650; }
+    .mmtTopTitle{
+      font-weight:850; font-size:clamp(1rem,1.7vw,1.35rem); letter-spacing:-.04em;
+      text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .topActions{ justify-self:end; display:flex; align-items:center; gap:9px; flex-wrap:wrap; }
+
+    .btn{
+      appearance:none; border:1px solid rgba(255,255,255,.28); background:rgba(255,255,255,.14);
+      color:white; padding:10px 14px; border-radius:13px; font-weight:900; font-size:14.5px;
+      cursor:pointer; transition:.18s ease; user-select:none;
+    }
+    .btn:hover:not(:disabled){ background:rgba(255,255,255,.22); transform:translateY(-1px); }
+    .btn-primary{ background:white; color:#1d4ed8; border-color:white; }
+    .btn:disabled{ opacity:.45; cursor:not-allowed; transform:none; }
+    .lvlChip{
+      font-weight:950; font-size:.8rem; letter-spacing:.04em; text-transform:uppercase;
+      padding:6px 12px; border-radius:999px; color:#fff; white-space:nowrap;
+      background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.3);
+    }
+    .lvlChip.sweet{ background:linear-gradient(135deg,#4ade80,#16a34a); border-color:transparent; }
+    .lvlChip.mild{ background:linear-gradient(135deg,#facc15,#d97706); border-color:transparent; }
+    .lvlChip.medium{ background:linear-gradient(135deg,#fb923c,#ea580c); border-color:transparent; }
+    .lvlChip.spicy{ background:linear-gradient(135deg,#f87171,#b91c1c); border-color:transparent; }
+
+    .menuWrap{ position:relative; display:inline-flex; }
+    .dropMenu{ position:absolute; top:calc(100% + 8px); right:0; min-width:250px; background:#fff; color:var(--ink);
+      border:1px solid rgba(226,232,240,.95); border-radius:14px; box-shadow:0 18px 45px rgba(15,23,42,.22);
+      padding:7px; display:none; z-index:120; text-align:left; }
+    .dropMenu.open{ display:grid; gap:4px; }
+    .toolLink{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border-radius:10px;
+      color:var(--ink); text-decoration:none; font-weight:900; font-size:.9rem; }
+    .toolLink::after{ content:'\203A'; color:var(--blue); font-weight:1000; font-size:1.1rem; line-height:1; }
+    .toolLink:hover{ background:#eef2ff; color:#1d4ed8; }
+    .toolLink small{ display:block; font-weight:650; font-size:.74rem; color:var(--muted); }
+
+    /* ---------- progress ---------- */
+    .progressWrap{ height:8px; background:#e2e8f0; position:relative; z-index:30; }
+    .progressFill{ height:100%; width:0%; background:linear-gradient(90deg,var(--blue),var(--purple)); transition:width .35s ease; }
+
+    /* ---------- layout ---------- */
+    .layout{
+      flex:1; width:min(1420px,100%); margin:0 auto; padding:16px 20px 26px;
+      display:grid; grid-template-columns:minmax(0,1fr) clamp(258px,23vw,320px); gap:clamp(12px,1.5vw,18px);
+      align-items:start; min-width:0;
+    }
+    .stage{ display:flex; flex-direction:column; gap:12px; min-width:0; }
+    .side{ display:flex; flex-direction:column; gap:12px; position:sticky; top:14px; }
+    .card{ background:var(--card); border:1px solid var(--border); border-radius:18px; box-shadow:var(--shadow); padding:13px 16px; }
+
+    /* ---------- the question ---------- */
+    .qCard{
+      position:relative; background:var(--card); border:1px solid var(--border); border-radius:18px;
+      box-shadow:var(--shadow); padding:12px var(--eqPad,16px); min-height:78px;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .qCard.stacked{ flex-direction:column; gap:9px; padding:12px 14px; }
+    .qCard.stacked .qMeta{ position:static; transform:none; }
+    .qMeta{ position:absolute; right:16px; top:50%; transform:translateY(-50%); display:flex; align-items:center; gap:9px; }
+    .qCounter{ font-size:.76rem; font-weight:950; color:var(--muted); letter-spacing:.05em; text-transform:uppercase; white-space:nowrap; }
+    .kindTag{
+      font-size:.64rem; letter-spacing:.1em; font-weight:950; text-transform:uppercase;
+      color:var(--purple-dark); background:rgba(124,58,237,.11); border:1px solid rgba(124,58,237,.24);
+      padding:4px 8px; border-radius:999px; white-space:nowrap;
+    }
+    .sentence{
+      font-family:var(--mathFont); font-size:clamp(1.6rem,3.6vw,2.6rem); font-weight:700;
+      line-height:1; display:flex; align-items:baseline; gap:.2em; white-space:nowrap;
+    }
+    .sentence .dv{ color:var(--blue-dark); }
+    .sentence .ds{ color:var(--purple-dark); }
+    .sentence .ans{ color:var(--line-soft); min-width:.7em; display:inline-block; text-align:center; }
+    .sentence .ans.is-known{ color:var(--green-dark); animation:popIn .45s cubic-bezier(.34,1.5,.5,1); }
+    .sentence .rem{ font-size:.55em; color:var(--orange-dark); font-weight:700; margin-left:.22em; }
+    .wordText{ font-size:1.02rem; font-weight:850; color:var(--line); line-height:1.4; max-width:62ch; text-align:center; }
+    @keyframes popIn{ 0%{ transform:scale(.4); opacity:0;} 60%{ transform:scale(1.16);} 100%{ transform:scale(1); opacity:1;} }
+
+    .promptBar{
+      display:flex; align-items:center; gap:11px; padding:10px 14px; border-radius:14px;
+      background:linear-gradient(135deg,rgba(37,99,235,.10),rgba(124,58,237,.08));
+      border:1px solid rgba(37,99,235,.20); font-weight:850; color:var(--line); font-size:.97rem; line-height:1.35;
+      min-height:46px;
+    }
+    .promptBar .pIco{ font-size:1.2rem; line-height:1; flex:0 0 auto; }
+    .promptBar.is-warn{ background:linear-gradient(135deg,rgba(220,38,38,.12),rgba(249,115,22,.10)); border-color:rgba(220,38,38,.3); color:#991b1b; }
+    .promptBar.is-good{ background:linear-gradient(135deg,rgba(34,197,94,.14),rgba(37,99,235,.08)); border-color:rgba(21,128,61,.28); color:var(--green-dark); }
+
+    /* ---------- the bubbles ---------- */
+    .arenaCard{ background:var(--card); border:1px solid var(--border); border-radius:20px; box-shadow:var(--shadow); padding:14px 14px 11px; }
+    .arenaHead{ display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:10px; }
+    .groupsChip{
+      font-weight:950; font-size:.8rem; color:var(--purple-dark); background:rgba(124,58,237,.10);
+      border:1px solid rgba(124,58,237,.22); padding:5px 12px; border-radius:999px;
+    }
+    .arena{ display:flex; flex-direction:column; align-items:center; gap:clamp(4px,.9vh,11px); --bubMax:170px; }
+    .arenaRow{ display:flex; justify-content:center; gap:clamp(7px,1.2vw,16px); }
+    .bubbleWrap{ width:var(--bubMax); min-width:0; display:flex; flex-direction:column; align-items:center; gap:5px; }
+    .blob{
+      width:100%; aspect-ratio:1/1.04; border-radius:47%;
+      background:radial-gradient(circle at 30% 24%,#ffffff,#f1f5f9 46%,#e2e8f0);
+      border:2.5px solid #cbd5e1;
+      display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+      padding:8% 9%; position:relative; overflow:hidden;
+      transition:border-color .22s ease, box-shadow .22s ease, transform .22s ease;
+      box-shadow:inset 0 -10px 22px rgba(15,23,42,.05), 0 6px 16px rgba(15,23,42,.07);
+    }
+    .blob::before{
+      content:""; position:absolute; top:9%; left:16%; width:26%; height:15%;
+      border-radius:50%; background:rgba(255,255,255,.85); filter:blur(1px); pointer-events:none;
+    }
+    .blob.has-any{ border-color:var(--blue); box-shadow:inset 0 -10px 22px rgba(37,99,235,.07), 0 8px 20px rgba(37,99,235,.16); }
+    .blob.is-pop{ animation:blobPop .42s cubic-bezier(.34,1.5,.5,1); }
+    .blob.is-over{ border-color:var(--red); background:radial-gradient(circle at 30% 24%,#fff,#fee2e2 50%,#fecaca); }
+    .blob.is-full{ border-color:var(--green-dark); box-shadow:inset 0 -10px 22px rgba(34,197,94,.10), 0 10px 26px rgba(21,128,61,.20); }
+    @keyframes blobPop{ 0%{ transform:scale(1);} 42%{ transform:scale(1.09);} 100%{ transform:scale(1);} }
+
+    .bubTotal{ font-family:var(--mathFont); font-weight:700; line-height:1; color:var(--ink); font-size:clamp(1.5rem,3.8vw,2.7rem); }
+    .blob.is-empty .bubTotal{ color:var(--line-soft); }
+    .bubChips{ display:flex; flex-wrap:wrap; gap:3px; justify-content:center; align-items:center; max-width:100%; }
+    .bubChips .ch{
+      font-size:clamp(.56rem,.95vw,.72rem); font-weight:950; padding:1px 6px; border-radius:999px;
+      background:color-mix(in srgb,var(--c) 15%,#fff); color:var(--c); border:1px solid color-mix(in srgb,var(--c) 40%,#fff);
+      white-space:nowrap;
+    }
+    .bubChips .plus{ font-size:.62rem; font-weight:950; color:var(--line-soft); }
+    .bubLabel{ font-size:.68rem; font-weight:900; color:var(--muted); }
+
+    .tray{
+      margin:11px auto 0; max-width:480px; border:2px dashed var(--orange); border-radius:14px;
+      background:rgba(249,115,22,.07); padding:8px 13px; display:flex; align-items:center; gap:11px; justify-content:center;
+    }
+    .trayHead{ font-weight:950; font-size:.82rem; color:var(--orange-dark); }
+    .trayDots{ display:flex; gap:4px; color:var(--orange-dark); }
+    .trayDots i{ width:10px; height:10px; border-radius:50%; background:currentColor; display:block; }
+    .trayNum{ font-family:var(--mathFont); font-size:1.4rem; font-weight:700; color:var(--orange-dark); }
+
+    .noTool{
+      border:1.6px dashed var(--line-soft); border-radius:16px; padding:16px 18px; text-align:center;
+      font-weight:850; color:var(--muted); line-height:1.45; font-size:.96rem; background:rgba(148,163,184,.06);
+    }
+    .noTool b{ color:var(--line); }
+
+    /* ---------- sharing controls ---------- */
+    .entryCard{
+      background:var(--card); border:1px solid var(--border); border-radius:18px; box-shadow:var(--shadow);
+      padding:11px 15px; display:flex; flex-wrap:wrap; align-items:center; gap:9px;
+    }
+    .entryLab{ font-weight:900; font-size:.95rem; color:var(--line); }
+    .entryLab b{ color:var(--blue-dark); }
+    #chunkInput{
+      width:88px; text-align:center; font-family:var(--mathFont); font-size:1.65rem; font-weight:700;
+      padding:3px 6px; border:2.5px solid var(--blue); border-radius:12px; color:var(--blue-dark); background:#fff;
+    }
+    #chunkInput:focus-visible{ outline:none; box-shadow:0 0 0 5px rgba(37,99,235,.18); }
+    #chunkInput.is-bad{ border-color:var(--red); color:var(--red); animation:shake .34s; }
+    @keyframes shake{ 0%,100%{transform:translateX(0);} 20%{transform:translateX(-7px);} 40%{transform:translateX(7px);} 60%{transform:translateX(-4px);} 80%{transform:translateX(4px);} }
+    .goBtn{
+      appearance:none; border:none; background:linear-gradient(135deg,var(--blue),var(--purple));
+      color:#fff; padding:10px 16px; border-radius:13px; font-weight:950; font-size:.95rem; cursor:pointer;
+      box-shadow:0 9px 20px rgba(37,99,235,.28); transition:.18s ease; white-space:nowrap;
+    }
+    .goBtn:hover:not(:disabled){ transform:translateY(-1px); }
+    .goBtn:disabled{ opacity:.42; cursor:not-allowed; transform:none; box-shadow:none; }
+    .quickRow{ display:flex; gap:5px; flex-wrap:wrap; align-items:center; }
+    .quickRow .qLab{ font-size:.68rem; font-weight:900; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; }
+    .qBtn{
+      appearance:none; border:1.5px solid var(--border); background:#fff; color:var(--line);
+      min-width:36px; padding:6px 9px; border-radius:10px; font-weight:900; font-size:.9rem; cursor:pointer;
+      font-family:var(--mathFont); transition:.15s ease;
+    }
+    .qBtn:hover:not(:disabled){ border-color:var(--blue); background:#eef2ff; color:var(--blue-dark); }
+    .qBtn:disabled{ opacity:.4; cursor:not-allowed; }
+    .ghostBtn{
+      appearance:none; border:1.5px solid var(--border); background:#fff; color:var(--muted);
+      padding:8px 12px; border-radius:11px; font-weight:900; font-size:.83rem; cursor:pointer;
+    }
+    .ghostBtn:hover:not(:disabled){ border-color:var(--line-soft); color:var(--line); }
+    .ghostBtn:disabled{ opacity:.4; cursor:not-allowed; }
+    .spacer{ flex:1 1 auto; }
+
+    /* ---------- the answer ---------- */
+    .answerCard{
+      background:linear-gradient(140deg,#f0fdf4,#ffffff 60%);
+      border:2px solid rgba(21,128,61,.3); border-radius:18px; box-shadow:var(--shadow);
+      padding:12px 16px; display:flex; flex-wrap:wrap; align-items:center; gap:10px;
+    }
+    .answerCard.is-right{ border-color:var(--green-dark); background:linear-gradient(140deg,#dcfce7,#f0fdf4 60%); }
+    .answerCard.is-wrong{ border-color:var(--red); background:linear-gradient(140deg,#fef2f2,#fff 60%); }
+    .answerLab{ font-weight:950; font-size:1rem; color:var(--green-dark); }
+    .ansIn{
+      width:104px; text-align:center; font-family:var(--mathFont); font-size:1.8rem; font-weight:700;
+      padding:3px 6px; border:2.5px solid var(--green-dark); border-radius:13px; color:var(--ink); background:#fff;
+    }
+    .ansIn:focus-visible{ outline:none; box-shadow:0 0 0 5px rgba(34,197,94,.22); }
+    .ansIn:disabled{ background:#f8fafc; color:var(--green-dark); }
+    .remWrap{ display:flex; align-items:center; gap:7px; }
+    .remWrap .rLab{ font-weight:900; color:var(--orange-dark); font-size:.92rem; }
+    .ansIn.rem{ width:78px; border-color:var(--orange-dark); }
+    .checkBtn{
+      appearance:none; border:none; background:linear-gradient(135deg,var(--green),var(--green-dark));
+      color:#fff; padding:11px 20px; border-radius:13px; font-weight:950; font-size:1rem; cursor:pointer;
+      box-shadow:0 9px 20px rgba(21,128,61,.3); transition:.18s ease; white-space:nowrap;
+    }
+    .checkBtn:hover:not(:disabled){ transform:translateY(-1px); }
+    .checkBtn:disabled{ opacity:.42; cursor:not-allowed; transform:none; box-shadow:none; }
+    .fb{ font-weight:900; font-size:.95rem; flex:1 1 220px; min-width:180px; line-height:1.35; }
+    .fb.ok{ color:var(--green-dark); }
+    .fb.no{ color:var(--red); }
+
+    .navRow{ display:flex; gap:9px; flex-wrap:wrap; align-items:center; }
+    .navBtn{
+      appearance:none; border:1.5px solid var(--border); background:#fff; color:var(--line);
+      padding:10px 16px; border-radius:13px; font-weight:900; font-size:.92rem; cursor:pointer; transition:.15s ease;
+    }
+    .navBtn:hover:not(:disabled){ border-color:var(--blue); color:var(--blue-dark); background:#eef2ff; }
+    .navBtn:disabled{ opacity:.4; cursor:not-allowed; }
+    .navBtn.next{ background:var(--blue); border-color:var(--blue); color:#fff; }
+    .navBtn.next:hover:not(:disabled){ background:var(--blue-dark); color:#fff; }
+
+    /* ---------- side ---------- */
+    .tHead{ font-size:.66rem; letter-spacing:.14em; text-transform:uppercase; font-weight:950; color:var(--muted); }
+    .tBig{ font-family:var(--mathFont); font-size:2.6rem; font-weight:700; line-height:1; color:var(--blue-dark); margin:4px 0 2px; }
+    .tBig.is-over{ color:var(--red); }
+    .tOf{ font-size:.9rem; font-weight:850; color:var(--muted); margin-bottom:9px; }
+    .tOf b{ color:var(--line); font-family:var(--mathFont); font-size:1.1rem; }
+    .tBar{ position:relative; height:14px; border-radius:999px; background:#e2e8f0; overflow:hidden; }
+    .tFill{ position:absolute; inset:0 auto 0 0; width:0%; border-radius:999px;
+      background:linear-gradient(90deg,var(--blue),var(--purple)); transition:width .3s ease; }
+    .tFill.is-over{ background:linear-gradient(90deg,var(--red),#f97316); }
+    .tRows{ margin-top:10px; display:grid; gap:6px; }
+    .tRow{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; font-weight:850; font-size:.87rem; color:var(--muted); }
+    .tRow b{ font-family:var(--mathFont); font-size:1.22rem; font-weight:700; color:var(--line); }
+    .tRow.left b{ color:var(--orange-dark); }
+    .tRow.left.is-zero b{ color:var(--green-dark); }
+
+    .ladHead{ font-size:.66rem; letter-spacing:.14em; text-transform:uppercase; font-weight:950; color:var(--muted); margin-bottom:8px; }
+    .ladCols{ display:grid; grid-template-columns:auto 1fr auto; gap:4px 9px; align-items:center; }
+    .ladColHead{ font-size:.6rem; letter-spacing:.08em; text-transform:uppercase; font-weight:950; color:var(--line-soft); }
+    .ladN{
+      font-family:var(--mathFont); font-size:1.2rem; font-weight:700; text-align:center; min-width:2em;
+      padding:2px 6px; border-radius:8px; color:var(--c);
+      background:color-mix(in srgb,var(--c) 13%,#fff); border:1px solid color-mix(in srgb,var(--c) 34%,#fff);
+    }
+    .ladMult{ font-family:var(--mathFont); font-size:.98rem; font-weight:700; color:var(--line); white-space:nowrap; }
+    .ladLeft{ font-family:var(--mathFont); font-size:.98rem; font-weight:700; color:var(--orange-dark); text-align:right; }
+    .ladLeft.zero{ color:var(--green-dark); }
+    .ladEmpty{ font-size:.8rem; font-weight:750; color:var(--line-soft); line-height:1.45; }
+
+    /* ---------- fly layer ---------- */
+    #flyLayer{ position:fixed; inset:0; pointer-events:none; z-index:200; }
+    .flyTok{
+      position:absolute; left:0; top:0; will-change:transform,opacity;
+      font-family:var(--mathFont); font-size:1.55rem; font-weight:700; line-height:1;
+      padding:7px 13px; border-radius:13px; color:#fff; background:var(--c,#2563eb);
+      box-shadow:0 10px 26px rgba(15,23,42,.28); white-space:nowrap;
+    }
+    .flyTok.back{ background:var(--red); }
+
+    /* ---------- modals ---------- */
+    .overlay{
+      position:fixed; inset:0; background:rgba(15,23,42,.55); backdrop-filter:blur(3px);
+      z-index:900; display:none;
+    }
+    .overlay.on{ display:block; }
+    .modal{
+      position:fixed; left:50%; top:50%; transform:translate(-50%,-50%);
+      width:min(560px,calc(100% - 32px)); max-height:calc(100dvh - 40px); overflow:auto;
+      background:#fff; border-radius:22px; box-shadow:0 24px 70px rgba(15,23,42,.34);
+      z-index:901; display:none;
+    }
+    .modal.on{ display:block; }
+    .modalHead{ font-weight:1000; font-size:1.35rem; padding:20px 22px 6px; }
+    .modalBody{ padding:6px 22px 18px; }
+    .modalActions{ padding:0 22px 20px; display:flex; gap:9px; flex-wrap:wrap; }
+    .modalActions .btn{ border-color:var(--border); background:#fff; color:var(--line); }
+    .modalActions .btn:hover{ background:#f1f5f9; }
+    .modalActions .btn.primary{ background:var(--blue); border-color:var(--blue); color:#fff; }
+    .modalActions .btn.danger{ background:#fff; border-color:#fecaca; color:var(--red); }
+
+    .levelList{ display:grid; gap:9px; }
+    .levelRow{
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      border:2px solid var(--border); border-radius:16px; padding:11px 14px;
+    }
+    .levelRow.lvl-sweet{ border-color:#bbf7d0; }
+    .levelRow.lvl-mild{ border-color:#fde68a; }
+    .levelRow.lvl-medium{ border-color:#fed7aa; }
+    .levelRow.lvl-spicy{ border-color:#fecaca; }
+    .levelName{ font-weight:1000; font-size:1.06rem; }
+    .levelSub{ font-size:.83rem; font-weight:750; color:var(--muted); line-height:1.35; margin-top:2px; }
+    .levelLen{ font-size:.72rem; font-weight:900; color:var(--line-soft); margin-top:3px; }
+    .startBtn{
+      appearance:none; border:none; background:var(--blue); color:#fff; padding:10px 18px;
+      border-radius:12px; font-weight:950; cursor:pointer; white-space:nowrap;
+    }
+    .startBtn:hover{ background:var(--blue-dark); }
+
+    .certWrap{ display:flex; gap:14px; align-items:flex-start; }
+    .trophyBox{ font-size:2.4rem; line-height:1; }
+    .certText{ font-weight:950; font-size:1.05rem; line-height:1.35; }
+    .certSub{ font-weight:700; font-size:.84rem; color:var(--muted); margin-top:5px; }
+    .certBreakdown{ margin-top:10px; font-weight:850; font-size:.95rem; line-height:1.6; color:var(--line); }
+
+    .mmtFooter{
+      padding:10px 12px; text-align:center; font-weight:900; font-size:.84rem; color:var(--muted);
+    }
+    .mmtFooter a{ color:var(--blue); text-decoration:none; font-weight:950; }
+
+    /* ---------- responsive ---------- */
+    @media (max-width:1180px){
+      .mmtBrandText{ display:none; }
+      .btn{ padding:9px 12px; font-size:13.5px; }
+      .tBig{ font-size:2.2rem; }
+      .layout{ padding:14px 13px 22px; }
+    }
+    @media (max-width:960px){
+      .layout{ grid-template-columns:minmax(0,1fr); }
+      .side{ position:static; display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); }
+    }
+    @media (max-width:720px){
+      .mmtTopbar{ grid-template-columns:1fr; justify-items:center; gap:9px; }
+      .topActions{ justify-self:center; }
+      .dropMenu{ right:auto; left:50%; transform:translateX(-50%); }
+      .qCard{ flex-direction:column; gap:9px; }
+      .qMeta{ position:static; transform:none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="mmtTopbar">
+      <a class="mmtBrand" href="https://www.millsmathstools.au" target="_self" aria-label="Back to Mills Maths Tools">
+        <span class="mmtBrandLogo" aria-hidden="true">MMT</span>
+        <span class="mmtBrandText"><strong>MMT</strong><span>Mills Maths Tools</span></span>
+      </a>
+      <div class="mmtTopTitle">Division by Grouping &mdash; Student Quiz</div>
+      <div class="topActions">
+        <span id="mmtAuthSlot"></span>
+        <span class="lvlChip" id="levelChip" hidden>Sweet</span>
+        <div class="menuWrap">
+          <button class="btn" id="toolsBtn" type="button" aria-haspopup="true" aria-expanded="false">Tools &#9662;</button>
+          <nav class="dropMenu" id="toolsMenu" aria-label="Related tools">
+            <a class="toolLink" href="/interactive-tools/stage-3/number/division-grouping-bubbles/">Teaching Tool<small>The whole-class version of these bubbles</small></a>
+            <a class="toolLink" href="/worksheet-creators/stage-3/number/division-grouping.html">Worksheet Creator<small>Printable A4 practice, with the bubbles drawn</small></a>
+          </nav>
+        </div>
+        <button class="btn btn-primary" id="menuBtn" type="button">Change level</button>
+      </div>
+    </header>
+
+    <div class="progressWrap"><div class="progressFill" id="progressFill"></div></div>
+
+    <main class="layout">
+      <section class="stage">
+
+        <div class="qCard" id="qCard">
+          <div class="sentence" id="sentence" aria-live="polite">
+            <span class="dv" id="sDividend">84</span><span>&divide;</span><span class="ds" id="sDivisor">6</span><span>=</span><span class="ans" id="sAnswer">?</span>
+          </div>
+          <div class="wordText" id="wordText" hidden></div>
+          <div class="qMeta">
+            <span class="kindTag" id="kindTag">Share it out</span>
+            <span class="qCounter" id="qCounter">Question 1 / 12</span>
+          </div>
+        </div>
+
+        <div class="promptBar" id="promptBar">
+          <span class="pIco" id="promptIco" aria-hidden="true">&#128173;</span>
+          <span id="promptText">Choose a level to begin.</span>
+        </div>
+
+        <div class="arenaCard" id="arenaCard">
+          <div class="arenaHead"><span class="groupsChip" id="groupsChip">6 equal groups</span></div>
+          <div class="arena" id="arena"></div>
+          <div class="tray" id="tray" hidden>
+            <span class="trayHead">Left over</span>
+            <span class="trayDots" id="trayDots"></span>
+            <span class="trayNum" id="trayNum">0</span>
+          </div>
+        </div>
+
+        <div class="noTool" id="noTool" hidden>
+          No bubbles at this level &mdash; work it out in your head or on paper, then write the answer below.
+        </div>
+
+        <div class="entryCard" id="entryCard">
+          <label class="entryLab" for="chunkInput">Put in <b>each</b> group:</label>
+          <input id="chunkInput" type="text" inputmode="numeric" autocomplete="off" aria-label="How many in each group" />
+          <button class="goBtn" id="goBtn" type="button">Share it out</button>
+          <div class="quickRow" id="quickRow"><span class="qLab">Quick</span></div>
+          <span class="spacer"></span>
+          <button class="ghostBtn" id="undoBtn" type="button" disabled>Undo round</button>
+          <button class="ghostBtn" id="clearBtn" type="button" disabled>Start again</button>
+        </div>
+
+        <div class="answerCard" id="answerCard">
+          <span class="answerLab" id="answerLab">How many in each group?</span>
+          <input id="ansInput" class="ansIn" type="text" inputmode="numeric" autocomplete="off" aria-label="Your answer" />
+          <span class="remWrap" id="remWrap" hidden>
+            <span class="rLab">remainder</span>
+            <input id="remInput" class="ansIn rem" type="text" inputmode="numeric" autocomplete="off" aria-label="Remainder" />
+          </span>
+          <button class="checkBtn" id="checkBtn" type="button">Check</button>
+          <span class="fb" id="feedback"></span>
+        </div>
+
+        <div class="navRow">
+          <button class="navBtn" id="prevBtn" type="button">&larr; Previous</button>
+          <button class="navBtn next" id="nextBtn" type="button">Next &rarr;</button>
+          <span class="spacer"></span>
+          <span id="submitSlot"></span>
+        </div>
+      </section>
+
+      <aside class="side" id="sideCol">
+        <div class="card" id="tallyCard">
+          <div class="tHead">Shared out so far</div>
+          <div class="tBig" id="tallyNum">0</div>
+          <div class="tOf">out of <b id="tallyTarget">84</b></div>
+          <div class="tBar"><div class="tFill" id="tallyFill"></div></div>
+          <div class="tRows">
+            <div class="tRow"><span>In each group</span><b id="tallyEach">0</b></div>
+            <div class="tRow left" id="tallyLeftRow"><span id="tallyLeftLab">Still to share</span><b id="tallyLeft">84</b></div>
+          </div>
+        </div>
+
+        <div class="card" id="ladderCard">
+          <div class="ladHead">How you got there</div>
+          <div class="ladCols" id="ladderRows"></div>
+          <div class="ladEmpty" id="ladderEmpty">Each round you share out is recorded here.</div>
+        </div>
+
+        <div class="card" id="scoreCard">
+          <div class="tHead">Your quiz</div>
+          <div class="tRows" style="margin-top:8px">
+            <div class="tRow"><span>Answered</span><b id="statDone">0</b></div>
+            <div class="tRow"><span>Right first go</span><b id="statScore">0</b></div>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <div class="mmtFooter">
+      This tool and more can be found at <a href="https://www.millsmathstools.au">www.millsmathstools.au</a>
+    </div>
+  </div>
+
+  <div id="flyLayer" aria-hidden="true"></div>
+  <div id="overlay" class="overlay"></div>
+
+  <div id="levelModal" class="modal" role="dialog" aria-modal="true" aria-label="Choose your level">
+    <div class="modalHead">Choose your level</div>
+    <div class="modalBody">
+      <p style="margin:0 0 12px;font-weight:800;color:var(--muted);line-height:1.45;font-size:.92rem">
+        The level decides how much of the teaching tool you keep. Every level asks you to
+        <b>share a number into equal groups</b> &mdash; the higher levels just hand you less help.
+      </p>
+      <div class="levelList" id="levelList"></div>
+    </div>
+  </div>
+
+  <div id="certModal" class="modal" role="dialog" aria-modal="true" aria-label="Certificate">
+    <div class="modalHead">Certificate</div>
+    <div class="modalBody">
+      <div class="certWrap">
+        <div class="trophyBox">&#127942;</div>
+        <div>
+          <div id="certLine1" class="certText">You completed the quiz.</div>
+          <div class="certSub">Screenshot this and paste into Google Classroom.</div>
+          <div id="certBreakdown" class="certBreakdown"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modalActions">
+      <button id="copyBtn" class="btn primary">Copy to clipboard</button>
+      <button id="closeCertBtn" class="btn">Close</button>
+      <button id="backToMenuBtn" class="btn danger">Back to level menu</button>
+    </div>
+  </div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ==================================================================
+     DIVISION BY GROUPING — STUDENT QUIZ
+     -------------------------------------------------------------------
+     THE ENGINE IS THE TEACHING TOOL'S, COPIED. Everything above the quiz
+     layer — the packing, the fly-and-duplicate round, the derived
+     totals, the overshoot bounce — behaves exactly as it does in
+     `interactive-tools/stage-3/number/division-grouping-bubbles/`, so a
+     bubble does the same thing in the quiz as it did on the board. Fix
+     one and port it to the other.
+
+     THE LEVEL IS HOW MUCH OF THE TOOL THE STUDENT KEEPS. Sweet hands
+     over the whole thing; Mild drops the table; Medium drops the
+     running total as well, so the student has to keep track of how much
+     they have shared; Spicy takes the bubbles away entirely. The
+     numbers climb alongside, but the withdrawal of the model is the
+     real ladder.
+
+     THE ANSWER IS NEVER PRINTED. The teaching tool announces "Each group
+     has 14" when the sharing completes; here that is replaced, the
+     number sentence keeps its "?" until the question is marked, and the
+     check sentence and ladder total are gone. The bubbles themselves
+     still show what is in a group — that is the METHOD, not a spoiler.
+     ================================================================== */
+
+  const $ = id => document.getElementById(id);
+  const COLOURS = ["#2563eb","#16a34a","#7c3aed","#ea580c","#db2777","#0891b2"];
+  const PACK = { 2:[2], 3:[3], 4:[2,2], 5:[3,2], 6:[3,3], 7:[4,3], 8:[4,4], 9:[3,3,3], 10:[5,5] };
+
+  const randInt = (lo,hi) => lo + Math.floor(Math.random()*(hi-lo+1));
+  const pick = a => a[Math.floor(Math.random()*a.length)];
+  const sleep = ms => new Promise(r => setTimeout(r, Math.max(0,ms)));
+
+  /* ---------------------------------------------------------- levels */
+  const LEVELS = {
+    sweet: {
+      name:"Sweet", len:12, digits:2, divisors:[2,3,4,5],
+      tool:true, tally:true, ladder:true, chips:true,
+      mix:{ share:8, left:4 },
+      sub:"Two-digit numbers shared into 2 to 5 groups. You keep the whole tool: the bubbles, the running total and the table."
+    },
+    mild: {
+      name:"Mild", len:12, digits:2, divisors:[2,3,4,5,6,7,8,9,10],
+      tool:true, tally:true, ladder:false, chips:true,
+      mix:{ share:6, left:3, inverse:3 },
+      sub:"Two-digit numbers, up to 10 groups. The bubbles and the running total stay; the table that records your rounds is gone."
+    },
+    medium: {
+      name:"Medium", len:12, digits:3, divisors:[2,3,4,5,6,7,8,9,10],
+      tool:true, tally:false, ladder:false, chips:false,
+      mix:{ share:5, left:3, inverse:2, word:2 },
+      sub:"Three-digit numbers. The bubbles fill, but nothing counts for you — you keep track of how much you have shared."
+    },
+    spicy: {
+      name:"Spicy", len:10, digits:3, divisors:[2,3,4,5,6,7,8,9,10],
+      tool:false, tally:false, ladder:false, chips:false,
+      mix:{ share:3, rem:4, inverse:1, word:2 },
+      sub:"Three-digit numbers and remainders, and no bubbles at all. Head or paper."
+    }
+  };
+  const ORDER = ["sweet","mild","medium","spicy"];
+
+  const KIND_LABEL = {
+    share:"Share it out", left:"How many left?", rem:"With a remainder",
+    inverse:"Missing factor", word:"Use it"
+  };
+  const KIND_ORDER = ["share","left","rem","inverse","word"];
+
+  /* Word problems — all SHARING questions, because that is what the
+     bubbles model. "How many groups of 6?" is a different picture. */
+  const WORDS = [
+    "{n} pencils are shared equally between {d} students. How many pencils does each student get?",
+    "{n} students are put into {d} equal teams. How many students are in each team?",
+    "The canteen has {n} muffins to pack into {d} equal trays. How many muffins go on each tray?",
+    "{n} books are shared equally across {d} shelves. How many books are on each shelf?",
+    "A club has {n} players to split into {d} equal teams. How many players are in each team?",
+    "{n} eggs are packed into {d} equal boxes. How many eggs are in each box?"
+  ];
+
+  /* ==================================================================
+     QUESTION BANK
+     ================================================================== */
+  function chunksOf(q){
+    const out = []; let left = q, unit = 1;
+    while(unit * 10 <= left) unit *= 10;
+    while(left > 0){
+      const part = Math.floor(left / unit) * unit;
+      if(part > 0){ out.push(part); left -= part; }
+      unit = Math.floor(unit / 10) || 1;
+      if(unit < 1) break;
+    }
+    return out;
+  }
+
+  function numbers(cfg, wantRem){
+    for(let t=0;t<80;t++){
+      const d = pick(cfg.divisors);
+      const q = cfg.digits === 2
+        ? randInt(Math.max(3, Math.ceil(20/d)), Math.max(4, Math.floor(99/d)))
+        : randInt(Math.ceil(100/d), Math.floor(600/d));
+      if(q < 2) continue;
+      const rem = wantRem ? randInt(1, d-1) : 0;
+      const dividend = d*q + rem;
+      if(dividend < 20 || dividend > 999) continue;
+      return { dividend, divisor:d, quotient:q, rem, chunks:chunksOf(q) };
+    }
+    return { dividend:84, divisor:6, quotient:14, rem:0, chunks:[10,4] };
+  }
+
+  function buildBank(cfg){
+    const wanted = [];
+    KIND_ORDER.forEach(k => { for(let i=0;i<(cfg.mix[k]||0);i++) wanted.push(k); });
+    const bank = [], seen = {};
+    let prevD = 0;
+    wanted.forEach(kind => {
+      let q = null, spare = null;
+      for(let t=0;t<40;t++){
+        const n = numbers(cfg, kind === "rem");
+        const id = n.dividend + "/" + n.divisor;
+        if(seen[id] || n.divisor === prevD){ spare = spare || n; continue; }
+        seen[id] = 1; q = n; break;
+      }
+      q = q || spare || numbers(cfg, kind === "rem");
+      prevD = q.divisor;
+      const item = Object.assign({ kind, tries:0, done:false, correct:false, rounds:[] }, q);
+      if(kind === "left"){
+        /* one round is already shared out, and the question is what is LEFT.
+           The running total would simply answer it, so it is withheld. */
+        item.given = item.chunks[0] || 1;
+        if(item.given >= item.quotient) item.given = Math.max(1, item.quotient - 1);
+      }
+      if(kind === "word") item.word = pick(WORDS);
+      bank.push(item);
+    });
+    /* ORDERING. Two things want to be spread out: the KIND, so a level is not
+       four blocks of the same question, and the NUMBER OF GROUPS, because ÷5
+       twice running is one question asked twice. Generating in a good order
+       does not survive a later shuffle, so both are done here, in one pass:
+       at each step take the question that breaks a divisor run first, a kind
+       run second, and otherwise whichever number of groups is commonest in
+       what is left — that is what stops a divisor being stranded at the end. */
+    const pool = bank.slice(), out = [];
+    let lastD = null, lastK = null;
+    while(pool.length){
+      const freq = {};
+      pool.forEach(q => freq[q.divisor] = (freq[q.divisor] || 0) + 1);
+      let best = 0, bestScore = -1;
+      pool.forEach((q,i) => {
+        const score = (q.divisor !== lastD ? 400 : 0)
+                    + (q.kind !== lastK ? 200 : 0)
+                    + freq[q.divisor];
+        if(score > bestScore){ bestScore = score; best = i; }
+      });
+      const q = pool.splice(best,1)[0];
+      out.push(q); lastD = q.divisor; lastK = q.kind;
+    }
+    return out;
+  }
+
+  /* ==================================================================
+     STATE
+     ================================================================== */
+  const S = {
+    levelKey:null, cfg:null, bank:[], idx:0, quizDone:false,
+    /* the tool's own state, for the question on screen */
+    dividend:84, divisor:6, rounds:[], busy:false, token:0, settled:false,
+    speed:260
+  };
+
+  const bubbleValue = i => S.rounds.reduce((s,r)=> s + (r.landed > i ? r.n : 0), 0);
+  const usedTotal   = () => S.rounds.reduce((s,r)=> s + r.n * r.landed, 0);
+  const eachTotal   = () => S.rounds.reduce((s,r)=> s + (r.landed >= S.divisor ? r.n : 0), 0);
+  const remaining   = () => S.dividend - usedTotal();
+  const cur = () => S.bank[S.idx];
+
+  /* what the CURRENT question hands the student */
+  function toolOn(){
+    const q = cur(); if(!q || !S.cfg) return false;
+    return S.cfg.tool && q.kind !== "left";
+  }
+  function tallyOn(){
+    const q = cur(); if(!q || !S.cfg) return false;
+    /* on a "how many are left?" question the running total IS the answer */
+    return S.cfg.tally && q.kind !== "left" && toolOn();
+  }
+  function ladderOn(){ return !!(S.cfg && S.cfg.ladder && toolOn()); }
+
+  /* ==================================================================
+     THE BOARD
+     ================================================================== */
+  function buildArena(){
+    const arena = $("arena");
+    arena.innerHTML = "";
+    const rows = PACK[S.divisor] || [S.divisor];
+    let i = 0;
+    rows.forEach(n => {
+      const row = document.createElement("div");
+      row.className = "arenaRow";
+      for(let k=0;k<n;k++,i++){
+        const wrap = document.createElement("div");
+        wrap.className = "bubbleWrap";
+        wrap.innerHTML =
+          '<div class="blob" id="blob'+i+'">' +
+            '<div class="bubTotal" id="tot'+i+'">0</div>' +
+            '<div class="bubChips" id="chips'+i+'"></div>' +
+          '</div>' +
+          '<div class="bubLabel">Group '+(i+1)+'</div>';
+        row.appendChild(wrap);
+      }
+      arena.appendChild(row);
+    });
+    $("groupsChip").textContent = S.divisor + " equal groups";
+    fitArena(true);
+  }
+
+  let fitSig = "";
+  function fitArena(force){
+    const arena = $("arena");
+    const rows = (PACK[S.divisor] || [S.divisor]).length;
+    const sig = [S.divisor, rows, window.innerWidth, window.innerHeight, $("tray").hidden].join("|");
+    if(!force && sig === fitSig) return;
+    fitSig = sig;
+    if(rows === 1 || window.innerWidth <= 960){
+      arena.style.setProperty("--bubMax", rows === 1 ? "170px" : Math.round(280/rows) + "px");
+      return;
+    }
+    const fits = px => {
+      arena.style.setProperty("--bubMax", px + "px");
+      const r = $("answerCard").getBoundingClientRect();
+      return (r.bottom + window.scrollY) <= window.innerHeight - 10;
+    };
+    let lo = 58, hi = 170, best = lo;
+    while(lo <= hi){
+      const mid = (lo + hi) >> 1;
+      if(fits(mid)){ best = mid; lo = mid + 1; } else { hi = mid - 1; }
+    }
+    arena.style.setProperty("--bubMax", best + "px");
+  }
+
+  function paintBubbles(){
+    const done = S.settled;
+    for(let i=0;i<S.divisor;i++){
+      const blob = $("blob"+i); if(!blob) continue;
+      const v = bubbleValue(i);
+      blob.classList.toggle("has-any", v > 0);
+      blob.classList.toggle("is-empty", v === 0);
+      blob.classList.toggle("is-full", done && v > 0);
+      $("tot"+i).textContent = v;
+      const parts = S.rounds.filter(r => r.landed > i);
+      const box = $("chips"+i);
+      if(parts.length > 1){
+        box.innerHTML = parts.map(r => '<span class="ch" style="--c:'+r.colour+'">'+r.n+'</span>')
+                             .join('<span class="plus">+</span>');
+        box.hidden = false;
+      } else { box.innerHTML = ""; box.hidden = true; }
+    }
+  }
+
+  function paintTally(over){
+    const on = tallyOn();
+    $("tallyCard").hidden = !on;
+    if(!on) return;
+    const used = usedTotal(), left = S.dividend - used;
+    $("tallyNum").textContent = used;
+    $("tallyTarget").textContent = S.dividend;
+    $("tallyEach").textContent = eachTotal();
+    if(left < 0){ $("tallyLeftLab").textContent = "Too many by"; $("tallyLeft").textContent = -left; }
+    else { $("tallyLeftLab").textContent = "Still to share"; $("tallyLeft").textContent = left; }
+    $("tallyLeftRow").classList.toggle("is-zero", left === 0);
+    const pct = Math.max(0, Math.min(100, (used / S.dividend) * 100));
+    $("tallyFill").style.width = pct + "%";
+    $("tallyFill").classList.toggle("is-over", !!over);
+    $("tallyNum").classList.toggle("is-over", !!over);
+  }
+
+  function paintLadder(){
+    const on = ladderOn();
+    $("ladderCard").hidden = !on;
+    if(!on) return;
+    const rows = $("ladderRows"), empty = $("ladderEmpty");
+    const full = S.rounds.filter(r => r.landed >= S.divisor);
+    rows.innerHTML = "";
+    if(!full.length){ empty.hidden = false; return; }
+    empty.hidden = true;
+    [["In each",""],["So that shares out",""],["Left","r"]].forEach(([t,cls]) => {
+      const h = document.createElement("div");
+      h.className = "ladColHead"; h.textContent = t;
+      if(cls === "r") h.style.textAlign = "right";
+      rows.appendChild(h);
+    });
+    let run = 0;
+    full.forEach(r => {
+      run += r.n * S.divisor;
+      const a = document.createElement("div");
+      a.className = "ladN"; a.style.setProperty("--c", r.colour); a.textContent = r.n;
+      const b = document.createElement("div");
+      b.className = "ladMult"; b.textContent = S.divisor + " × " + r.n + " = " + (S.divisor*r.n);
+      const c = document.createElement("div");
+      const lft = S.dividend - run;
+      c.className = "ladLeft" + (lft === 0 ? " zero" : ""); c.textContent = lft;
+      rows.appendChild(a); rows.appendChild(b); rows.appendChild(c);
+    });
+  }
+
+  function paintTray(){
+    const q = cur();
+    const show = S.settled && q && q.rem > 0;
+    $("tray").hidden = !show;
+    if(!show) return;
+    $("trayNum").textContent = q.rem;
+    let h = ""; for(let k=0;k<q.rem;k++) h += "<i></i>";
+    $("trayDots").innerHTML = h;
+  }
+
+  /* THE NUMBER SENTENCE KEEPS ITS "?" UNTIL THE QUESTION IS MARKED. */
+  function paintSentence(){
+    const q = cur(); if(!q) return;
+    $("sDividend").textContent = q.dividend;
+    $("sDivisor").textContent = q.divisor;
+    const ans = $("sAnswer");
+    if(S.settled){
+      ans.className = "ans is-known";
+      ans.innerHTML = q.quotient + (q.rem ? '<span class="rem">r ' + q.rem + '</span>' : '');
+    } else { ans.className = "ans"; ans.textContent = "?"; }
+    const word = q.kind === "word";
+    $("wordText").hidden = !word;
+    $("sentence").hidden = false;
+    if(word){
+      $("wordText").textContent = q.word.replace("{n}", q.dividend).replace("{d}", q.divisor);
+    }
+    $("kindTag").textContent = KIND_LABEL[q.kind];
+    $("qCounter").textContent = "Question " + (S.idx+1) + " / " + S.bank.length;
+    fitQCard(false);
+  }
+
+  let eqSig = "";
+  function fitQCard(force){
+    const q = cur(); if(!q) return;
+    const card = $("qCard"), meta = $("qMeta") || document.querySelector(".qMeta");
+    const sig = [q.dividend, q.divisor, S.settled, S.idx, window.innerWidth].join("|");
+    if(!force && sig === eqSig) return;
+    eqSig = sig;
+    card.classList.remove("stacked");
+    const pad = Math.ceil(meta.getBoundingClientRect().width) + 20;
+    card.style.setProperty("--eqPad", pad + "px");
+    const wide = q.kind === "word" ? $("wordText").scrollWidth : $("sentence").scrollWidth;
+    if(wide > card.clientWidth - 2 * pad){
+      card.classList.add("stacked");
+      card.style.removeProperty("--eqPad");
+    }
+  }
+
+  function setPrompt(kind, html){
+    const bar = $("promptBar");
+    bar.classList.toggle("is-warn", kind === "warn");
+    bar.classList.toggle("is-good", kind === "good");
+    $("promptIco").innerHTML = kind === "warn" ? "&#9888;" : kind === "good" ? "&#127881;" : "&#128173;";
+    $("promptText").innerHTML = html;
+  }
+
+  /* The teaching tool announces the answer when the sharing completes.
+     Here it must not — the student writes it. */
+  function defaultPrompt(){
+    const q = cur(); if(!q) return;
+    if(S.settled){
+      setPrompt(q.correct ? "good" : "think",
+        q.correct ? "That is right." : "The answer is shown above &mdash; look at how it works, then move on.");
+      return;
+    }
+    if(q.kind === "left"){
+      setPrompt("think", "<b>" + q.given + "</b> has already gone into <b>each</b> of the " + q.divisor +
+        " groups. How many are still to share?");
+      return;
+    }
+    if(q.kind === "inverse"){
+      setPrompt("think", "What do you multiply <b>" + q.divisor + "</b> by to make <b>" + q.dividend + "</b>?" +
+        (toolOn() ? " Share it out if that helps." : ""));
+      return;
+    }
+    if(!toolOn()){
+      setPrompt("think", "Work out how many go in <b>each</b> group, then write it below.");
+      return;
+    }
+    if(!S.rounds.length){
+      setPrompt("think", "Share <b>" + q.dividend + "</b> into the " + q.divisor +
+        " groups, a bit at a time. Then write how many are in each group.");
+    } else if(remaining() === 0){
+      setPrompt("think", "It is all shared out. Now write how many are in <b>each</b> group.");
+    } else if(remaining() < S.divisor && q.rem){
+      setPrompt("think", "There are <b>" + remaining() + "</b> left and not enough for one each. Write the answer and the remainder.");
+    } else {
+      setPrompt("think", "<b>" + usedTotal() + "</b> shared out, <b>" + remaining() + "</b> still to go.");
+    }
+  }
+
+  function paintQuick(){
+    const row = $("quickRow");
+    row.innerHTML = '<span class="qLab">Quick</span>';
+    if(!S.cfg || !S.cfg.chips){ row.hidden = true; return; }
+    row.hidden = false;
+    [1,2,5,10,20,25,40,50,100].forEach(n => {
+      if(n * S.divisor > S.dividend) return;
+      const b = document.createElement("button");
+      b.className = "qBtn"; b.type = "button"; b.textContent = n;
+      b.addEventListener("click", () => { $("chunkInput").value = n; submitChunk(); });
+      row.appendChild(b);
+    });
+  }
+
+  function setBusy(on){
+    S.busy = on;
+    const locked = on || S.settled || !toolOn();
+    $("goBtn").disabled = locked;
+    $("chunkInput").disabled = locked;
+    document.querySelectorAll("#quickRow .qBtn").forEach(b => b.disabled = locked);
+    $("undoBtn").disabled = locked || !S.rounds.length;
+    $("clearBtn").disabled = locked || !S.rounds.length;
+    $("checkBtn").disabled = on || S.settled;
+    $("ansInput").disabled = on || S.settled;
+    $("remInput").disabled = on || S.settled;
+    $("prevBtn").disabled = on || S.idx === 0;
+    $("nextBtn").disabled = on;
+  }
+
+  function paintAll(over){
+    paintSentence(); paintBubbles(); paintTally(over); paintLadder(); paintTray();
+    const on = toolOn();
+    $("arenaCard").hidden = !on;
+    $("entryCard").hidden = !on || (cur() && cur().kind === "left" ? true : false);
+    $("noTool").hidden = on;
+    if(cur() && cur().kind === "left"){
+      /* the picture is there to be read, not driven */
+      $("arenaCard").hidden = false;
+      $("entryCard").hidden = true;
+      $("noTool").hidden = true;
+    }
+    $("scoreCard").hidden = false;
+    setBusy(S.busy);
+    fitArena(false);
+  }
+
+  /* ==================================================================
+     THE ROUND — the teaching tool's, unchanged
+     ================================================================== */
+  function centreOf(el){
+    const r = el.getBoundingClientRect();
+    return { x:r.left + r.width/2, y:r.top + r.height/2 };
+  }
+
+  function flyToken(from, to, text, colour, back){
+    return new Promise(resolve => {
+      const dur = Math.max(1, S.speed);
+      if(dur <= 1){ resolve(); return; }
+      const el = document.createElement("div");
+      el.className = "flyTok" + (back ? " back" : "");
+      el.style.setProperty("--c", colour);
+      el.textContent = text;
+      $("flyLayer").appendChild(el);
+      el.style.transform = "translate(" + from.x + "px," + from.y + "px) translate(-50%,-50%) scale(.55)";
+      el.style.opacity = "0";
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        el.style.transition = "transform " + dur + "ms cubic-bezier(.34,1.28,.5,1), opacity 150ms linear";
+        el.style.transform = "translate(" + to.x + "px," + to.y + "px) translate(-50%,-50%) scale(1)";
+        el.style.opacity = "1";
+      }));
+      setTimeout(() => { el.remove(); resolve(); }, dur + 40);
+    });
+  }
+
+  function popBlob(i, over){
+    const b = $("blob"+i); if(!b) return;
+    b.classList.toggle("is-over", !!over);
+    b.classList.remove("is-pop"); void b.offsetWidth; b.classList.add("is-pop");
+  }
+
+  async function runRound(n){
+    if(S.busy || S.settled || !toolOn()) return;
+    const tok = ++S.token;
+    setBusy(true);
+    const overshoot = (usedTotal() + n * S.divisor) > S.dividend;
+    const colour = COLOURS[S.rounds.length % COLOURS.length];
+    const r = { n:n, landed:0, colour:colour };
+    S.rounds.push(r);
+
+    const source = centreOf($("chunkInput"));
+    for(let i=0;i<S.divisor;i++){
+      const from = (i === 0) ? source : centreOf($("blob0"));
+      await flyToken(from, centreOf($("blob"+i)), String(n), colour, false);
+      if(tok !== S.token) return;
+      r.landed = i + 1;
+      const over = usedTotal() > S.dividend;
+      popBlob(i, over);
+      paintBubbles(); paintTally(over);
+      await sleep(S.speed <= 1 ? 0 : 70);
+      if(tok !== S.token) return;
+    }
+
+    if(overshoot){
+      setPrompt("warn", S.divisor + " &times; " + n + " = <b>" + (S.divisor*n) +
+        "</b>, and that is past <b>" + S.dividend + "</b>. Try a smaller number.");
+      await sleep(S.speed <= 1 ? 0 : 850);
+      if(tok !== S.token) return;
+      const home = centreOf($("chunkInput"));
+      const flights = [];
+      for(let i=S.divisor-1;i>=0;i--) flights.push(flyToken(centreOf($("blob"+i)), home, String(n), colour, true));
+      await Promise.all(flights);
+      if(tok !== S.token) return;
+      S.rounds.pop();
+      for(let i=0;i<S.divisor;i++){ const b = $("blob"+i); if(b) b.classList.remove("is-over"); }
+      paintAll(false);
+      setPrompt("warn", "Nothing kept &mdash; only <b>" + remaining() + "</b> is left to share.");
+      $("chunkInput").value = "";
+      setBusy(false); $("chunkInput").focus();
+      return;
+    }
+
+    paintAll(false); defaultPrompt();
+    $("chunkInput").value = "";
+    setBusy(false);
+    if(remaining() === 0 || remaining() < S.divisor) $("ansInput").focus();
+    else $("chunkInput").focus();
+  }
+
+  function submitChunk(){
+    if(S.busy || S.settled || !toolOn()) return;
+    const raw = ($("chunkInput").value || "").trim();
+    const bad = msg => {
+      const el = $("chunkInput");
+      el.classList.remove("is-bad"); void el.offsetWidth; el.classList.add("is-bad");
+      setTimeout(() => el.classList.remove("is-bad"), 600);
+      setPrompt("warn", msg);
+    };
+    if(!/^\d+$/.test(raw)) return bad("Type a whole number, then press Enter.");
+    const n = parseInt(raw, 10);
+    if(n < 1) return bad("It has to be at least 1 &mdash; every group gets the same.");
+    if(n > 999) return bad("That is far too big.");
+    runRound(n);
+  }
+
+  function undoRound(){
+    if(S.busy || S.settled || !S.rounds.length) return;
+    S.token++;
+    S.rounds.pop();
+    for(let i=0;i<S.divisor;i++){ const b = $("blob"+i); if(b) b.classList.remove("is-over"); }
+    paintAll(false); defaultPrompt(); $("chunkInput").focus();
+  }
+  function clearRounds(){
+    if(S.busy || S.settled) return;
+    S.token++; S.rounds = [];
+    for(let i=0;i<S.divisor;i++){ const b = $("blob"+i); if(b) b.classList.remove("is-over"); }
+    paintAll(false); defaultPrompt();
+  }
+
+  /* ==================================================================
+     THE QUIZ LAYER
+     ================================================================== */
+  function wantedAnswer(q){
+    if(q.kind === "left") return { a: q.dividend - q.divisor * q.given, r:null };
+    if(q.kind === "rem")  return { a: q.quotient, r: q.rem };
+    return { a: q.quotient, r:null };
+  }
+
+  function answerLabel(q){
+    if(q.kind === "left") return "Still to share:";
+    if(q.kind === "inverse") return q.divisor + " × ? =  " + q.dividend + ", so ? is";
+    return "How many in each group?";
+  }
+
+  function showQuestion(){
+    const q = cur(); if(!q) return;
+    S.token++;
+    S.dividend = q.dividend; S.divisor = q.divisor;
+    S.rounds = q.rounds || [];
+    S.settled = q.done;
+    S.busy = false;
+
+    buildArena();
+
+    if(q.kind === "left" && !S.rounds.length){
+      /* the round is already done for them; the question is what is left */
+      S.rounds = [{ n:q.given, landed:q.divisor, colour:COLOURS[0] }];
+      q.rounds = S.rounds;
+    }
+
+    $("answerLab").textContent = answerLabel(q);
+    $("remWrap").hidden = q.kind !== "rem";
+    $("ansInput").value = q.ansGiven != null ? q.ansGiven : "";
+    $("remInput").value = q.remGiven != null ? q.remGiven : "";
+    $("answerCard").classList.toggle("is-right", q.done && q.correct);
+    $("answerCard").classList.toggle("is-wrong", q.done && !q.correct);
+    $("feedback").textContent = q.done ? settledLine(q) : "";
+    $("feedback").className = "fb" + (q.done ? (q.correct ? " ok" : " no") : "");
+    $("chunkInput").value = "";
+
+    paintQuick();
+    paintAll(false);
+    defaultPrompt();
+    paintScore();
+    $("progressFill").style.width = Math.round((S.idx / S.bank.length) * 100) + "%";
+    $("prevBtn").disabled = S.idx === 0;
+    $("nextBtn").textContent = (S.idx === S.bank.length - 1) ? "Finish ✓" : "Next →";
+    if(!q.done) setTimeout(() => { try{ (toolOn() ? $("chunkInput") : $("ansInput")).focus(); }catch(e){} }, 40);
+  }
+
+  function settledLine(q){
+    const w = wantedAnswer(q);
+    if(q.correct) return "Right" + (q.tries > 1 ? " — second go, so it does not score." : " first go ✓");
+    return "The answer was " + w.a + (w.r != null ? " remainder " + w.r : "") + ".";
+  }
+
+  function checkAnswer(){
+    const q = cur();
+    if(!q || S.settled || S.busy) return;
+    const raw = ($("ansInput").value || "").trim();
+    if(!/^\d+$/.test(raw)){
+      $("feedback").className = "fb no";
+      $("feedback").textContent = "Type a whole number.";
+      return;
+    }
+    const w = wantedAnswer(q);
+    let ok = parseInt(raw,10) === w.a;
+    let remRaw = null;
+    if(w.r != null){
+      remRaw = ($("remInput").value || "").trim();
+      if(!/^\d+$/.test(remRaw)){
+        $("feedback").className = "fb no";
+        $("feedback").textContent = "Write the remainder too.";
+        return;
+      }
+      ok = ok && parseInt(remRaw,10) === w.r;
+    }
+    q.tries++;
+    q.ansGiven = raw; q.remGiven = remRaw;
+
+    if(ok){
+      q.done = true; q.correct = true; S.settled = true;
+      $("answerCard").classList.remove("is-wrong");
+      $("answerCard").classList.add("is-right");
+      $("feedback").className = "fb ok";
+      $("feedback").textContent = settledLine(q);
+      paintAll(false); defaultPrompt();
+    } else {
+      $("answerCard").classList.add("is-wrong");
+      $("feedback").className = "fb no";
+      /* A wrong answer stays editable so the student finishes the thinking,
+         but only the FIRST attempt scores. */
+      $("feedback").textContent = q.tries === 1
+        ? "Not yet — have another look. Only your first go scores, so keep thinking."
+        : "Still not right. Press Next to see the answer and move on.";
+      $("ansInput").focus(); $("ansInput").select();
+    }
+    paintScore();
+    setBusy(false);
+  }
+
+  function revealAndSettle(){
+    const q = cur();
+    if(!q || q.done) return;
+    if(q.tries > 0){ q.done = true; q.correct = false; }
+    S.settled = q.done;
+  }
+
+  function paintScore(){
+    const s = scores();
+    $("statDone").textContent = s.done;
+    $("statScore").textContent = s.score;
+  }
+
+  function scores(){
+    const by = {}; KIND_ORDER.forEach(k => by[k] = { t:0, s:0 });
+    let done = 0, score = 0;
+    S.bank.forEach(q => {
+      if(!q.done) return;
+      done++;
+      const won = q.correct && q.tries <= 1;
+      if(won) score++;
+      by[q.kind].t++; if(won) by[q.kind].s++;
+    });
+    const total = (window.MMTSubmit && window.MMTSubmit.total) ? window.MMTSubmit.total() : S.bank.length;
+    return { total, done, score, by };
+  }
+
+  function go(delta){
+    if(S.busy) return;
+    const q = cur();
+    if(delta > 0 && q && !q.done) revealAndSettle();
+    const next = S.idx + delta;
+    if(next < 0) return;
+    if(next >= S.bank.length){ finish(); return; }
+    S.idx = next;
+    showQuestion();
+  }
+
+  /* ==================================================================
+     THE END
+     ================================================================== */
+  function finish(){
+    S.quizDone = true;
+    const s = scores();
+    $("progressFill").style.width = "100%";
+    $("certLine1").textContent =
+      'You completed "Division by Grouping" — ' + S.cfg.name + ".";
+    const lines = KIND_ORDER.filter(k => s.by[k].t)
+      .map(k => KIND_LABEL[k] + ": " + s.by[k].s + " / " + s.by[k].t).join("<br>");
+    $("certBreakdown").innerHTML = (lines ? lines + "<br>" : "") + "<b>Total: " + s.score + " / " + s.total + "</b>";
+    showModal($("certModal"));
+
+    if(window.MMTSave) window.MMTSave({
+      tool:"division-grouping-student-quiz", topic:"number",
+      level:S.cfg.name, levelKey:S.levelKey, score:s.score, total:s.total,
+      percent: s.total ? Math.round((s.score/s.total)*100) : 0,
+      masteryTopic:"division-grouping",
+      types: KIND_ORDER.filter(k => s.by[k].t).map(k => k + ":" + s.by[k].s + "/" + s.by[k].t)
+              .concat(["level:" + S.levelKey]),
+      certificateText:"Division by Grouping — " + S.cfg.name + ": " + s.score + "/" + s.total,
+      ...(window.MMTSubmit && window.MMTSubmit.fields ? window.MMTSubmit.fields() : {})
+    });
+  }
+
+  function nowStamp(){
+    const d = new Date();
+    return d.toLocaleDateString() + " " + d.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
+  }
+
+  async function copyCertificate(){
+    const s = scores();
+    const lines = KIND_ORDER.filter(k => s.by[k].t)
+      .map(k => KIND_LABEL[k] + ": " + s.by[k].s + " / " + s.by[k].t).join("\n");
+    const text =
+'🏆 Mills Maths Tools – "Division by Grouping" Student Quiz\n' +
+'Level: ' + S.cfg.name + '\n' +
+(lines ? lines + '\n' : '') +
+'Total: ' + s.score + ' / ' + s.total + '\n' +
+'Completed: ' + nowStamp() + '\n\n' +
+(window.MMTAuth ? window.MMTAuth.shareLine() : "Submit a screenshot or paste this into Google Classroom.");
+    try{
+      await navigator.clipboard.writeText(text);
+      $("copyBtn").textContent = "Copied!";
+      setTimeout(() => $("copyBtn").textContent = "Copy to clipboard", 1200);
+    }catch(e){ window.prompt("Copy this text:", text); }
+  }
+
+  /* ==================================================================
+     MODALS AND STARTING
+     ================================================================== */
+  function showModal(m){ $("overlay").classList.add("on"); m.classList.add("on"); }
+  function hideModals(){
+    $("overlay").classList.remove("on");
+    $("levelModal").classList.remove("on");
+    $("certModal").classList.remove("on");
+  }
+
+  function buildLevelList(){
+    const list = $("levelList");
+    list.innerHTML = "";
+    ORDER.forEach(k => {
+      const L = LEVELS[k];
+      const row = document.createElement("div");
+      row.className = "levelRow lvl-" + k;
+      row.innerHTML =
+        '<div><div class="levelName">' + L.name + '</div>' +
+        '<div class="levelSub">' + L.sub + '</div>' +
+        '<div class="levelLen">' + L.len + ' questions</div></div>' +
+        '<button class="startBtn" data-level="' + k + '" type="button">Start</button>';
+      list.appendChild(row);
+    });
+    list.querySelectorAll(".startBtn").forEach(b =>
+      b.addEventListener("click", () => startLevel(b.dataset.level)));
+  }
+
+  function startLevel(key){
+    S.levelKey = key;
+    S.cfg = LEVELS[key];
+    S.quizDone = false;
+    S.bank = buildBank(S.cfg);
+    S.idx = 0;
+    hideModals();
+    const chip = $("levelChip");
+    chip.hidden = false;
+    chip.className = "lvlChip " + key;
+    chip.textContent = S.cfg.name;
+    if(window.MMTSubmit && window.MMTSubmit.register) window.MMTSubmit.register({
+      progress: () => { const s = scores(); return { attempted:s.done, correct:s.score, quizLength:S.bank.length }; },
+      finish:   () => finish(),
+      mount:    $("submitSlot")
+    });
+    showQuestion();
+  }
+
+  /* ------------------------------------------------------------ wires */
+  $("goBtn").addEventListener("click", submitChunk);
+  $("chunkInput").addEventListener("keydown", e => { if(e.key === "Enter"){ e.preventDefault(); submitChunk(); } });
+  $("undoBtn").addEventListener("click", undoRound);
+  $("clearBtn").addEventListener("click", clearRounds);
+  $("checkBtn").addEventListener("click", checkAnswer);
+  $("ansInput").addEventListener("keydown", e => { if(e.key === "Enter"){ e.preventDefault(); checkAnswer(); } });
+  $("remInput").addEventListener("keydown", e => { if(e.key === "Enter"){ e.preventDefault(); checkAnswer(); } });
+  $("prevBtn").addEventListener("click", () => go(-1));
+  $("nextBtn").addEventListener("click", () => go(1));
+  $("menuBtn").addEventListener("click", () => showModal($("levelModal")));
+  $("copyBtn").addEventListener("click", copyCertificate);
+  $("closeCertBtn").addEventListener("click", hideModals);
+  $("backToMenuBtn").addEventListener("click", () => { hideModals(); showModal($("levelModal")); });
+
+  $("toolsBtn").addEventListener("click", e => {
+    e.stopPropagation();
+    const m = $("toolsMenu"), was = m.classList.contains("open");
+    m.classList.toggle("open", !was);
+    $("toolsBtn").setAttribute("aria-expanded", String(!was));
+  });
+  document.addEventListener("click", () => {
+    $("toolsMenu").classList.remove("open");
+    $("toolsBtn").setAttribute("aria-expanded","false");
+  });
+  $("toolsMenu").addEventListener("click", e => e.stopPropagation());
+
+  let resizeT;
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeT);
+    resizeT = setTimeout(() => { fitQCard(true); fitArena(true); paintBubbles(); }, 90);
+  });
+
+  /* the shared early-submit button, when it is reachable */
+  import("/portal/shared/earlySubmit.js")
+    .then(m => { window.MMTSubmit = m.MMTSubmit; })
+    .catch(() => {});
+
+  buildLevelList();
+  showModal($("levelModal"));
+
+  /* a small surface for the automated checks; nothing in the page reads it */
+  window.__DGQ__ = {
+    S, LEVELS, KIND_ORDER, chunksOf, buildBank, scores, wantedAnswer,
+    startLevel, showQuestion, go, finish, runRound, toolOn, tallyOn, ladderOn,
+    bubbleValue, usedTotal, eachTotal, remaining,
+    setSpeed: v => { S.speed = v; },
+    answer: (a, r) => { $("ansInput").value = String(a); if(r != null) $("remInput").value = String(r); checkAnswer(); }
+  };
+})();
+</script>
+
+<!-- ===== MMT student-code login + secure save + sign-in banner ===== -->
+<script src="/portal/shared/quizAuthUI.js"></script>
+
+</body>
+</html>

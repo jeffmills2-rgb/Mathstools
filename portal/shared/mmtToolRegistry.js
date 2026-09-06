@@ -202,6 +202,14 @@ export const MMT_TOOLS = Object.freeze([
     notes: "Seeing a coefficient × factor as equal groups (lead-in to like terms). Added secure student-code login + achievements save (2026-07). masteryTopic 'number-groups'. (Page <title> was a copy-paste of the like-terms quiz — content is the groups quiz.)",
   },
   {
+    toolId: "division-grouping-quiz", title: "Division by Grouping — Student Quiz", category: "Quiz",
+    enabled: true, resultCollection: "achievements", richCollection: null,
+    achievementToolName: "division-grouping-student-quiz", topics: ["number"], stage: "Stage 3",
+    launchUrl: "/online-quizzes/stage-3/number/division-grouping.html",
+    supportsAdventureAttempts: false, supportsSkillBreakdown: false,
+    notes: "Sweet/Mild/Medium/Spicy. The LEVEL is how much of the teaching tool the student keeps: Sweet is the whole thing (bubbles, running total, partial-quotient table, quick numbers); Mild drops the table; Medium drops the running total and the quick numbers too, so the student tracks what they have shared; Spicy has no bubbles at all. 12 questions, 10 at Spicy. Five kinds — share it out, how many left, with a remainder, missing factor, use it — with subtotals by kind in types[]. The tool NEVER prints the answer: the number sentence keeps its ? until the question is marked. Only the FIRST attempt scores. masteryTopic 'division-grouping'. Pairs with the interactive + worksheet creator, both cross-listed under MA3-MR-01 and MA3-MR-02.",
+  },
+  {
     toolId: "perimeter-plane-shapes-quiz", title: "Perimeter of Plane Shapes — Student Quiz", category: "Quiz",
     enabled: true, resultCollection: "achievements", richCollection: null,
     achievementToolName: "perimeter-plane-shapes-student-quiz", topics: ["measurement-space"], stage: "Stage 4",

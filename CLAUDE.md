@@ -16,6 +16,72 @@
 > §2 "TWO folders", §3 deploy paths and §5's `mathstools-main 2` heading below
 > describe the OLD layout — this block supersedes them.
 >
+> **NEW (2026-09-05, session — being pushed): DIVISION BY GROUPING — STUDENT
+> QUIZ.** `online-quizzes/stage-3/number/division-grouping.html`, the third page
+> of the family. Registered in `portal/shared/mmtToolRegistry.js` as
+> `division-grouping-quiz`, writing `tool: "division-grouping-student-quiz"`, so
+> a teacher can set it from the dashboard. The tool's "Tools ▾" menu is now two
+> live rows and nothing greyed.
+>
+> * **THE ENGINE IS THE TEACHING TOOL'S, COPIED.** The packing, the
+>   fly-and-duplicate round, the derived totals and the overshoot bounce are the
+>   tool's, so a bubble does the same thing in the quiz as it did on the board.
+>   Fix one and port it to the other.
+> * **THE LEVEL IS HOW MUCH OF THE TOOL THE STUDENT KEEPS**, the same design as
+>   the Perimeter quiz. **Sweet** hands over the whole thing — bubbles, running
+>   total, partial-quotient table, quick numbers. **Mild** drops the table.
+>   **Medium** drops the running total AND the quick numbers, so the student has
+>   to keep track of how much they have shared. **Spicy** takes the bubbles away
+>   entirely. The numbers climb alongside, but the withdrawal of the model is the
+>   real ladder.
+> * **THE TOOL MUST NOT ANSWER THE QUESTION OUT LOUD.** The teaching tool
+>   announces "Each group has 14" when the sharing completes and prints the
+>   answer in the sentence; here `paintSentence` keeps the `?` until the question
+>   is marked, the completion prompt asks the student to write it instead, and
+>   the check sentence and ladder total are gone. A check plays every level right
+>   through and FAILS if the sentence ever shows the answer before marking. The
+>   bubbles themselves still show what is in a group — that is the METHOD, not a
+>   spoiler, and taking it away would leave nothing to use.
+> * **"HOW MANY LEFT?" IS A PICTURE TO BE READ, NOT DRIVEN.** One round is
+>   already in the bubbles and the question is what is still to share, so the
+>   sharing controls are hidden AND the running total is withheld — it would
+>   simply be the answer.
+> * **FIVE KINDS, WITH SUBTOTALS.** share it out / how many left / with a
+>   remainder / missing factor (`6 × ? = 84`) / use it. `types[]` carries one
+>   `kind:x/y` flag per kind plus the level, so the dashboard can see WHICH part
+>   went wrong. The missing-factor kind is why the quiz is cross-listed under
+>   MA3-MR-02 as well.
+> * **ONLY THE REMAINDER KIND HAS REMAINDERS**, and it is Spicy only. A
+>   remainder question shows a second box and both numbers must be right.
+> * **ORDERING IS DONE IN ONE PASS, NOT DURING GENERATION.** Two things want
+>   spreading out — the KIND, so a level is not four blocks of the same question,
+>   and the NUMBER OF GROUPS, because ÷5 twice running is one question asked
+>   twice. Generating in a good order does not survive the interleave that
+>   follows it; a hill-climbing repair afterwards gets stuck. Both are done
+>   greedily in one pass: take the question that breaks a divisor run first, a
+>   kind run second, and otherwise whichever number of groups is commonest in
+>   what is left, which is what stops a divisor being stranded at the end.
+> * **ONLY THE FIRST ATTEMPT SCORES.** A wrong answer goes red and stays
+>   editable so the student finishes the thinking; the dashboard number means
+>   what it says. Pressing Next on an unanswered question settles it and reveals.
+> * **THE LOGIN AND THE SAVE ARE THE SHARED ONES.** One
+>   `<script src="/portal/shared/quizAuthUI.js">` before `</body>` and a
+>   `window.MMTSave()` call on finish — no Firebase config, no keys and no
+>   sign-in markup inlined in the quiz, and a check asserts that. `earlySubmit.js`
+>   is imported for the "Finish & submit" button, and the payload carries
+>   `MMTSubmit.fields()`. **No typed answer is ever in the payload**, which a
+>   check also asserts.
+> * **Verified** through Playwright: 86 checks — the shared auth plumbing and no
+>   inlined Firebase, the level ladder withdrawing one layer at a time, 240
+>   generated papers (identity, ranges, kinds, no repeats, no divisor run), every
+>   level played right through for full marks with the answer never on screen
+>   early, a right answer on the second go scoring nothing, the tool sharing 84
+>   into six groups and the overshoot still bouncing back, exactly what each level
+>   hands over, the "how many left?" picture and its withheld total, remainders
+>   needing both boxes, the whole save payload, and the fit at 1366×768, 1280×800,
+>   1024×768 and 820×1180. Harnesses live in the session scratch, not the repo:
+>   `qcheck.mjs`, `qshots.mjs`.
+
 > **NEW (2026-09-05, session — being pushed): DIVISION BY GROUPING — WORKSHEET
 > CREATOR.** `worksheet-creators/stage-3/number/division-grouping.html`, the
 > printable sibling of the teaching tool and cross-listed under the same two
@@ -1525,7 +1591,10 @@ portal/PLACEMENT.md , portal/README.md   migration + structure notes
   bounce or the side column's width. Its **worksheet creator** is
   `worksheet-creators/stage-3/number/division-grouping.html` (five sections, the
   bubbles printed as an option, an answer key that shows the rounds), listed
-  under the same two outcomes and reached from the tool's "Tools ▾" menu.
+  under the same two outcomes and reached from the tool's "Tools ▾" menu. Its
+  **student quiz** is `online-quizzes/stage-3/number/division-grouping.html`
+  (registered as `division-grouping-quiz`; the level is how much of the teaching
+  tool the student keeps), also cross-listed under both outcomes.
 - **Complete the Square (2026-08-31):** teacher tool
   `interactive-tools/stage-5/algebra/complete-the-square/`, the first Stage 5
   algebra tool. Two modes (tiles, and the formula proof), cross-listed under
@@ -1689,16 +1758,13 @@ portal/PLACEMENT.md , portal/README.md   migration + structure notes
   of ten, so it breaks the “move the decimal point” habit) and **area/volume**
   (m² ↔ cm² is 10 000, not 100 — the classic trap, and it would need its own
   tier). Digital storage (GB/MB/kB) was considered and left out.
-- **Division by Grouping siblings:** the teaching tool AND its worksheet creator
-  both shipped 2026-09-05.
-  Still to build: a **student quiz**
-  (`online-quizzes/stage-3/number/division-grouping.html`, registry id
-  `division-grouping-quiz`) carrying the v2 login block — a ladder that fades
-  the bubbles, then the tally, then leaves only the written algorithm. Both are
-  stubbed as greyed rows in the tool's Tools menu. Possible extensions to the
-  tool itself: a **quotitive mode** ("how many groups of 6?", which needs
-  bubbles that are created rather than filled), and **divisors above 6** (the
-  arena would have to wrap to two rows).
+- **Division by Grouping:** the teaching tool, the worksheet creator AND the
+  student quiz all shipped 2026-09-05 — the family is complete. Possible
+  extensions to the tool itself: a **quotitive mode** ("how many groups of 6?",
+  which needs bubbles that are created rather than filled) and **divisors above
+  ten** (the packing table would need more rows). For the quiz: a **sub-topic
+  builder** in the teacher portal so a task can ask for one KIND of question,
+  which the `types[]` flags already make meaningful.
 - **Revision Generator — Stage 3**: 6 of 8 topics built (Represents Numbers,
   Additive Relations, Multiplicative Relations, Fractions, 2D Space and Area,
   Geometric Measure). Each remaining topic needs a new diagram engine first:
