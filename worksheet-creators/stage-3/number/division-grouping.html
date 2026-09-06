@@ -1,0 +1,1059 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Division by Grouping — Worksheet Generator</title>
+
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --ink:#111827;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --shadow:0 14px 40px rgba(0,0,0,.10);
+      --radius:18px;
+
+      --blue:#2563eb;
+      --green:#16a34a;
+      --red:#dc2626;
+
+      --sweet1:#4ade80;  --sweet2:#16a34a;
+      --mild1:#facc15;   --mild2:#d97706;
+      --medium1:#fb923c; --medium2:#ea580c;
+      --spicy1:#f87171;  --spicy2:#b91c1c;
+
+      --footer-h:44px;
+      --mathFont:"Cambria Math","STIX Two Math","STIXGeneral","Times New Roman",serif;
+      --uiFont:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0; background:var(--bg); color:var(--ink);
+      font-family:var(--uiFont); padding-bottom:var(--footer-h);
+    }
+
+    .wrap{ max-width:1280px; margin:14px auto 32px; padding:0 14px; }
+    .card{ background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px; }
+
+    .title{ margin:0 0 4px; font-size:28px; font-weight:1000; letter-spacing:.2px; }
+    .subtitle{ margin:0 0 14px; color:var(--muted); font-weight:850; font-size:15px; line-height:1.35; }
+    .subtitle a{ color:var(--blue); text-decoration:none; font-weight:1000; }
+
+    .controls{ display:grid; gap:10px; }
+    .band{
+      border:1px solid var(--border); border-radius:18px; padding:12px 14px;
+      background:linear-gradient(180deg,#ffffff,#f9fafb);
+    }
+    .bandHead{
+      font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+      font-weight:1000; color:var(--muted); margin:0 0 9px;
+    }
+    .bandGrid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; align-items:end; }
+    .bandRow{ display:flex; gap:16px 22px; flex-wrap:wrap; align-items:center; }
+
+    label{ display:block; margin:0 0 7px; font-size:15px; font-weight:950; }
+    select, input[type="number"]{
+      border:2px solid #e5e7eb; border-radius:14px; padding:12px 13px;
+      font-size:15px; font-weight:900; width:100%; background:#fff; color:var(--ink);
+      font-family:inherit;
+    }
+    select:focus, input:focus{ outline:none; border-color:var(--blue); }
+
+    .sw{ display:inline-flex; align-items:center; gap:10px; cursor:pointer; user-select:none; font-weight:900; font-size:14.5px; }
+    .sw input{ position:absolute; opacity:0; width:0; height:0; }
+    .sw .track{ position:relative; width:46px; height:27px; border-radius:999px; background:#cbd5e1; transition:.16s ease; flex:0 0 auto; }
+    .sw .track::after{ content:""; position:absolute; top:3px; left:3px; width:21px; height:21px; border-radius:50%; background:#fff; box-shadow:0 2px 5px rgba(0,0,0,.28); transition:.16s ease; }
+    .sw input:checked + .track{ background:var(--green); }
+    .sw input:checked + .track::after{ transform:translateX(19px); }
+    .sw input:focus-visible + .track{ box-shadow:0 0 0 4px rgba(37,99,235,.25); }
+
+    .divBox{ border:2px dashed #e5e7eb; border-radius:16px; padding:10px 12px; }
+    .divHead{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
+    .divHint{ font-size:12.5px; font-weight:850; color:var(--muted); }
+    .divAll{
+      margin-left:auto; border:2px solid var(--border); background:#fff; border-radius:11px;
+      padding:6px 11px; font-size:12.5px; font-weight:1000; cursor:pointer; font-family:inherit;
+    }
+    .divChips{ display:flex; gap:7px; flex-wrap:wrap; }
+    .divChip{
+      border:2px solid var(--border); background:#fff; color:var(--ink);
+      font-family:var(--mathFont); font-size:17px; font-weight:1000;
+      min-width:44px; padding:7px 6px; border-radius:12px; cursor:pointer; transition:.14s ease;
+    }
+    .divChip:hover{ border-color:#c7ccd4; }
+    .divChip[aria-pressed="true"]{ background:var(--blue); border-color:var(--blue); color:#fff; }
+
+    .secGrid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(268px,1fr)); gap:10px; }
+    .secOpt{ border:1px solid var(--border); border-radius:14px; padding:10px 12px; background:#fff; }
+    .cntRow{ display:flex; align-items:center; gap:10px; margin-top:8px; }
+    .cntRow label{ margin:0; font-size:13px; color:var(--muted); white-space:nowrap; }
+    .cntRow input{ width:78px; padding:8px 10px; }
+    .totalRow{ display:flex; align-items:center; gap:10px; margin-top:10px; font-weight:950; font-size:14px; }
+    .pill{ background:#eef2ff; color:#1d4ed8; border-radius:999px; padding:5px 12px; font-weight:1000; font-size:13px; }
+
+    .note{ margin:9px 0 0; font-size:12.6px; font-weight:800; color:var(--muted); line-height:1.5; }
+    .note b{ color:var(--ink); }
+    .note.warn{ color:#991b1b; font-size:14px; }
+
+    .btnRow{ display:flex; gap:10px; flex-wrap:wrap; margin-top:2px; }
+    button.primary, button.ghost, button.danger{
+      border-radius:14px; padding:13px 18px; font-size:15px; font-weight:1000; cursor:pointer;
+      border:2px solid transparent; font-family:inherit;
+    }
+    button.primary{ background:var(--blue); color:#fff; }
+    button.primary:hover{ background:#1d4ed8; }
+    button.ghost{ background:#fff; color:var(--ink); border-color:var(--border); }
+    button.ghost:hover{ border-color:#c7ccd4; }
+    button.danger{ background:#fff; color:var(--red); border-color:#fecaca; }
+    button.danger:hover{ background:#fef2f2; }
+
+    .outWrap{ margin-top:8px; }
+
+    /* =====================================================================
+       THE PAPER
+       ===================================================================== */
+    .page{
+      margin:14px auto 0; background:#fff; border:1px solid var(--border);
+      border-radius:18px; box-shadow:0 10px 26px rgba(15,23,42,.08); overflow:hidden;
+      width:210mm; max-width:100%; height:297mm;
+      display:flex; flex-direction:column;
+    }
+    .pageHeader{
+      padding:9px 13px 7px; border-bottom:2px solid #111827;
+      display:flex; align-items:flex-end; justify-content:space-between; gap:10px;
+    }
+    .hdrTitle{ font-weight:1000; font-size:15px; line-height:1.1; }
+    .hdrSub{ color:var(--muted); font-weight:850; font-size:11px; margin-top:2px; white-space:nowrap; }
+    .nameDate{ display:flex; gap:8px; align-items:flex-end; }
+    .lineField{ display:flex; flex-direction:column; gap:3px; width:116px; }
+    .lineLabel{ font-size:10px; font-weight:950; color:var(--muted); }
+    .lineBox{ height:19px; border-bottom:1.6px solid #111827; }
+
+    .sheet{ padding:8px 13px 10px; flex:1 1 auto; display:flex; flex-direction:column; min-height:0; }
+
+    .section{ margin-bottom:9px; }
+    .secHead{
+      display:flex; align-items:baseline; gap:9px;
+      border-bottom:1.6px solid #111827; padding-bottom:3px; margin-bottom:7px;
+    }
+    .secLetter{
+      font-weight:1000; font-size:14px; letter-spacing:.02em;
+      background:#111827; color:#fff; border-radius:5px; padding:1px 7px; flex:0 0 auto;
+    }
+    .secText{ font-weight:900; font-size:13.2px; color:#111827; line-height:1.3; }
+    .secCont{ margin-left:auto; font-size:11px; font-weight:900; color:var(--muted); flex:0 0 auto; }
+
+    /* bilingual lines: chosen language on top, English beneath.
+       Numerals stay Western and LTR, isolated with <bdi>.                  */
+    .tl{ display:block; }
+    .tl[lang="ar"], .tl[lang="fa"]{ font-size:1.05em; }
+    .el{ display:block; font-size:.84em; opacity:.72; font-weight:750; margin-top:1px; }
+    bdi{ unicode-bidi:isolate; }
+
+    .qGrid{ display:grid; gap:8px 9px; grid-template-columns:repeat(var(--cols,2),1fr); }
+    .qCard{
+      border:1.2px solid #d7dce3; border-radius:10px; padding:6px 8px 7px;
+      display:flex; flex-direction:column; gap:5px;
+      break-inside:avoid; page-break-inside:avoid; background:#fff; min-width:0;
+    }
+    .qCard.wide{ grid-column:span 2; }
+    .qTop{ display:flex; align-items:center; gap:7px; width:100%; }
+    .qNum{
+      width:20px; height:20px; border-radius:999px; color:#fff;
+      display:flex; align-items:center; justify-content:center;
+      font-size:11px; font-weight:1000; flex:0 0 auto;
+    }
+    .qNum.sweet{ background:linear-gradient(180deg,var(--sweet1),var(--sweet2)); }
+    .qNum.mild{ background:linear-gradient(180deg,var(--mild1),var(--mild2)); }
+    .qNum.medium{ background:linear-gradient(180deg,var(--medium1),var(--medium2)); }
+    .qNum.spicy{ background:linear-gradient(180deg,var(--spicy1),var(--spicy2)); }
+
+    .qSentence{
+      font-family:var(--mathFont); font-weight:1000; font-size:17px; line-height:1.1;
+      display:flex; align-items:baseline; gap:5px; white-space:nowrap;
+    }
+    .qSentence .blank{
+      display:inline-block; min-width:44px; border-bottom:1.6px solid #111827; height:1em;
+    }
+    .qWord{ font-size:12.4px; font-weight:850; line-height:1.35; }
+
+    /* A bubble is the same size on every question. Letting the drawing fill the
+       card made a ÷4 paper print circles twice the size of a ÷6 one, which reads
+       as though the groups were different. */
+    .bubWrap{ width:100%; }
+    .bubWrap svg{ display:block; margin:0 auto; height:auto;
+      width:min(100%, calc(var(--per,3) * 17mm)); }
+    .bub{ fill:#fff; stroke:#111827; stroke-width:2.4; }
+    .bubGiven{ font-family:var(--mathFont); font-weight:1000; fill:#1d4ed8; text-anchor:middle; dominant-baseline:middle; }
+    .bubRule{ stroke:#9aa3af; stroke-width:1.6; }
+
+    .lad{ width:100%; border-collapse:collapse; font-size:11.4px; }
+    .lad th{
+      font-weight:1000; font-size:9.4px; letter-spacing:.05em; text-transform:uppercase;
+      color:var(--muted); border-bottom:1.4px solid #111827; padding:1px 4px 2px; text-align:left;
+    }
+    .lad th.r, .lad td.r{ text-align:right; }
+    .lad td{ border-bottom:1px solid #d7dce3; height:17px; padding:1px 4px; }
+    .lad td.mid{ font-family:var(--mathFont); font-weight:900; white-space:nowrap; }
+    .lad tr.given td{ background:#eef2ff; }
+    .lad tr.given td.mid, .lad tr.given td.r, .lad tr.given td:first-child{ color:#1d4ed8; font-weight:1000; }
+    .lad td:first-child{ font-family:var(--mathFont); font-weight:900; width:23%; }
+    .lad td.r{ width:23%; font-family:var(--mathFont); font-weight:900; }
+
+    .qFill{ flex:1 1 auto; min-height:0; }
+    .qFoot{ display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; font-size:11.4px; font-weight:900; color:var(--muted); }
+    .qFoot .chk{ font-family:var(--mathFont); font-size:13px; color:#111827; font-weight:1000; white-space:nowrap; }
+    .qFoot .chk .blank{ display:inline-block; min-width:34px; border-bottom:1.4px solid #111827; height:1em; }
+
+    .leftBox{
+      display:flex; align-items:center; gap:7px; border:1.5px dashed #ea580c; border-radius:8px;
+      padding:3px 8px; font-size:11px; font-weight:1000; color:#c2410c; align-self:flex-start;
+    }
+    .leftBox .slot{ display:inline-block; width:30px; height:15px; border-bottom:1.5px solid #c2410c; }
+
+    .workBox{
+      border:1.4px dashed #9aa3af; border-radius:9px; padding:5px 8px 3px;
+      background:repeating-linear-gradient(180deg,transparent 0 15px,#e7eaef 15px 16px);
+    }
+    .workHead{ font-size:10.4px; font-weight:1000; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; }
+
+    .prompt{
+      border:1.4px dashed #94a3b8; border-radius:9px; padding:6px 9px 7px;
+      margin-bottom:8px; break-inside:avoid;
+    }
+    .promptHead{ font-size:10.4px; font-weight:1000; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; margin-bottom:3px; }
+    .promptText{ font-size:12px; font-weight:850; line-height:1.35; }
+    .promptRules{ margin-top:5px; height:var(--ph,60px); background:repeating-linear-gradient(180deg,transparent 0 15px,#e7eaef 15px 16px); }
+
+    /* answer key */
+    .isKey .qCard{ border-color:#bbf7d0; background:#f7fdf9; }
+    .keyAns{ font-family:var(--mathFont); font-weight:1000; font-size:16px; color:#15803d; }
+    .keyWhy{ font-size:11px; font-weight:850; color:#374151; line-height:1.4; }
+    .keyWhy b{ color:#111827; }
+
+    .pageFooter{
+      padding:5px 13px 6px; border-top:1px solid rgba(229,231,235,.95);
+      display:flex; align-items:center; justify-content:space-between;
+      font-weight:900; color:var(--muted); font-size:10px;
+    }
+    .pageFooter a{ color:#2563eb; text-decoration:none; font-weight:1000; }
+
+    .measure{ position:absolute; left:-10000px; top:0; width:210mm; visibility:hidden; }
+
+    .mmtFooter{
+      position:fixed; left:0; right:0; bottom:0; height:var(--footer-h);
+      display:flex; align-items:center; justify-content:center; padding:0 12px;
+      background:rgba(255,255,255,.92); border-top:1px solid rgba(229,231,235,.95);
+      backdrop-filter:blur(8px); z-index:500; font-weight:900; color:#111827;
+      text-align:center; font-size:13px;
+    }
+    .mmtFooter a{ color:#2563eb; text-decoration:none; font-weight:950; }
+
+    @media print{
+      @page{ size:A4; margin:8mm 7mm; }
+      html, body{ width:210mm; height:auto; }
+      body{ background:#fff; padding-bottom:0; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+
+      .wrap{ max-width:none; margin:0; padding:0; }
+      .card{ box-shadow:none; border-radius:0; padding:0; }
+      .controls, .title, .subtitle, .mmtFooter{ display:none !important; }
+
+      .page{
+        margin:0; border:none; border-radius:0; box-shadow:none;
+        width:auto; height:281mm; page-break-after:always;
+      }
+      .page:last-child{ page-break-after:auto; }
+
+      .pageHeader{ padding:0 0 1.6mm; }
+      .sheet{ padding:2.4mm 0 0; }
+      .pageFooter{ padding:1.4mm 0 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1 class="title">Division by Grouping — Worksheet Generator</h1>
+      <p class="subtitle">Printable A4 worksheets from the <a href="/interactive-tools/stage-3/number/division-grouping-bubbles/">Division by Grouping</a> teaching tool. The bubbles are drawn on the page, so a student shares out a chunk at a time exactly as the class did on the board — and the table beside them turns those chunks into the written method. Worksheet language prints every instruction bilingually for EAL/D students; the numerals stay Western and LTR.</p>
+
+      <div class="controls">
+        <div class="band">
+          <p class="bandHead">The paper</p>
+          <div class="bandGrid">
+            <div>
+              <label for="levelSel">Level</label>
+              <select id="levelSel">
+                <option value="sweet">Sweet &mdash; two-digit, 2 to 5 groups</option>
+                <option value="mild">Mild &mdash; two-digit, any number of groups</option>
+                <option value="medium">Medium &mdash; three-digit</option>
+                <option value="spicy">Spicy &mdash; three-digit, some with remainders</option>
+                <option value="mixed" selected>Mixed &mdash; a ladder of all four</option>
+              </select>
+            </div>
+            <div>
+              <label for="densitySel">Question size</label>
+              <select id="densitySel">
+                <option value="roomy" selected>Large &mdash; two to a row, biggest bubbles</option>
+                <option value="normal">Medium &mdash; three to a row</option>
+                <option value="tight">Small &mdash; four to a row, no bubbles</option>
+              </select>
+            </div>
+            <div>
+              <label for="langSel">Worksheet language</label>
+              <select id="langSel">
+                <option value="en">English only</option>
+                <option value="ar">Arabic + English (&#1575;&#1604;&#1593;&#1585;&#1576;&#1610;&#1577;)</option>
+                <option value="fa">Farsi / Persian + English (&#1601;&#1575;&#1585;&#1587;&#1740;)</option>
+              </select>
+            </div>
+            <div class="divBox">
+              <div class="divHead">
+                <label style="margin:0">Number of groups</label>
+                <span class="divHint">Which divisors this paper may use.</span>
+                <button type="button" id="divAllBtn" class="divAll">Untick all</button>
+              </div>
+              <div class="divChips" id="divChips"></div>
+            </div>
+          </div>
+          <p class="note"><b>Number of groups</b> and <b>Level</b> work independently, so a class practising &divide;&thinsp;3 alone can still meet three-digit numbers. Seven or more groups makes each bubble small &mdash; those questions print across <b>two columns</b> so there is still room to write in them.</p>
+        </div>
+
+        <div class="band">
+          <p class="bandHead">Sections &mdash; and how many of each</p>
+          <div class="secGrid">
+            <div class="secOpt">
+              <label class="sw"><input type="checkbox" id="kFinish" checked /><span class="track"></span><span>A &nbsp;Finish the sharing</span></label>
+              <div class="cntRow"><label for="nFinish">How many</label><input id="nFinish" type="number" min="0" max="40" value="2" /></div>
+            </div>
+            <div class="secOpt">
+              <label class="sw"><input type="checkbox" id="kShare" checked /><span class="track"></span><span>B &nbsp;Share it out</span></label>
+              <div class="cntRow"><label for="nShare">How many</label><input id="nShare" type="number" min="0" max="40" value="4" /></div>
+            </div>
+            <div class="secOpt">
+              <label class="sw"><input type="checkbox" id="kLadder" checked /><span class="track"></span><span>C &nbsp;Just the table</span></label>
+              <div class="cntRow"><label for="nLadder">How many</label><input id="nLadder" type="number" min="0" max="40" value="4" /></div>
+            </div>
+            <div class="secOpt">
+              <label class="sw"><input type="checkbox" id="kRem" checked /><span class="track"></span><span>D &nbsp;Some left over</span></label>
+              <div class="cntRow"><label for="nRem">How many</label><input id="nRem" type="number" min="0" max="40" value="2" /></div>
+            </div>
+            <div class="secOpt">
+              <label class="sw"><input type="checkbox" id="kWord" checked /><span class="track"></span><span>E &nbsp;Use it</span></label>
+              <div class="cntRow"><label for="nWord">How many</label><input id="nWord" type="number" min="0" max="20" value="2" /></div>
+            </div>
+          </div>
+          <div class="totalRow"><span>On the paper:</span><span class="pill" id="totalPill">0 questions</span></div>
+          <p class="note">The order is the teaching, and the scaffold comes off one layer at a time. <b>A</b> hands over a paper where the first round has already been shared out &mdash; one decision left, and a worked round to copy the shape of. <b>B</b> is the real practice: empty bubbles, and the student picks their own chunks. <b>C</b> takes the bubbles away and leaves the table, which is the written method in disguise. <b>D</b> is the same thing when it will not go evenly. <b>E</b> asks for it in words.</p>
+        </div>
+
+        <div class="band">
+          <p class="bandHead">Options</p>
+          <div class="bandRow">
+            <label class="sw"><input type="checkbox" id="bubbleToggle" checked /><span class="track"></span><span>Draw the bubbles</span></label>
+            <label class="sw"><input type="checkbox" id="ladderToggle" checked /><span class="track"></span><span>Table beside the bubbles</span></label>
+            <label class="sw"><input type="checkbox" id="checkToggle" checked /><span class="track"></span><span>Check sentence</span></label>
+            <label class="sw"><input type="checkbox" id="promptToggle" checked /><span class="track"></span><span>Fewer-rounds prompt</span></label>
+            <label class="sw"><input type="checkbox" id="keyToggle" checked /><span class="track"></span><span>Answer key pages</span></label>
+          </div>
+          <p class="note"><b>Draw the bubbles</b> off turns every question into the table alone plus a ruled working box &mdash; the same paper once a class no longer needs the picture. The <b>check sentence</b> prints <bdi>6 &times; ___ = 84</bdi> under each question, so an answer can be tested rather than believed. The <b>fewer-rounds prompt</b> asks a student to go back and share one question out in fewer rounds; that is the whole efficiency conversation, and it is where <bdi>10</bdi> and <bdi>4</bdi> turn into <bdi>14</bdi>. The answer key shows the <b>rounds</b>, not just the answer, so it can be handed to a student.</p>
+        </div>
+
+        <div class="btnRow">
+          <button id="genBtn" class="primary">Generate worksheet</button>
+          <button id="printBtn" class="ghost">Print (Ctrl+P)</button>
+          <button id="resetBtn" class="danger">Reset</button>
+        </div>
+      </div>
+
+      <div id="out" class="outWrap"></div>
+    </div>
+  </div>
+
+  <div class="measure" id="measure" aria-hidden="true"></div>
+
+  <div class="mmtFooter">
+    This tool and more can be found at&nbsp;
+    <a href="https://www.millsmathstools.au">www.millsmathstools.au</a>
+  </div>
+
+<script>
+(() => {
+  "use strict";
+
+  /* ==================================================================
+     DIVISION BY GROUPING — WORKSHEET GENERATOR
+     -------------------------------------------------------------------
+     The printable sibling of the teaching tool, and it keeps the tool's
+     one idea: a number is shared out A CHUNK AT A TIME into equal
+     groups, and the chunks add up to the answer.
+
+       A  finish the sharing — the first round is already done;
+       B  share it out — empty bubbles, the student's own chunks;
+       C  just the table — the bubbles are gone, the method is not;
+       D  some left over;
+       E  use it.
+
+     Section C is the point of the whole paper: the "in each" column of
+     that table is the digits a student will later write above a
+     division bracket. The bubbles exist to make that column mean
+     something, and then they come off.
+     ================================================================== */
+
+  const SITE = "https://www.millsmathstools.au";
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
+
+  /* Same packing as the teaching tool, so a bubble diagram on paper is the
+     one the class saw on the board. A short row is centred, so it sits in
+     the gaps of the row above. */
+  const PACK = {
+    2:[2], 3:[3], 4:[2,2], 5:[3,2], 6:[3,3],
+    7:[4,3], 8:[4,4], 9:[3,3,3], 10:[5,5]
+  };
+
+  /* ===================== worksheet language (EN / Arabic / Farsi) =====================
+     Same convention as the other creators: the chosen language on top, English
+     beneath. Every numeral stays Western and LTR, isolated with <bdi> so it does
+     not flip inside a right-to-left sentence.
+     NOTE: the AR/FA strings want a fluent proofread, as in the other creators. */
+  let LANG = "en";
+  try{ LANG = localStorage.getItem("mmt-divgroup-ws-lang") || "en"; }catch(_){ }
+
+  function TR(o){
+    if(o == null) return "";
+    if(typeof o === "string") return o;
+    if(LANG === "en" || !o[LANG]) return o.en || "";
+    return '<span class="tl" dir="rtl" lang="' + LANG + '">' + o[LANG] + '</span>'
+         + '<span class="el" dir="ltr">' + o.en + '</span>';
+  }
+  /* one-line version for table headers and chips, where two stacked lines
+     would blow the row height apart */
+  function TR1(o){
+    if(o == null) return "";
+    if(typeof o === "string") return o;
+    if(LANG === "en" || !o[LANG]) return o.en || "";
+    return '<bdi dir="rtl" lang="' + LANG + '">' + o[LANG] + '</bdi>';
+  }
+
+  const WS = {
+    name:   { en:"Name", ar:"الاسم", fa:"نام" },
+    date:   { en:"Date", ar:"التاريخ", fa:"تاریخ" },
+    inEach: { en:"In each", ar:"في كل مجموعة", fa:"در هر گروه" },
+    shares: { en:"That shares out", ar:"هذا يوزّع", fa:"این مقدار توزیع می‌شود" },
+    left:   { en:"Left", ar:"الباقي", fa:"باقی‌مانده" },
+    check:  { en:"Check", ar:"تحقّق", fa:"بررسی" },
+    leftOver:{ en:"Left over", ar:"الباقي", fa:"باقی‌مانده" },
+    working:{ en:"Working", ar:"الحل", fa:"محاسبه" },
+    think:  { en:"Think about it", ar:"فكّر في ذلك", fa:"دربارهٔ آن فکر کن" },
+    fewer:  { en:"Go back to one question you have finished. Could you have shared it out in fewer rounds? Show how.",
+              ar:"عد إلى سؤال أنهيته. هل كان بإمكانك التوزيع في جولات أقل؟ وضّح كيف.",
+              fa:"به یکی از سؤال‌هایی که تمام کرده‌ای برگرد. آیا می‌توانستی با مراحل کمتری تقسیم کنی؟ نشان بده چگونه." }
+  };
+
+  const SECTIONS = {
+    finish: { letter:"A", head:{
+      en:"Finish the sharing. Each group already has some. Write how many more go in each group, then write the answer.",
+      ar:"أكمل التوزيع. كل مجموعة لديها بعضها بالفعل. اكتب كم يُضاف إلى كل مجموعة، ثم اكتب الإجابة.",
+      fa:"تقسیم را کامل کن. هر گروه از قبل مقداری دارد. بنویس چند تای دیگر به هر گروه می‌رسد، سپس پاسخ را بنویس." } },
+    share:  { letter:"B", head:{
+      en:"Share it out. Put the same amount in every bubble. Use the table to record each round.",
+      ar:"وزّع العدد. ضع المقدار نفسه في كل دائرة. استخدم الجدول لتسجيل كل جولة.",
+      fa:"تقسیم کن. در هر حباب مقدار یکسان بگذار. هر مرحله را در جدول بنویس." } },
+    ladder: { letter:"C", head:{
+      en:"No bubbles this time. Fill the table until nothing is left, then add the “in each” column.",
+      ar:"بدون دوائر هذه المرة. أكمل الجدول حتى لا يبقى شيء، ثم اجمع عمود «في كل مجموعة».",
+      fa:"این بار حباب نیست. جدول را پر کن تا چیزی باقی نماند، سپس ستون «در هر گروه» را جمع بزن." } },
+    rem:    { letter:"D", head:{
+      en:"Share out as much as you can. Some will be left over — write it in the box.",
+      ar:"وزّع أكبر قدر ممكن. سيبقى بعضها — اكتبه في المربع.",
+      fa:"تا جایی که می‌توانی تقسیم کن. مقداری باقی می‌ماند — آن را در کادر بنویس." } },
+    word:   { letter:"E", head:{
+      en:"Use it. Show your working with bubbles or with the table.",
+      ar:"طبّقها. أظهر خطوات حلّك بالدوائر أو بالجدول.",
+      fa:"از آن استفاده کن. راه حل خود را با حباب‌ها یا جدول نشان بده." } }
+  };
+
+  /* Word problems. Every one is a SHARING question — a number split into a
+     given number of equal groups — because that is what the bubbles model.
+     "How many groups of 6 are there?" is a different picture and is not asked
+     here. {n} and {d} are filled with Western numerals inside <bdi>. */
+  const WORDS = [
+    { en:"{n} pencils are shared equally between {d} students. How many pencils does each student get?",
+      ar:"يتم توزيع {n} قلم رصاص بالتساوي على {d} طلاب. كم قلمًا يحصل عليه كل طالب؟",
+      fa:"{n} مداد به‌طور مساوی بین {d} دانش‌آموز تقسیم می‌شود. هر دانش‌آموز چند مداد می‌گیرد؟" },
+    { en:"{n} students are put into {d} equal teams. How many students are in each team?",
+      ar:"يتم تقسيم {n} طالبًا إلى {d} فرق متساوية. كم طالبًا في كل فريق؟",
+      fa:"{n} دانش‌آموز به {d} تیم مساوی تقسیم می‌شوند. در هر تیم چند دانش‌آموز است؟" },
+    { en:"The canteen has {n} muffins to pack into {d} equal trays. How many muffins go on each tray?",
+      ar:"لدى المقصف {n} كعكة ليضعها في {d} صوانٍ متساوية. كم كعكة في كل صينية؟",
+      fa:"بوفه {n} کیک دارد تا در {d} سینی مساوی بچیند. در هر سینی چند کیک قرار می‌گیرد؟" },
+    { en:"{n} books are shared equally across {d} shelves. How many books are on each shelf?",
+      ar:"يتم توزيع {n} كتابًا بالتساوي على {d} أرفف. كم كتابًا على كل رف؟",
+      fa:"{n} کتاب به‌طور مساوی روی {d} قفسه چیده می‌شود. روی هر قفسه چند کتاب است؟" },
+    { en:"A club has {n} players to split into {d} equal teams. How many players are in each team?",
+      ar:"لدى النادي {n} لاعبًا لتقسيمهم إلى {d} فرق متساوية. كم لاعبًا في كل فريق؟",
+      fa:"یک باشگاه {n} بازیکن دارد تا به {d} تیم مساوی تقسیم کند. در هر تیم چند بازیکن است؟" },
+    { en:"{n} eggs are packed into {d} equal boxes. How many eggs are in each box?",
+      ar:"يتم تعبئة {n} بيضة في {d} علب متساوية. كم بيضة في كل علبة؟",
+      fa:"{n} تخم‌مرغ در {d} جعبهٔ مساوی بسته‌بندی می‌شود. در هر جعبه چند تخم‌مرغ است؟" }
+  ];
+
+  const LEVEL_LABEL = {
+    sweet:"Sweet", mild:"Mild", medium:"Medium", spicy:"Spicy", mixed:"Mixed — sweet to spicy"
+  };
+  const ORDER = ["sweet","mild","medium","spicy"];
+
+  /* ==================================================================
+     NUMBERS
+     ================================================================== */
+  const randInt = (lo,hi) => lo + Math.floor(Math.random()*(hi-lo+1));
+  const pick = a => a[Math.floor(Math.random()*a.length)];
+
+  function allowedDivisors(){
+    return Array.from(document.querySelectorAll(".divChip"))
+      .filter(c => c.getAttribute("aria-pressed") === "true")
+      .map(c => parseInt(c.dataset.d, 10));
+  }
+
+  /* The chunking the answer key shows: place value, biggest first.
+     43 becomes 40 then 3, which is exactly the digits a student will later
+     write above a division bracket — that is the whole point of the ladder. */
+  function chunksOf(q){
+    const out = [];
+    let left = q, unit = 1;
+    while(unit * 10 <= left) unit *= 10;
+    while(left > 0){
+      const part = Math.floor(left / unit) * unit;
+      if(part > 0){ out.push(part); left -= part; }
+      unit = Math.floor(unit / 10) || 1;
+      if(unit < 1) break;
+    }
+    return out;
+  }
+
+  function makeNumbers(level, wantRemainder, divisors){
+    const pool = (level === "sweet") ? divisors.filter(d => d <= 5) : divisors;
+    const ds = pool.length ? pool : divisors;
+    for(let t=0;t<80;t++){
+      const d = pick(ds);
+      let q;
+      if(level === "sweet")       q = randInt(Math.max(3, Math.ceil(20/d)), Math.max(4, Math.floor(99/d)));
+      else if(level === "mild")   q = randInt(Math.max(3, Math.ceil(20/d)), Math.max(4, Math.floor(99/d)));
+      else                        q = randInt(Math.ceil(100/d), Math.floor(600/d));
+      if(q < 2) continue;
+      const r = wantRemainder ? randInt(1, d-1) : 0;
+      if(wantRemainder && d < 2) continue;
+      const dividend = d*q + r;
+      if(dividend < 20 || dividend > 999) continue;
+      return { dividend, divisor:d, quotient:q, rem:r, chunks:chunksOf(q) };
+    }
+    return { dividend:84, divisor:6, quotient:14, rem:0, chunks:[10,4] };
+  }
+
+  function makeQ(kind, level, divisors){
+    const wantRem = (kind === "rem") || (kind !== "rem" && level === "spicy" && Math.random() < 0.25);
+    const n = makeNumbers(level === "mixed" ? "mild" : level, kind === "rem" ? true : (kind === "word" ? false : wantRem), divisors);
+    const q = Object.assign({ kind, level }, n);
+    if(kind === "word"){
+      q.word = pick(WORDS);
+      q.rem = 0; q.dividend = q.divisor * q.quotient;
+    }
+    if(kind === "finish"){
+      /* The point of section A is that ONE round is left to work out, so the
+         quotient has to break into at least two place-value chunks — 10 and 4,
+         not a bare 6. */
+      let n = q;
+      for(let t=0; t<40 && n.chunks.length < 2; t++){
+        const c = makeNumbers(level === "mixed" ? "mild" : level, false, divisors);
+        if(c.chunks.length >= 2) n = Object.assign({ kind, level }, c);
+      }
+      Object.assign(q, n);
+      if(q.chunks.length < 2){ q.given = Math.max(1, q.quotient - 1); q.chunks = [q.given, q.quotient - q.given]; }
+      else q.given = q.chunks[0];
+      q.rem = 0; q.dividend = q.divisor * q.quotient;
+    }
+    return q;
+  }
+
+  /* ==================================================================
+     DRAWING
+     ================================================================== */
+  function bubblesSVG(d, given){
+    const rows = PACK[d] || [d];
+    const per = Math.max.apply(null, rows);
+    const R = 50, GAP = 20;
+    const W = per*2*R + (per-1)*GAP;
+    const H = rows.length*2*R + (rows.length-1)*GAP;
+    let body = "";
+    let y = R;
+    rows.forEach(n => {
+      const rowW = n*2*R + (n-1)*GAP;
+      let x = (W - rowW)/2 + R;
+      for(let k=0;k<n;k++){
+        body += '<circle class="bub" cx="' + x + '" cy="' + y + '" r="' + (R-2) + '"/>';
+        if(given != null){
+          body += '<text class="bubGiven" x="' + x + '" y="' + (y - 17) + '" font-size="34">' + given + '</text>';
+          body += '<line class="bubRule" x1="' + (x-26) + '" y1="' + (y+22) + '" x2="' + (x+26) + '" y2="' + (y+22) + '"/>';
+        }
+        x += 2*R + GAP;
+      }
+      y += 2*R + GAP;
+    });
+    return '<div class="bubWrap"><svg style="--per:' + per + '" viewBox="0 0 ' + W + ' ' + H
+         + '" role="img" aria-label="' + d + ' groups">' + body + '</svg></div>';
+  }
+
+  function ladderHTML(q, rowsWanted, givenRow){
+    const rows = Math.max(2, rowsWanted);
+    let body = "";
+    for(let i=0;i<rows;i++){
+      if(givenRow && i === 0){
+        const used = q.divisor * q.given;
+        body += '<tr class="given"><td>' + q.given + '</td>'
+              + '<td class="mid">' + q.divisor + ' × ' + q.given + ' = ' + used + '</td>'
+              + '<td class="r">' + (q.dividend - used) + '</td></tr>';
+      } else {
+        body += '<tr><td></td><td class="mid">' + q.divisor + ' × &nbsp;&nbsp;&nbsp; =</td><td class="r"></td></tr>';
+      }
+    }
+    return '<table class="lad"><thead><tr>'
+         + '<th>' + TR1(WS.inEach) + '</th>'
+         + '<th>' + TR1(WS.shares) + '</th>'
+         + '<th class="r">' + TR1(WS.left) + '</th>'
+         + '</tr></thead><tbody>' + body + '</tbody></table>';
+  }
+
+  function sentenceHTML(q){
+    return '<div class="qSentence"><span>' + q.dividend + '</span><span>÷</span><span>' + q.divisor
+         + '</span><span>=</span><span class="blank"></span>'
+         + (q.rem ? '<span style="font-size:.72em">r</span><span class="blank" style="min-width:28px"></span>' : '')
+         + '</div>';
+  }
+
+  function cardHTML(q, idx, opts){
+    const wide = (q.divisor >= 7 && opts.cols >= 2) ? " wide" : "";
+    const bubbles = opts.bubbles && q.kind !== "ladder";
+    let body = '<div class="qTop"><span class="qNum ' + q.level + '">' + idx + '</span>'
+             + (q.kind === "word" ? "" : sentenceHTML(q)) + '</div>';
+
+    if(q.kind === "word"){
+      const txt = {};
+      ["en","ar","fa"].forEach(L => {
+        txt[L] = (q.word[L] || q.word.en)
+          .replace("{n}", '<bdi>' + q.dividend + '</bdi>')
+          .replace("{d}", '<bdi>' + q.divisor + '</bdi>');
+      });
+      body += '<div class="qWord">' + TR(txt) + '</div>';
+      body += '<div class="qSentence"><span>' + q.dividend + '</span><span>÷</span><span>' + q.divisor
+            + '</span><span>=</span><span class="blank"></span></div>';
+    }
+
+    if(bubbles) body += bubblesSVG(q.divisor, q.kind === "finish" ? q.given : null);
+
+    if(opts.ladder || q.kind === "ladder" || !bubbles){
+      const wanted = (q.chunks.length + 1);
+      body += ladderHTML(q, wanted, q.kind === "finish");
+    }
+    if(!bubbles && q.kind !== "ladder"){
+      body += '<div class="workBox"><span class="workHead">' + TR1(WS.working) + '</span>'
+            + '<div style="height:26px"></div></div>';
+    }
+    if(q.rem){
+      body += '<div class="leftBox"><span>' + TR1(WS.leftOver) + '</span><span class="slot"></span></div>';
+    }
+    /* Cards in one grid row are as tall as the tallest, so the check line is
+       pushed to the BOTTOM — the spare room then reads as space to write in
+       rather than a hole in the middle of a question. */
+    body += '<div class="qFill"></div>';
+    if(opts.check){
+      body += '<div class="qFoot"><span>' + TR1(WS.check) + '</span>'
+            + '<span class="chk">' + q.divisor + ' × <span class="blank"></span>'
+            + (q.rem ? ' + <span class="blank" style="min-width:24px"></span>' : '')
+            + ' = ' + q.dividend + '</span></div>';
+    }
+    return '<div class="qCard' + wide + '">' + body + '</div>';
+  }
+
+  function keyCardHTML(q, idx){
+    let run = 0, steps = [];
+    q.chunks.forEach(c => {
+      run += c * q.divisor;
+      steps.push(c + " in each &rarr; " + q.divisor + " × " + c + " = " + (c*q.divisor)
+                 + ", " + (q.dividend - run) + " left");
+    });
+    const ans = q.quotient + (q.rem ? " r " + q.rem : "");
+    const sum = q.chunks.length > 1 ? (q.chunks.join(" + ") + " = " + q.quotient) : (q.quotient + " in each");
+    const chk = q.divisor + " × " + q.quotient + (q.rem ? " + " + q.rem : "") + " = " + q.dividend;
+    return '<div class="qCard' + ((q.divisor >= 7) ? " wide" : "") + '">'
+      + '<div class="qTop"><span class="qNum ' + q.level + '">' + idx + '</span>'
+      + '<span class="keyAns">' + q.dividend + ' ÷ ' + q.divisor + ' = ' + ans + '</span></div>'
+      + '<div class="keyWhy">' + steps.join("; ")
+      + (q.rem ? "; " + q.rem + " cannot be shared &mdash; not enough for one each" : "")
+      + '.<br><b>' + sum + '</b>. Check: ' + chk + '.</div>'
+      + '</div>';
+  }
+
+  /* ==================================================================
+     BUILDING THE PAPER
+     ================================================================== */
+  const KINDS = ["finish","share","ladder","rem","word"];
+  const TOGGLE = { finish:"kFinish", share:"kShare", ladder:"kLadder", rem:"kRem", word:"kWord" };
+  const COUNT  = { finish:"nFinish", share:"nShare", ladder:"nLadder", rem:"nRem", word:"nWord" };
+
+  function sectionCounts(){
+    const c = {};
+    KINDS.forEach(k => {
+      c[k] = $(TOGGLE[k]).checked ? Math.max(0, Math.min(40, parseInt($(COUNT[k]).value, 10) || 0)) : 0;
+    });
+    return c;
+  }
+  const totalAsked = () => { const c = sectionCounts(); return KINDS.reduce((t,k) => t + c[k], 0); };
+
+  const A4_CONTENT_PX = (() => {
+    const p = document.createElement("div");
+    p.style.cssText = "position:absolute;left:-10000px;top:0;height:281mm;";
+    document.body.appendChild(p);
+    const h = p.getBoundingClientRect().height;
+    p.remove();
+    return h;
+  })();
+
+  const COLS = { roomy:2, normal:3, tight:4 };
+  let LAST_ROOM = 0;
+
+  function buildQuestions(){
+    const level = $("levelSel").value;
+    const divisors = allowedDivisors();
+    if(!divisors.length) return { error:"Tick at least one number of groups." };
+
+    const counts = sectionCounts();
+    const kinds = KINDS.filter(k => counts[k] > 0);
+    if(!kinds.length) return { error:"Turn on at least one section and give it a number of questions." };
+
+    const groups = [];
+    const seen = {};
+    kinds.forEach(k => {
+      const n = counts[k], qs = [];
+      for(let i=0;i<n;i++){
+        /* Every section climbs its OWN ladder, so four "share it out"
+           questions still run sweet to spicy inside that section. */
+        const lv = (level === "mixed")
+          ? ORDER[Math.min(ORDER.length-1, Math.floor(i / Math.max(1, n/ORDER.length)))]
+          : level;
+        let q = null, spare = null;
+        for(let t=0;t<30;t++){
+          const cand = makeQ(k, lv, divisors);
+          const id = k + "|" + cand.dividend + "/" + cand.divisor;
+          if(seen[id]){ spare = spare || cand; continue; }
+          seen[id] = 1; q = cand; break;
+        }
+        qs.push(q || spare);
+      }
+      groups.push({ kind:k, qs:qs.filter(Boolean) });
+    });
+    return { groups, level, divisors };
+  }
+
+  /* Rows are measured for real, per section, then poured into pages.
+     Sampling one row drops a card under the page footer. */
+  function measureRows(groups, opts, key){
+    const m = $("measure");
+    m.innerHTML = '<section class="page' + (key ? " isKey" : "") + '"><div class="sheet" id="mSheet"></div></section>';
+    const sheet = $("mSheet");
+    const out = [];
+    let n = 1;
+
+    groups.forEach(g => {
+      const head = document.createElement("div");
+      head.className = "secHead";
+      head.innerHTML = '<span class="secLetter">' + SECTIONS[g.kind].letter + '</span>'
+                     + '<span class="secText">' + TR(SECTIONS[g.kind].head) + '</span>';
+      sheet.appendChild(head);
+      const headH = head.getBoundingClientRect().height + 7;   /* + .secHead margin */
+
+      const rows = [];
+      const cards = g.qs.map(q => ({ q, n:n++ }));
+      /* a wide card takes two columns, so a row is filled by column count */
+      let row = [], used = 0;
+      cards.forEach(c => {
+        const span = (!key && c.q.divisor >= 7 && opts.cols >= 2) || (key && c.q.divisor >= 7) ? 2 : 1;
+        const w = Math.min(span, opts.cols);
+        if(used + w > opts.cols){ rows.push(row); row = []; used = 0; }
+        row.push(c); used += w;
+      });
+      if(row.length) rows.push(row);
+
+      /* Consecutive .qGrid rows inside a section sit flush against each other,
+         so a row costs exactly its own height — adding a guessed gap here is
+         what made the packer break a page early. */
+      const heights = rows.map(r => {
+        const grid = document.createElement("div");
+        grid.className = "qGrid";
+        grid.style.setProperty("--cols", opts.cols);
+        grid.innerHTML = r.map(c => key ? keyCardHTML(c.q, c.n) : cardHTML(c.q, c.n, opts)).join("");
+        sheet.appendChild(grid);
+        const h = grid.getBoundingClientRect().height;
+        grid.remove();
+        return h;
+      });
+      head.remove();
+      out.push({ kind:g.kind, headH, rows, heights });
+    });
+    m.innerHTML = "";
+    return out;
+  }
+
+  /* Pages are filled row by row against REAL measured heights. Sampling one
+     row and multiplying drops a card under the page footer. */
+  function layout(units, room, cap){
+    const limit = Math.min(room, cap);
+    const pages = [];
+    let cur = [], h = 0, kind = null;
+    const SECGAP = 9;      /* .section margin-bottom, only BETWEEN sections */
+    units.forEach(u => {
+      const cost = k => (k === u.kind) ? u.h : u.head + u.h + (k === null ? 0 : SECGAP);
+      if(cur.length && h + cost(kind) > limit){ pages.push(cur); cur = []; h = 0; kind = null; }
+      h += cost(kind); cur.push(u); kind = u.kind;
+    });
+    if(cur.length) pages.push(cur);
+    return pages;
+  }
+
+  function paginate(blocks, room){
+    const units = [];
+    blocks.forEach(b => b.rows.forEach((r,i) =>
+      units.push({ kind:b.kind, head:b.headH, row:r, h:b.heights[i] })));
+    if(!units.length) return [];
+
+    /* Fill each page until the next row genuinely will not fit. Balancing the
+       rows evenly instead was tried and is worse on paper: it leaves a visible
+       gap on EVERY page rather than one at the end. */
+    const best = layout(units, room, Infinity);
+
+    /* back into section blocks, marking a section that carries over */
+    const seen = {};
+    return best.map(pageUnits => {
+      const page = [];
+      pageUnits.forEach(u => {
+        const last = page[page.length-1];
+        if(last && last.kind === u.kind){ last.rows.push(u.row); last.heights.push(u.h); }
+        else { page.push({ kind:u.kind, cont: !!seen[u.kind], rows:[u.row], heights:[u.h] }); seen[u.kind] = 1; }
+      });
+      return page;
+    });
+  }
+
+  function blocksHTML(page, opts, key){
+    return page.map(b =>
+      '<div class="section"><div class="secHead">'
+      + '<span class="secLetter">' + SECTIONS[b.kind].letter + '</span>'
+      + '<span class="secText">' + TR(SECTIONS[b.kind].head) + '</span>'
+      + (b.cont ? '<span class="secCont">continued</span>' : '')
+      + '</div>'
+      + b.rows.map(r => '<div class="qGrid" style="--cols:' + opts.cols + '">'
+          + r.map(c => key ? keyCardHTML(c.q, c.n) : cardHTML(c.q, c.n, opts)).join("")
+          + '</div>').join("")
+      + '</div>'
+    ).join("");
+  }
+
+  function fillHTML(h){
+    return '<div class="workBox" style="margin-top:2px"><span class="workHead">' + TR1(WS.working) + '</span>'
+         + '<div style="height:' + Math.min(320, Math.max(24, h)) + 'px"></div></div>';
+  }
+
+  /* Ruled room is useful; a whole page of it is not. Both boxes are capped. */
+  function promptHTML(h){
+    return '<div class="prompt"><div class="promptHead">' + TR1(WS.think) + '</div>'
+         + '<div class="promptText">' + TR(WS.fewer) + '</div>'
+         + '<div class="promptRules" style="--ph:' + Math.min(240, Math.max(30, h)) + 'px"></div></div>';
+  }
+
+  function pageHTML(inner, meta, key, pageNo, total){
+    return '<section class="page' + (key ? " isKey" : "") + '">'
+      + '<div class="pageHeader">'
+      +   '<div><div class="hdrTitle">Division by Grouping' + (key ? " &mdash; ANSWERS" : "") + '</div>'
+      +   '<div class="hdrSub">' + (key ? "Answer key &middot; " : "")
+      +     esc(LEVEL_LABEL[meta.level]) + " &middot; " + esc(divisorLabel(meta.divisors)) + '</div></div>'
+      +   (key ? "" : '<div class="nameDate">'
+      +     '<div class="lineField"><span class="lineLabel">' + TR1(WS.name) + '</span><span class="lineBox"></span></div>'
+      +     '<div class="lineField"><span class="lineLabel">' + TR1(WS.date) + '</span><span class="lineBox"></span></div>'
+      +   '</div>')
+      + '</div>'
+      + '<div class="sheet">' + inner + '</div>'
+      + '<div class="pageFooter"><span>Page ' + pageNo + ' of ' + total + '</span>'
+      +   '<span><a href="' + SITE + '">www.millsmathstools.au</a></span></div>'
+      + '</section>';
+  }
+
+  function divisorLabel(ds){
+    if(ds.length >= 9) return "÷ 2 to 10";
+    if(ds.length === 1) return "÷ " + ds[0];
+    return "÷ " + ds.join(", ");
+  }
+
+  function generate(scroll){
+    const built = buildQuestions();
+    const out = $("out");
+    if(built.error){ out.innerHTML = '<p class="note warn">' + esc(built.error) + '</p>'; return; }
+
+    const density = $("densitySel").value;
+    const opts = {
+      cols: COLS[density],
+      bubbles: $("bubbleToggle").checked && density !== "tight",
+      ladder: $("ladderToggle").checked,
+      check: $("checkToggle").checked
+    };
+
+    /* header + footer + sheet padding, measured once against a real page */
+    const probe = document.createElement("div");
+    probe.className = "measure";
+    probe.innerHTML = pageHTML("", built, false, 1, 1);
+    document.body.appendChild(probe);
+    const pageEl = probe.querySelector(".page");
+    const chrome = probe.querySelector(".pageHeader").getBoundingClientRect().height
+                 + probe.querySelector(".pageFooter").getBoundingClientRect().height
+                 + 18;                     /* .sheet padding, top and bottom */
+    probe.remove();
+    /* The page is 297mm on screen but only 281mm once print margins are taken,
+       so the packing is done against the PRINT budget and the screen preview
+       simply has a little room to spare at the bottom. */
+    const room = A4_CONTENT_PX - chrome;
+    LAST_ROOM = room;
+
+    const wsBlocks = measureRows(built.groups, opts, false);
+    const pagesS = paginate(wsBlocks, room);
+
+    const key = $("keyToggle").checked;
+    let pagesK = [];
+    if(key){
+      const keyBlocks = measureRows(built.groups, opts, true);
+      pagesK = paginate(keyBlocks, room);
+    }
+
+    let html = "";
+    /* No page prints half empty. Whatever the questions leave becomes ruled
+       writing room — and on the last page it becomes the thinking prompt. */
+    const headOf = {};
+    wsBlocks.forEach(b => headOf[b.kind] = b.headH);
+    const spareOf = p => room - p.reduce((t,b,bi) =>
+      t + headOf[b.kind] + b.heights.reduce((x,y)=>x+y,0) + (bi ? 9 : 0), 0);
+    const wantPrompt = $("promptToggle").checked;
+    /* The prompt only goes on the last page if that page can actually hold it;
+       otherwise it gets a page of its own rather than being quietly dropped. */
+    const lastSpare = pagesS.length ? spareOf(pagesS[pagesS.length-1]) : 0;
+    const promptOnLast = wantPrompt && lastSpare >= 76;
+    const promptOwnPage = wantPrompt && !promptOnLast;
+    const totalPages = pagesS.length + pagesK.length + (promptOwnPage ? 1 : 0);
+
+    pagesS.forEach((p,i) => {
+      let inner = blocksHTML(p, opts, false);
+      const spare = spareOf(p);
+      if(promptOnLast && i === pagesS.length - 1) inner += promptHTML(spare - 72);
+      else if(spare > 150) inner += fillHTML(spare - 72);
+      html += pageHTML(inner, built, false, i+1, totalPages);
+    });
+    if(promptOwnPage) html += pageHTML(promptHTML(240), built, false, pagesS.length+1, totalPages);
+
+    const before = pagesS.length + (promptOwnPage ? 1 : 0);
+    pagesK.forEach((p,i) => {
+      html += pageHTML(blocksHTML(p, opts, true), built, true, before+i+1, totalPages);
+    });
+    out.innerHTML = html;
+
+    /* The filler is sized from the model; the model can be a few pixels out
+       once a bilingual heading wraps. Measure the real page and take those
+       pixels back off the filler, so it can never be what pushes a card past
+       the print budget. */
+    out.querySelectorAll(".page").forEach(pg => {
+      const box = pg.querySelector(".workBox div, .promptRules");
+      if(!box) return;
+      const sheet = pg.querySelector(".sheet").getBoundingClientRect();
+      for(let t=0; t<6; t++){
+        const over = box.getBoundingClientRect().bottom - (sheet.top + room);
+        if(over <= 0) break;
+        const h = parseFloat(getComputedStyle(box).height) || 0;
+        const next = Math.max(0, h - over - 2);
+        if(box.classList.contains("promptRules")) box.style.setProperty("--ph", next + "px");
+        box.style.height = next + "px";
+        /* a working box with no room left is just noise; the prompt is not */
+        if(next === 0 && !box.classList.contains("promptRules")){ box.parentElement.remove(); break; }
+        if(next === 0) break;
+      }
+    });
+
+    if(scroll && out.scrollIntoView) out.scrollIntoView({ behavior:"smooth", block:"start" });
+  }
+
+  /* ==================================================================
+     CONTROLS
+     ================================================================== */
+  function buildDivChips(){
+    const wrap = $("divChips");
+    wrap.innerHTML = "";
+    for(let d=2; d<=10; d++){
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "divChip"; b.dataset.d = d; b.textContent = d;
+      b.setAttribute("aria-pressed", String(d <= 6));
+      b.addEventListener("click", () => {
+        b.setAttribute("aria-pressed", b.getAttribute("aria-pressed") === "true" ? "false" : "true");
+        syncAllBtn();
+      });
+      wrap.appendChild(b);
+    }
+    syncAllBtn();
+  }
+  function syncAllBtn(){
+    const on = allowedDivisors().length;
+    $("divAllBtn").textContent = on ? "Untick all" : "Tick all";
+  }
+  $("divAllBtn").addEventListener("click", () => {
+    const turnOn = allowedDivisors().length === 0;
+    document.querySelectorAll(".divChip").forEach(c => c.setAttribute("aria-pressed", String(turnOn)));
+    syncAllBtn();
+  });
+
+  function syncTotal(){ $("totalPill").textContent = totalAsked() + " questions"; }
+  KINDS.forEach(k => {
+    $(TOGGLE[k]).addEventListener("change", syncTotal);
+    $(COUNT[k]).addEventListener("input", syncTotal);
+  });
+
+  $("langSel").addEventListener("change", function(){
+    LANG = this.value;
+    try{ localStorage.setItem("mmt-divgroup-ws-lang", LANG); }catch(_){ }
+    if($("out").innerHTML.trim()) generate(false);
+  });
+  $("genBtn").addEventListener("click", () => generate(true));
+  $("printBtn").addEventListener("click", () => window.print());
+  $("resetBtn").addEventListener("click", () => {
+    $("levelSel").value = "mixed";
+    $("densitySel").value = "roomy";
+    LANG = "en"; $("langSel").value = "en";
+    buildDivChips();
+    const def = { finish:2, share:4, ladder:4, rem:2, word:2 };
+    KINDS.forEach(k => { $(TOGGLE[k]).checked = true; $(COUNT[k]).value = def[k]; });
+    ["bubbleToggle","ladderToggle","checkToggle","promptToggle","keyToggle"].forEach(id => $(id).checked = true);
+    syncTotal();
+    $("out").innerHTML = "";
+  });
+
+  buildDivChips();
+  syncTotal();
+  $("langSel").value = LANG;
+  generate(false);
+
+  /* a small surface for the automated checks */
+  window.__DGW__ = {
+    generate, buildQuestions, chunksOf, makeQ, PACK, allowedDivisors,
+    room: () => LAST_ROOM,
+    setLang: v => { LANG = v; $("langSel").value = v; generate(false); }
+  };
+})();
+</script>
+</body>
+</html>

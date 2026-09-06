@@ -16,6 +16,74 @@
 > §2 "TWO folders", §3 deploy paths and §5's `mathstools-main 2` heading below
 > describe the OLD layout — this block supersedes them.
 >
+> **NEW (2026-09-05, session — being pushed): DIVISION BY GROUPING — WORKSHEET
+> CREATOR.** `worksheet-creators/stage-3/number/division-grouping.html`, the
+> printable sibling of the teaching tool and cross-listed under the same two
+> outcomes (**MA3-MR-01**, **MA3-MR-02**). Same shell, A4 machinery and
+> trilingual EN/AR/FA convention as the other creators; the tool's "Tools ▾"
+> menu is now a live row pointing at it, with only Student Quiz still greyed.
+>
+> * **THE BUBBLES ARE PRINTED, AND THAT IS THE POINT.** A student shares out a
+>   chunk at a time on paper exactly as the class did on the board. **Draw the
+>   bubbles** is a toggle, because the same paper is wanted again once a class
+>   no longer needs the picture — with it off, every question becomes the table
+>   plus a ruled working box.
+> * **FIVE SECTIONS, AND THE SCAFFOLD COMES OFF ONE LAYER AT A TIME.**
+>   **A Finish the sharing** hands over a paper where the FIRST ROUND IS ALREADY
+>   DONE — the chunk is printed inside every bubble and the first table row is
+>   filled in — so there is one decision left and a worked round to copy the
+>   shape of. **B Share it out** is the real practice: empty bubbles, the
+>   student's own chunks. **C Just the table** takes the bubbles away, and is
+>   the section the whole paper exists for — that "in each" column is the digits
+>   they will later write above a division bracket. **D Some left over.**
+>   **E Use it.**
+> * **THE KEY'S CHUNKING IS PLACE VALUE, BIGGEST FIRST** — 43 is 40 then 3, not
+>   20 + 20 + 3. `chunksOf()` is checked over every quotient to 600: the parts
+>   sum to the quotient, each is a single digit times a power of ten, and they
+>   descend. That is what makes the ladder the bridge to short division rather
+>   than just a tidy record.
+> * **SECTION A NEEDS A QUOTIENT THAT BREAKS IN TWO.** A bare 6 leaves nothing
+>   to work out, so `makeQ("finish")` re-rolls until the quotient has at least
+>   two place-value chunks, and the printed round is the first of them.
+> * **EVERY QUESTION ENDS WITH THE INVERSE** — `6 × ___ = 84` — so an answer can
+>   be tested rather than believed, and division and multiplication are written
+>   side by side. That is why the paper is cross-listed under MA3-MR-02.
+> * **A BUBBLE IS THE SAME SIZE ON EVERY QUESTION.** Letting the drawing fill
+>   the card printed a ÷4 question with circles twice the size of a ÷6 one,
+>   which reads as though the groups were different; the SVG is capped at
+>   `per × 17mm`. Seven or more groups spans TWO columns, or there is no room to
+>   write in them.
+> * **THE CHECK LINE IS PINNED TO THE BOTTOM OF ITS CARD** (`.qFill` grows).
+>   Cards in a grid row are as tall as the tallest, so without it a short
+>   question printed a hole in its middle instead of writing room.
+> * **PAGES ARE FILLED, NOT BALANCED.** Spreading rows evenly across the pages
+>   was tried and is worse on paper: it leaves a visible gap on EVERY page
+>   rather than one at the end. Rows are measured for real (a `.qGrid` sits
+>   flush against the next, so a row costs exactly its own height — a guessed
+>   gap is what made the packer break a page early), and whatever a page leaves
+>   becomes a ruled **Working** box, or on the last page the **fewer-rounds
+>   prompt**. Both boxes are capped, and a post-render pass measures the real
+>   page and takes any overshoot back off the filler, so the filler can never be
+>   what pushes a card past the print budget. The packing is done against
+>   **281mm**, not the 297mm the preview shows, because print margins take the
+>   difference.
+> * **THE PROMPT IS NEVER SILENTLY DROPPED.** If the last page cannot hold it,
+>   it gets a page of its own rather than vanishing.
+> * **THE WORD PROBLEMS ARE ALL SHARING QUESTIONS**, never "how many groups of
+>   6?" — that is a different picture and the bubbles do not model it. A check
+>   asserts every one of them asks how many in EACH group.
+> * **AR/FA WANT A FLUENT PROOFREAD**, as in the other creators.
+> * **Verified** through Playwright: 92 checks — every quotient to 600 chunked
+>   and re-derived, 2500 generated questions satisfying d × q + r = dividend
+>   with their chunks summing to q and each section's own rules, the divisor
+>   tick-list obeyed, the key mirroring the worksheet question for question and
+>   every answer re-derived from its own question, nothing falling off a page at
+>   three densities and with the bubbles off, no page that could have held
+>   another question, each section alone, a 58-question paper, both refusals,
+>   all three languages with the numerals staying Western, and the word problems
+>   being sharing questions. Harnesses live in the session scratch, not the
+>   repo: `wscheck.mjs`, `wsshots.mjs`.
+
 > **NEW (2026-09-05, session — being pushed): DIVISION BY GROUPING — BUBBLES.**
 > A Stage 3 teaching tool at
 > `interactive-tools/stage-3/number/division-grouping-bubbles/index.html`,
@@ -76,6 +144,19 @@
 >   write above the bracket. Do not "help" by suggesting the efficient chunk —
 >   the rounds counter is there so a class can be asked whether it could have
 >   been done in fewer.
+> * **THE GROUPS PACK LIKE STACKED PIPES, AND THE DIVISOR GOES TO TEN** (teacher
+>   feedback 2026-09-05). `PACK` maps the divisor to rows — 5 is 3 over 2, 7 is
+>   4 over 3, 9 is 3+3+3, 10 is 5+5 — and every row is CENTRED, so a short row
+>   sits in the gaps of the row above. Rows are equal wherever the number allows
+>   it (4, 6, 8, 9, 10), because equal rows are what "equal groups" should look
+>   like. 2, 3 and 5 across in one row have no second factor worth drawing.
+> * **"TYPE YOUR OWN" IS TYPED ON THE LOAD SCREEN** (teacher feedback
+>   2026-09-05): the intro's sentence becomes an input plus a row of 2–10 chips,
+>   and the numbers the teacher types are what flies onto the card — there is no
+>   second copy of the question anywhere to disagree with it. The Settings
+>   inputs that used to do this are GONE; they closed the menu the moment the
+>   level changed and could not be reached. Choosing that level forces the intro
+>   on and disables its toggle, or there would be nowhere to type.
 > * **AN OVERSHOOT FLIES OUT AND BOUNCES BACK.** Teacher decision 2026-09-05:
 >   blocking the entry before it moves hides the very thing worth seeing. The
 >   copies fly, the tally goes red AT THE GROUP THAT TIPS IT OVER (so a class can
@@ -106,7 +187,7 @@
 >   is a real classroom, and a running total you have to scroll to is not a
 >   running total. The side column is `clamp(266px,24vw,336px)` and the topbar
 >   drops its brand text at 1180px so it never wraps to two rows.
-> * **Verified** through Playwright: 181 checks — 1200 generated questions across
+> * **Verified** through Playwright: 232 checks — 3600 generated questions across
 >   the three levels for range, exactness and no back-to-back repeats; the
 >   divisor lock; scripted solves in one round, two rounds and fourteen rounds of
 >   1 agreeing; the tally, the ladder rows, the "left" column and both check
@@ -1417,7 +1498,10 @@ portal/PLACEMENT.md , portal/README.md   migration + structure notes
   which is the bridge to short division. No Firebase, no registry entry, no
   worksheet creator and no student quiz yet. Read the 2026-09-05 header block
   before touching the duplication order, the derived totals, the overshoot
-  bounce or the side column's width.
+  bounce or the side column's width. Its **worksheet creator** is
+  `worksheet-creators/stage-3/number/division-grouping.html` (five sections, the
+  bubbles printed as an option, an answer key that shows the rounds), listed
+  under the same two outcomes and reached from the tool's "Tools ▾" menu.
 - **Complete the Square (2026-08-31):** teacher tool
   `interactive-tools/stage-5/algebra/complete-the-square/`, the first Stage 5
   algebra tool. Two modes (tiles, and the formula proof), cross-listed under
@@ -1581,11 +1665,9 @@ portal/PLACEMENT.md , portal/README.md   migration + structure notes
   of ten, so it breaks the “move the decimal point” habit) and **area/volume**
   (m² ↔ cm² is 10 000, not 100 — the classic trap, and it would need its own
   tier). Digital storage (GB/MB/kB) was considered and left out.
-- **Division by Grouping siblings:** the teaching tool shipped 2026-09-05.
-  Still to build: a **worksheet creator**
-  (`worksheet-creators/stage-3/number/division-grouping.html` — a printable
-  partial-quotient ladder with the bubbles drawn blank, and a "how few rounds"
-  section) and a **student quiz**
+- **Division by Grouping siblings:** the teaching tool AND its worksheet creator
+  both shipped 2026-09-05.
+  Still to build: a **student quiz**
   (`online-quizzes/stage-3/number/division-grouping.html`, registry id
   `division-grouping-quiz`) carrying the v2 login block — a ladder that fades
   the bubbles, then the tally, then leaves only the written algorithm. Both are

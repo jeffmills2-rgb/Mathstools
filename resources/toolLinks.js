@@ -219,6 +219,13 @@ window.MMT_TOOL_LINKS = {
       tags: ["division", "sharing", "equal groups", "partial quotients", "chunking", "repeated subtraction", "remainder", "partitioning", "visual", "whole-class teaching", "inverse", "multiplication"]
     },
     {
+      title: "Division by Grouping \u2014 Worksheet Creator",
+      kind: "Worksheet maker",
+      url: "/worksheet-creators/stage-3/number/division-grouping.html",
+      note: "Printable A4 with the bubbles drawn on the page: finish a started round, share it out, the partial-quotient table alone, remainders, and word problems. Trilingual, with an answer key that shows the rounds.",
+      tags: ["worksheet generator", "printable", "division", "sharing", "equal groups", "partial quotients", "chunking", "remainder", "short division", "answer key", "trilingual", "eald"]
+    },
+    {
       title: "Factor Circles — Teacher Explore",
       kind: "Teacher tool",
       url: "/interactive-tools/stage-4/number/factor-circles/",
@@ -283,6 +290,14 @@ window.MMT_TOOL_LINKS = {
       url: "/interactive-tools/stage-3/number/division-grouping-bubbles/",
       note: "Finishes every question with both number sentences \u2014 84 \u00f7 6 = 14 and 6 \u00d7 14 = 84 \u2014 so division and multiplication are read as the same fact.",
       tags: ["number sentences", "division", "multiplication", "inverse", "equal groups", "partial quotients", "remainder", "visual", "whole-class teaching"]
+    }
+    ,
+    {
+      title: "Division by Grouping \u2014 Worksheet Creator",
+      kind: "Worksheet maker",
+      url: "/worksheet-creators/stage-3/number/division-grouping.html",
+      note: "Every question ends with the inverse check \u2014 6 \u00d7 ___ = 84 \u2014 so a division sentence and its multiplication are written side by side.",
+      tags: ["worksheet generator", "printable", "number sentences", "division", "multiplication", "inverse", "equal groups", "partial quotients", "answer key"]
     }
   ],
 

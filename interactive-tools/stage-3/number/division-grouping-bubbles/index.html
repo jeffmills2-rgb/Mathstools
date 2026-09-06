@@ -207,12 +207,13 @@
        A two-row arena is capped from the VIEWPORT HEIGHT (`--bubMax`), or the
        second row pushes the entry bar off a 1366×768 screen. */
     .arena{
-      display:grid; justify-content:center; align-items:start;
-      gap:clamp(4px,1vh,12px) clamp(8px,1.4vw,18px);
+      display:flex; flex-direction:column; align-items:center;
+      gap:clamp(4px,1vh,12px);
       --bubMax:186px;
     }
-    .arena.rows2{ --bubMax:min(168px,15.2vh); }   /* fallback; fitArena() measures the real one */
-    .bubbleWrap{ width:100%; min-width:0; display:flex; flex-direction:column; align-items:center; gap:6px; }
+    .arena.multi{ --bubMax:min(168px,15.2vh); }   /* fallback; fitArena() measures the real one */
+    .arenaRow{ display:flex; justify-content:center; gap:clamp(8px,1.4vw,18px); }
+    .bubbleWrap{ width:var(--bubMax); min-width:0; display:flex; flex-direction:column; align-items:center; gap:6px; }
     .blob{
       width:100%; aspect-ratio:1/1.04; border-radius:47%;
       background:radial-gradient(circle at 30% 24%,#ffffff,#f1f5f9 46%,#e2e8f0);
@@ -406,6 +407,34 @@
     }
     .introNext:hover{ transform:translateY(-2px); box-shadow:0 18px 40px rgba(37,99,235,.42); }
     .introNext:focus-visible{ outline:none; box-shadow:0 0 0 5px rgba(37,99,235,.28); }
+    .introSentence input.iNum{
+      font:inherit; width:3.6ch; text-align:center; color:var(--blue-dark);
+      background:transparent; border:none; border-bottom:.09em solid var(--blue);
+      border-radius:0; padding:0 .04em; margin:0; -moz-appearance:textfield;
+    }
+    .introSentence input.iNum::-webkit-outer-spin-button,
+    .introSentence input.iNum::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
+    .introSentence input.iNum:focus{ outline:none; background:rgba(37,99,235,.09); }
+    .introSentence input.iNum.is-bad{ border-bottom-color:var(--red); color:var(--red); animation:shake .34s; }
+    .introPick{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; justify-content:center; }
+    .introPickLab{ font-weight:900; color:var(--muted); font-size:1rem; }
+    .introChips{ display:flex; gap:7px; flex-wrap:wrap; justify-content:center; }
+    .introChip{
+      appearance:none; border:2px solid var(--border); background:#fff; color:var(--line);
+      font-family:var(--mathFont); font-size:1.5rem; font-weight:700; line-height:1;
+      min-width:2.2em; padding:8px 4px; border-radius:14px; cursor:pointer; transition:.15s ease;
+    }
+    .introChip:hover{ border-color:var(--purple); color:var(--purple-dark); transform:translateY(-1px); }
+    .introChip[aria-pressed="true"]{
+      background:var(--purple); border-color:var(--purple); color:#fff;
+      box-shadow:0 8px 20px rgba(124,58,237,.32);
+    }
+    .introMsg{
+      font-weight:900; color:#991b1b; background:rgba(220,38,38,.10);
+      border:1px solid rgba(220,38,38,.28); border-radius:12px; padding:8px 14px; font-size:.95rem;
+    }
+    .introVeil.is-leaving .introPick,
+    .introVeil.is-leaving .introMsg{ opacity:0; transition:opacity .3s ease; }
     .introVeil.is-leaving{ pointer-events:none; }
     .introVeil.is-leaving .introBg,
     .introVeil.is-leaving .introNext{ opacity:0; }
@@ -479,24 +508,18 @@
             </label>
             <label class="selRow"><span>Divide by</span>
               <select id="divisorSel" aria-label="Divisor">
-                <option value="0" selected>Any (2&ndash;6)</option>
+                <option value="0" selected>Any (2&ndash;10)</option>
                 <option value="2">2</option>
                 <option value="3">3</option>
                 <option value="4">4</option>
                 <option value="5">5</option>
                 <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
               </select>
             </label>
-            <div id="customRow" hidden>
-              <label class="selRow" style="margin-bottom:8px"><span>Number to share</span>
-                <input id="customDividend" type="text" inputmode="numeric" value="84" aria-label="Number to share" />
-              </label>
-              <label class="selRow"><span>Number of groups</span>
-                <input id="customDivisor" type="text" inputmode="numeric" value="6" aria-label="Number of groups" />
-              </label>
-              <p class="settingsNote" style="margin-top:8px">Up to 999 shared into 2&ndash;6 groups. Press <b>Use these numbers</b>.</p>
-              <button class="genBtn" id="customGo" type="button" style="margin-top:8px">Use these numbers</button>
-            </div>
             <p class="settingsNote" id="levelNote">Every question divides exactly, so a group can never be left stranded part-way.</p>
 
             <div class="settingsRule" role="separator"></div>
@@ -525,7 +548,7 @@
         <div class="menuWrap">
           <button class="btn" id="toolsBtn" type="button" aria-haspopup="true" aria-expanded="false">Tools &#9662;</button>
           <nav class="dropMenu" id="toolsMenu" aria-label="Related tools">
-            <span class="toolLink is-disabled">Worksheet Creator<small>Not built yet</small></span>
+            <a class="toolLink" href="/worksheet-creators/stage-3/number/division-grouping.html">Worksheet Creator<small>Printable A4: bubbles to fill, the ladder, remainders, use it</small></a>
             <span class="toolLink is-disabled">Student Quiz<small>Not built yet</small></span>
           </nav>
         </div>
@@ -621,6 +644,12 @@
       <div class="introSentence" id="introSentence">
         <span class="dv" id="iDividend">84</span><span>&divide;</span><span class="ds" id="iDivisor">6</span><span>=</span><span class="ans">?</span>
       </div>
+      <div class="introPick" id="introPick" hidden>
+        <span class="introPickLab">Share into</span>
+        <div class="introChips" id="introChips"></div>
+        <span class="introPickLab">groups</span>
+      </div>
+      <div class="introMsg" id="introMsg" hidden></div>
       <button class="introNext" id="introNext" type="button">Next &rarr;</button>
     </div>
   </div>
@@ -654,10 +683,16 @@
     lastKey: ""
   };
 
-  /* How the groups are arranged. An array, not a strip: 6 is 3 × 2 and 4 is
-     2 × 2, which is also the shape a class draws for equal groups. 2, 3 and 5
-     have no second factor worth drawing, so they stay in one row. */
-  const GRID = { 2:[2,1], 3:[3,1], 4:[2,2], 5:[5,1], 6:[3,2] };
+  /* How the groups are packed. An array, not a strip — and a row that is short
+     is CENTRED, so its bubbles sit in the gaps of the row above, the way pipes
+     stack. 5 is 3 over 2, 7 is 4 over 3. The rows are equal wherever the number
+     allows it (4, 6, 8, 9, 10), because equal rows are what "equal groups"
+     should look like. */
+  const PACK = {
+    2:[2], 3:[3], 4:[2,2], 5:[3,2], 6:[3,3],
+    7:[4,3], 8:[4,4], 9:[3,3,3], 10:[5,5]
+  };
+  const MAXDIV = 10;
 
   /* ---------------------------------------------------------------- derived */
   /* Everything about the board is derived from S.rounds, so undo and a bounced
@@ -671,7 +706,7 @@
   function randInt(lo,hi){ return lo + Math.floor(Math.random()*(hi-lo+1)); }
 
   function pickDivisor(){
-    return S.divisorPick ? S.divisorPick : randInt(2,6);
+    return S.divisorPick ? S.divisorPick : randInt(2, MAXDIV);
   }
 
   function generate(keepDivisor){
@@ -682,11 +717,15 @@
         const qLo = Math.ceil(100/d), qHi = Math.floor(600/d);
         dividend = d * randInt(qLo, qHi);
       } else if(S.level === "rem"){
-        const q = randInt(5, Math.min(40, Math.floor(240/d)));
+        /* Never below 20 to share: 7 ÷ 2 is not a question worth a board. */
+        const qLo = Math.max(3, Math.ceil(20/d));
+        const q = randInt(qLo, Math.max(qLo + 1, Math.min(40, Math.floor(240/d))));
         rem = randInt(1, d-1);
         dividend = d*q + rem;
       } else {
-        const qLo = Math.max(5, Math.ceil(20/d)), qHi = Math.floor(99/d);
+        /* Three is the smallest quotient worth sharing out; with ten groups a
+           two-digit dividend cannot give much more than that. */
+        const qLo = Math.max(3, Math.ceil(20/d)), qHi = Math.floor(99/d);
         dividend = d * randInt(qLo, qHi);
       }
       const key = dividend + "/" + d;
@@ -705,21 +744,26 @@
   function buildArena(){
     const arena = $("arena");
     arena.innerHTML = "";
-    const spec = GRID[S.divisor] || [S.divisor, 1];
-    arena.style.gridTemplateColumns = "repeat(" + spec[0] + ", minmax(0, var(--bubMax)))";
-    arena.classList.toggle("rows2", spec[1] > 1);
-    for(let i=0;i<S.divisor;i++){
-      const wrap = document.createElement("div");
-      wrap.className = "bubbleWrap";
-      wrap.innerHTML =
-        '<div class="blob" id="blob'+i+'">' +
-          '<div class="bubDots" id="dots'+i+'"></div>' +
-          '<div class="bubTotal" id="tot'+i+'">0</div>' +
-          '<div class="bubChips" id="chips'+i+'"></div>' +
-        '</div>' +
-        '<div class="bubLabel">Group '+(i+1)+'</div>';
-      arena.appendChild(wrap);
-    }
+    const rows = PACK[S.divisor] || [S.divisor];
+    arena.classList.toggle("multi", rows.length > 1);
+    let i = 0;
+    rows.forEach(n => {
+      const row = document.createElement("div");
+      row.className = "arenaRow";
+      for(let k=0;k<n;k++,i++){
+        const wrap = document.createElement("div");
+        wrap.className = "bubbleWrap";
+        wrap.innerHTML =
+          '<div class="blob" id="blob'+i+'">' +
+            '<div class="bubDots" id="dots'+i+'"></div>' +
+            '<div class="bubTotal" id="tot'+i+'">0</div>' +
+            '<div class="bubChips" id="chips'+i+'"></div>' +
+          '</div>' +
+          '<div class="bubLabel">Group '+(i+1)+'</div>';
+        row.appendChild(wrap);
+      }
+      arena.appendChild(row);
+    });
     $("groupsChip").textContent = S.divisor + " equal groups";
     fitArena(true);          /* only meaningful once the bubbles are in the DOM */
   }
@@ -741,14 +785,14 @@
   let fitSig = "";
   function fitArena(force){
     const arena = $("arena");
-    const rows = arena.classList.contains("rows2") ? 2 : 1;
+    const rows = (PACK[S.divisor] || [S.divisor]).length;
     const sig = [S.divisor, rows, window.innerWidth, window.innerHeight,
                  $("tray").hidden, $("estCard").hidden, S.showRounds].join("|");
     if(!force && sig === fitSig) return;
     fitSig = sig;
 
     if(rows === 1 || window.innerWidth <= 960){
-      arena.style.setProperty("--bubMax", rows === 1 ? "186px" : "150px");
+      arena.style.setProperty("--bubMax", rows === 1 ? "186px" : Math.round(300 / rows) + "px");
       return;
     }
     const fits = px => {
@@ -756,7 +800,7 @@
       const r = $("entryCard").getBoundingClientRect();
       return (r.bottom + window.scrollY) <= window.innerHeight - 10;
     };
-    let lo = 96, hi = 186, best = lo;
+    let lo = 62, hi = 186, best = lo;
     while(lo <= hi){
       const mid = (lo + hi) >> 1;
       if(fits(mid)){ best = mid; lo = mid + 1; } else { hi = mid - 1; }
@@ -935,8 +979,11 @@
     } else {
       ans.className = "ans"; ans.textContent = "?";
     }
-    $("iDividend").textContent = S.dividend;
-    $("iDivisor").textContent = S.divisor;
+    /* The intro's copy of the sentence is replaced by input fields in
+       "Type your own", so neither span is guaranteed to exist. */
+    const iD = $("iDividend"), iS = $("iDivisor");
+    if(iD) iD.textContent = S.dividend;
+    if(iS) iS.textContent = S.divisor;
     fitEqCard(false);
   }
 
@@ -1162,26 +1209,15 @@
     if(S.busy) return;
     S.token++;
     if(S.level === "custom"){
-      applyCustom(true);
+      S.rounds = []; S.done = false; S.estValue = null; S.estAsked = false;
+      buildArena(); paintQuick(); maybeAskEstimate();
+      paintAll(false); defaultPrompt(); showIntro();
       return;
     }
     generate(keepDivisor ? S.divisor : 0);
     S.rounds = []; S.done = false; S.estValue = null; S.estAsked = false;
     buildArena(); paintQuick(); maybeAskEstimate();
     paintAll(false); defaultPrompt(); showIntro();
-  }
-
-  function applyCustom(silent){
-    const dv = parseInt(($("customDividend").value || "").trim(), 10);
-    const ds = parseInt(($("customDivisor").value || "").trim(), 10);
-    if(!(dv >= 2 && dv <= 999)){ setPrompt("warn", "The number to share has to be between 2 and 999."); return; }
-    if(!(ds >= 2 && ds <= 6)){ setPrompt("warn", "This tool shares into 2 to 6 groups."); return; }
-    if(ds > dv){ setPrompt("warn", "There are more groups than there is to share."); return; }
-    setQuestion(dv, ds);
-    S.rounds = []; S.done = false; S.estValue = null; S.estAsked = false;
-    buildArena(); paintQuick(); maybeAskEstimate();
-    paintAll(false); defaultPrompt(); showIntro();
-    if(!silent) closeMenus();
   }
 
   /* --------------------------------------------------------------- estimate */
@@ -1210,9 +1246,41 @@
   /* The question is read before the board exists. Pressing Next does not swap
      one sentence for another: the SAME sentence flies down into its place on
      the card, so what the class just read is what the bubbles are about. */
+  function introStatic(){
+    $("introSentence").innerHTML =
+      '<span class="dv" id="iDividend">' + S.dividend + '</span><span>&divide;</span>' +
+      '<span class="ds" id="iDivisor">' + S.divisor + '</span><span>=</span><span class="ans">?</span>';
+  }
+
+  function introEditable(){
+    $("introSentence").innerHTML =
+      '<input class="iNum" id="introDividend" type="text" inputmode="numeric" ' +
+        'autocomplete="off" aria-label="Number to share" value="' + S.dividend + '" />' +
+      '<span>&divide;</span><span class="ds" id="iDivisor">' + S.divisor + '</span>' +
+      '<span>=</span><span class="ans">?</span>';
+    const chips = $("introChips");
+    chips.innerHTML = "";
+    for(let d=2; d<=MAXDIV; d++){
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "introChip"; b.textContent = d;
+      b.setAttribute("aria-pressed", String(d === S.divisor));
+      b.addEventListener("click", () => {
+        S.divisor = d;
+        chips.querySelectorAll(".introChip").forEach(x =>
+          x.setAttribute("aria-pressed", String(+x.textContent === d)));
+        $("iDivisor").textContent = d;
+        $("introMsg").hidden = true;
+      });
+      chips.appendChild(b);
+    }
+    $("introDividend").addEventListener("keydown", e => {
+      if(e.key === "Enter"){ e.preventDefault(); dismissIntro(); }
+    });
+  }
+
   function showIntro(){
-    const veil = $("introVeil");
-    if(!S.intro){
+    const veil = $("introVeil"), custom = (S.level === "custom");
+    if(!S.intro && !custom){
       veil.hidden = true; S.introOpen = false;
       $("sentence").style.visibility = "";
       setBusy(S.busy);
@@ -1220,16 +1288,48 @@
     }
     paintSentence();
     closeMenus();          /* an open Settings menu sits above the veil */
+    if(custom) introEditable(); else introStatic();
+    $("introPick").hidden = !custom;
+    $("introMsg").hidden = true;
     veil.classList.remove("is-leaving");
     veil.hidden = false;
     S.introOpen = true;
     $("sentence").style.visibility = "hidden";
     setBusy(false);
-    $("introNext").focus();
+    if(custom){ const el = $("introDividend"); el.focus(); el.select(); }
+    else $("introNext").focus();
+  }
+
+  /* In "Type your own" the teacher types the question ON the load screen, and
+     the numbers they typed are what flies onto the card — there is no second
+     copy of the question anywhere to disagree with it. */
+  function takeCustom(){
+    const el = $("introDividend");
+    const raw = (el.value || "").trim();
+    const bad = msg => {
+      $("introMsg").hidden = false; $("introMsg").textContent = msg;
+      el.classList.remove("is-bad"); void el.offsetWidth; el.classList.add("is-bad");
+      setTimeout(() => el.classList.remove("is-bad"), 700);
+      el.focus(); el.select();
+      return false;
+    };
+    if(!/^\d+$/.test(raw)) return bad("Type a whole number to share out.");
+    const dv = parseInt(raw, 10);
+    if(dv < 2 || dv > 999) return bad("The number to share has to be between 2 and 999.");
+    if(dv < S.divisor) return bad("There are more groups than there is to share.");
+    $("introMsg").hidden = true;
+    setQuestion(dv, S.divisor);
+    S.rounds = []; S.done = false; S.estValue = null; S.estAsked = false;
+    buildArena(); paintQuick(); maybeAskEstimate();
+    paintAll(false); defaultPrompt();
+    introStatic();
+    $("introPick").hidden = true;
+    return true;
   }
 
   async function dismissIntro(){
     if(!S.introOpen) return;
+    if(S.level === "custom" && $("introDividend") && !takeCustom()) return;
     S.introOpen = false;
     const veil = $("introVeil"), fly = $("introSentence"), target = $("sentence");
     const from = fly.getBoundingClientRect();
@@ -1293,7 +1393,6 @@
   $("estGo").addEventListener("click", () => takeEstimate(false));
   $("estSkip").addEventListener("click", () => takeEstimate(true));
   $("estInput").addEventListener("keydown", e => { if(e.key === "Enter"){ e.preventDefault(); takeEstimate(false); } });
-  $("customGo").addEventListener("click", () => applyCustom(false));
   $("introNext").addEventListener("click", dismissIntro);
   document.addEventListener("keydown", e => {
     if(S.introOpen && (e.key === "Enter" || e.key === " ")){ e.preventDefault(); dismissIntro(); }
@@ -1303,20 +1402,19 @@
     two:    "Two-digit numbers that divide exactly, so a group can never be left stranded part-way.",
     three:  "Three-digit numbers that divide exactly — this is where sharing out ten or forty at a time pays off.",
     rem:    "The last few cannot be shared. Once there are fewer left than there are groups, they drop into the leftover tray as the remainder.",
-    custom: "Type any number up to 999 and choose 2–6 groups. It does not have to divide exactly."
+    custom: "Type the question on the opening screen: any number up to 999, shared into 2–10 groups. It does not have to divide exactly."
   };
 
   $("levelSel").addEventListener("change", e => {
     S.level = e.target.value;
-    $("customRow").hidden = S.level !== "custom";
     $("levelNote").textContent = LEVEL_NOTES[S.level];
-    if(S.level === "custom") applyCustom(true); else newQuestion(false);
+    $("introToggle").disabled = (S.level === "custom");
+    newQuestion(false);
   });
   $("divisorSel").addEventListener("change", e => {
     S.divisorPick = parseInt(e.target.value, 10) || 0;
-    if(S.level === "custom"){
-      if(S.divisorPick){ $("customDivisor").value = S.divisorPick; applyCustom(true); }
-    } else newQuestion(false);
+    if(S.divisorPick) S.divisor = S.divisorPick;
+    newQuestion(false);
   });
 
   function bindToggle(id, key, after){
@@ -1361,6 +1459,7 @@
     fitArena: fitArena,
     setQuestion: function(dv, ds){
       S.token++;
+      S.level = (S.level === "custom") ? "two" : S.level;
       setQuestion(dv, ds);
       S.rounds = []; S.done = false; S.estValue = null; S.estAsked = true;
       S.introOpen = false;
