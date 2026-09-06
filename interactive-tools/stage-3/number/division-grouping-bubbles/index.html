@@ -145,9 +145,21 @@
     }
 
     /* ---------- sentence card ---------- */
+    /* The sentence is the only thing centred in this card; the outcome tag and
+       the dice button are floated out of the flow so they cannot pull it off
+       centre as the numbers change width. */
     .eqCard{
-      background:var(--card); border:1px solid var(--border); border-radius:20px; box-shadow:var(--shadow);
-      padding:14px 18px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+      position:relative; background:var(--card); border:1px solid var(--border); border-radius:20px;
+      box-shadow:var(--shadow); padding:14px var(--eqPad,18px); min-height:88px;
+      display:flex; align-items:center; justify-content:center;
+    }
+    /* When the sentence is too wide to sit clear of the tag and the dice
+       button, the card gives up on one line rather than letting them collide. */
+    .eqCard.stacked{ flex-direction:column; gap:10px; padding:14px; }
+    .eqCard.stacked .eqActions{ position:static; transform:none; }
+    .eqActions{
+      position:absolute; right:18px; top:50%; transform:translateY(-50%);
+      display:flex; align-items:center; gap:10px;
     }
     .sentence{
       font-family:var(--mathFont); font-size:clamp(1.9rem,4.2vw,3rem); font-weight:700;
@@ -158,8 +170,6 @@
     .sentence .ans{ color:var(--line-soft); min-width:.7em; display:inline-block; text-align:center; }
     .sentence .ans.is-known{ color:var(--green-dark); animation:popIn .45s cubic-bezier(.34,1.5,.5,1); }
     .sentence .rem{ font-size:.55em; color:var(--orange-dark); font-weight:700; margin-left:.25em; }
-    .meaning{ font-size:.92rem; font-weight:800; color:var(--muted); line-height:1.35; flex:1 1 240px; min-width:200px; }
-    .meaning b{ color:var(--line); }
     .outcomeTag{
       font-size:.66rem; letter-spacing:.1em; font-weight:950; text-transform:uppercase;
       color:var(--purple-dark); background:rgba(124,58,237,.11); border:1px solid rgba(124,58,237,.24);
@@ -192,8 +202,17 @@
       font-weight:950; font-size:.84rem; color:var(--purple-dark); background:rgba(124,58,237,.10);
       border:1px solid rgba(124,58,237,.22); padding:6px 13px; border-radius:999px;
     }
-    .arena{ display:flex; gap:clamp(6px,1.2vw,16px); justify-content:center; align-items:flex-start; flex-wrap:nowrap; }
-    .bubbleWrap{ flex:1 1 0; min-width:0; max-width:186px; display:flex; flex-direction:column; align-items:center; gap:7px; }
+    /* The groups are laid out as an ARRAY, not a strip — 6 is 3 × 2, 4 is 2 × 2 —
+       so the width the bubbles are not using goes into making them bigger.
+       A two-row arena is capped from the VIEWPORT HEIGHT (`--bubMax`), or the
+       second row pushes the entry bar off a 1366×768 screen. */
+    .arena{
+      display:grid; justify-content:center; align-items:start;
+      gap:clamp(4px,1vh,12px) clamp(8px,1.4vw,18px);
+      --bubMax:186px;
+    }
+    .arena.rows2{ --bubMax:min(168px,15.2vh); }   /* fallback; fitArena() measures the real one */
+    .bubbleWrap{ width:100%; min-width:0; display:flex; flex-direction:column; align-items:center; gap:6px; }
     .blob{
       width:100%; aspect-ratio:1/1.04; border-radius:47%;
       background:radial-gradient(circle at 30% 24%,#ffffff,#f1f5f9 46%,#e2e8f0);
@@ -251,36 +270,36 @@
     /* ---------- entry ---------- */
     .entryCard{
       background:var(--card); border:1px solid var(--border); border-radius:20px; box-shadow:var(--shadow);
-      padding:14px 18px; display:flex; flex-wrap:wrap; align-items:center; gap:12px;
+      padding:12px 16px; display:flex; flex-wrap:wrap; align-items:center; gap:10px;
     }
-    .entryLab{ font-weight:900; font-size:1rem; color:var(--line); }
+    .entryLab{ font-weight:900; font-size:.98rem; color:var(--line); }
     .entryLab b{ color:var(--blue-dark); }
     #chunkInput{
-      width:110px; text-align:center; font-family:var(--mathFont); font-size:1.9rem; font-weight:700;
-      padding:4px 8px; border:2.5px solid var(--blue); border-radius:14px; color:var(--blue-dark); background:#fff;
+      width:94px; text-align:center; font-family:var(--mathFont); font-size:1.8rem; font-weight:700;
+      padding:3px 6px; border:2.5px solid var(--blue); border-radius:13px; color:var(--blue-dark); background:#fff;
     }
     #chunkInput:focus-visible{ outline:none; box-shadow:0 0 0 5px rgba(37,99,235,.18); }
     #chunkInput.is-bad{ border-color:var(--red); color:var(--red); animation:shake .34s; }
     @keyframes shake{ 0%,100%{transform:translateX(0);} 20%{transform:translateX(-7px);} 40%{transform:translateX(7px);} 60%{transform:translateX(-4px);} 80%{transform:translateX(4px);} }
     .goBtn{
       appearance:none; border:none; background:linear-gradient(135deg,var(--blue),var(--purple));
-      color:#fff; padding:12px 20px; border-radius:14px; font-weight:950; font-size:1rem; cursor:pointer;
+      color:#fff; padding:11px 17px; border-radius:14px; font-weight:950; font-size:.98rem; cursor:pointer;
       box-shadow:0 10px 22px rgba(37,99,235,.30); transition:.18s ease; white-space:nowrap;
     }
     .goBtn:hover:not(:disabled){ transform:translateY(-1px); box-shadow:0 14px 28px rgba(37,99,235,.38); }
     .goBtn:disabled{ opacity:.42; cursor:not-allowed; transform:none; box-shadow:none; }
-    .quickRow{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+    .quickRow{ display:flex; gap:5px; flex-wrap:wrap; align-items:center; }
     .quickRow .qLab{ font-size:.72rem; font-weight:900; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; }
     .qBtn{
       appearance:none; border:1.5px solid var(--border); background:#fff; color:var(--line);
-      min-width:44px; padding:7px 10px; border-radius:11px; font-weight:900; font-size:.95rem; cursor:pointer;
+      min-width:38px; padding:6px 9px; border-radius:10px; font-weight:900; font-size:.92rem; cursor:pointer;
       font-family:var(--mathFont); transition:.15s ease;
     }
     .qBtn:hover:not(:disabled){ border-color:var(--blue); background:#eef2ff; color:var(--blue-dark); transform:translateY(-1px); }
     .qBtn:disabled{ opacity:.4; cursor:not-allowed; transform:none; }
     .ghostBtn{
       appearance:none; border:1.5px solid var(--border); background:#fff; color:var(--muted);
-      padding:9px 14px; border-radius:12px; font-weight:900; font-size:.86rem; cursor:pointer; transition:.15s ease;
+      padding:8px 12px; border-radius:12px; font-weight:900; font-size:.84rem; cursor:pointer; transition:.15s ease;
     }
     .ghostBtn:hover:not(:disabled){ border-color:var(--line-soft); color:var(--line); }
     .ghostBtn:disabled{ opacity:.4; cursor:not-allowed; }
@@ -356,6 +375,41 @@
     .checkLine .b{ color:var(--green-dark); }
     .checkNote{ margin:6px 0 0; font-size:.73rem; font-weight:800; color:var(--muted); text-align:center; line-height:1.4; }
 
+    /* ---------- the question, before anything else is on screen ---------- */
+    /* A class reads the question first. The sentence then FLIES to its place on
+       the card, so the thing they just read is the thing the board is about —
+       it is not replaced by a different-looking one. */
+    .introVeil{ position:fixed; inset:0; z-index:30; display:grid; place-items:center; padding:24px; }
+    .introBg{
+      position:absolute; inset:0; transition:opacity .42s ease;
+      background:
+        radial-gradient(circle at top left,rgba(37,99,235,.14),transparent 32rem),
+        radial-gradient(circle at top right,rgba(124,58,237,.12),transparent 34rem),
+        var(--bg);
+    }
+    .introInner{ position:relative; display:flex; flex-direction:column; align-items:center; gap:clamp(22px,5vh,46px); }
+    .introSentence{
+      font-family:var(--mathFont); font-size:clamp(3.2rem,12vw,8rem); font-weight:700;
+      letter-spacing:-.01em; line-height:1; display:flex; align-items:baseline; gap:.22em; white-space:nowrap;
+      animation:introRise .5s cubic-bezier(.34,1.3,.5,1);
+    }
+    .introSentence .dv{ color:var(--blue-dark); }
+    .introSentence .ds{ color:var(--purple-dark); }
+    .introSentence .ans{ color:var(--line-soft); min-width:.7em; display:inline-block; text-align:center; }
+    .introSentence.flying{ position:fixed; margin:0; z-index:220; animation:none; transform-origin:50% 50%; }
+    @keyframes introRise{ 0%{ opacity:0; transform:translateY(22px) scale(.94);} 100%{ opacity:1; transform:none;} }
+    .introNext{
+      appearance:none; border:none; background:linear-gradient(135deg,var(--blue),var(--purple)); color:#fff;
+      padding:16px 40px; border-radius:18px; font-weight:950; font-size:1.25rem; cursor:pointer;
+      box-shadow:0 14px 34px rgba(37,99,235,.34); transition:transform .18s ease,box-shadow .18s ease,opacity .3s ease;
+      animation:introRise .5s .12s backwards cubic-bezier(.34,1.3,.5,1);
+    }
+    .introNext:hover{ transform:translateY(-2px); box-shadow:0 18px 40px rgba(37,99,235,.42); }
+    .introNext:focus-visible{ outline:none; box-shadow:0 0 0 5px rgba(37,99,235,.28); }
+    .introVeil.is-leaving{ pointer-events:none; }
+    .introVeil.is-leaving .introBg,
+    .introVeil.is-leaving .introNext{ opacity:0; }
+
     /* ---------- fly layer ---------- */
     #flyLayer{ position:fixed; inset:0; pointer-events:none; z-index:200; }
     .flyTok{
@@ -375,6 +429,9 @@
       .btn{ padding:10px 13px; font-size:14px; }
       .tBig{ font-size:2.6rem; }
       .layout{ padding:16px 14px 24px; }
+      /* the sentence needs the room more than the button needs its words */
+      .genBtn .genLabel{ display:none; }
+      .genBtn{ padding:9px 11px; }
     }
     @media (max-width:960px){
       .layout{ grid-template-columns:minmax(0,1fr); }
@@ -389,8 +446,12 @@
     }
     @media (max-height:840px){
       .tBig{ font-size:2.7rem; }
-      .arenaCard{ padding:12px 12px 10px; }
-      .promptBar{ min-height:46px; padding:9px 14px; font-size:.94rem; }
+      .arenaCard{ padding:11px 12px 9px; }
+      .promptBar{ min-height:44px; padding:8px 14px; font-size:.94rem; }
+      .eqCard{ min-height:76px; padding:10px 16px; }
+      .stage{ gap:11px; }
+      .layout{ padding:14px 20px 20px; }
+      .entryCard{ padding:11px 16px; }
     }
     @media print{ .mmtTopbar,.entryCard,.promptBar{ display:none; } }
   </style>
@@ -445,6 +506,7 @@
             <label class="sw"><input type="checkbox" id="multToggle" checked><span class="track"></span><span>Multiplication each round</span></label>
             <label class="sw"><input type="checkbox" id="checkToggle" checked><span class="track"></span><span>Check sentence at the end</span></label>
             <label class="sw"><input type="checkbox" id="estToggle"><span class="track"></span><span>Estimate first</span></label>
+            <label class="sw"><input type="checkbox" id="introToggle" checked><span class="track"></span><span>Read the question first</span></label>
             <label class="sw"><input type="checkbox" id="roundsToggle" checked><span class="track"></span><span>Count the rounds</span></label>
 
             <div class="settingsRule" role="separator"></div>
@@ -463,9 +525,6 @@
         <div class="menuWrap">
           <button class="btn" id="toolsBtn" type="button" aria-haspopup="true" aria-expanded="false">Tools &#9662;</button>
           <nav class="dropMenu" id="toolsMenu" aria-label="Related tools">
-            <a class="toolLink" href="/interactive-tools/stage-3/number/timestable-chart/">Times Table Chart<small>The same fact seen as an array, a product, a division and a fraction</small></a>
-            <a class="toolLink" href="/interactive-tools/stage-3/number/partition-splitter/">Partition Splitter<small>Break a number into friendly parts before operating on it</small></a>
-            <a class="toolLink" href="/interactive-tools/stage-4/number/factor-circles/">Factor Circles<small>Arrange dots to reveal factor pairs and equal groups</small></a>
             <span class="toolLink is-disabled">Worksheet Creator<small>Not built yet</small></span>
             <span class="toolLink is-disabled">Student Quiz<small>Not built yet</small></span>
           </nav>
@@ -481,11 +540,12 @@
           <div class="sentence" id="sentence" aria-live="polite">
             <span class="dv" id="sDividend">84</span><span>&divide;</span><span class="ds" id="sDivisor">6</span><span>=</span><span class="ans" id="sAnswer">?</span>
           </div>
-          <div class="meaning" id="meaning"><b>84</b> shared equally into <b>6</b> groups. How many in each group?</div>
-          <span class="outcomeTag">MA3-MR-01</span>
-          <button class="genBtn" id="genBtn" type="button" title="Keep the number of groups, change the number being shared">
-            <span class="dice" aria-hidden="true">&#9860;</span><span>New numbers</span>
-          </button>
+          <div class="eqActions">
+            <span class="outcomeTag">MA3-MR-01</span>
+            <button class="genBtn" id="genBtn" type="button" title="Keep the number of groups, change the number being shared">
+              <span class="dice" aria-hidden="true">&#9860;</span><span class="genLabel">New numbers</span>
+            </button>
+          </div>
         </div>
 
         <div class="estCard" id="estCard" hidden>
@@ -512,7 +572,7 @@
           </div>
         </div>
 
-        <div class="entryCard">
+        <div class="entryCard" id="entryCard">
           <label class="entryLab" for="chunkInput">Put in <b>each</b> group:</label>
           <input id="chunkInput" type="text" inputmode="numeric" autocomplete="off" aria-label="How many in each group" />
           <button class="goBtn" id="goBtn" type="button">Share it out</button>
@@ -555,6 +615,16 @@
     </main>
   </div>
 
+  <div class="introVeil" id="introVeil" hidden>
+    <div class="introBg" id="introBg"></div>
+    <div class="introInner">
+      <div class="introSentence" id="introSentence">
+        <span class="dv" id="iDividend">84</span><span>&divide;</span><span class="ds" id="iDivisor">6</span><span>=</span><span class="ans">?</span>
+      </div>
+      <button class="introNext" id="introNext" type="button">Next &rarr;</button>
+    </div>
+  </div>
+
   <div id="flyLayer" aria-hidden="true"></div>
 
 <script>
@@ -579,9 +649,15 @@
     token: 0,
     speed: 420,
     dots: false, ladder: true, mult: true, check: true, estimate: false, showRounds: true,
+    intro: true, introOpen: false,
     estValue: null, estAsked: false,
     lastKey: ""
   };
+
+  /* How the groups are arranged. An array, not a strip: 6 is 3 × 2 and 4 is
+     2 × 2, which is also the shape a class draws for equal groups. 2, 3 and 5
+     have no second factor worth drawing, so they stay in one row. */
+  const GRID = { 2:[2,1], 3:[3,1], 4:[2,2], 5:[5,1], 6:[3,2] };
 
   /* ---------------------------------------------------------------- derived */
   /* Everything about the board is derived from S.rounds, so undo and a bounced
@@ -629,6 +705,9 @@
   function buildArena(){
     const arena = $("arena");
     arena.innerHTML = "";
+    const spec = GRID[S.divisor] || [S.divisor, 1];
+    arena.style.gridTemplateColumns = "repeat(" + spec[0] + ", minmax(0, var(--bubMax)))";
+    arena.classList.toggle("rows2", spec[1] > 1);
     for(let i=0;i<S.divisor;i++){
       const wrap = document.createElement("div");
       wrap.className = "bubbleWrap";
@@ -642,6 +721,7 @@
       arena.appendChild(wrap);
     }
     $("groupsChip").textContent = S.divisor + " equal groups";
+    fitArena(true);          /* only meaningful once the bubbles are in the DOM */
   }
 
   function glyphs(n){
@@ -651,6 +731,37 @@
     for(let k=0;k<T;k++) s += '<i class="rod"></i>';
     for(let k=0;k<O;k++) s += '<i class="unit"></i>';
     return s;
+  }
+
+  /* How big a bubble can be is a question about the HEIGHT that is left, not
+     the width. A two-row array is measured against the real page: grow the
+     bubbles until the entry bar would drop below the fold, then step back.
+     Guessing with `vh` left 39px of a 1366×768 screen unused and overflowed a
+     shorter one; this uses whatever the screen actually has. */
+  let fitSig = "";
+  function fitArena(force){
+    const arena = $("arena");
+    const rows = arena.classList.contains("rows2") ? 2 : 1;
+    const sig = [S.divisor, rows, window.innerWidth, window.innerHeight,
+                 $("tray").hidden, $("estCard").hidden, S.showRounds].join("|");
+    if(!force && sig === fitSig) return;
+    fitSig = sig;
+
+    if(rows === 1 || window.innerWidth <= 960){
+      arena.style.setProperty("--bubMax", rows === 1 ? "186px" : "150px");
+      return;
+    }
+    const fits = px => {
+      arena.style.setProperty("--bubMax", px + "px");
+      const r = $("entryCard").getBoundingClientRect();
+      return (r.bottom + window.scrollY) <= window.innerHeight - 10;
+    };
+    let lo = 96, hi = 186, best = lo;
+    while(lo <= hi){
+      const mid = (lo + hi) >> 1;
+      if(fits(mid)){ best = mid; lo = mid + 1; } else { hi = mid - 1; }
+    }
+    arena.style.setProperty("--bubMax", best + "px");
   }
 
   function paintBubbles(){
@@ -795,6 +906,24 @@
       : "Multiplying back gets us to the number we started with, so the answer is right.";
   }
 
+  /* The sentence is centred on the CARD, so the card is padded on both sides by
+     the width of the tag + dice cluster. Equal padding means the content box's
+     centre and the card's centre are the same point, whatever the numbers do. */
+  let eqSig = "";
+  function fitEqCard(force){
+    const card = document.querySelector(".eqCard"), acts = document.querySelector(".eqActions");
+    const sig = [S.dividend, S.divisor, S.done, window.innerWidth].join("|");
+    if(!force && sig === eqSig) return;
+    eqSig = sig;
+    card.classList.remove("stacked");
+    const pad = Math.ceil(acts.getBoundingClientRect().width) + 22;
+    card.style.setProperty("--eqPad", pad + "px");
+    if($("sentence").scrollWidth > card.clientWidth - 2 * pad){
+      card.classList.add("stacked");
+      card.style.removeProperty("--eqPad");
+    }
+  }
+
   function paintSentence(){
     $("sDividend").textContent = S.dividend;
     $("sDivisor").textContent = S.divisor;
@@ -806,8 +935,9 @@
     } else {
       ans.className = "ans"; ans.textContent = "?";
     }
-    $("meaning").innerHTML =
-      "<b>" + S.dividend + "</b> shared equally into <b>" + S.divisor + "</b> groups. How many in each group?";
+    $("iDividend").textContent = S.dividend;
+    $("iDivisor").textContent = S.divisor;
+    fitEqCard(false);
   }
 
   function paintTray(){
@@ -862,7 +992,7 @@
 
   function setBusy(on){
     S.busy = on;
-    const dis = on || S.done || ($("estCard").hidden === false);
+    const dis = on || S.done || S.introOpen || ($("estCard").hidden === false);
     $("goBtn").disabled = dis;
     $("chunkInput").disabled = dis;
     document.querySelectorAll("#quickRow .qBtn").forEach(b => b.disabled = dis);
@@ -874,7 +1004,7 @@
 
   function paintAll(overshoot){
     paintSentence(); paintBubbles(); paintTally(overshoot); paintLadder();
-    paintCheck(); paintTray(); setBusy(S.busy);
+    paintCheck(); paintTray(); setBusy(S.busy); fitArena(false);
   }
 
   /* -------------------------------------------------------------- animation */
@@ -1038,7 +1168,7 @@
     generate(keepDivisor ? S.divisor : 0);
     S.rounds = []; S.done = false; S.estValue = null; S.estAsked = false;
     buildArena(); paintQuick(); maybeAskEstimate();
-    paintAll(false); defaultPrompt();
+    paintAll(false); defaultPrompt(); showIntro();
   }
 
   function applyCustom(silent){
@@ -1050,7 +1180,7 @@
     setQuestion(dv, ds);
     S.rounds = []; S.done = false; S.estValue = null; S.estAsked = false;
     buildArena(); paintQuick(); maybeAskEstimate();
-    paintAll(false); defaultPrompt();
+    paintAll(false); defaultPrompt(); showIntro();
     if(!silent) closeMenus();
   }
 
@@ -1074,6 +1204,61 @@
     $("estCard").hidden = true;
     paintAll(false); defaultPrompt();
     $("chunkInput").focus();
+  }
+
+  /* ----------------------------------------------------------------- intro */
+  /* The question is read before the board exists. Pressing Next does not swap
+     one sentence for another: the SAME sentence flies down into its place on
+     the card, so what the class just read is what the bubbles are about. */
+  function showIntro(){
+    const veil = $("introVeil");
+    if(!S.intro){
+      veil.hidden = true; S.introOpen = false;
+      $("sentence").style.visibility = "";
+      setBusy(S.busy);
+      return;
+    }
+    paintSentence();
+    closeMenus();          /* an open Settings menu sits above the veil */
+    veil.classList.remove("is-leaving");
+    veil.hidden = false;
+    S.introOpen = true;
+    $("sentence").style.visibility = "hidden";
+    setBusy(false);
+    $("introNext").focus();
+  }
+
+  async function dismissIntro(){
+    if(!S.introOpen) return;
+    S.introOpen = false;
+    const veil = $("introVeil"), fly = $("introSentence"), target = $("sentence");
+    const from = fly.getBoundingClientRect();
+    /* The target is laid out but invisible, so its box is already correct. */
+    const to = target.getBoundingClientRect();
+    const scale = from.width ? (to.width / from.width) : 1;
+    const dx = (to.left + to.width/2) - (from.left + from.width/2);
+    const dy = (to.top + to.height/2) - (from.top + from.height/2);
+
+    fly.style.left = from.left + "px";
+    fly.style.top = from.top + "px";
+    fly.style.width = from.width + "px";
+    fly.style.height = from.height + "px";
+    fly.classList.add("flying");
+    veil.classList.add("is-leaving");
+
+    const dur = S.speed <= 1 ? 1 : 620;
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+    fly.style.transition = "transform " + dur + "ms cubic-bezier(.42,.9,.3,1)";
+    fly.style.transform = "translate(" + dx + "px," + dy + "px) scale(" + scale + ")";
+    await sleep(dur + 40);
+
+    veil.hidden = true;
+    veil.classList.remove("is-leaving");
+    fly.classList.remove("flying");
+    fly.removeAttribute("style");
+    target.style.visibility = "";
+    setBusy(false);
+    if(!$("estCard").hidden) $("estInput").focus(); else $("chunkInput").focus();
   }
 
   /* ----------------------------------------------------------------- menus */
@@ -1109,6 +1294,10 @@
   $("estSkip").addEventListener("click", () => takeEstimate(true));
   $("estInput").addEventListener("keydown", e => { if(e.key === "Enter"){ e.preventDefault(); takeEstimate(false); } });
   $("customGo").addEventListener("click", () => applyCustom(false));
+  $("introNext").addEventListener("click", dismissIntro);
+  document.addEventListener("keydown", e => {
+    if(S.introOpen && (e.key === "Enter" || e.key === " ")){ e.preventDefault(); dismissIntro(); }
+  });
 
   const LEVEL_NOTES = {
     two:    "Two-digit numbers that divide exactly, so a group can never be left stranded part-way.",
@@ -1143,15 +1332,19 @@
   bindToggle("checkToggle","check");
   bindToggle("roundsToggle","showRounds");
   bindToggle("estToggle","estimate", () => { if(!S.rounds.length) maybeAskEstimate(); });
+  bindToggle("introToggle","intro");
   $("speedSel").addEventListener("change", e => { S.speed = parseInt(e.target.value,10) || 420; });
 
-  window.addEventListener("resize", () => paintBubbles());
+  let resizeT;
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeT);
+    resizeT = setTimeout(() => { fitEqCard(true); fitArena(true); paintBubbles(); }, 90);
+  });
 
   /* ------------------------------------------------------------------ start */
   generate(0);
   buildArena(); paintQuick(); maybeAskEstimate();
-  paintAll(false); defaultPrompt();
-  $("chunkInput").focus();
+  paintAll(false); defaultPrompt(); showIntro();
 
   /* A small surface for the automated checks. Nothing in the page reads it. */
   window.__DGB__ = {
@@ -1162,12 +1355,18 @@
     remaining: remaining,
     runRound: runRound,
     newQuestion: newQuestion,
+    showIntro: showIntro,
+    dismissIntro: dismissIntro,
     generate: generate,
+    fitArena: fitArena,
     setQuestion: function(dv, ds){
       S.token++;
       setQuestion(dv, ds);
       S.rounds = []; S.done = false; S.estValue = null; S.estAsked = true;
+      S.introOpen = false;
       $("estCard").hidden = true;
+      $("introVeil").hidden = true;
+      $("sentence").style.visibility = "";
       buildArena(); paintQuick(); paintAll(false); defaultPrompt();
     }
   };

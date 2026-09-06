@@ -40,6 +40,35 @@
 >   40, 50, 60 for a round of 10 into six groups. That IS skip counting, and it
 >   is the whole reason the copies are staggered rather than fired together.
 >   Anything that batches the landings destroys it.
+> * **THE GROUPS ARE AN ARRAY, NOT A STRIP** (teacher feedback 2026-09-05).
+>   `GRID` maps the divisor to a shape — 6 is 3 × 2, 4 is 2 × 2 — and 2, 3 and 5
+>   stay in one row because they have no second factor worth drawing. The width
+>   a strip of six was wasting goes into the bubbles instead.
+> * **HOW BIG A BUBBLE CAN BE IS A QUESTION ABOUT HEIGHT, AND IT IS MEASURED.**
+>   `fitArena()` binary-searches `--bubMax` against the real page: grow until the
+>   entry bar would drop below the fold, then step back. A guessed `vh` cap left
+>   39px of a 1366×768 screen unused and overflowed a shorter one; the measured
+>   fit gives 155px bubbles at 1366×768 and the full 186px at 1080p, from the
+>   same code. It re-fits on a rebuild and on a debounced resize, and is a no-op
+>   when nothing that matters has changed.
+> * **THE QUESTION IS READ BEFORE THE BOARD EXISTS** (teacher decision
+>   2026-09-05). Every new question opens on a veil carrying the sentence alone
+>   and a **Next** button. Pressing Next does NOT swap one sentence for another:
+>   `dismissIntro()` FLIPs the SAME element down onto the card (measure both
+>   rects, translate + scale, fade the backdrop out from under it), so the thing
+>   the class just read is the thing the bubbles are about. The veil sits at
+>   `z-index:30`, UNDER the topbar, and `showIntro()` closes any open menu —
+>   the Settings menu is at 120 and would otherwise sit on top of it. Settings
+>   toggle: **Read the question first**, on by default.
+> * **THE CARD HOLDS THE SENTENCE AND NOTHING ELSE** (teacher feedback
+>   2026-09-05). The "84 shared equally into 6 groups" line is gone — the prompt
+>   bar, the `6 equal groups` chip and the entry's "Put in **each** group" all
+>   carry the partitive reading already. The outcome tag and the dice button are
+>   taken out of the flow, and `fitEqCard()` pads the card by their width on BOTH
+>   sides so the sentence's centre and the card's centre are the same point
+>   whatever the numbers do. Below 1180px the dice button drops its words rather
+>   than let a three-digit sentence collide with it; if it still cannot fit, the
+>   card stacks.
 > * **THE STRATEGY IS PARTIAL QUOTIENTS.** Rounds accumulate, so 10 then 4 into
 >   six groups reaches 84 and the ladder records `6 × 10 = 60`, `6 × 4 = 24`,
 >   then `10 + 4 = 14 in each group`. That column IS the bridge to short and
@@ -77,7 +106,7 @@
 >   is a real classroom, and a running total you have to scroll to is not a
 >   running total. The side column is `clamp(266px,24vw,336px)` and the topbar
 >   drops its brand text at 1180px so it never wraps to two rows.
-> * **Verified** through Playwright: 96 checks — 1200 generated questions across
+> * **Verified** through Playwright: 181 checks — 1200 generated questions across
 >   the three levels for range, exactness and no back-to-back repeats; the
 >   divisor lock; scripted solves in one round, two rounds and fourteen rounds of
 >   1 agreeing; the tally, the ladder rows, the "left" column and both check
@@ -87,9 +116,13 @@
 >   drawn in every bubble summing to that bubble's number; input guarding
 >   (empty, non-numeric, zero, negative, decimal, absurd); custom numbers and the
 >   refusal of more than six groups; a real flight sampled mid-animation to prove
->   the groups fill one at a time and the tally climbs with them; and the fit at
->   1366×768, 1280×800, 1024×768 and 820×1180. Harnesses live in the session
->   scratch, not the repo: `check.mjs`, `shots.mjs`.
+>   the groups fill one at a time and the tally climbs with them; the array
+>   shape, bubble sizing and reading order at every divisor; the intro veil
+>   covering the board, holding the entry shut, flying the sentence to within
+>   40px of its landing place and leaving nothing stranded; and the sentence
+>   staying centred and clear of the tag for four question widths at five
+>   viewports. Harnesses live in the session scratch, not the repo:
+>   `check.mjs`, `shots.mjs`.
 
 > **NEW (2026-09-02, session — being pushed): THE WORKING PAD.** A drag-and-drop
 > scratchpad beside the figure, shared by the teaching tool (Settings → **Working
