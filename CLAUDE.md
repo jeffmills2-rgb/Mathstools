@@ -16,6 +16,81 @@
 > §2 "TWO folders", §3 deploy paths and §5's `mathstools-main 2` heading below
 > describe the OLD layout — this block supersedes them.
 >
+> **NEW (2026-09-05, session — being pushed): DIVISION BY GROUPING — BUBBLES.**
+> A Stage 3 teaching tool at
+> `interactive-tools/stage-3/number/division-grouping-bubbles/index.html`,
+> cross-listed under **MA3-MR-01** and **MA3-MR-02**. Self-contained inline
+> CSS/JS, same shell and tokens as the Stage 4/5 tools. The teacher types how
+> many go in EACH group; the number flies to the first bubble and then copies
+> itself into every other one while a running tally counts up. No Firebase, no
+> registry entry, no worksheet creator and no student quiz yet — its "Tools ▾"
+> menu points at the two other Stage 3 number tools and Factor Circles, with
+> both siblings greyed out.
+>
+> * **THE BUBBLE SIZE IS THE ANSWER, WHICH MAKES THIS SHARING, NOT MEASURING.**
+>   `84 ÷ 6` is drawn as SIX bubbles and the question is how many go in each —
+>   the partitive reading. The quotitive one ("how many groups of 6?") is a
+>   different picture and is deliberately not what this tool shows; if it is
+>   ever wanted it needs a second mode, not a relabelled arena.
+> * **THE DUPLICATION IS WHAT ENFORCES EQUALITY.** A teacher cannot put a
+>   different amount in a different bubble, because one entry fans out to all of
+>   them. Equal groups are a property of the mechanic, not a rule anyone has to
+>   remember, and that is why there is no per-bubble editing.
+> * **THE TALLY COUNTS AS EACH COPY LANDS, NOT ONCE AT THE END** — 10, 20, 30,
+>   40, 50, 60 for a round of 10 into six groups. That IS skip counting, and it
+>   is the whole reason the copies are staggered rather than fired together.
+>   Anything that batches the landings destroys it.
+> * **THE STRATEGY IS PARTIAL QUOTIENTS.** Rounds accumulate, so 10 then 4 into
+>   six groups reaches 84 and the ladder records `6 × 10 = 60`, `6 × 4 = 24`,
+>   then `10 + 4 = 14 in each group`. That column IS the bridge to short and
+>   long division: the chunks a student chooses are the digits they will later
+>   write above the bracket. Do not "help" by suggesting the efficient chunk —
+>   the rounds counter is there so a class can be asked whether it could have
+>   been done in fewer.
+> * **AN OVERSHOOT FLIES OUT AND BOUNCES BACK.** Teacher decision 2026-09-05:
+>   blocking the entry before it moves hides the very thing worth seeing. The
+>   copies fly, the tally goes red AT THE GROUP THAT TIPS IT OVER (so a class can
+>   see 4 groups of 20 was fine and the fifth was not), then everything flies
+>   home and NOTHING is kept. `S.rounds.pop()` is the entire undo, because…
+> * **EVERY DISPLAY IS DERIVED FROM `S.rounds`.** `bubbleValue(i)`, `usedTotal()`,
+>   `eachTotal()` and `remaining()` are all folds over that one array, and a
+>   round carries `landed` = how many groups have received it so far. So a
+>   half-finished flight, an undo and a bounced overshoot are the same operation
+>   and cannot disagree with each other. Never cache a total.
+> * **A MID-OVERSHOOT TALLY NEVER SHOWS A NEGATIVE.** "Still to share − 36" is
+>   not a number this class has met; the row relabels itself to "Too many by 36",
+>   and to "Left over" once a remainder question finishes.
+> * **AN EXACTLY-DIVIDING QUESTION CAN NEVER STRAND A PART-GROUP.** Used is
+>   always a multiple of the divisor, so what is left is too — a teacher can
+>   never be left holding fewer than one each. That property is what lets the
+>   finish rule be the single line `left === 0 || left < divisor`, which also
+>   gives the remainder levels their ending for free. Checked exhaustively.
+> * **THE COUNTERS ARE COLOURED BY ROUND, NOT BY PLACE.** With counters on, a
+>   bubble holding 43 after rounds of 40 and 3 shows four blue rods and three
+>   green dots — the chunks stay visible inside the total. Hundreds become flats
+>   so a 3-digit bubble stays compact.
+> * **THE CHECK SENTENCE LIVES INSIDE THE LADDER CARD.** As its own card the
+>   right-hand column ran 42px past the fold at 1366×768 exactly when it
+>   mattered — the moment a question is finished. Two cards became one; the
+>   ladder card is shown when EITHER the ladder or the check sentence is wanted.
+> * **THE TALLY STAYS BESIDE THE BUBBLES DOWN TO 960px.** A 1024×768 projector
+>   is a real classroom, and a running total you have to scroll to is not a
+>   running total. The side column is `clamp(266px,24vw,336px)` and the topbar
+>   drops its brand text at 1180px so it never wraps to two rows.
+> * **Verified** through Playwright: 96 checks — 1200 generated questions across
+>   the three levels for range, exactness and no back-to-back repeats; the
+>   divisor lock; scripted solves in one round, two rounds and fourteen rounds of
+>   1 agreeing; the tally, the ladder rows, the "left" column and both check
+>   sentences re-derived; the overshoot keeping nothing and the question still
+>   finishing afterwards; undo and start-again; remainders and the leftover tray;
+>   the answer absent from the screen until the question is done; the counters
+>   drawn in every bubble summing to that bubble's number; input guarding
+>   (empty, non-numeric, zero, negative, decimal, absurd); custom numbers and the
+>   refusal of more than six groups; a real flight sampled mid-animation to prove
+>   the groups fill one at a time and the tally climbs with them; and the fit at
+>   1366×768, 1280×800, 1024×768 and 820×1180. Harnesses live in the session
+>   scratch, not the repo: `check.mjs`, `shots.mjs`.
+
 > **NEW (2026-09-02, session — being pushed): THE WORKING PAD.** A drag-and-drop
 > scratchpad beside the figure, shared by the teaching tool (Settings → **Working
 > pad**, off by default) and the student quiz (always on, every level). One
@@ -1301,6 +1376,15 @@ portal/PLACEMENT.md , portal/README.md   migration + structure notes
 - All Firebase quizzes were migrated to the secure exchange (via `quizClient.js`
   or inline). The decimal-zoom rounding quiz was converted from a public
   leaderboard to a secure achievements quiz.
+- **Division by Grouping — Bubbles (2026-09-05):** teacher tool
+  `interactive-tools/stage-3/number/division-grouping-bubbles/`, a Stage 3
+  number tool cross-listed under **MA3-MR-01** and **MA3-MR-02** (two rows in
+  `resources/toolLinks.js`, one URL, nothing duplicated on disk). Shares a
+  number into 2–6 bubbles a chunk at a time; the chunks add to the quotient,
+  which is the bridge to short division. No Firebase, no registry entry, no
+  worksheet creator and no student quiz yet. Read the 2026-09-05 header block
+  before touching the duplication order, the derived totals, the overshoot
+  bounce or the side column's width.
 - **Complete the Square (2026-08-31):** teacher tool
   `interactive-tools/stage-5/algebra/complete-the-square/`, the first Stage 5
   algebra tool. Two modes (tiles, and the formula proof), cross-listed under
@@ -1464,6 +1548,18 @@ portal/PLACEMENT.md , portal/README.md   migration + structure notes
   of ten, so it breaks the “move the decimal point” habit) and **area/volume**
   (m² ↔ cm² is 10 000, not 100 — the classic trap, and it would need its own
   tier). Digital storage (GB/MB/kB) was considered and left out.
+- **Division by Grouping siblings:** the teaching tool shipped 2026-09-05.
+  Still to build: a **worksheet creator**
+  (`worksheet-creators/stage-3/number/division-grouping.html` — a printable
+  partial-quotient ladder with the bubbles drawn blank, and a "how few rounds"
+  section) and a **student quiz**
+  (`online-quizzes/stage-3/number/division-grouping.html`, registry id
+  `division-grouping-quiz`) carrying the v2 login block — a ladder that fades
+  the bubbles, then the tally, then leaves only the written algorithm. Both are
+  stubbed as greyed rows in the tool's Tools menu. Possible extensions to the
+  tool itself: a **quotitive mode** ("how many groups of 6?", which needs
+  bubbles that are created rather than filled), and **divisors above 6** (the
+  arena would have to wrap to two rows).
 - **Revision Generator — Stage 3**: 6 of 8 topics built (Represents Numbers,
   Additive Relations, Multiplicative Relations, Fractions, 2D Space and Area,
   Geometric Measure). Each remaining topic needs a new diagram engine first:

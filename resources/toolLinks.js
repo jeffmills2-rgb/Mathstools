@@ -212,6 +212,13 @@ window.MMT_TOOL_LINKS = {
 
   "MA3-MR-01": [
     {
+      title: "Division by Grouping \u2014 Bubbles",
+      kind: "Teacher tool",
+      url: "/interactive-tools/stage-3/number/division-grouping-bubbles/",
+      note: "Share a number into 2\u20136 equal bubbles a chunk at a time. The chunk flies to the first group then copies to every other one, a running tally counts up as each lands, and the chunks add to the quotient.",
+      tags: ["division", "sharing", "equal groups", "partial quotients", "chunking", "repeated subtraction", "remainder", "partitioning", "visual", "whole-class teaching", "inverse", "multiplication"]
+    },
+    {
       title: "Factor Circles — Teacher Explore",
       kind: "Teacher tool",
       url: "/interactive-tools/stage-4/number/factor-circles/",
@@ -266,6 +273,16 @@ window.MMT_TOOL_LINKS = {
       url: "/games/Maths%20Memory/",
       note: "Memory game matching multiplication facts.",
       tags: ["game", "memory", "multiplication", "fluency", "matching"]
+    }
+  ],
+
+  "MA3-MR-02": [
+    {
+      title: "Division by Grouping \u2014 Bubbles",
+      kind: "Teacher tool",
+      url: "/interactive-tools/stage-3/number/division-grouping-bubbles/",
+      note: "Finishes every question with both number sentences \u2014 84 \u00f7 6 = 14 and 6 \u00d7 14 = 84 \u2014 so division and multiplication are read as the same fact.",
+      tags: ["number sentences", "division", "multiplication", "inverse", "equal groups", "partial quotients", "remainder", "visual", "whole-class teaching"]
     }
   ],
 

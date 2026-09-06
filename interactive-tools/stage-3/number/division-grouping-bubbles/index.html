@@ -1,0 +1,1177 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Division by Grouping | Mills Maths Tools</title>
+
+  <style>
+    :root{
+      --bg:#f8fafc;
+      --card:#ffffff;
+      --ink:#0f172a;
+      --muted:#64748b;
+      --border:#e2e8f0;
+      --shadow:0 18px 45px rgba(15,23,42,.13);
+      --blue:#2563eb;
+      --blue-dark:#1d4ed8;
+      --green:#22c55e;
+      --green-dark:#15803d;
+      --purple:#7c3aed;
+      --purple-dark:#5b21b6;
+      --orange:#f97316;
+      --orange-dark:#c2410c;
+      --line:#334155;
+      --line-soft:#94a3b8;
+      --pink:#db2777;
+      --red:#dc2626;
+      --uiFont:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      --mathFont:"STIX Two Math","Cambria Math","Latin Modern Math","Times New Roman",Georgia,serif;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ min-height:100%; }
+    body{
+      margin:0;
+      font-family:var(--uiFont);
+      color:var(--ink);
+      background:
+        radial-gradient(circle at top left,rgba(37,99,235,.14),transparent 32rem),
+        radial-gradient(circle at top right,rgba(124,58,237,.12),transparent 34rem),
+        var(--bg);
+      overflow-x:hidden;
+    }
+    button,input,select{ font:inherit; }
+    [hidden]{ display:none !important; }
+
+    .app{ min-height:100dvh; display:flex; flex-direction:column; min-width:0; }
+
+    /* ---------- topbar (shared MMT shell) ---------- */
+    .mmtTopbar{
+      position:relative; z-index:40;
+      background:linear-gradient(135deg,#0f172a,#123b7a 55%,#2563eb);
+      color:white; padding:14px 24px;
+      display:grid; grid-template-columns:minmax(220px,1fr) auto minmax(320px,1fr);
+      align-items:center; gap:18px;
+      box-shadow:0 10px 28px rgba(15,23,42,.22);
+    }
+    .mmtBrand{
+      display:flex; align-items:center; gap:12px; justify-self:start;
+      text-decoration:none; color:white; border-radius:14px; padding:8px 12px;
+      margin-left:-12px; font-weight:900;
+      transition:background .18s ease,transform .18s ease,box-shadow .18s ease;
+    }
+    .mmtBrand:hover{ background:rgba(255,255,255,.12); transform:translateY(-1px);
+      box-shadow:0 0 10px rgba(124,58,237,.6),0 0 18px rgba(37,99,235,.4); }
+    .mmtBrandLogo{
+      width:44px; height:44px; border-radius:9px; background:white; color:#1d4ed8;
+      display:grid; place-items:center; font-weight:1000; letter-spacing:-.08em;
+      box-shadow:inset 0 -2px 0 rgba(15,23,42,.08); flex:0 0 auto;
+    }
+    .mmtBrandText strong{ display:block; font-size:1.18rem; line-height:1; letter-spacing:-.03em; color:white; }
+    .mmtBrandText span{ display:block; font-size:.78rem; opacity:.82; font-weight:650; color:white; }
+    .mmtTopTitle{
+      font-weight:850; font-size:clamp(1.05rem,1.9vw,1.5rem); letter-spacing:-.04em;
+      text-align:center; color:white; white-space:nowrap;
+    }
+    .topActions{ justify-self:end; display:flex; align-items:center; justify-content:flex-end; gap:10px; flex-wrap:wrap; }
+
+    .btn{
+      appearance:none; border:1px solid rgba(255,255,255,.28); background:rgba(255,255,255,.14);
+      color:white; padding:11px 15px; border-radius:14px; font-weight:900; font-size:15px;
+      cursor:pointer; transition:.18s ease; user-select:none;
+    }
+    .btn:hover:not(:disabled){ background:rgba(255,255,255,.22); transform:translateY(-1px); }
+    .btn:active{ transform:translateY(0); }
+    .btn:focus-visible{ outline:none; box-shadow:0 0 0 4px rgba(255,255,255,.23); }
+    .btn-primary{ background:white; color:#1d4ed8; border-color:white; }
+    .btn-primary:hover:not(:disabled){ background:#eef2ff; color:#1d4ed8; }
+    .btn:disabled{ opacity:.45; cursor:not-allowed; transform:none; }
+
+    .menuWrap{ position:relative; display:inline-flex; }
+    .dropMenu{ position:absolute; top:calc(100% + 8px); right:0; min-width:250px; background:#fff; color:var(--ink);
+      border:1px solid rgba(226,232,240,.95); border-radius:14px; box-shadow:0 18px 45px rgba(15,23,42,.22);
+      padding:7px; display:none; z-index:120; text-align:left; }
+    .dropMenu.open{ display:grid; gap:4px; }
+    .toolLink{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border-radius:10px;
+      color:var(--ink); text-decoration:none; font-weight:900; font-size:.9rem; }
+    .toolLink::after{ content:'\203A'; color:var(--blue); font-weight:1000; font-size:1.1rem; line-height:1; }
+    .toolLink:hover,.toolLink:focus-visible{ background:#eef2ff; color:#1d4ed8; outline:none; }
+    .toolLink small{ display:block; font-weight:650; font-size:.74rem; color:var(--muted); }
+    .toolLink.is-disabled{ color:var(--line-soft); cursor:not-allowed; }
+    .toolLink.is-disabled::after{ content:'\2022'; color:var(--line-soft); font-size:.9rem; }
+    .toolLink.is-disabled:hover{ background:transparent; color:var(--line-soft); }
+    .toolLink.is-disabled small{ color:var(--line-soft); }
+
+    .settingsMenu.open{ gap:11px; padding:15px 18px; min-width:320px; max-height:min(74vh,640px); overflow:auto; }
+    .settingsHead{ font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; font-weight:950; color:var(--muted); }
+    .settingsNote{ margin:0; font-size:.76rem; font-weight:650; color:var(--muted); line-height:1.4; }
+    .settingsRule{ height:1px; background:var(--border); margin:1px 0; }
+
+    .selRow{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .selRow > span{ font-weight:900; font-size:.92rem; color:var(--ink); white-space:nowrap; }
+    .selRow select,.selRow input{
+      appearance:none; border:1.5px solid var(--border); background:#fff;
+      padding:8px 11px; border-radius:11px; font-weight:850; font-size:.88rem;
+      color:var(--line); min-width:118px;
+    }
+    .selRow select{
+      background:#fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' fill='none' stroke='%232563eb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>") no-repeat right 10px center;
+      background-size:11px; padding-right:30px; cursor:pointer; min-width:158px;
+    }
+    .selRow select:hover{ border-color:var(--line-soft); }
+    .selRow select:focus-visible,.selRow input:focus-visible{ outline:none; border-color:var(--blue); box-shadow:0 0 0 4px rgba(37,99,235,.16); }
+
+    .sw{ display:inline-flex; align-items:center; gap:11px; cursor:pointer; user-select:none; font-weight:850; color:var(--line); font-size:.93rem; }
+    .sw input{ position:absolute; opacity:0; width:0; height:0; }
+    .sw .track{ position:relative; width:50px; height:29px; border-radius:999px; background:#cbd5e1; transition:.18s ease; flex:0 0 auto; box-shadow:inset 0 1px 3px rgba(15,23,42,.18); }
+    .sw .track::after{ content:""; position:absolute; top:3px; left:3px; width:23px; height:23px; border-radius:50%; background:#fff; box-shadow:0 2px 6px rgba(15,23,42,.3); transition:.18s ease; }
+    .sw input:checked + .track{ background:var(--green); }
+    .sw input:checked + .track::after{ transform:translateX(21px); }
+    .sw input:focus-visible + .track{ box-shadow:0 0 0 4px rgba(37,99,235,.28); }
+
+    /* ---------- layout ---------- */
+    .layout{
+      flex:1; width:min(1420px,100%); margin:0 auto; padding:20px 22px 30px;
+      display:grid; grid-template-columns:minmax(0,1fr) clamp(266px,24vw,336px); gap:clamp(12px,1.6vw,20px);
+      align-items:start; min-width:0;
+    }
+    .stage{ display:flex; flex-direction:column; gap:14px; min-width:0; }
+    .side{ display:flex; flex-direction:column; gap:14px; position:sticky; top:16px; }
+
+    .card{
+      background:var(--card); border:1px solid var(--border); border-radius:20px;
+      box-shadow:var(--shadow); padding:14px 17px;
+    }
+
+    /* ---------- sentence card ---------- */
+    .eqCard{
+      background:var(--card); border:1px solid var(--border); border-radius:20px; box-shadow:var(--shadow);
+      padding:14px 18px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+    }
+    .sentence{
+      font-family:var(--mathFont); font-size:clamp(1.9rem,4.2vw,3rem); font-weight:700;
+      letter-spacing:-.01em; line-height:1; display:flex; align-items:baseline; gap:.22em; white-space:nowrap;
+    }
+    .sentence .dv{ color:var(--blue-dark); }
+    .sentence .ds{ color:var(--purple-dark); }
+    .sentence .ans{ color:var(--line-soft); min-width:.7em; display:inline-block; text-align:center; }
+    .sentence .ans.is-known{ color:var(--green-dark); animation:popIn .45s cubic-bezier(.34,1.5,.5,1); }
+    .sentence .rem{ font-size:.55em; color:var(--orange-dark); font-weight:700; margin-left:.25em; }
+    .meaning{ font-size:.92rem; font-weight:800; color:var(--muted); line-height:1.35; flex:1 1 240px; min-width:200px; }
+    .meaning b{ color:var(--line); }
+    .outcomeTag{
+      font-size:.66rem; letter-spacing:.1em; font-weight:950; text-transform:uppercase;
+      color:var(--purple-dark); background:rgba(124,58,237,.11); border:1px solid rgba(124,58,237,.24);
+      padding:5px 9px; border-radius:999px; white-space:nowrap;
+    }
+    .genBtn{
+      appearance:none; border:1.5px solid var(--border); background:#fff; color:var(--line);
+      padding:9px 14px; border-radius:13px; font-weight:900; font-size:.88rem; cursor:pointer;
+      display:inline-flex; align-items:center; gap:8px; transition:.18s ease; white-space:nowrap;
+    }
+    .genBtn:hover:not(:disabled){ border-color:var(--blue); color:var(--blue-dark); background:#eef2ff; transform:translateY(-1px); }
+    .genBtn:disabled{ opacity:.45; cursor:not-allowed; }
+    .dice{ font-size:1.15rem; line-height:1; }
+
+    /* ---------- prompt ---------- */
+    .promptBar{
+      display:flex; align-items:center; gap:12px; padding:12px 16px; border-radius:16px;
+      background:linear-gradient(135deg,rgba(37,99,235,.10),rgba(124,58,237,.08));
+      border:1px solid rgba(37,99,235,.20); font-weight:850; color:var(--line); font-size:1rem; line-height:1.35;
+      min-height:54px;
+    }
+    .promptBar .pIco{ font-size:1.3rem; line-height:1; flex:0 0 auto; }
+    .promptBar.is-warn{ background:linear-gradient(135deg,rgba(220,38,38,.12),rgba(249,115,22,.10)); border-color:rgba(220,38,38,.3); color:#991b1b; }
+    .promptBar.is-done{ background:linear-gradient(135deg,rgba(34,197,94,.14),rgba(37,99,235,.08)); border-color:rgba(21,128,61,.28); color:var(--green-dark); }
+
+    /* ---------- arena ---------- */
+    .arenaCard{ background:var(--card); border:1px solid var(--border); border-radius:22px; box-shadow:var(--shadow); padding:18px 16px 14px; }
+    .arenaHead{ display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:12px; }
+    .groupsChip{
+      font-weight:950; font-size:.84rem; color:var(--purple-dark); background:rgba(124,58,237,.10);
+      border:1px solid rgba(124,58,237,.22); padding:6px 13px; border-radius:999px;
+    }
+    .arena{ display:flex; gap:clamp(6px,1.2vw,16px); justify-content:center; align-items:flex-start; flex-wrap:nowrap; }
+    .bubbleWrap{ flex:1 1 0; min-width:0; max-width:186px; display:flex; flex-direction:column; align-items:center; gap:7px; }
+    .blob{
+      width:100%; aspect-ratio:1/1.04; border-radius:47%;
+      background:radial-gradient(circle at 30% 24%,#ffffff,#f1f5f9 46%,#e2e8f0);
+      border:2.5px solid #cbd5e1;
+      display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+      padding:8% 9%; position:relative; overflow:hidden;
+      transition:border-color .22s ease, box-shadow .22s ease, transform .22s ease;
+      box-shadow:inset 0 -10px 22px rgba(15,23,42,.05), 0 6px 16px rgba(15,23,42,.07);
+    }
+    .blob::before{
+      content:""; position:absolute; top:9%; left:16%; width:26%; height:15%;
+      border-radius:50%; background:rgba(255,255,255,.85); filter:blur(1px); pointer-events:none;
+    }
+    .blob.has-any{ border-color:var(--blue); box-shadow:inset 0 -10px 22px rgba(37,99,235,.07), 0 8px 20px rgba(37,99,235,.16); }
+    .blob.is-pop{ animation:blobPop .42s cubic-bezier(.34,1.5,.5,1); }
+    .blob.is-over{ border-color:var(--red); background:radial-gradient(circle at 30% 24%,#fff,#fee2e2 50%,#fecaca); }
+    .blob.is-done{ border-color:var(--green-dark); box-shadow:inset 0 -10px 22px rgba(34,197,94,.10), 0 10px 26px rgba(21,128,61,.20); }
+    @keyframes blobPop{ 0%{ transform:scale(1);} 42%{ transform:scale(1.09);} 100%{ transform:scale(1);} }
+    @keyframes popIn{ 0%{ transform:scale(.4); opacity:0;} 60%{ transform:scale(1.16);} 100%{ transform:scale(1); opacity:1;} }
+
+    .bubTotal{ font-family:var(--mathFont); font-weight:700; line-height:1; color:var(--ink); }
+    .blob.plain .bubTotal{ font-size:clamp(1.7rem,4.4vw,3.1rem); }
+    .blob.dots .bubTotal{ font-size:clamp(1rem,2.1vw,1.5rem); }
+    .blob.is-empty .bubTotal{ color:var(--line-soft); }
+    .bubChips{ display:flex; flex-wrap:wrap; gap:3px; justify-content:center; align-items:center; max-width:100%; }
+    .bubChips .ch{
+      font-size:clamp(.58rem,1.02vw,.76rem); font-weight:950; padding:1px 6px; border-radius:999px;
+      background:color-mix(in srgb,var(--c) 15%,#fff); color:var(--c); border:1px solid color-mix(in srgb,var(--c) 40%,#fff);
+      white-space:nowrap;
+    }
+    .bubChips .plus{ font-size:.66rem; font-weight:950; color:var(--line-soft); }
+    .bubDots{ display:flex; flex-wrap:wrap; gap:5px; justify-content:center; align-items:center; max-width:100%; }
+    .cGroup{ display:flex; flex-wrap:wrap; gap:3px; justify-content:center; align-items:center; color:var(--c); }
+    .cGroup i{ display:block; background:currentColor; flex:0 0 auto; }
+    .cGroup i.unit{ width:10px; height:10px; border-radius:50%; }
+    .cGroup i.rod{ width:9px; height:38px; border-radius:4.5px;
+      background:repeating-linear-gradient(to bottom,currentColor 0 2.6px,rgba(255,255,255,.55) 2.6px 3.8px); }
+    .cGroup i.flat{ width:38px; height:38px; border-radius:5px;
+      background:
+        repeating-linear-gradient(to bottom,currentColor 0 2.6px,rgba(255,255,255,.55) 2.6px 3.8px),
+        repeating-linear-gradient(to right,currentColor 0 2.6px,rgba(255,255,255,.55) 2.6px 3.8px); }
+    .bubLabel{ font-size:.72rem; font-weight:900; color:var(--muted); letter-spacing:.02em; }
+    .blob.is-done + .bubLabel{ color:var(--green-dark); }
+
+    /* leftover tray */
+    .tray{
+      margin:14px auto 0; max-width:520px; border:2px dashed var(--orange); border-radius:16px;
+      background:rgba(249,115,22,.07); padding:10px 14px; display:flex; align-items:center; gap:12px; justify-content:center;
+    }
+    .trayHead{ font-weight:950; font-size:.86rem; color:var(--orange-dark); }
+    .trayDots{ display:flex; gap:4px; color:var(--orange-dark); }
+    .trayDots i{ width:11px; height:11px; border-radius:50%; background:currentColor; display:block; }
+    .trayNum{ font-family:var(--mathFont); font-size:1.5rem; font-weight:700; color:var(--orange-dark); }
+
+    /* ---------- entry ---------- */
+    .entryCard{
+      background:var(--card); border:1px solid var(--border); border-radius:20px; box-shadow:var(--shadow);
+      padding:14px 18px; display:flex; flex-wrap:wrap; align-items:center; gap:12px;
+    }
+    .entryLab{ font-weight:900; font-size:1rem; color:var(--line); }
+    .entryLab b{ color:var(--blue-dark); }
+    #chunkInput{
+      width:110px; text-align:center; font-family:var(--mathFont); font-size:1.9rem; font-weight:700;
+      padding:4px 8px; border:2.5px solid var(--blue); border-radius:14px; color:var(--blue-dark); background:#fff;
+    }
+    #chunkInput:focus-visible{ outline:none; box-shadow:0 0 0 5px rgba(37,99,235,.18); }
+    #chunkInput.is-bad{ border-color:var(--red); color:var(--red); animation:shake .34s; }
+    @keyframes shake{ 0%,100%{transform:translateX(0);} 20%{transform:translateX(-7px);} 40%{transform:translateX(7px);} 60%{transform:translateX(-4px);} 80%{transform:translateX(4px);} }
+    .goBtn{
+      appearance:none; border:none; background:linear-gradient(135deg,var(--blue),var(--purple));
+      color:#fff; padding:12px 20px; border-radius:14px; font-weight:950; font-size:1rem; cursor:pointer;
+      box-shadow:0 10px 22px rgba(37,99,235,.30); transition:.18s ease; white-space:nowrap;
+    }
+    .goBtn:hover:not(:disabled){ transform:translateY(-1px); box-shadow:0 14px 28px rgba(37,99,235,.38); }
+    .goBtn:disabled{ opacity:.42; cursor:not-allowed; transform:none; box-shadow:none; }
+    .quickRow{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+    .quickRow .qLab{ font-size:.72rem; font-weight:900; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; }
+    .qBtn{
+      appearance:none; border:1.5px solid var(--border); background:#fff; color:var(--line);
+      min-width:44px; padding:7px 10px; border-radius:11px; font-weight:900; font-size:.95rem; cursor:pointer;
+      font-family:var(--mathFont); transition:.15s ease;
+    }
+    .qBtn:hover:not(:disabled){ border-color:var(--blue); background:#eef2ff; color:var(--blue-dark); transform:translateY(-1px); }
+    .qBtn:disabled{ opacity:.4; cursor:not-allowed; transform:none; }
+    .ghostBtn{
+      appearance:none; border:1.5px solid var(--border); background:#fff; color:var(--muted);
+      padding:9px 14px; border-radius:12px; font-weight:900; font-size:.86rem; cursor:pointer; transition:.15s ease;
+    }
+    .ghostBtn:hover:not(:disabled){ border-color:var(--line-soft); color:var(--line); }
+    .ghostBtn:disabled{ opacity:.4; cursor:not-allowed; }
+    .spacer{ flex:1 1 auto; }
+
+    /* estimate */
+    .estCard{ border:1.5px dashed var(--purple); background:rgba(124,58,237,.06); border-radius:18px; padding:13px 16px;
+      display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+    .estCard .estLab{ font-weight:900; color:var(--purple-dark); font-size:.98rem; }
+    #estInput{ width:96px; text-align:center; font-family:var(--mathFont); font-size:1.5rem; font-weight:700;
+      padding:4px 8px; border:2px solid var(--purple); border-radius:12px; color:var(--purple-dark); background:#fff; }
+    #estInput:focus-visible{ outline:none; box-shadow:0 0 0 4px rgba(124,58,237,.2); }
+
+    /* ---------- side: tally ---------- */
+    .tallyCard{ position:relative; }
+    .tHead{ font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; font-weight:950; color:var(--muted); }
+    .tBig{
+      font-family:var(--mathFont); font-size:3rem; font-weight:700; line-height:1; color:var(--blue-dark);
+      margin:5px 0 2px; transition:color .2s ease;
+    }
+    .tBig.is-over{ color:var(--red); }
+    .tBig.is-done{ color:var(--green-dark); }
+    .tOf{ font-size:.95rem; font-weight:850; color:var(--muted); margin-bottom:10px; }
+    .tOf b{ color:var(--line); font-family:var(--mathFont); font-size:1.15rem; }
+    .tBar{ position:relative; height:16px; border-radius:999px; background:#e2e8f0; overflow:hidden; box-shadow:inset 0 1px 3px rgba(15,23,42,.16); }
+    .tFill{ position:absolute; inset:0 auto 0 0; width:0%; border-radius:999px;
+      background:linear-gradient(90deg,var(--blue),var(--purple)); transition:width .3s cubic-bezier(.34,1.1,.5,1); }
+    .tFill.is-over{ background:linear-gradient(90deg,var(--red),#f97316); }
+    .tFill.is-done{ background:linear-gradient(90deg,var(--green),var(--green-dark)); }
+    .tRows{ margin-top:12px; display:grid; gap:7px; }
+    .tRow{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; font-weight:850; font-size:.9rem; color:var(--muted); }
+    .tRow b{ font-family:var(--mathFont); font-size:1.3rem; font-weight:700; color:var(--line); }
+    .tRow.left b{ color:var(--orange-dark); }
+    .tRow.left.is-zero b{ color:var(--green-dark); }
+    .tFlash{
+      position:absolute; right:18px; top:44px; font-family:var(--mathFont); font-size:1.5rem; font-weight:700;
+      color:var(--green-dark); opacity:0; pointer-events:none;
+    }
+    .tFlash.go{ animation:flashUp .72s ease-out; }
+    .tFlash.bad{ color:var(--red); }
+    @keyframes flashUp{ 0%{ opacity:0; transform:translateY(10px) scale(.7);} 25%{ opacity:1; transform:translateY(0) scale(1.1);} 100%{ opacity:0; transform:translateY(-26px) scale(1);} }
+    .roundsChip{ margin-top:11px; display:inline-flex; align-items:center; gap:7px; font-size:.78rem; font-weight:900;
+      color:var(--muted); background:#f1f5f9; border:1px solid var(--border); padding:5px 11px; border-radius:999px; }
+
+    /* ---------- side: ladder ---------- */
+    .ladHead{ display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-bottom:9px; }
+    .ladTitle{ font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; font-weight:950; color:var(--muted); }
+    .ladCols{ display:grid; grid-template-columns:auto 1fr auto; gap:4px 10px; align-items:center; }
+    .ladColHead{ font-size:.63rem; letter-spacing:.08em; text-transform:uppercase; font-weight:950; color:var(--line-soft); }
+    .ladN{
+      font-family:var(--mathFont); font-size:1.28rem; font-weight:700; text-align:center; min-width:2.1em;
+      padding:2px 7px; border-radius:9px; color:var(--c);
+      background:color-mix(in srgb,var(--c) 13%,#fff); border:1px solid color-mix(in srgb,var(--c) 34%,#fff);
+    }
+    .ladMult{ font-family:var(--mathFont); font-size:1.02rem; font-weight:700; color:var(--line); white-space:nowrap; }
+    .ladLeft{ font-family:var(--mathFont); font-size:1.02rem; font-weight:700; color:var(--orange-dark); text-align:right; white-space:nowrap; }
+    .ladLeft.zero{ color:var(--green-dark); }
+    .ladEmpty{ font-size:.84rem; font-weight:750; color:var(--line-soft); line-height:1.45; }
+    .ladSum{
+      margin-top:9px; padding-top:9px; border-top:2px solid var(--border);
+      font-family:var(--mathFont); font-size:1.18rem; font-weight:700; color:var(--ink); text-align:center; line-height:1.45;
+    }
+    .ladSum .eq{ display:block; font-size:1.5rem; color:var(--green-dark); margin-top:3px; }
+    .ladSum small{ display:block; font-family:var(--uiFont); font-size:.72rem; font-weight:850; color:var(--muted); margin-top:4px; line-height:1.35; }
+
+    /* ---------- check block (lives in the ladder card so the column fits) ---- */
+    .checkBlock{
+      margin-top:8px; padding:9px 12px 8px; border-radius:14px;
+      border:1px solid rgba(21,128,61,.28); background:linear-gradient(140deg,#f0fdf4,#ffffff 66%);
+    }
+    .checkHead{ font-size:.64rem; letter-spacing:.14em; text-transform:uppercase; font-weight:950; color:var(--green-dark); margin-bottom:5px; }
+    .checkLine{ font-family:var(--mathFont); font-size:1.3rem; font-weight:700; color:var(--ink); text-align:center; line-height:1.42; }
+    .checkLine .b{ color:var(--green-dark); }
+    .checkNote{ margin:6px 0 0; font-size:.73rem; font-weight:800; color:var(--muted); text-align:center; line-height:1.4; }
+
+    /* ---------- fly layer ---------- */
+    #flyLayer{ position:fixed; inset:0; pointer-events:none; z-index:200; }
+    .flyTok{
+      position:absolute; left:0; top:0; will-change:transform,opacity;
+      font-family:var(--mathFont); font-size:1.7rem; font-weight:700; line-height:1;
+      padding:8px 14px; border-radius:14px; color:#fff; background:var(--c,#2563eb);
+      box-shadow:0 10px 26px rgba(15,23,42,.28); white-space:nowrap;
+    }
+    .flyTok.back{ background:var(--red); }
+
+    /* ---------- responsive ---------- */
+    /* The side column carries the running tally, so it is kept beside the
+       bubbles down to 960px — a 1024×768 projector must not have to scroll. */
+    @media (max-width:1180px){
+      .mmtTopbar{ grid-template-columns:auto minmax(0,1fr) auto; padding:12px 16px; gap:12px; }
+      .mmtBrandText{ display:none; }
+      .btn{ padding:10px 13px; font-size:14px; }
+      .tBig{ font-size:2.6rem; }
+      .layout{ padding:16px 14px 24px; }
+    }
+    @media (max-width:960px){
+      .layout{ grid-template-columns:minmax(0,1fr); }
+      .side{ position:static; display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); }
+    }
+    @media (max-width:900px){
+      .mmtTopbar{ grid-template-columns:1fr; justify-items:center; padding:12px 14px; }
+      .mmtBrand{ margin-left:0; } .topActions{ justify-self:center; justify-content:center; }
+      .dropMenu{ right:auto; left:50%; transform:translateX(-50%); }
+      .layout{ padding:14px 12px 24px; }
+      .cGroup i.rod{ height:22px; } .cGroup i.flat{ width:22px; height:22px; }
+    }
+    @media (max-height:840px){
+      .tBig{ font-size:2.7rem; }
+      .arenaCard{ padding:12px 12px 10px; }
+      .promptBar{ min-height:46px; padding:9px 14px; font-size:.94rem; }
+    }
+    @media print{ .mmtTopbar,.entryCard,.promptBar{ display:none; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="mmtTopbar">
+      <a class="mmtBrand" href="https://www.millsmathstools.au" target="_self" aria-label="Back to Mills Maths Tools">
+        <span class="mmtBrandLogo" aria-hidden="true">MMT</span>
+        <span class="mmtBrandText"><strong>MMT</strong><span>Mills Maths Tools</span></span>
+      </a>
+      <div class="mmtTopTitle">Division by Grouping</div>
+      <div class="topActions">
+        <div class="menuWrap">
+          <button class="btn" id="settingsBtn" type="button" aria-haspopup="true" aria-expanded="false">Settings &#9662;</button>
+          <nav class="dropMenu settingsMenu" id="settingsMenu" aria-label="Settings">
+            <div class="settingsHead">The question</div>
+            <label class="selRow"><span>Numbers</span>
+              <select id="levelSel" aria-label="Number range">
+                <option value="two" selected>Two-digit &mdash; divides exactly</option>
+                <option value="three">Three-digit &mdash; divides exactly</option>
+                <option value="rem">With remainders</option>
+                <option value="custom">Type your own</option>
+              </select>
+            </label>
+            <label class="selRow"><span>Divide by</span>
+              <select id="divisorSel" aria-label="Divisor">
+                <option value="0" selected>Any (2&ndash;6)</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+              </select>
+            </label>
+            <div id="customRow" hidden>
+              <label class="selRow" style="margin-bottom:8px"><span>Number to share</span>
+                <input id="customDividend" type="text" inputmode="numeric" value="84" aria-label="Number to share" />
+              </label>
+              <label class="selRow"><span>Number of groups</span>
+                <input id="customDivisor" type="text" inputmode="numeric" value="6" aria-label="Number of groups" />
+              </label>
+              <p class="settingsNote" style="margin-top:8px">Up to 999 shared into 2&ndash;6 groups. Press <b>Use these numbers</b>.</p>
+              <button class="genBtn" id="customGo" type="button" style="margin-top:8px">Use these numbers</button>
+            </div>
+            <p class="settingsNote" id="levelNote">Every question divides exactly, so a group can never be left stranded part-way.</p>
+
+            <div class="settingsRule" role="separator"></div>
+            <div class="settingsHead">On screen</div>
+            <label class="sw"><input type="checkbox" id="dotsToggle"><span class="track"></span><span>Counters in the bubbles</span></label>
+            <label class="sw"><input type="checkbox" id="ladderToggle" checked><span class="track"></span><span>Partial-quotient ladder</span></label>
+            <label class="sw"><input type="checkbox" id="multToggle" checked><span class="track"></span><span>Multiplication each round</span></label>
+            <label class="sw"><input type="checkbox" id="checkToggle" checked><span class="track"></span><span>Check sentence at the end</span></label>
+            <label class="sw"><input type="checkbox" id="estToggle"><span class="track"></span><span>Estimate first</span></label>
+            <label class="sw"><input type="checkbox" id="roundsToggle" checked><span class="track"></span><span>Count the rounds</span></label>
+
+            <div class="settingsRule" role="separator"></div>
+            <div class="settingsHead">Animation</div>
+            <label class="selRow"><span>Speed</span>
+              <select id="speedSel" aria-label="Animation speed">
+                <option value="620">Calm</option>
+                <option value="420" selected>Normal</option>
+                <option value="240">Quick</option>
+                <option value="1">Straight there</option>
+              </select>
+            </label>
+            <p class="settingsNote">The number flies to the first group, then a copy of it flies to every other group &mdash; the tally counts up as each one lands.</p>
+          </nav>
+        </div>
+        <div class="menuWrap">
+          <button class="btn" id="toolsBtn" type="button" aria-haspopup="true" aria-expanded="false">Tools &#9662;</button>
+          <nav class="dropMenu" id="toolsMenu" aria-label="Related tools">
+            <a class="toolLink" href="/interactive-tools/stage-3/number/timestable-chart/">Times Table Chart<small>The same fact seen as an array, a product, a division and a fraction</small></a>
+            <a class="toolLink" href="/interactive-tools/stage-3/number/partition-splitter/">Partition Splitter<small>Break a number into friendly parts before operating on it</small></a>
+            <a class="toolLink" href="/interactive-tools/stage-4/number/factor-circles/">Factor Circles<small>Arrange dots to reveal factor pairs and equal groups</small></a>
+            <span class="toolLink is-disabled">Worksheet Creator<small>Not built yet</small></span>
+            <span class="toolLink is-disabled">Student Quiz<small>Not built yet</small></span>
+          </nav>
+        </div>
+        <button class="btn btn-primary" id="newBtn" type="button">New question</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="stage">
+
+        <div class="eqCard">
+          <div class="sentence" id="sentence" aria-live="polite">
+            <span class="dv" id="sDividend">84</span><span>&divide;</span><span class="ds" id="sDivisor">6</span><span>=</span><span class="ans" id="sAnswer">?</span>
+          </div>
+          <div class="meaning" id="meaning"><b>84</b> shared equally into <b>6</b> groups. How many in each group?</div>
+          <span class="outcomeTag">MA3-MR-01</span>
+          <button class="genBtn" id="genBtn" type="button" title="Keep the number of groups, change the number being shared">
+            <span class="dice" aria-hidden="true">&#9860;</span><span>New numbers</span>
+          </button>
+        </div>
+
+        <div class="estCard" id="estCard" hidden>
+          <span class="estLab">Before we start &mdash; about how many do you think will be in each group?</span>
+          <input id="estInput" type="text" inputmode="numeric" autocomplete="off" aria-label="Your estimate" />
+          <button class="goBtn" id="estGo" type="button" style="padding:9px 16px;font-size:.92rem">Lock it in</button>
+          <button class="ghostBtn" id="estSkip" type="button">Skip</button>
+        </div>
+
+        <div class="promptBar" id="promptBar">
+          <span class="pIco" id="promptIco" aria-hidden="true">&#128173;</span>
+          <span id="promptText">Choose a number to put in <b>each</b> group. A friendly number like 10 is a good start.</span>
+        </div>
+
+        <div class="arenaCard">
+          <div class="arenaHead">
+            <span class="groupsChip" id="groupsChip">6 equal groups</span>
+          </div>
+          <div class="arena" id="arena"></div>
+          <div class="tray" id="tray" hidden>
+            <span class="trayHead">Left over</span>
+            <span class="trayDots" id="trayDots"></span>
+            <span class="trayNum" id="trayNum">0</span>
+          </div>
+        </div>
+
+        <div class="entryCard">
+          <label class="entryLab" for="chunkInput">Put in <b>each</b> group:</label>
+          <input id="chunkInput" type="text" inputmode="numeric" autocomplete="off" aria-label="How many in each group" />
+          <button class="goBtn" id="goBtn" type="button">Share it out</button>
+          <div class="quickRow" id="quickRow"><span class="qLab">Quick</span></div>
+          <span class="spacer"></span>
+          <button class="ghostBtn" id="undoBtn" type="button" disabled>Undo round</button>
+          <button class="ghostBtn" id="clearBtn" type="button" disabled>Start again</button>
+        </div>
+      </section>
+
+      <aside class="side">
+        <div class="card tallyCard">
+          <div class="tHead">Shared out so far</div>
+          <div class="tBig" id="tallyNum">0</div>
+          <div class="tOf">out of <b id="tallyTarget">84</b></div>
+          <div class="tBar"><div class="tFill" id="tallyFill"></div></div>
+          <div class="tRows">
+            <div class="tRow"><span>In each group</span><b id="tallyEach">0</b></div>
+            <div class="tRow left" id="tallyLeftRow"><span id="tallyLeftLab">Still to share</span><b id="tallyLeft">84</b></div>
+            <div class="tRow" id="estRow" hidden><span>Your estimate</span><b id="estShown">&ndash;</b></div>
+          </div>
+          <span class="roundsChip" id="roundsChip">Rounds: <b style="color:var(--line)">0</b></span>
+          <div class="tFlash" id="tallyFlash" aria-hidden="true"></div>
+        </div>
+
+        <div class="card" id="ladderCard">
+          <div class="ladHead" id="ladderHead">
+            <span class="ladTitle">How we got there</span>
+          </div>
+          <div class="ladCols" id="ladderRows"></div>
+          <div class="ladEmpty" id="ladderEmpty">Each round you share out is recorded here. The numbers you put in each group add up to the answer.</div>
+          <div class="ladSum" id="ladderSum" hidden></div>
+          <div class="checkBlock" id="checkBlock" hidden>
+            <div class="checkHead">Check it</div>
+            <div class="checkLine" id="checkLine"></div>
+            <p class="checkNote" id="checkNote"></p>
+          </div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <div id="flyLayer" aria-hidden="true"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  const $ = id => document.getElementById(id);
+
+  /* Round colours. Six, because six is the largest divisor and a lesson rarely
+     needs more than six rounds; after that they cycle. */
+  const COLOURS = ["#2563eb","#16a34a","#7c3aed","#ea580c","#db2777","#0891b2"];
+
+  const S = {
+    dividend: 84,
+    divisor: 6,
+    level: "two",          /* two | three | rem | custom */
+    divisorPick: 0,        /* 0 = any */
+    rounds: [],            /* [{n, landed, colour}] — landed = how many groups have received it */
+    done: false,
+    remainder: 0,
+    busy: false,
+    token: 0,
+    speed: 420,
+    dots: false, ladder: true, mult: true, check: true, estimate: false, showRounds: true,
+    estValue: null, estAsked: false,
+    lastKey: ""
+  };
+
+  /* ---------------------------------------------------------------- derived */
+  /* Everything about the board is derived from S.rounds, so undo and a bounced
+     overshoot are the same operation: drop the round and repaint. */
+  const bubbleValue = i => S.rounds.reduce((s,r)=> s + (r.landed > i ? r.n : 0), 0);
+  const usedTotal   = () => S.rounds.reduce((s,r)=> s + r.n * r.landed, 0);
+  const eachTotal   = () => S.rounds.reduce((s,r)=> s + (r.landed >= S.divisor ? r.n : 0), 0);
+  const remaining   = () => S.dividend - usedTotal();
+
+  /* ------------------------------------------------------------- generation */
+  function randInt(lo,hi){ return lo + Math.floor(Math.random()*(hi-lo+1)); }
+
+  function pickDivisor(){
+    return S.divisorPick ? S.divisorPick : randInt(2,6);
+  }
+
+  function generate(keepDivisor){
+    for(let attempt=0; attempt<60; attempt++){
+      const d = keepDivisor || pickDivisor();
+      let dividend, rem = 0;
+      if(S.level === "three"){
+        const qLo = Math.ceil(100/d), qHi = Math.floor(600/d);
+        dividend = d * randInt(qLo, qHi);
+      } else if(S.level === "rem"){
+        const q = randInt(5, Math.min(40, Math.floor(240/d)));
+        rem = randInt(1, d-1);
+        dividend = d*q + rem;
+      } else {
+        const qLo = Math.max(5, Math.ceil(20/d)), qHi = Math.floor(99/d);
+        dividend = d * randInt(qLo, qHi);
+      }
+      const key = dividend + "/" + d;
+      if(key === S.lastKey) continue;
+      S.lastKey = key; S.divisor = d; S.dividend = dividend; S.remainder = rem;
+      return;
+    }
+  }
+
+  function setQuestion(dividend, divisor){
+    S.dividend = dividend; S.divisor = divisor;
+    S.lastKey = dividend + "/" + divisor;
+  }
+
+  /* ------------------------------------------------------------------ board */
+  function buildArena(){
+    const arena = $("arena");
+    arena.innerHTML = "";
+    for(let i=0;i<S.divisor;i++){
+      const wrap = document.createElement("div");
+      wrap.className = "bubbleWrap";
+      wrap.innerHTML =
+        '<div class="blob" id="blob'+i+'">' +
+          '<div class="bubDots" id="dots'+i+'"></div>' +
+          '<div class="bubTotal" id="tot'+i+'">0</div>' +
+          '<div class="bubChips" id="chips'+i+'"></div>' +
+        '</div>' +
+        '<div class="bubLabel">Group '+(i+1)+'</div>';
+      arena.appendChild(wrap);
+    }
+    $("groupsChip").textContent = S.divisor + " equal groups";
+  }
+
+  function glyphs(n){
+    const H = Math.floor(n/100), T = Math.floor((n%100)/10), O = n%10;
+    let s = "";
+    for(let k=0;k<H;k++) s += '<i class="flat"></i>';
+    for(let k=0;k<T;k++) s += '<i class="rod"></i>';
+    for(let k=0;k<O;k++) s += '<i class="unit"></i>';
+    return s;
+  }
+
+  function paintBubbles(){
+    for(let i=0;i<S.divisor;i++){
+      const blob = $("blob"+i); if(!blob) continue;
+      const v = bubbleValue(i);
+      blob.classList.toggle("plain", !S.dots);
+      blob.classList.toggle("dots", S.dots);
+      blob.classList.toggle("has-any", v > 0);
+      blob.classList.toggle("is-empty", v === 0);
+      blob.classList.toggle("is-done", S.done);
+      $("tot"+i).textContent = v;
+
+      const dotsBox = $("dots"+i);
+      const chipBox = $("chips"+i);
+      if(S.dots){
+        let h = "";
+        S.rounds.forEach(r => {
+          if(r.landed <= i) return;
+          h += '<span class="cGroup" style="--c:'+r.colour+'">'+glyphs(r.n)+'</span>';
+        });
+        dotsBox.innerHTML = h; dotsBox.hidden = false;
+        chipBox.innerHTML = ""; chipBox.hidden = true;
+      } else {
+        dotsBox.innerHTML = ""; dotsBox.hidden = true;
+        const parts = S.rounds.filter(r => r.landed > i);
+        if(parts.length > 1){
+          chipBox.innerHTML = parts
+            .map(r => '<span class="ch" style="--c:'+r.colour+'">'+r.n+'</span>')
+            .join('<span class="plus">+</span>');
+          chipBox.hidden = false;
+        } else {
+          chipBox.innerHTML = ""; chipBox.hidden = true;
+        }
+      }
+    }
+  }
+
+  function paintTally(overshoot){
+    const used = usedTotal(), left = S.dividend - used;
+    $("tallyNum").textContent = used;
+    $("tallyTarget").textContent = S.dividend;
+    $("tallyEach").textContent = eachTotal();
+    /* A negative "still to share" is not a number a Stage 3 class should meet
+       here — mid-overshoot the honest reading is how far PAST the target we are. */
+    if(left < 0){
+      $("tallyLeftLab").textContent = "Too many by";
+      $("tallyLeft").textContent = -left;
+    } else if(S.done && left > 0){
+      $("tallyLeftLab").textContent = "Left over";
+      $("tallyLeft").textContent = left;
+    } else {
+      $("tallyLeftLab").textContent = "Still to share";
+      $("tallyLeft").textContent = left;
+    }
+    $("tallyLeftRow").classList.toggle("is-zero", left === 0);
+
+    const pct = Math.max(0, Math.min(100, (used / S.dividend) * 100));
+    const fill = $("tallyFill");
+    fill.style.width = pct + "%";
+    fill.classList.toggle("is-over", !!overshoot);
+    fill.classList.toggle("is-done", S.done && !overshoot);
+    $("tallyNum").classList.toggle("is-over", !!overshoot);
+    $("tallyNum").classList.toggle("is-done", S.done && !overshoot);
+
+    const rc = $("roundsChip");
+    rc.hidden = !S.showRounds;
+    rc.innerHTML = 'Rounds: <b style="color:var(--line)">' + S.rounds.filter(r=>r.landed>=S.divisor).length + '</b>';
+
+    $("estRow").hidden = S.estValue === null;
+    $("estShown").textContent = S.estValue === null ? "–" : S.estValue;
+  }
+
+  function paintLadder(){
+    /* The check block lives inside this card so the whole right-hand column
+       still fits above the fold at 1366×768 when a question is finished. */
+    const showCheck = S.done && S.check;
+    $("ladderCard").hidden = !(S.ladder || showCheck);
+    $("ladderHead").hidden = !S.ladder;
+    $("ladderRows").hidden = !S.ladder;
+    if(!S.ladder){
+      $("ladderEmpty").hidden = true;
+      $("ladderSum").hidden = true;
+      return;
+    }
+    const rows = $("ladderRows"), sum = $("ladderSum"), empty = $("ladderEmpty");
+    const full = S.rounds.filter(r => r.landed >= S.divisor);
+    rows.innerHTML = "";
+    if(!full.length){
+      empty.hidden = false; sum.hidden = true; return;
+    }
+    empty.hidden = true;
+
+    const head = document.createElement("div");
+    head.className = "ladColHead"; head.textContent = "In each";
+    rows.appendChild(head);
+    const head2 = document.createElement("div");
+    head2.className = "ladColHead"; head2.textContent = S.mult ? "So that shares out" : "";
+    rows.appendChild(head2);
+    const head3 = document.createElement("div");
+    head3.className = "ladColHead"; head3.style.textAlign = "right"; head3.textContent = "Left";
+    rows.appendChild(head3);
+
+    let run = 0;
+    full.forEach(r => {
+      run += r.n * S.divisor;
+      const a = document.createElement("div");
+      a.className = "ladN"; a.style.setProperty("--c", r.colour); a.textContent = r.n;
+      const b = document.createElement("div");
+      b.className = "ladMult";
+      b.textContent = S.mult ? (S.divisor + " × " + r.n + " = " + (S.divisor*r.n)) : "";
+      const c = document.createElement("div");
+      const lft = S.dividend - run;
+      c.className = "ladLeft" + (lft === 0 ? " zero" : "");
+      c.textContent = lft;
+      rows.appendChild(a); rows.appendChild(b); rows.appendChild(c);
+    });
+
+    if(S.done){
+      const each = eachTotal();
+      const adds = full.map(r => r.n).join(" + ");
+      sum.hidden = false;
+      sum.innerHTML =
+        (full.length > 1 ? adds + " = " : "") +
+        '<span class="eq">' + each + ' in each group</span>' +
+        '<small>The numbers you put in each group add up to the answer.</small>';
+    } else {
+      sum.hidden = true;
+    }
+  }
+
+  function paintCheck(){
+    const card = $("checkBlock");
+    if(!S.done || !S.check){ card.hidden = true; return; }
+    const q = eachTotal(), r = remaining();
+    card.hidden = false;
+    $("checkLine").innerHTML =
+      S.dividend + ' ÷ ' + S.divisor + ' = <span class="b">' + q + (r ? ' r ' + r : '') + '</span><br>' +
+      S.divisor + ' × ' + q + (r ? ' + ' + r : '') + ' = <span class="b">' + S.dividend + '</span>';
+    $("checkNote").textContent = r
+      ? "There were " + r + " left over — not enough to give one more to each of the " + S.divisor + " groups."
+      : "Multiplying back gets us to the number we started with, so the answer is right.";
+  }
+
+  function paintSentence(){
+    $("sDividend").textContent = S.dividend;
+    $("sDivisor").textContent = S.divisor;
+    const ans = $("sAnswer");
+    if(S.done){
+      const r = remaining();
+      ans.className = "ans is-known";
+      ans.innerHTML = eachTotal() + (r ? '<span class="rem">r ' + r + '</span>' : '');
+    } else {
+      ans.className = "ans"; ans.textContent = "?";
+    }
+    $("meaning").innerHTML =
+      "<b>" + S.dividend + "</b> shared equally into <b>" + S.divisor + "</b> groups. How many in each group?";
+  }
+
+  function paintTray(){
+    const tray = $("tray");
+    const r = S.done ? remaining() : 0;
+    if(!r){ tray.hidden = true; return; }
+    tray.hidden = false;
+    $("trayNum").textContent = r;
+    let h = ""; for(let k=0;k<r;k++) h += "<i></i>";
+    $("trayDots").innerHTML = h;
+  }
+
+  function setPrompt(kind, html){
+    const bar = $("promptBar");
+    bar.classList.toggle("is-warn", kind === "warn");
+    bar.classList.toggle("is-done", kind === "done");
+    $("promptIco").innerHTML = kind === "warn" ? "&#9888;" : kind === "done" ? "&#127881;" : "&#128173;";
+    $("promptText").innerHTML = html;
+  }
+
+  function defaultPrompt(){
+    const left = remaining(), used = usedTotal();
+    if(S.done){
+      const r = remaining();
+      setPrompt("done", r
+        ? "Each group has <b>" + eachTotal() + "</b>, and <b>" + r + "</b> could not be shared. " +
+          S.dividend + " &divide; " + S.divisor + " = <b>" + eachTotal() + " remainder " + r + "</b>."
+        : "Each group has <b>" + eachTotal() + "</b>. That is the answer: " +
+          S.dividend + " &divide; " + S.divisor + " = <b>" + eachTotal() + "</b>.");
+      return;
+    }
+    if(!S.rounds.length){
+      setPrompt("think", "Choose a number to put in <b>each</b> group. A friendly number like 10 is a good start.");
+    } else {
+      setPrompt("think",
+        "<b>" + used + "</b> shared out, <b>" + left + "</b> still to go. How many more can go in each group?");
+    }
+  }
+
+  function paintQuick(){
+    const row = $("quickRow");
+    row.innerHTML = '<span class="qLab">Quick</span>';
+    [1,2,5,10,20,25,40,50,100].forEach(n => {
+      if(n * S.divisor > S.dividend) return;
+      const b = document.createElement("button");
+      b.className = "qBtn"; b.type = "button"; b.textContent = n;
+      b.dataset.n = n;
+      b.addEventListener("click", () => { $("chunkInput").value = n; submit(); });
+      row.appendChild(b);
+    });
+  }
+
+  function setBusy(on){
+    S.busy = on;
+    const dis = on || S.done || ($("estCard").hidden === false);
+    $("goBtn").disabled = dis;
+    $("chunkInput").disabled = dis;
+    document.querySelectorAll("#quickRow .qBtn").forEach(b => b.disabled = dis);
+    $("undoBtn").disabled = on || !S.rounds.length;
+    $("clearBtn").disabled = on || !S.rounds.length;
+    $("genBtn").disabled = on;
+    $("newBtn").disabled = on;
+  }
+
+  function paintAll(overshoot){
+    paintSentence(); paintBubbles(); paintTally(overshoot); paintLadder();
+    paintCheck(); paintTray(); setBusy(S.busy);
+  }
+
+  /* -------------------------------------------------------------- animation */
+  function centreOf(el){
+    const r = el.getBoundingClientRect();
+    return { x: r.left + r.width/2, y: r.top + r.height/2 };
+  }
+
+  function flyToken(from, to, text, colour, back){
+    return new Promise(resolve => {
+      const dur = Math.max(1, S.speed);
+      if(dur <= 1){ resolve(); return; }
+      const el = document.createElement("div");
+      el.className = "flyTok" + (back ? " back" : "");
+      el.style.setProperty("--c", colour);
+      el.textContent = text;
+      $("flyLayer").appendChild(el);
+      el.style.transform = "translate(" + from.x + "px," + from.y + "px) translate(-50%,-50%) scale(.55)";
+      el.style.opacity = "0";
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        el.style.transition = "transform " + dur + "ms cubic-bezier(.34,1.28,.5,1), opacity 150ms linear";
+        el.style.transform = "translate(" + to.x + "px," + to.y + "px) translate(-50%,-50%) scale(1)";
+        el.style.opacity = "1";
+      }));
+      setTimeout(() => { el.remove(); resolve(); }, dur + 40);
+    });
+  }
+
+  function sleep(ms){ return new Promise(r => setTimeout(r, Math.max(0, ms))); }
+
+  function popBlob(i, over){
+    const b = $("blob"+i); if(!b) return;
+    b.classList.toggle("is-over", !!over);
+    b.classList.remove("is-pop");
+    void b.offsetWidth;
+    b.classList.add("is-pop");
+  }
+
+  function flashTally(n, bad){
+    const f = $("tallyFlash");
+    f.textContent = "+" + n;
+    f.classList.toggle("bad", !!bad);
+    f.classList.remove("go");
+    void f.offsetWidth;
+    f.classList.add("go");
+  }
+
+  /* ------------------------------------------------------------- the round */
+  async function runRound(n){
+    if(S.busy || S.done) return;
+    const tok = ++S.token;
+    setBusy(true);
+
+    const overshoot = (usedTotal() + n * S.divisor) > S.dividend;
+    const colour = COLOURS[S.rounds.length % COLOURS.length];
+    const r = { n: n, landed: 0, colour: colour };
+    S.rounds.push(r);
+
+    const source = centreOf($("chunkInput"));
+    for(let i=0;i<S.divisor;i++){
+      const from = (i === 0) ? source : centreOf($("blob0"));
+      await flyToken(from, centreOf($("blob"+i)), String(n), colour, false);
+      if(tok !== S.token) return;
+      r.landed = i + 1;
+      const over = usedTotal() > S.dividend;
+      popBlob(i, over);
+      flashTally(n, over);
+      paintBubbles(); paintTally(over);
+      if(over) setPrompt("warn", "That is <b>" + usedTotal() + "</b> &mdash; past " + S.dividend + ".");
+      await sleep(S.speed <= 1 ? 0 : 90);
+      if(tok !== S.token) return;
+    }
+
+    if(overshoot){
+      setPrompt("warn",
+        S.divisor + " &times; " + n + " = <b>" + (S.divisor*n) + "</b>, and that takes us to <b>" +
+        usedTotal() + "</b> &mdash; past <b>" + S.dividend + "</b>. Try a smaller number.");
+      await sleep(S.speed <= 1 ? 0 : 950);
+      if(tok !== S.token) return;
+      /* send it all back — the overshoot is seen, not kept */
+      const home = centreOf($("chunkInput"));
+      const flights = [];
+      for(let i=S.divisor-1;i>=0;i--) flights.push(flyToken(centreOf($("blob"+i)), home, String(n), colour, true));
+      await Promise.all(flights);
+      if(tok !== S.token) return;
+      S.rounds.pop();
+      for(let i=0;i<S.divisor;i++){ const b = $("blob"+i); if(b) b.classList.remove("is-over"); }
+      paintAll(false);
+      setPrompt("warn",
+        "Nothing kept. " + S.divisor + " groups of " + n + " is " + (S.divisor*n) +
+        ", and only <b>" + remaining() + "</b> is left to share.");
+      $("chunkInput").value = "";
+      setBusy(false);
+      $("chunkInput").focus();
+      return;
+    }
+
+    /* finished? remaining is always a multiple of the divisor when the question
+       divides exactly, so an exact question can never strand a part-group. */
+    const left = remaining();
+    if(left === 0 || left < S.divisor){
+      S.done = true;
+      paintAll(false);
+      defaultPrompt();
+      const first = $("blob0"); if(first){ first.classList.remove("is-pop"); void first.offsetWidth; first.classList.add("is-pop"); }
+    } else {
+      paintAll(false);
+      defaultPrompt();
+    }
+    $("chunkInput").value = "";
+    setBusy(false);
+    if(!S.done) $("chunkInput").focus();
+  }
+
+  /* ------------------------------------------------------------------ input */
+  function badInput(msg){
+    const el = $("chunkInput");
+    el.classList.remove("is-bad"); void el.offsetWidth; el.classList.add("is-bad");
+    setTimeout(() => el.classList.remove("is-bad"), 600);
+    setPrompt("warn", msg);
+  }
+
+  function submit(){
+    if(S.busy || S.done) return;
+    const raw = ($("chunkInput").value || "").trim();
+    if(!/^\d+$/.test(raw)){ badInput("Type a whole number, then press Enter."); return; }
+    const n = parseInt(raw, 10);
+    if(n < 1){ badInput("It has to be at least 1 &mdash; every group gets the same amount."); return; }
+    if(n > 999){ badInput("That is far too big for this many groups."); return; }
+    runRound(n);
+  }
+
+  function undoRound(){
+    if(S.busy || !S.rounds.length) return;
+    S.token++;
+    S.rounds.pop();
+    S.done = false;
+    for(let i=0;i<S.divisor;i++){ const b = $("blob"+i); if(b) b.classList.remove("is-over","is-done"); }
+    paintAll(false);
+    defaultPrompt();
+    $("chunkInput").focus();
+  }
+
+  function clearAll(){
+    if(S.busy) return;
+    S.token++;
+    S.rounds = []; S.done = false; S.estValue = null; S.estAsked = false;
+    for(let i=0;i<S.divisor;i++){ const b = $("blob"+i); if(b) b.classList.remove("is-over","is-done"); }
+    maybeAskEstimate();
+    paintAll(false);
+    defaultPrompt();
+  }
+
+  function newQuestion(keepDivisor){
+    if(S.busy) return;
+    S.token++;
+    if(S.level === "custom"){
+      applyCustom(true);
+      return;
+    }
+    generate(keepDivisor ? S.divisor : 0);
+    S.rounds = []; S.done = false; S.estValue = null; S.estAsked = false;
+    buildArena(); paintQuick(); maybeAskEstimate();
+    paintAll(false); defaultPrompt();
+  }
+
+  function applyCustom(silent){
+    const dv = parseInt(($("customDividend").value || "").trim(), 10);
+    const ds = parseInt(($("customDivisor").value || "").trim(), 10);
+    if(!(dv >= 2 && dv <= 999)){ setPrompt("warn", "The number to share has to be between 2 and 999."); return; }
+    if(!(ds >= 2 && ds <= 6)){ setPrompt("warn", "This tool shares into 2 to 6 groups."); return; }
+    if(ds > dv){ setPrompt("warn", "There are more groups than there is to share."); return; }
+    setQuestion(dv, ds);
+    S.rounds = []; S.done = false; S.estValue = null; S.estAsked = false;
+    buildArena(); paintQuick(); maybeAskEstimate();
+    paintAll(false); defaultPrompt();
+    if(!silent) closeMenus();
+  }
+
+  /* --------------------------------------------------------------- estimate */
+  function maybeAskEstimate(){
+    const card = $("estCard");
+    if(S.estimate && !S.estAsked){
+      card.hidden = false;
+      $("estInput").value = "";
+    } else {
+      card.hidden = true;
+    }
+  }
+
+  function takeEstimate(skip){
+    S.estAsked = true;
+    if(!skip){
+      const raw = ($("estInput").value || "").trim();
+      if(/^\d+$/.test(raw)) S.estValue = parseInt(raw, 10);
+    }
+    $("estCard").hidden = true;
+    paintAll(false); defaultPrompt();
+    $("chunkInput").focus();
+  }
+
+  /* ----------------------------------------------------------------- menus */
+  function closeMenus(){
+    ["settingsMenu","toolsMenu"].forEach(id => {
+      $(id).classList.remove("open");
+      $(id === "settingsMenu" ? "settingsBtn" : "toolsBtn").setAttribute("aria-expanded","false");
+    });
+  }
+  function toggleMenu(btnId, menuId){
+    $(btnId).addEventListener("click", e => {
+      e.stopPropagation();
+      const m = $(menuId), wasOpen = m.classList.contains("open");
+      closeMenus();
+      if(!wasOpen){ m.classList.add("open"); $(btnId).setAttribute("aria-expanded","true"); }
+    });
+  }
+  toggleMenu("settingsBtn","settingsMenu");
+  toggleMenu("toolsBtn","toolsMenu");
+  document.addEventListener("click", closeMenus);
+  $("settingsMenu").addEventListener("click", e => e.stopPropagation());
+  $("toolsMenu").addEventListener("click", e => e.stopPropagation());
+  document.addEventListener("keydown", e => { if(e.key === "Escape") closeMenus(); });
+
+  /* ------------------------------------------------------------------ wires */
+  $("goBtn").addEventListener("click", submit);
+  $("chunkInput").addEventListener("keydown", e => { if(e.key === "Enter"){ e.preventDefault(); submit(); } });
+  $("undoBtn").addEventListener("click", undoRound);
+  $("clearBtn").addEventListener("click", clearAll);
+  $("genBtn").addEventListener("click", () => newQuestion(true));
+  $("newBtn").addEventListener("click", () => newQuestion(false));
+  $("estGo").addEventListener("click", () => takeEstimate(false));
+  $("estSkip").addEventListener("click", () => takeEstimate(true));
+  $("estInput").addEventListener("keydown", e => { if(e.key === "Enter"){ e.preventDefault(); takeEstimate(false); } });
+  $("customGo").addEventListener("click", () => applyCustom(false));
+
+  const LEVEL_NOTES = {
+    two:    "Two-digit numbers that divide exactly, so a group can never be left stranded part-way.",
+    three:  "Three-digit numbers that divide exactly — this is where sharing out ten or forty at a time pays off.",
+    rem:    "The last few cannot be shared. Once there are fewer left than there are groups, they drop into the leftover tray as the remainder.",
+    custom: "Type any number up to 999 and choose 2–6 groups. It does not have to divide exactly."
+  };
+
+  $("levelSel").addEventListener("change", e => {
+    S.level = e.target.value;
+    $("customRow").hidden = S.level !== "custom";
+    $("levelNote").textContent = LEVEL_NOTES[S.level];
+    if(S.level === "custom") applyCustom(true); else newQuestion(false);
+  });
+  $("divisorSel").addEventListener("change", e => {
+    S.divisorPick = parseInt(e.target.value, 10) || 0;
+    if(S.level === "custom"){
+      if(S.divisorPick){ $("customDivisor").value = S.divisorPick; applyCustom(true); }
+    } else newQuestion(false);
+  });
+
+  function bindToggle(id, key, after){
+    $(id).addEventListener("change", e => {
+      S[key] = e.target.checked;
+      if(after) after();
+      paintAll(false);
+    });
+  }
+  bindToggle("dotsToggle","dots");
+  bindToggle("ladderToggle","ladder");
+  bindToggle("multToggle","mult");
+  bindToggle("checkToggle","check");
+  bindToggle("roundsToggle","showRounds");
+  bindToggle("estToggle","estimate", () => { if(!S.rounds.length) maybeAskEstimate(); });
+  $("speedSel").addEventListener("change", e => { S.speed = parseInt(e.target.value,10) || 420; });
+
+  window.addEventListener("resize", () => paintBubbles());
+
+  /* ------------------------------------------------------------------ start */
+  generate(0);
+  buildArena(); paintQuick(); maybeAskEstimate();
+  paintAll(false); defaultPrompt();
+  $("chunkInput").focus();
+
+  /* A small surface for the automated checks. Nothing in the page reads it. */
+  window.__DGB__ = {
+    S: S,
+    bubbleValue: bubbleValue,
+    usedTotal: usedTotal,
+    eachTotal: eachTotal,
+    remaining: remaining,
+    runRound: runRound,
+    newQuestion: newQuestion,
+    generate: generate,
+    setQuestion: function(dv, ds){
+      S.token++;
+      setQuestion(dv, ds);
+      S.rounds = []; S.done = false; S.estValue = null; S.estAsked = true;
+      $("estCard").hidden = true;
+      buildArena(); paintQuick(); paintAll(false); defaultPrompt();
+    }
+  };
+})();
+</script>
+</body>
+</html>
