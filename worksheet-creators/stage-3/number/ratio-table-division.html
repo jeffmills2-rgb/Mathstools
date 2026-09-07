@@ -1,0 +1,1114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Division with a Ratio Table — Worksheet Generator</title>
+
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --ink:#111827;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --shadow:0 14px 40px rgba(0,0,0,.10);
+      --radius:18px;
+
+      --blue:#2563eb;
+      --green:#16a34a;
+      --red:#dc2626;
+
+      --sweet1:#4ade80;  --sweet2:#16a34a;
+      --mild1:#facc15;   --mild2:#d97706;
+      --medium1:#fb923c; --medium2:#ea580c;
+      --spicy1:#f87171;  --spicy2:#b91c1c;
+
+      --footer-h:44px;
+      --mathFont:"Cambria Math","STIX Two Math","STIXGeneral","Times New Roman",serif;
+      --uiFont:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0; background:var(--bg); color:var(--ink);
+      font-family:var(--uiFont); padding-bottom:var(--footer-h);
+    }
+
+    .wrap{ max-width:1280px; margin:14px auto 32px; padding:0 14px; }
+    .card{ background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px; }
+
+    .title{ margin:0 0 4px; font-size:28px; font-weight:1000; letter-spacing:.2px; }
+    .subtitle{ margin:0 0 14px; color:var(--muted); font-weight:850; font-size:15px; line-height:1.35; }
+    .subtitle a{ color:var(--blue); text-decoration:none; font-weight:1000; }
+
+    /* ---------------------------------------------------------- controls */
+    .controls{ display:grid; gap:10px; }
+    .band{
+      border:1px solid var(--border); border-radius:18px; padding:12px 14px;
+      background:linear-gradient(180deg,#ffffff,#f9fafb);
+    }
+    .bandHead{
+      font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+      font-weight:1000; color:var(--muted); margin:0 0 9px;
+    }
+    .bandGrid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; align-items:end; }
+    .bandRow{ display:flex; gap:16px 22px; flex-wrap:wrap; align-items:center; }
+
+    label{ display:block; margin:0 0 7px; font-size:15px; font-weight:950; }
+    select, input[type="number"]{
+      border:2px solid #e5e7eb; border-radius:14px; padding:12px 13px;
+      font-size:15px; font-weight:900; width:100%; background:#fff; color:var(--ink);
+      font-family:inherit;
+    }
+    select:focus, input:focus{ outline:none; border-color:var(--blue); }
+
+    .sw{ display:inline-flex; align-items:center; gap:10px; cursor:pointer; user-select:none; font-weight:900; font-size:14.5px; }
+    .sw input{ position:absolute; opacity:0; width:0; height:0; }
+    .sw .track{ position:relative; width:46px; height:27px; border-radius:999px; background:#cbd5e1; transition:.16s ease; flex:0 0 auto; }
+    .sw .track::after{ content:""; position:absolute; top:3px; left:3px; width:21px; height:21px; border-radius:50%; background:#fff; box-shadow:0 2px 5px rgba(0,0,0,.28); transition:.16s ease; }
+    .sw input:checked + .track{ background:var(--green); }
+    .sw input:checked + .track::after{ transform:translateX(19px); }
+    .sw input:focus-visible + .track{ box-shadow:0 0 0 4px rgba(37,99,235,.25); }
+
+    .secGrid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(268px,1fr)); gap:10px; }
+    .secOpt{ border:1px solid var(--border); border-radius:14px; padding:10px 12px; background:#fff; }
+    .cntRow{ display:flex; align-items:center; gap:10px; margin-top:8px; }
+    .cntRow label{ margin:0; font-size:13px; color:var(--muted); white-space:nowrap; }
+    .cntRow input{ width:78px; padding:8px 10px; }
+    .totalRow{ display:flex; align-items:center; gap:10px; margin-top:10px; font-weight:950; font-size:14px; }
+    .pill{ background:#eef2ff; color:#1d4ed8; border-radius:999px; padding:5px 12px; font-weight:1000; font-size:13px; }
+
+    .divBox{ border:2px dashed #e5e7eb; border-radius:16px; padding:10px 12px; }
+    .divHead{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
+    .divHint{ font-size:12.5px; font-weight:850; color:var(--muted); }
+    .divAll{
+      margin-left:auto; border:2px solid var(--border); background:#fff; border-radius:11px;
+      padding:6px 11px; font-size:12.5px; font-weight:1000; cursor:pointer; font-family:inherit;
+    }
+    .divChips{ display:flex; gap:7px; flex-wrap:wrap; }
+    .divChip{
+      border:2px solid var(--border); background:#fff; color:var(--ink);
+      font-family:var(--mathFont); font-size:17px; font-weight:1000;
+      min-width:44px; padding:7px 6px; border-radius:12px; cursor:pointer; transition:.14s ease;
+    }
+    .divChip:hover{ border-color:#c7ccd4; }
+    .divChip[aria-pressed="true"]{ background:var(--blue); border-color:var(--blue); color:#fff; }
+
+    .note{ margin:9px 0 0; font-size:12.6px; font-weight:800; color:var(--muted); line-height:1.5; }
+    .note b{ color:var(--ink); }
+    .note.warn{ color:#991b1b; font-size:14px; }
+
+    .btnRow{ display:flex; gap:10px; flex-wrap:wrap; margin-top:2px; }
+    button.primary, button.ghost, button.danger{
+      border-radius:14px; padding:13px 18px; font-size:15px; font-weight:1000; cursor:pointer;
+      border:2px solid transparent; font-family:inherit;
+    }
+    button.primary{ background:var(--blue); color:#fff; }
+    button.primary:hover{ background:#1d4ed8; }
+    button.ghost{ background:#fff; color:var(--ink); border-color:var(--border); }
+    button.ghost:hover{ border-color:#c7ccd4; }
+    button.danger{ background:#fff; color:var(--red); border-color:#fecaca; }
+    button.danger:hover{ background:#fef2f2; }
+
+    .outWrap{ margin-top:8px; }
+    .measure{ position:absolute; left:-10000px; top:0; width:210mm; visibility:hidden; }
+
+    .mmtFooter{
+      position:fixed; left:0; right:0; bottom:0; height:var(--footer-h);
+      display:flex; align-items:center; justify-content:center; padding:0 12px;
+      background:rgba(255,255,255,.92); border-top:1px solid rgba(229,231,235,.95);
+      backdrop-filter:blur(8px); z-index:500; font-weight:900; color:#111827;
+      text-align:center; font-size:13px;
+    }
+    .mmtFooter a{ color:#2563eb; text-decoration:none; font-weight:950; }
+
+    /* bilingual lines: chosen language on top, English beneath.
+       Numerals stay Western and LTR, isolated with <bdi>.                  */
+    .tl{ display:block; }
+    .tl[lang="ar"], .tl[lang="fa"]{ font-size:1.05em; }
+    .el{ display:block; font-size:.84em; opacity:.72; font-weight:750; margin-top:1px; }
+    bdi{ unicode-bidi:isolate; }
+
+    /* =====================================================================
+       THE PAPER
+       ===================================================================== */
+    .page{
+      margin:14px auto 0; background:#fff; border:1px solid var(--border);
+      border-radius:18px; box-shadow:0 10px 26px rgba(15,23,42,.08); overflow:hidden;
+      width:210mm; max-width:100%; height:297mm;
+      display:flex; flex-direction:column;
+    }
+    .pageHeader{
+      padding:9px 13px 7px; border-bottom:2px solid #111827;
+      display:flex; align-items:flex-end; justify-content:space-between; gap:10px;
+    }
+    .hdrTitle{ font-weight:1000; font-size:15px; line-height:1.1; }
+    .hdrSub{ color:var(--muted); font-weight:850; font-size:11px; margin-top:2px; white-space:nowrap; }
+    .nameDate{ display:flex; gap:8px; align-items:flex-end; }
+    .lineField{ display:flex; flex-direction:column; gap:3px; width:116px; }
+    .lineLabel{ font-size:10px; font-weight:950; color:var(--muted); }
+    .lineBox{ height:19px; border-bottom:1.6px solid #111827; }
+
+    .sheet{ padding:8px 13px 10px; flex:1 1 auto; display:flex; flex-direction:column; min-height:0; }
+
+    .pageFooter{
+      padding:5px 13px 6px; border-top:1px solid rgba(229,231,235,.95);
+      display:flex; align-items:center; justify-content:space-between;
+      font-weight:900; color:var(--muted); font-size:10px;
+    }
+    .pageFooter a{ color:#2563eb; text-decoration:none; font-weight:1000; }
+
+    .section{ margin-bottom:9px; }
+    .secHead{
+      display:flex; align-items:baseline; gap:9px;
+      border-bottom:1.6px solid #111827; padding-bottom:3px; margin-bottom:7px;
+    }
+    .secLetter{
+      font-weight:1000; font-size:14px; letter-spacing:.02em;
+      background:#111827; color:#fff; border-radius:5px; padding:1px 7px; flex:0 0 auto;
+    }
+    .secText{ font-weight:900; font-size:13.2px; color:#111827; line-height:1.3; }
+    .secCont{ margin-left:auto; font-size:11px; font-weight:900; color:var(--muted); flex:0 0 auto; }
+
+    .qGrid{ display:grid; gap:8px 9px; grid-template-columns:repeat(var(--cols,2),1fr); }
+    .qCard{
+      border:1.2px solid #d7dce3; border-radius:10px; padding:6px 8px 7px;
+      display:flex; flex-direction:column; gap:5px;
+      break-inside:avoid; page-break-inside:avoid; background:#fff; min-width:0;
+    }
+    .qCard.wide{ grid-column:span 2; }
+    .qTop{ display:flex; align-items:center; gap:7px; width:100%; }
+    .qNum{
+      width:20px; height:20px; border-radius:999px; color:#fff;
+      display:flex; align-items:center; justify-content:center;
+      font-size:11px; font-weight:1000; flex:0 0 auto;
+    }
+    .qNum.sweet{ background:linear-gradient(180deg,var(--sweet1),var(--sweet2)); }
+    .qNum.mild{ background:linear-gradient(180deg,var(--mild1),var(--mild2)); }
+    .qNum.medium{ background:linear-gradient(180deg,var(--medium1),var(--medium2)); }
+    .qNum.spicy{ background:linear-gradient(180deg,var(--spicy1),var(--spicy2)); }
+
+    .qSentence{
+      font-family:var(--mathFont); font-weight:1000; font-size:17px; line-height:1.1;
+      display:flex; align-items:baseline; gap:5px; white-space:nowrap;
+    }
+    .qSentence .blank{
+      display:inline-block; min-width:44px; border-bottom:1.6px solid #111827; height:1em;
+    }
+    .qWord{ font-size:12.4px; font-weight:850; line-height:1.35; }
+
+    .qFill{ flex:1 1 auto; min-height:0; }
+    .qFoot{ display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; font-size:11.4px; font-weight:900; color:var(--muted); }
+    .qFoot .chk{ font-family:var(--mathFont); font-size:13px; color:#111827; font-weight:1000; white-space:nowrap; }
+    .qFoot .chk .blank{ display:inline-block; min-width:34px; border-bottom:1.4px solid #111827; height:1em; }
+
+    /* ---------------------------------------------------- the ratio table */
+    /* Two columns and nothing else. The left column is where the answer will
+       be, so it is the WIDER of the two — a student writing 18 in a 12mm cell
+       writes it small, and small numbers in the answer column read as working
+       rather than as the answer.                                            */
+    .rt{ width:100%; border-collapse:collapse; }
+    .rt th{
+      font-weight:1000; font-size:9.2px; letter-spacing:.05em; text-transform:uppercase;
+      color:var(--muted); border-bottom:1.5px solid #111827; padding:1px 5px 2px; text-align:center;
+      line-height:1.15;
+    }
+    .rt td{
+      border-bottom:1px solid #c9d0d9; border-left:1px solid #e7eaef;
+      height:var(--rowH,22px); padding:1px 5px; text-align:center;
+      font-family:var(--mathFont); font-weight:1000; font-size:14px;
+    }
+    .rt td:first-child{ border-left:none; }
+    .rt tr.given td{ background:#eef2ff; color:#1d4ed8; }
+    /* the goal row is the question restated, so it is ruled off like an answer */
+    .rt tr.goal td{ border-top:1.6px solid #111827; border-bottom:none; height:calc(var(--rowH,22px) + 2px); }
+    .rt tr.goal td:first-child{ font-size:15px; position:relative; }
+    /* the corner label, not the middle of the cell - the middle is where the
+       answer gets written */
+    .goalTag{
+      position:absolute; left:3px; top:2px;
+      font-family:var(--uiFont); font-size:6.6px; font-weight:1000; letter-spacing:.08em;
+      text-transform:uppercase; color:var(--muted);
+    }
+    .rt tr.goal td.tot{ font-size:15px; }
+    .rtWrap{ border:1px solid #d7dce3; border-radius:7px; overflow:hidden; }
+
+    /* ------------------------------------------------------------- the grid */
+    /* A grid is the same size on every question, and it is drawn at a real
+       physical width — letting it fill the card instead gave a wide "plot it"
+       card a grid three times the size of the one beside a small table, which
+       reads as though the squares were different. It shrinks below its cap
+       when the column is narrow, and never grows past it. */
+    .plotRow{ display:flex; gap:8px; align-items:flex-start; }
+    .plotRow .rtWrap{ flex:0 0 44%; }
+    .gridWrap{ flex:1 1 auto; min-width:0; display:flex; justify-content:center; }
+    .gridWrap svg{ display:block; width:min(100%, var(--gw,52mm)); height:auto; }
+    .qCard.wide .gridWrap svg{ --gw:88mm; }
+    /* text inside an SVG scales with the drawing, so the wide grid's labels are
+       stepped down to land at the same size on paper as the small one's */
+    .qCard.wide .axLab{ font-size:3.6px; }
+    .qCard.wide .tk{ font-size:3.2px; }
+    .qCard.wide .goalLab{ font-size:4.2px; }
+    .qCard.wide .plotRow .rtWrap{ flex:0 0 38%; }
+    .gr{ stroke:#e7eaef; stroke-width:.5; }
+    .grMaj{ stroke:#c9d0d9; stroke-width:.7; }
+    .ax{ stroke:#111827; stroke-width:1.2; }
+    .axLab{ font-family:var(--uiFont); font-size:5.6px; font-weight:1000; fill:#111827; }
+    .tk{ font-family:var(--uiFont); font-size:5px; font-weight:850; fill:#6b7280; }
+    .goalLine{ stroke:#111827; stroke-width:.9; stroke-dasharray:3 2.4; }
+    .goalLab{ font-family:var(--mathFont); font-size:6.6px; font-weight:1000; fill:#111827; }
+
+    /* ------------------------------------------------------ filler + prompt */
+    .prompt{
+      border:1.4px dashed #94a3b8; border-radius:9px; padding:6px 9px 7px;
+      margin-bottom:8px; break-inside:avoid;
+    }
+    .promptHead{ font-size:10.4px; font-weight:1000; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; margin-bottom:3px; }
+    .promptText{ font-size:12px; font-weight:850; line-height:1.35; }
+    .promptRules{ margin-top:5px; height:var(--ph,60px); background:repeating-linear-gradient(180deg,transparent 0 15px,#e7eaef 15px 16px); }
+
+    .designLine{
+      display:flex; align-items:baseline; gap:8px; margin:5px 0 2px;
+      font-family:var(--mathFont); font-weight:1000; font-size:16px;
+    }
+    .designLine .blank{ display:inline-block; min-width:64px; border-bottom:1.6px solid #111827; height:1em; }
+
+    /* ------------------------------------------------------------ answer key */
+    .isKey .qCard{ border-color:#bbf7d0; background:#f7fdf9; }
+    .keyAns{ font-family:var(--mathFont); font-weight:1000; font-size:16px; color:#15803d; }
+    .keyWhy{ font-size:11px; font-weight:850; color:#374151; line-height:1.4; }
+    .keyWhy b{ color:#111827; }
+    .keyTab{ width:100%; border-collapse:collapse; font-family:var(--mathFont); font-weight:1000; font-size:11.5px; }
+    .keyTab td{ border-bottom:1px solid #d1fae5; padding:1px 5px; text-align:center; color:#166534; }
+    .keyTab tr:last-child td{ border-bottom:none; border-top:1.3px solid #15803d; }
+    .keyTab td.how{ font-family:var(--uiFont); font-size:9.4px; font-weight:900; color:#4b5563; text-align:left; }
+
+    @media print{
+      @page{ size:A4; margin:8mm 7mm; }
+      html, body{ width:210mm; height:auto; }
+      body{ background:#fff; padding-bottom:0; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+
+      .wrap{ max-width:none; margin:0; padding:0; }
+      .card{ box-shadow:none; border-radius:0; padding:0; }
+      .controls, .title, .subtitle, .mmtFooter{ display:none !important; }
+
+      .page{
+        margin:0; border:none; border-radius:0; box-shadow:none;
+        width:auto; height:281mm; page-break-after:always;
+      }
+      .page:last-child{ page-break-after:auto; }
+
+      .pageHeader{ padding:0 0 1.6mm; }
+      .sheet{ padding:2.4mm 0 0; }
+      .pageFooter{ padding:1.4mm 0 0; }
+    }
+  </style>
+  <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "c7e5713b5e4f4993907eb285797dc89b"}'></script><!-- End Cloudflare Web Analytics -->
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1 class="title">Division with a Ratio Table &mdash; Worksheet Generator</h1>
+      <p class="subtitle">Printable A4 worksheets from the <a href="/interactive-tools/stage-3/number/ratio-table-division/">Division with a Ratio Table</a> teaching tool. Every question starts at one group and asks how many groups it takes &mdash; so division is met as the missing factor, and the rows a student chooses are the strategy. Worksheet language prints every instruction bilingually for EAL/D students; the numerals stay Western and LTR.</p>
+
+      <div class="controls">
+        <div class="band">
+          <p class="bandHead">The paper</p>
+          <div class="bandGrid">
+            <div>
+              <label for="levelSel">Level</label>
+              <select id="levelSel">
+                <option value="sweet">Sweet &mdash; small group sizes, answers under 12</option>
+                <option value="mild">Mild &mdash; group sizes to 10, answers to 20</option>
+                <option value="medium">Medium &mdash; two-digit group sizes</option>
+                <option value="spicy">Spicy &mdash; two-digit group sizes, bigger answers</option>
+                <option value="mixed" selected>Mixed &mdash; a ladder of all four</option>
+              </select>
+            </div>
+            <div>
+              <label for="densitySel">Question size</label>
+              <select id="densitySel">
+                <option value="roomy" selected>Large &mdash; two to a row, tall rows</option>
+                <option value="normal">Medium &mdash; three to a row</option>
+                <option value="tight">Small &mdash; four to a row, no grids</option>
+              </select>
+            </div>
+            <div>
+              <label for="langSel">Worksheet language</label>
+              <select id="langSel">
+                <option value="en">English only</option>
+                <option value="ar">Arabic + English (&#1575;&#1604;&#1593;&#1585;&#1576;&#1610;&#1577;)</option>
+                <option value="fa">Farsi / Persian + English (&#1601;&#1575;&#1585;&#1587;&#1740;)</option>
+              </select>
+            </div>
+            <div class="divBox">
+              <div class="divHead">
+                <label style="margin:0">Group size</label>
+                <span class="divHint">What one group is worth.</span>
+                <button type="button" id="divAllBtn" class="divAll">Untick all</button>
+              </div>
+              <div class="divChips" id="divChips"></div>
+            </div>
+          </div>
+          <p class="note"><b>Group size</b> and <b>Level</b> work independently, so a class practising groups of <bdi>15</bdi> alone can still meet small answers first. A level with no ticked group size of its own falls back to whatever is ticked, rather than printing nothing.</p>
+        </div>
+
+        <div class="band">
+          <p class="bandHead">Sections &mdash; and how many of each</p>
+          <div class="secGrid">
+            <div class="secOpt">
+              <label class="sw"><input type="checkbox" id="kFinish" checked /><span class="track"></span><span>A &nbsp;Finish the table</span></label>
+              <div class="cntRow"><label for="nFinish">How many</label><input id="nFinish" type="number" min="0" max="40" value="4" /></div>
+            </div>
+            <div class="secOpt">
+              <label class="sw"><input type="checkbox" id="kBuild" checked /><span class="track"></span><span>B &nbsp;Build your own table</span></label>
+              <div class="cntRow"><label for="nBuild">How many</label><input id="nBuild" type="number" min="0" max="40" value="4" /></div>
+            </div>
+            <div class="secOpt">
+              <label class="sw"><input type="checkbox" id="kPlot" checked /><span class="track"></span><span>C &nbsp;Plot it</span></label>
+              <div class="cntRow"><label for="nPlot">How many</label><input id="nPlot" type="number" min="0" max="20" value="2" /></div>
+            </div>
+            <div class="secOpt">
+              <label class="sw"><input type="checkbox" id="kWord" checked /><span class="track"></span><span>D &nbsp;Use it</span></label>
+              <div class="cntRow"><label for="nWord">How many</label><input id="nWord" type="number" min="0" max="20" value="2" /></div>
+            </div>
+          </div>
+          <div class="totalRow"><span>On the paper:</span><span class="pill" id="totalPill">0 questions</span></div>
+          <p class="note">The order is the teaching. <b>A</b> hands back a table already begun, so the first thing a student does is notice what the given rows are worth. <b>B</b> gives them the one row every table starts with and nothing else &mdash; the rows they choose are the strategy. <b>C</b> puts the table beside a grid, so the same six numbers are met twice. <b>D</b> asks how many groups fit, which is the question a ratio table was already answering.</p>
+        </div>
+
+        <div class="band">
+          <p class="bandHead">Options</p>
+          <div class="bandRow">
+            <label class="sw"><input type="checkbox" id="gridToggle" /><span class="track"></span><span>Grid beside every table</span></label>
+            <label class="sw"><input type="checkbox" id="checkToggle" /><span class="track"></span><span>Check sentence</span></label>
+            <label class="sw"><input type="checkbox" id="promptToggle" /><span class="track"></span><span>Which rows helped?</span></label>
+            <label class="sw"><input type="checkbox" id="keyToggle" /><span class="track"></span><span>Answer key pages</span></label>
+          </div>
+          <p class="note">Everything is off to begin with, so the plainest paper is the one you get without asking. The <b>check sentence</b> prints <bdi>___ &times; 15 = 270</bdi> under each question, so an answer can be tested rather than believed. <b>Which rows helped?</b> asks a student to go back and name the two or three rows that did the work &mdash; the point of the table is the choosing, not the filling. The <b>answer key</b> shows a route through the table, not just the answer, so it can be handed to a student.</p>
+        </div>
+
+        <div class="btnRow">
+          <button id="genBtn" class="primary">Generate worksheet</button>
+          <button id="printBtn" class="ghost">Print (Ctrl+P)</button>
+          <button id="resetBtn" class="danger">Reset</button>
+        </div>
+      </div>
+
+      <div id="out" class="outWrap"></div>
+    </div>
+  </div>
+
+  <div class="measure" id="measure" aria-hidden="true"></div>
+
+  <div class="mmtFooter">
+    This tool and more can be found at&nbsp;
+    <a href="https://www.millsmathstools.au">www.millsmathstools.au</a>
+  </div>
+
+<script>
+(() => {
+  "use strict";
+
+  /* ==================================================================
+     DIVISION WITH A RATIO TABLE — WORKSHEET GENERATOR
+     -------------------------------------------------------------------
+     The printable sibling of the teaching tool, and it keeps the tool's
+     one idea: the unknown sits in the LEFT column. Every table opens on
+     1 group and closes on a goal row that already knows the total, so
+     the question a student answers is "how many groups of 15 make 270",
+     never "share 270 out". The rows in between are theirs to choose,
+     which is why section B gives them nothing but the first row.
+     ================================================================== */
+
+  const SITE = "https://www.millsmathstools.au";
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
+  const randInt = (lo,hi) => lo + Math.floor(Math.random()*(hi-lo+1));
+  const pick = a => a[Math.floor(Math.random()*a.length)];
+
+  const KINDS  = ["finish","build","plot","word"];
+  const TOGGLE = { finish:"kFinish", build:"kBuild", plot:"kPlot", word:"kWord" };
+  const COUNT  = { finish:"nFinish", build:"nBuild", plot:"nPlot", word:"nWord" };
+
+  const ORDER = ["sweet","mild","medium","spicy"];
+  const LEVEL_LABEL = {
+    sweet:"Sweet", mild:"Mild", medium:"Medium", spicy:"Spicy", mixed:"Mixed — sweet to spicy"
+  };
+  const COLS = { roomy:2, normal:3, tight:4 };
+  /* A ten-year-old writing 150 in a cell needs the height; 17px is a fine
+     ruled line and a poor writing box. */
+  const ROWH = { roomy:23, normal:20, tight:17 };
+  /* How many blank rows a student gets to fill. Four is enough for
+     1 -> 10 -> 5 -> 15 -> 18 without being enough to brute-force upwards. */
+  const BLANKS = { roomy:4, normal:4, tight:3 };
+
+  const DIVISORS = [2,3,4,5,6,7,8,9,10,12,15,20,25,50];
+  const SMALL = d => d <= 10;
+
+  /* ===================== worksheet language (EN / Arabic / Farsi) =====================
+     Same convention as the other creators: the chosen language on top, English
+     beneath. Every numeral stays Western and LTR, isolated with <bdi> so it does
+     not flip inside a right-to-left sentence.
+     NOTE: the AR/FA strings want a fluent proofread, as in the other creators. */
+  let LANG = "en";
+  try{ LANG = localStorage.getItem("mmt-ratiotable-ws-lang") || "en"; }catch(_){ }
+
+  function TR(o){
+    if(o == null) return "";
+    if(typeof o === "string") return o;
+    if(LANG === "en" || !o[LANG]) return o.en || "";
+    return '<span class="tl" dir="rtl" lang="' + LANG + '">' + o[LANG] + '</span>'
+         + '<span class="el" dir="ltr">' + o.en + '</span>';
+  }
+  /* one-line version for table headers and chips, where two stacked lines
+     would blow the row height apart */
+  function TR1(o){
+    if(o == null) return "";
+    if(typeof o === "string") return o;
+    if(LANG === "en" || !o[LANG]) return o.en || "";
+    return '<bdi dir="rtl" lang="' + LANG + '">' + o[LANG] + '</bdi>';
+  }
+
+  const WS = {
+    name:    { en:"Name", ar:"الاسم", fa:"نام" },
+    date:    { en:"Date", ar:"التاريخ", fa:"تاریخ" },
+    groups:  { en:"Groups", ar:"عدد المجموعات", fa:"تعداد گروه‌ها" },
+    total:   { en:"Total", ar:"المجموع", fa:"مجموع" },
+    goal:    { en:"Goal", ar:"الهدف", fa:"هدف" },
+    check:   { en:"Check", ar:"تحقّق", fa:"بررسی" },
+    plotAx:  { en:"Groups", ar:"المجموعات", fa:"گروه‌ها" },
+    plotAy:  { en:"Total", ar:"المجموع", fa:"مجموع" },
+    design:  { en:"Write a question of your own", ar:"اكتب سؤالك الخاص", fa:"سؤال خودت را بنویس" },
+    designText:{ en:"Write a division of your own, build a table for it and find the answer.",
+                 ar:"اكتب عملية قسمة من عندك، أنشئ جدولًا لها وجد الإجابة.",
+                 fa:"یک تقسیم از خودت بنویس، برای آن یک جدول بساز و پاسخ را پیدا کن." },
+    think:   { en:"Which rows helped?", ar:"أي الصفوف ساعدت؟", fa:"کدام سطرها کمک کردند؟" },
+    which:   { en:"Go back to one table you have finished. Which two or three rows did the work? Write them down and say why you chose them.",
+               ar:"عد إلى جدول أنهيته. أي صفين أو ثلاثة صفوف قامت بالعمل؟ اكتبها ووضّح لماذا اخترتها.",
+               fa:"به یکی از جدول‌هایی که تمام کرده‌ای برگرد. کدام دو یا سه سطر کار را انجام دادند؟ آن‌ها را بنویس و بگو چرا آن‌ها را انتخاب کردی." }
+  };
+
+  const SECTIONS = {
+    finish: { letter:"A", head:{
+      en:"Finish the table. Some rows are done for you. Fill in the rest, then write the answer.",
+      ar:"أكمل الجدول. بعض الصفوف مكتملة. أكمل الباقي، ثم اكتب الإجابة.",
+      fa:"جدول را کامل کن. بعضی سطرها انجام شده‌اند. بقیه را پر کن، سپس پاسخ را بنویس." } },
+    build:  { letter:"B", head:{
+      en:"Build your own table. You are given one group. Choose the rows that help you reach the goal.",
+      ar:"أنشئ جدولك بنفسك. لديك مجموعة واحدة. اختر الصفوف التي تساعدك على الوصول إلى الهدف.",
+      fa:"جدول خودت را بساز. یک گروه به تو داده شده است. سطرهایی را انتخاب کن که تو را به هدف می‌رسانند." } },
+    plot:   { letter:"C", head:{
+      en:"Plot it. Fill the table, plot each row as a point, then join them with a ruler.",
+      ar:"ارسمها. أكمل الجدول، وارسم كل صف كنقطة، ثم صل بينها بالمسطرة.",
+      fa:"رسم کن. جدول را پر کن، هر سطر را به‌صورت یک نقطه رسم کن، سپس با خط‌کش آن‌ها را وصل کن." } },
+    word:   { letter:"D", head:{
+      en:"Use it. Build a table to answer the question.",
+      ar:"طبّقها. أنشئ جدولًا للإجابة عن السؤال.",
+      fa:"از آن استفاده کن. برای پاسخ به سؤال یک جدول بساز." } }
+  };
+
+  /* Word problems. Every one asks HOW MANY GROUPS OF a given size fit — the
+     quotitive reading — because that is the question the table's left column
+     answers. The sibling Division by Grouping paper is the mirror image and is
+     all sharing questions; mixing the two here would make the goal row mean
+     two different things. {n} and {d} are filled with Western numerals inside
+     <bdi>. */
+  const WORDS = [
+    { en:"A baker packs {d} muffins into each box. How many boxes does it take for {n} muffins?",
+      ar:"يضع خبّاز {d} كعكة في كل صندوق. كم صندوقًا يلزم لـ {n} كعكة؟",
+      fa:"یک نانوا در هر جعبه {d} کیک می‌گذارد. برای {n} کیک چند جعبه لازم است؟" },
+    { en:"A netball team has {d} players. How many teams can be made from {n} players?",
+      ar:"فريق كرة الشبكة يتكوّن من {d} لاعبين. كم فريقًا يمكن تكوينه من {n} لاعبًا؟",
+      fa:"هر تیم نت‌بال {d} بازیکن دارد. از {n} بازیکن چند تیم می‌توان ساخت؟" },
+    { en:"Each carton holds {d} bottles. How many cartons are needed for {n} bottles?",
+      ar:"كل صندوق يتّسع لـ {d} زجاجة. كم صندوقًا يلزم لـ {n} زجاجة؟",
+      fa:"هر کارتن {d} بطری جا می‌دهد. برای {n} بطری چند کارتن لازم است؟" },
+    { en:"A ticket to the school disco costs ${d}. How many tickets can be bought with ${n}?",
+      ar:"تذكرة حفلة المدرسة تكلّف {d} دولارًا. كم تذكرة يمكن شراؤها بـ {n} دولارًا؟",
+      fa:"بلیت جشن مدرسه {d} دلار است. با {n} دلار چند بلیت می‌توان خرید؟" },
+    { en:"Ribbon is cut into lengths of {d} cm. How many lengths come from {n} cm of ribbon?",
+      ar:"يُقصّ الشريط إلى قطع طول كل منها {d} سم. كم قطعة تنتج من {n} سم من الشريط؟",
+      fa:"روبان به قطعه‌های {d} سانتی‌متری بریده می‌شود. از {n} سانتی‌متر روبان چند قطعه به دست می‌آید؟" },
+    { en:"A minibus seats {d} students. How many minibuses are needed for {n} students?",
+      ar:"تتّسع الحافلة الصغيرة لـ {d} طالبًا. كم حافلة تلزم لـ {n} طالبًا؟",
+      fa:"هر مینی‌بوس {d} دانش‌آموز جا می‌دهد. برای {n} دانش‌آموز چند مینی‌بوس لازم است؟" }
+  ];
+
+  /* ------------------------------------------------------------- controls */
+  function allowedDivisors(){
+    return Array.from(document.querySelectorAll(".divChip"))
+      .filter(c => c.getAttribute("aria-pressed") === "true")
+      .map(c => parseInt(c.dataset.d, 10));
+  }
+  function buildDivChips(){
+    const wrap = $("divChips");
+    wrap.innerHTML = "";
+    DIVISORS.forEach(d => {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "divChip"; b.dataset.d = d; b.textContent = d;
+      /* everything but 50 is on by default: ticking only up to 12 left the
+         two-digit levels with a single group size to choose from */
+      b.setAttribute("aria-pressed", String(d !== 50));
+      b.addEventListener("click", () => {
+        b.setAttribute("aria-pressed", b.getAttribute("aria-pressed") === "true" ? "false" : "true");
+        syncAllBtn();
+      });
+      wrap.appendChild(b);
+    });
+    syncAllBtn();
+  }
+  function syncAllBtn(){
+    $("divAllBtn").textContent = allowedDivisors().length ? "Untick all" : "Tick all";
+  }
+  $("divAllBtn").addEventListener("click", () => {
+    const turnOn = allowedDivisors().length === 0;
+    document.querySelectorAll(".divChip").forEach(c => c.setAttribute("aria-pressed", String(turnOn)));
+    syncAllBtn();
+  });
+
+  function sectionCounts(){
+    const c = {};
+    KINDS.forEach(k => {
+      c[k] = $(TOGGLE[k]).checked ? Math.max(0, Math.min(40, parseInt($(COUNT[k]).value, 10) || 0)) : 0;
+    });
+    return c;
+  }
+  const totalAsked = () => { const c = sectionCounts(); return KINDS.reduce((t,k) => t + c[k], 0); };
+  function syncTotal(){ $("totalPill").textContent = totalAsked() + " questions"; }
+
+  /* ------------------------------------------------------------ questions */
+  /* The route the answer key shows: the quotient split by place value, because
+     10 and 8 are exactly the two rows a ratio table wants and exactly the
+     digits a student will later write above a division bracket. */
+  function chunksOf(q){
+    const out = [];
+    let left = q, unit = 1;
+    while(unit * 10 <= left) unit *= 10;
+    while(left > 0){
+      const part = Math.floor(left / unit) * unit;
+      if(part > 0){ out.push(part); left -= part; }
+      unit = Math.floor(unit / 10) || 1;
+      if(unit < 1) break;
+    }
+    return out;
+  }
+
+  function makeNumbers(level, divisors){
+    /* A level narrows the pool; an empty pool falls back rather than printing
+       nothing, so ticking only 2 and 3 still gives a Spicy paper. */
+    const wants = (level === "medium" || level === "spicy") ? divisors.filter(d => !SMALL(d))
+                                                            : divisors.filter(SMALL);
+    const pool = wants.length ? wants : divisors;
+    for(let t=0;t<80;t++){
+      const d = pick(pool);
+      let q;
+      if(level === "sweet")       q = randInt(4, 12);
+      else if(level === "mild")   q = randInt(6, 20);
+      else if(level === "medium") q = randInt(6, 20);
+      else                        q = randInt(12, 32);
+      /* A quotient that is a round ten every time hides the combining move:
+         10 groups alone would answer it. */
+      if(q % 10 === 0) q += pick([1,2,3,-1,-2]);
+      if(q < 3) continue;
+      const dividend = d * q;
+      if(dividend < 18 || dividend > 1800) continue;
+      return { dividend, divisor:d, quotient:q, chunks:chunksOf(q) };
+    }
+    return { dividend:270, divisor:15, quotient:18, chunks:[10,8] };
+  }
+
+  function makeQ(kind, level, divisors){
+    const n = makeNumbers(level === "mixed" ? "mild" : level, divisors);
+    const q = Object.assign({ kind, level }, n);
+    if(kind === "word") q.word = pick(WORDS);
+    return q;
+  }
+
+  function buildQuestions(){
+    const level = $("levelSel").value;
+    const divisors = allowedDivisors();
+    if(!divisors.length) return { error:"Tick at least one group size." };
+
+    const counts = sectionCounts();
+    const kinds = KINDS.filter(k => counts[k] > 0);
+    if(!kinds.length) return { error:"Turn on at least one section and give it a number of questions." };
+
+    const groups = [];
+    const seen = {};
+    kinds.forEach(k => {
+      const n = counts[k], qs = [];
+      let prevD = 0;
+      for(let i=0;i<n;i++){
+        /* Every section climbs its OWN ladder, so four "build your own"
+           questions still run sweet to spicy inside that section. */
+        const lv = (level === "mixed")
+          ? ORDER[Math.min(ORDER.length-1, Math.floor(i / Math.max(1, n/ORDER.length)))]
+          : level;
+        let q = null, spare = null;
+        for(let t=0;t<30;t++){
+          const cand = makeQ(k, lv, divisors);
+          /* the id carries no section, so the same numbers cannot turn up in
+             A and again in B - on paper that reads as a fault, not as a pair */
+          const id = cand.dividend + "/" + cand.divisor;
+          /* not the same question twice, and not the same GROUP SIZE twice
+             running — three tables of 3 in a row is one question asked three
+             times, and the second and third teach nothing */
+          if(seen[id] || (divisors.length > 1 && cand.divisor === prevD)){ spare = spare || cand; continue; }
+          seen[id] = 1; q = cand; break;
+        }
+        q = q || spare;
+        if(q) prevD = q.divisor;
+        qs.push(q);
+      }
+      groups.push({ kind:k, qs:qs.filter(Boolean) });
+    });
+    return { groups, level, divisors };
+  }
+
+  /* --------------------------------------------------------------- drawing */
+  function sentenceHTML(q){
+    return '<span class="qSentence"><span>' + q.dividend + '</span><span>&divide;</span>'
+         + '<span>' + q.divisor + '</span><span>=</span><span class="blank"></span></span>';
+  }
+
+  /* The given rows. A "finish the table" question is handed the unit rate and
+     one friendly multiple of it — never a row that is most of the way there,
+     because then the only move left is a single addition. */
+  function givenRows(q, kind){
+    const rows = [{ g:1, t:q.divisor }];
+    if(kind === "finish"){
+      const step = q.quotient >= 20 ? 10 : (q.quotient >= 10 ? 5 : 2);
+      rows.push({ g:step, t:step * q.divisor });
+    }
+    return rows;
+  }
+
+  function tableHTML(q, opts, kind){
+    const given = givenRows(q, kind);
+    /* a plot card is as tall as its grid, so its table gets the extra rows
+       rather than leaving a hole beside the drawing */
+    const want = opts.blanks + (kind === "plot" ? 2 : 0);
+    const blanks = Math.max(2, want - (given.length - 1));
+    let body = "";
+    given.forEach(r => {
+      body += '<tr class="given"><td>' + r.g + '</td><td>' + r.t + '</td></tr>';
+    });
+    for(let i=0;i<blanks;i++) body += '<tr><td></td><td></td></tr>';
+    body += '<tr class="goal"><td><span class="goalTag">' + TR1(WS.goal) + '</span></td>'
+          + '<td class="tot">' + q.dividend + '</td></tr>';
+    return '<div class="rtWrap"><table class="rt" style="--rowH:' + opts.rowH + 'px">'
+         + '<thead><tr><th>' + TR1(WS.groups) + '<br>of ' + q.divisor + '</th>'
+         + '<th>' + TR1(WS.total) + '</th></tr></thead>'
+         + '<tbody>' + body + '</tbody></table></div>';
+  }
+
+  /* Axis steps come from the numbers on the page, not from the answer being
+     hidden — but the maximum is deliberately rounded WELL past the quotient so
+     the axis never quietly announces it. */
+  const STEPS = [1,2,5,10,20,25,50,100,200,250,500,1000,2000];
+  function axisFor(v, maxTicks){
+    for(const s of STEPS){ if(Math.ceil(v/s) <= maxTicks) return { step:s, max:s*Math.ceil(v/s) }; }
+    const s = STEPS[STEPS.length-1];
+    return { step:s, max:s*Math.ceil(v/s) };
+  }
+
+  function gridSVG(q){
+    const W = 132, H = 108, L = 20, R = 5, T = 13, B = 16;
+    const pw = W - L - R, ph = H - T - B;
+    const ax = axisFor(q.quotient * 1.35, 6);
+    const ay = axisFor(q.dividend * 1.18, 6);
+    const X = g => L + (g / ax.max) * pw;
+    const Y = t => T + ph - (t / ay.max) * ph;
+    let s = "";
+
+    /* graph paper: five minor divisions inside every major one, so a point can
+       actually be placed rather than estimated */
+    for(let i=0; i*ax.step <= ax.max; i++){
+      for(let j=1;j<5;j++){
+        const x = X(i*ax.step + j*ax.step/5);
+        if(x <= L + pw + .01) s += '<line class="gr" x1="'+x.toFixed(1)+'" y1="'+T+'" x2="'+x.toFixed(1)+'" y2="'+(T+ph)+'"/>';
+      }
+    }
+    for(let i=0; i*ay.step <= ay.max; i++){
+      for(let j=1;j<5;j++){
+        const y = Y(i*ay.step + j*ay.step/5);
+        if(y >= T - .01) s += '<line class="gr" x1="'+L+'" y1="'+y.toFixed(1)+'" x2="'+(L+pw)+'" y2="'+y.toFixed(1)+'"/>';
+      }
+    }
+    for(let v=ax.step; v<=ax.max; v+=ax.step){
+      s += '<line class="grMaj" x1="'+X(v).toFixed(1)+'" y1="'+T+'" x2="'+X(v).toFixed(1)+'" y2="'+(T+ph)+'"/>';
+      s += '<text class="tk" x="'+X(v).toFixed(1)+'" y="'+(T+ph+6)+'" text-anchor="middle">'+v+'</text>';
+    }
+    for(let v=ay.step; v<=ay.max; v+=ay.step){
+      s += '<line class="grMaj" x1="'+L+'" y1="'+Y(v).toFixed(1)+'" x2="'+(L+pw)+'" y2="'+Y(v).toFixed(1)+'"/>';
+      s += '<text class="tk" x="'+(L-2)+'" y="'+(Y(v)+2).toFixed(1)+'" text-anchor="end">'+v+'</text>';
+    }
+    s += '<text class="tk" x="'+(L-2)+'" y="'+(T+ph+2)+'" text-anchor="end">0</text>';
+
+    /* the goal, drawn for them: the table's bottom row, on the grid */
+    s += '<line class="goalLine" x1="'+L+'" y1="'+Y(q.dividend).toFixed(1)+'" x2="'+(L+pw)+'" y2="'+Y(q.dividend).toFixed(1)+'"/>';
+    s += '<text class="goalLab" x="'+(L+pw-2)+'" y="'+(Y(q.dividend)-2).toFixed(1)+'" text-anchor="end">'+q.dividend+'</text>';
+
+    s += '<line class="ax" x1="'+L+'" y1="'+T+'" x2="'+L+'" y2="'+(T+ph)+'"/>';
+    s += '<line class="ax" x1="'+L+'" y1="'+(T+ph)+'" x2="'+(L+pw)+'" y2="'+(T+ph)+'"/>';
+    s += '<text class="axLab" x="'+(L+pw)+'" y="'+(H-2)+'" text-anchor="end">'+esc(TR1(WS.plotAx).replace(/<[^>]*>/g,""))+'</text>';
+    s += '<text class="axLab" x="0" y="5" text-anchor="start">'+esc(TR1(WS.plotAy).replace(/<[^>]*>/g,""))+'</text>';
+
+    return '<div class="gridWrap"><svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Empty grid, groups against total">'+s+'</svg></div>';
+  }
+
+  function cardHTML(q, idx, opts){
+    const withGrid = (q.kind === "plot" || opts.grid) && opts.cols <= 3;
+    const wide = (q.kind === "plot" && opts.cols >= 2) ? " wide" : "";
+    let body = '<div class="qTop"><span class="qNum ' + q.level + '">' + idx + '</span>'
+             + (q.kind === "word" ? "" : sentenceHTML(q)) + '</div>';
+
+    if(q.kind === "word"){
+      const txt = {};
+      ["en","ar","fa"].forEach(L => {
+        txt[L] = (q.word[L] || q.word.en)
+          .replace("{n}", '<bdi>' + q.dividend + '</bdi>')
+          .replace("{d}", '<bdi>' + q.divisor + '</bdi>');
+      });
+      body += '<div class="qWord">' + TR(txt) + '</div>';
+    }
+
+    const tab = tableHTML(q, opts, q.kind);
+    if(withGrid) body += '<div class="plotRow">' + tab + gridSVG(q) + '</div>';
+    else body += tab;
+
+    /* Cards in one grid row are as tall as the tallest, so the check line is
+       pushed to the BOTTOM — the spare room then reads as space to write in
+       rather than a hole in the middle of a question. */
+    body += '<div class="qFill"></div>';
+    if(opts.check){
+      body += '<div class="qFoot"><span>' + TR1(WS.check) + '</span>'
+            + '<span class="chk"><span class="blank"></span> &times; ' + q.divisor + ' = ' + q.dividend + '</span></div>';
+    }
+    return '<div class="qCard' + wide + '">' + body + '</div>';
+  }
+
+  /* The parts the key's route is built from. Above ten that is place value,
+     because 10 and 8 are the two rows a ratio table wants and the digits a
+     student will later write above a division bracket. Under ten, place value
+     gives one part and no route at all, so a five is taken out instead —
+     5 + 3 is a pair of known products, and 8 on its own is the answer. */
+  function routeOf(q){
+    if(q.quotient >= 10) return chunksOf(q.quotient);
+    if(q.quotient > 5) return [5, q.quotient - 5];
+    return [q.quotient];
+  }
+
+  function keyCardHTML(q, idx){
+    /* The key is a table, because the method is a table. No row is printed
+       twice: 11 groups is 10 + 1, and the 1 is the row it already started on. */
+    const parts = routeOf(q);
+    const rows = [{ g:1, t:q.divisor, how:"the start" }];
+    const add = (g, how) => { if(!rows.some(r => r.g === g)) rows.push({ g:g, t:g*q.divisor, how:how }); };
+    parts.forEach(c => add(c, c + " &times; " + q.divisor));
+    if(rows[rows.length-1].g !== q.quotient) add(q.quotient, parts.join(" + ") + " groups");
+    let tab = "";
+    rows.forEach(r => {
+      tab += '<tr><td>' + r.g + '</td><td>' + r.t + '</td><td class="how">' + r.how + '</td></tr>';
+    });
+    return '<div class="qCard' + (q.kind === "plot" ? " wide" : "") + '">'
+      + '<div class="qTop"><span class="qNum ' + q.level + '">' + idx + '</span>'
+      + '<span class="keyAns">' + q.dividend + ' &divide; ' + q.divisor + ' = ' + q.quotient + '</span></div>'
+      + '<table class="keyTab"><tbody>' + tab + '</tbody></table>'
+      + '<div class="keyWhy">One route of many. <b>' + q.quotient + ' &times; ' + q.divisor + ' = ' + q.dividend + '</b>, '
+      + 'so ' + q.dividend + ' &divide; ' + q.divisor + ' = ' + q.quotient + '.</div>'
+      + '</div>';
+  }
+
+  /* --------------------------------------------------- measure and paginate */
+  const A4_CONTENT_PX = (() => {
+    const p = document.createElement("div");
+    p.style.cssText = "position:absolute;left:-10000px;top:0;height:281mm;";
+    document.body.appendChild(p);
+    const h = p.getBoundingClientRect().height;
+    p.remove();
+    return h;
+  })();
+  let LAST_ROOM = 0;
+
+  /* Rows are measured for real, per section, then poured into pages.
+     Sampling one row drops a card under the page footer. */
+  function measureRows(groups, opts, key){
+    const m = $("measure");
+    m.innerHTML = '<section class="page' + (key ? " isKey" : "") + '"><div class="sheet" id="mSheet"></div></section>';
+    const sheet = $("mSheet");
+    const out = [];
+    let n = 1;
+
+    groups.forEach(g => {
+      const head = document.createElement("div");
+      head.className = "secHead";
+      head.innerHTML = '<span class="secLetter">' + SECTIONS[g.kind].letter + '</span>'
+                     + '<span class="secText">' + TR(SECTIONS[g.kind].head) + '</span>';
+      sheet.appendChild(head);
+      const headH = head.getBoundingClientRect().height + 7;   /* + .secHead margin */
+
+      const rows = [];
+      const cards = g.qs.map(q => ({ q, n:n++ }));
+      let row = [], used = 0;
+      cards.forEach(c => {
+        const span = (c.q.kind === "plot" && opts.cols >= 2) ? 2 : 1;
+        const w = Math.min(span, opts.cols);
+        if(used + w > opts.cols){ rows.push(row); row = []; used = 0; }
+        row.push(c); used += w;
+      });
+      if(row.length) rows.push(row);
+
+      /* Consecutive .qGrid rows inside a section sit flush against each other,
+         so a row costs exactly its own height — adding a guessed gap here is
+         what made the packer break a page early. */
+      const heights = rows.map(r => {
+        const grid = document.createElement("div");
+        grid.className = "qGrid";
+        grid.style.setProperty("--cols", opts.cols);
+        grid.innerHTML = r.map(c => key ? keyCardHTML(c.q, c.n) : cardHTML(c.q, c.n, opts)).join("");
+        sheet.appendChild(grid);
+        const h = grid.getBoundingClientRect().height;
+        grid.remove();
+        return h;
+      });
+      head.remove();
+      out.push({ kind:g.kind, headH, rows, heights });
+    });
+    m.innerHTML = "";
+    return out;
+  }
+
+  function layout(units, room, cap){
+    const limit = Math.min(room, cap);
+    const pages = [];
+    let cur = [], h = 0, kind = null;
+    const SECGAP = 9;      /* .section margin-bottom, only BETWEEN sections */
+    units.forEach(u => {
+      const cost = k => (k === u.kind) ? u.h : u.head + u.h + (k === null ? 0 : SECGAP);
+      if(cur.length && h + cost(kind) > limit){ pages.push(cur); cur = []; h = 0; kind = null; }
+      h += cost(kind); cur.push(u); kind = u.kind;
+    });
+    if(cur.length) pages.push(cur);
+    return pages;
+  }
+
+  function paginate(blocks, room){
+    const units = [];
+    blocks.forEach(b => b.rows.forEach((r,i) =>
+      units.push({ kind:b.kind, head:b.headH, row:r, h:b.heights[i] })));
+    if(!units.length) return [];
+
+    /* Fill each page until the next row genuinely will not fit. Balancing the
+       rows evenly instead is worse on paper: it leaves a visible gap on EVERY
+       page rather than one at the end. */
+    const best = layout(units, room, Infinity);
+
+    const seen = {};
+    return best.map(pageUnits => {
+      const page = [];
+      pageUnits.forEach(u => {
+        const last = page[page.length-1];
+        if(last && last.kind === u.kind){ last.rows.push(u.row); last.heights.push(u.h); }
+        else { page.push({ kind:u.kind, cont: !!seen[u.kind], rows:[u.row], heights:[u.h] }); seen[u.kind] = 1; }
+      });
+      return page;
+    });
+  }
+
+  function blocksHTML(page, opts, key){
+    return page.map(b =>
+      '<div class="section"><div class="secHead">'
+      + '<span class="secLetter">' + SECTIONS[b.kind].letter + '</span>'
+      + '<span class="secText">' + TR(SECTIONS[b.kind].head) + '</span>'
+      + (b.cont ? '<span class="secCont">continued</span>' : '')
+      + '</div>'
+      + b.rows.map(r => '<div class="qGrid" style="--cols:' + opts.cols + '">'
+          + r.map(c => key ? keyCardHTML(c.q, c.n) : cardHTML(c.q, c.n, opts)).join("")
+          + '</div>').join("")
+      + '</div>'
+    ).join("");
+  }
+
+  function divisorLabel(ds){
+    if(ds.length === 1) return "groups of " + ds[0];
+    /* a run of thirteen numbers does not belong in a page header, but "2 to 50"
+       when 50 is not ticked is a lie, so the range is the ticked ends */
+    if(ds.length > 6) return "groups of " + ds[0] + " to " + ds[ds.length-1];
+    return "groups of " + ds.join(", ");
+  }
+
+  function pageHTML(inner, meta, key, pageNo, total){
+    return '<section class="page' + (key ? " isKey" : "") + '">'
+      + '<div class="pageHeader">'
+      +   '<div><div class="hdrTitle">Division with a Ratio Table' + (key ? " &mdash; ANSWERS" : "") + '</div>'
+      +   '<div class="hdrSub">' + (key ? "Answer key &middot; " : "")
+      +     esc(LEVEL_LABEL[meta.level]) + " &middot; " + esc(divisorLabel(meta.divisors)) + '</div></div>'
+      +   (key ? "" : '<div class="nameDate">'
+      +     '<div class="lineField"><span class="lineLabel">' + TR1(WS.name) + '</span><span class="lineBox"></span></div>'
+      +     '<div class="lineField"><span class="lineLabel">' + TR1(WS.date) + '</span><span class="lineBox"></span></div>'
+      +   '</div>')
+      + '</div>'
+      + '<div class="sheet">' + inner + '</div>'
+      + '<div class="pageFooter"><span>Page ' + pageNo + ' of ' + total + '</span>'
+      +   '<span><a href="' + SITE + '">www.millsmathstools.au</a></span></div>'
+      + '</section>';
+  }
+
+  /* Whatever a page leaves is not dead space and it is not "working" either —
+     it is a question the student writes for themselves, which is the same skill
+     read backwards. Both boxes are capped: ruled room is useful, a whole page
+     of it is not. */
+  function fillHTML(h){
+    return '<div class="prompt designBox" style="margin-top:2px"><div class="promptHead">' + TR1(WS.design) + '</div>'
+         + '<div class="promptText">' + TR(WS.designText) + '</div>'
+         + '<div class="designLine"><span class="blank"></span><span>&divide;</span><span class="blank"></span>'
+         +   '<span>=</span><span class="blank"></span></div>'
+         + '<div class="promptRules" style="--ph:' + Math.min(300, Math.max(24, h - 34)) + 'px"></div></div>';
+  }
+  function promptHTML(h){
+    return '<div class="prompt"><div class="promptHead">' + TR1(WS.think) + '</div>'
+         + '<div class="promptText">' + TR(WS.which) + '</div>'
+         + '<div class="promptRules" style="--ph:' + Math.min(240, Math.max(30, h)) + 'px"></div></div>';
+  }
+
+  /* ------------------------------------------------------------- generate */
+  function generate(scroll){
+    const built = buildQuestions();
+    const out = $("out");
+    if(built.error){ out.innerHTML = '<p class="note warn">' + esc(built.error) + '</p>'; return; }
+
+    const density = $("densitySel").value;
+    const opts = {
+      cols: COLS[density],
+      rowH: ROWH[density],
+      blanks: BLANKS[density],
+      grid: $("gridToggle").checked && density !== "tight",
+      check: $("checkToggle").checked
+    };
+
+    /* header + footer + sheet padding, measured once against a real page */
+    const probe = document.createElement("div");
+    probe.className = "measure";
+    probe.innerHTML = pageHTML("", built, false, 1, 1);
+    document.body.appendChild(probe);
+    const chrome = probe.querySelector(".pageHeader").getBoundingClientRect().height
+                 + probe.querySelector(".pageFooter").getBoundingClientRect().height
+                 + 18;                     /* .sheet padding, top and bottom */
+    probe.remove();
+    /* The page is 297mm on screen but only 281mm once print margins are taken,
+       so the packing is done against the PRINT budget and the screen preview
+       simply has a little room to spare at the bottom. */
+    const room = A4_CONTENT_PX - chrome;
+    LAST_ROOM = room;
+
+    const wsBlocks = measureRows(built.groups, opts, false);
+    const pagesS = paginate(wsBlocks, room);
+
+    const key = $("keyToggle").checked;
+    let pagesK = [];
+    if(key){
+      const keyBlocks = measureRows(built.groups, opts, true);
+      pagesK = paginate(keyBlocks, room);
+    }
+
+    let html = "";
+    const headOf = {};
+    wsBlocks.forEach(b => headOf[b.kind] = b.headH);
+    const spareOf = p => room - p.reduce((t,b,bi) =>
+      t + headOf[b.kind] + b.heights.reduce((x,y)=>x+y,0) + (bi ? 9 : 0), 0);
+    const wantPrompt = $("promptToggle").checked;
+    /* The prompt only goes on the last page if that page can actually hold it;
+       otherwise it gets a page of its own rather than being quietly dropped. */
+    const lastSpare = pagesS.length ? spareOf(pagesS[pagesS.length-1]) : 0;
+    const promptOnLast = wantPrompt && lastSpare >= 76;
+    const promptOwnPage = wantPrompt && !promptOnLast;
+    const totalPages = pagesS.length + pagesK.length + (promptOwnPage ? 1 : 0);
+
+    pagesS.forEach((p,i) => {
+      let inner = blocksHTML(p, opts, false);
+      const spare = spareOf(p);
+      if(promptOnLast && i === pagesS.length - 1) inner += promptHTML(spare - 72);
+      else if(spare > 120) inner += fillHTML(spare - 72);
+      html += pageHTML(inner, built, false, i+1, totalPages);
+    });
+    if(promptOwnPage) html += pageHTML(promptHTML(240), built, false, pagesS.length+1, totalPages);
+
+    const before = pagesS.length + (promptOwnPage ? 1 : 0);
+    pagesK.forEach((p,i) => {
+      html += pageHTML(blocksHTML(p, opts, true), built, true, before+i+1, totalPages);
+    });
+    out.innerHTML = html;
+
+    /* The filler is sized from the model; the model can be a few pixels out
+       once a bilingual heading wraps. Measure the real page and take those
+       pixels back off the filler, so it can never be what pushes a card past
+       the print budget. */
+    out.querySelectorAll(".page").forEach(pg => {
+      const box = pg.querySelector(".prompt");
+      if(!box) return;
+      const rules = box.querySelector(".promptRules");
+      if(!rules) return;
+      const sheet = pg.querySelector(".sheet").getBoundingClientRect();
+      /* the BOX is what has to fit, not its ruled lines: the box carries a
+         heading, a sentence and its own padding underneath them, which is the
+         15px that used to hang past the print budget */
+      for(let t=0; t<8; t++){
+        const over = box.getBoundingClientRect().bottom - (sheet.top + room);
+        if(over <= 0) break;
+        const h = parseFloat(getComputedStyle(rules).height) || 0;
+        const next = Math.max(0, h - over - 2);
+        rules.style.setProperty("--ph", next + "px");
+        if(next === 0) break;
+      }
+      /* a design box with no room left to write in is just noise; the "which
+         rows helped" prompt is a question and is never dropped */
+      if(box.classList.contains("designBox")
+         && box.getBoundingClientRect().bottom > sheet.top + room) box.remove();
+    });
+
+    if(scroll && out.scrollIntoView) out.scrollIntoView({ behavior:"smooth", block:"start" });
+  }
+
+  /* --------------------------------------------------------------- wiring */
+  KINDS.forEach(k => {
+    $(TOGGLE[k]).addEventListener("change", syncTotal);
+    $(COUNT[k]).addEventListener("input", syncTotal);
+  });
+  $("langSel").addEventListener("change", function(){
+    LANG = this.value;
+    try{ localStorage.setItem("mmt-ratiotable-ws-lang", LANG); }catch(_){ }
+    if($("out").innerHTML.trim()) generate(false);
+  });
+  $("genBtn").addEventListener("click", () => generate(true));
+  $("printBtn").addEventListener("click", () => window.print());
+  $("resetBtn").addEventListener("click", () => {
+    $("levelSel").value = "mixed";
+    $("densitySel").value = "roomy";
+    LANG = "en"; $("langSel").value = "en";
+    buildDivChips();
+    const def = { finish:4, build:4, plot:2, word:2 };
+    KINDS.forEach(k => { $(TOGGLE[k]).checked = true; $(COUNT[k]).value = def[k]; });
+    ["gridToggle","checkToggle","promptToggle","keyToggle"].forEach(id => $(id).checked = false);
+    syncTotal();
+    $("out").innerHTML = "";
+  });
+
+  buildDivChips();
+  syncTotal();
+  $("langSel").value = LANG;
+  generate(false);
+
+  /* a small surface for the automated checks */
+  window.__RTW__ = {
+    generate, buildQuestions, makeQ, chunksOf, routeOf, axisFor, givenRows, allowedDivisors,
+    room: () => LAST_ROOM,
+    setLang: v => { LANG = v; $("langSel").value = v; generate(false); }
+  };
+})();
+</script>
+</body>
+</html>

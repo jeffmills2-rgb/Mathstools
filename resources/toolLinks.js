@@ -288,6 +288,22 @@ window.MMT_TOOL_LINKS = {
       note: "Memory game matching multiplication facts.",
       tags: ["game", "memory", "multiplication", "fluency", "matching"]
     }
+      ,
+    {
+      title: "Division with a Ratio Table",
+      kind: "Teacher tool",
+      url: "/interactive-tools/stage-3/number/ratio-table-division/",
+      note: "A ratio table built from known products. Every row is entered as a pair \u2014 the groups, then the total \u2014 and when a row lands on the number being divided, its left column is the answer.",
+      tags: ["division", "ratio table", "known products", "proportional reasoning", "multiplicative thinking", "partial quotients", "doubling", "halving", "missing factor", "inverse", "multiplication", "two-digit divisor", "visual", "whole-class teaching"]
+    }
+      ,
+    {
+      title: "Division with a Ratio Table \u2014 Worksheet Creator",
+      kind: "Worksheet maker",
+      url: "/worksheet-creators/stage-3/number/ratio-table-division.html",
+      note: "Printable A4 ratio tables: finish one already begun, build one from a single given row, plot the rows on a grid, and word problems that ask how many groups fit. Trilingual, with an answer key that shows a route through the table.",
+      tags: ["worksheet generator", "printable", "division", "ratio table", "known products", "proportional reasoning", "multiplicative thinking", "doubling", "halving", "missing factor", "two-digit divisor", "answer key", "trilingual"]
+    }
   ],
 
   "MA3-MR-02": [
@@ -313,6 +329,22 @@ window.MMT_TOOL_LINKS = {
       url: "/online-quizzes/stage-3/number/division-grouping.html",
       note: "A whole section of questions is the missing factor \u2014 6 \u00d7 ? = 84 \u2014 so a division sentence and its multiplication are answered as the same fact.",
       tags: ["quiz", "number sentences", "division", "multiplication", "inverse", "missing factor", "equal groups", "remainder", "student code login", "teacher dashboard"]
+    }
+      ,
+    {
+      title: "Division with a Ratio Table",
+      kind: "Teacher tool",
+      url: "/interactive-tools/stage-3/number/ratio-table-division/",
+      note: "Finishes every question with both number sentences \u2014 18 \u00d7 15 = 270 and 270 \u00f7 15 = 18 \u2014 because the table is asking how many groups, which is the missing factor.",
+      tags: ["number sentences", "division", "multiplication", "inverse", "missing factor", "ratio table", "known products", "patterns", "visual", "whole-class teaching"]
+    }
+      ,
+    {
+      title: "Division with a Ratio Table \u2014 Worksheet Creator",
+      kind: "Worksheet maker",
+      url: "/worksheet-creators/stage-3/number/ratio-table-division.html",
+      note: "Every question can end with the check sentence \u005f\u005f\u005f \u00d7 15 = 270, so the division on the page and its multiplication are written side by side.",
+      tags: ["worksheet generator", "printable", "number sentences", "division", "multiplication", "inverse", "missing factor", "ratio table", "answer key", "trilingual"]
     }
   ],
 
@@ -1154,6 +1186,22 @@ window.MMT_TOOL_LINKS = {
       url: "/interactive-tools/stage-4/ratios-rates/stacked-bar-ratio/",
       note: "Stacked bar model for comparing ratios and scaling them up.",
       tags: ["ratio", "bar model", "proportion", "scaling", "visual"]
+    }
+      ,
+    {
+      title: "Division with a Ratio Table",
+      kind: "Teacher tool",
+      url: "/interactive-tools/stage-3/number/ratio-table-division/",
+      note: "The Stage 3 ratio table with an optional Cartesian plane: every row plots as a point, the points fall on a straight line through the origin, and the answer is where that line meets the target.",
+      tags: ["ratio table", "proportional reasoning", "rates", "linear relationship", "straight line", "graphing", "Cartesian plane", "origin", "gradient", "stage 3 to stage 4", "division"]
+    }
+      ,
+    {
+      title: "Division with a Ratio Table \u2014 Worksheet Creator",
+      kind: "Worksheet maker",
+      url: "/worksheet-creators/stage-3/number/ratio-table-division.html",
+      note: "A \u201cplot it\u201d section prints the ratio table beside an empty first-quadrant grid with the target drawn on it, so the table and the straight line through the origin are met as the same six numbers.",
+      tags: ["worksheet generator", "printable", "ratio table", "proportional reasoning", "rates", "linear relationship", "graphing", "Cartesian plane", "origin", "stage 3 to stage 4", "answer key", "trilingual"]
     }
   ],
 

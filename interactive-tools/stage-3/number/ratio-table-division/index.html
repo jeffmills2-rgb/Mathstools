@@ -1,0 +1,1524 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Division with a Ratio Table | Mills Maths Tools</title>
+
+  <style>
+    :root{
+      --bg:#f8fafc;
+      --card:#ffffff;
+      --ink:#0f172a;
+      --muted:#64748b;
+      --border:#e2e8f0;
+      --shadow:0 18px 45px rgba(15,23,42,.13);
+      --blue:#2563eb;
+      --blue-dark:#1d4ed8;
+      --green:#22c55e;
+      --green-dark:#15803d;
+      --purple:#7c3aed;
+      --purple-dark:#5b21b6;
+      --orange:#f97316;
+      --orange-dark:#c2410c;
+      --line:#334155;
+      --line-soft:#94a3b8;
+      --pink:#db2777;
+      --red:#dc2626;
+      --uiFont:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      --mathFont:"Cambria Math","STIX Two Math","Latin Modern Math","Times New Roman",Georgia,serif;
+      --mathWeight:500;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ min-height:100%; }
+    body{
+      margin:0;
+      font-family:var(--uiFont);
+      color:var(--ink);
+      background:
+        radial-gradient(circle at top left,rgba(37,99,235,.14),transparent 32rem),
+        radial-gradient(circle at top right,rgba(124,58,237,.12),transparent 34rem),
+        var(--bg);
+      overflow-x:hidden;
+    }
+    button,input,select{ font:inherit; }
+    [hidden]{ display:none !important; }
+
+    .app{ min-height:100dvh; display:flex; flex-direction:column; min-width:0; }
+
+    /* ---------- topbar (shared MMT shell) ---------- */
+    .mmtTopbar{
+      position:relative; z-index:40;
+      background:linear-gradient(135deg,#0f172a,#123b7a 55%,#2563eb);
+      color:white; padding:14px 24px;
+      display:grid; grid-template-columns:minmax(220px,1fr) auto minmax(320px,1fr);
+      align-items:center; gap:18px;
+      box-shadow:0 10px 28px rgba(15,23,42,.22);
+    }
+    .mmtBrand{
+      display:flex; align-items:center; gap:12px; justify-self:start;
+      text-decoration:none; color:white; border-radius:14px; padding:8px 12px;
+      margin-left:-12px; font-weight:900;
+      transition:background .18s ease,transform .18s ease,box-shadow .18s ease;
+    }
+    .mmtBrand:hover{ background:rgba(255,255,255,.12); transform:translateY(-1px);
+      box-shadow:0 0 10px rgba(124,58,237,.6),0 0 18px rgba(37,99,235,.4); }
+    .mmtBrandLogo{
+      width:44px; height:44px; border-radius:9px; background:white; color:#1d4ed8;
+      display:grid; place-items:center; font-weight:1000; letter-spacing:-.08em;
+      box-shadow:inset 0 -2px 0 rgba(15,23,42,.08); flex:0 0 auto;
+    }
+    .mmtBrandText strong{ display:block; font-size:1.18rem; line-height:1; letter-spacing:-.03em; color:white; }
+    .mmtBrandText span{ display:block; font-size:.78rem; opacity:.82; font-weight:650; color:white; }
+    .mmtTopTitle{
+      font-weight:850; font-size:clamp(1.05rem,1.9vw,1.5rem); letter-spacing:-.04em;
+      text-align:center; color:white; white-space:nowrap;
+    }
+    .topActions{ justify-self:end; display:flex; align-items:center; justify-content:flex-end; gap:10px; flex-wrap:wrap; }
+
+    .btn{
+      appearance:none; border:1px solid rgba(255,255,255,.28); background:rgba(255,255,255,.14);
+      color:white; padding:11px 15px; border-radius:14px; font-weight:900; font-size:15px;
+      cursor:pointer; transition:.18s ease; user-select:none;
+    }
+    .btn:hover:not(:disabled){ background:rgba(255,255,255,.22); transform:translateY(-1px); }
+    .btn:active{ transform:translateY(0); }
+    .btn:focus-visible{ outline:none; box-shadow:0 0 0 4px rgba(255,255,255,.23); }
+    .btn-primary{ background:white; color:#1d4ed8; border-color:white; }
+    .btn-primary:hover:not(:disabled){ background:#eef2ff; color:#1d4ed8; }
+    .btn:disabled{ opacity:.45; cursor:not-allowed; transform:none; }
+
+    .menuWrap{ position:relative; display:inline-flex; }
+    .dropMenu{ position:absolute; top:calc(100% + 8px); right:0; min-width:250px; background:#fff; color:var(--ink);
+      border:1px solid rgba(226,232,240,.95); border-radius:14px; box-shadow:0 18px 45px rgba(15,23,42,.22);
+      padding:7px; display:none; z-index:120; text-align:left; }
+    .dropMenu.open{ display:grid; gap:4px; }
+    .toolLink{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border-radius:10px;
+      color:var(--ink); text-decoration:none; font-weight:900; font-size:.9rem; }
+    .toolLink::after{ content:'\203A'; color:var(--blue); font-weight:1000; font-size:1.1rem; line-height:1; }
+    .toolLink:hover,.toolLink:focus-visible{ background:#eef2ff; color:#1d4ed8; outline:none; }
+    .toolLink small{ display:block; font-weight:650; font-size:.74rem; color:var(--muted); }
+    .toolLink.is-disabled{ color:var(--line-soft); cursor:not-allowed; }
+    .toolLink.is-disabled::after{ content:'\2022'; color:var(--line-soft); font-size:.9rem; }
+    .toolLink.is-disabled:hover{ background:transparent; color:var(--line-soft); }
+    .toolLink.is-disabled small{ color:var(--line-soft); }
+
+    /* The settings menu must not scroll — keep it short. */
+    .settingsMenu.open{ gap:11px; padding:15px 18px; min-width:326px; }
+    .settingsHead{ font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; font-weight:950; color:var(--muted); }
+    .settingsNote{ margin:0; font-size:.76rem; font-weight:650; color:var(--muted); line-height:1.4; }
+    .settingsRule{ height:1px; background:var(--border); margin:1px 0; }
+
+    .selRow{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .selRow > span{ font-weight:900; font-size:.92rem; color:var(--ink); white-space:nowrap; }
+    .selRow select{
+      appearance:none; border:1.5px solid var(--border);
+      background:#fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' fill='none' stroke='%232563eb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>") no-repeat right 10px center;
+      background-size:11px; padding:8px 30px 8px 11px; border-radius:11px;
+      font-weight:850; font-size:.88rem; color:var(--line); cursor:pointer; min-width:168px;
+    }
+    .selRow select:hover{ border-color:var(--line-soft); }
+    .selRow select:focus-visible{ outline:none; border-color:var(--blue); box-shadow:0 0 0 4px rgba(37,99,235,.16); }
+
+    .sw{ display:inline-flex; align-items:center; gap:11px; cursor:pointer; user-select:none; font-weight:850; color:var(--line); font-size:.93rem; }
+    .sw input{ position:absolute; opacity:0; width:0; height:0; }
+    .sw .track{ position:relative; width:50px; height:29px; border-radius:999px; background:#cbd5e1; transition:.18s ease; flex:0 0 auto; box-shadow:inset 0 1px 3px rgba(15,23,42,.18); }
+    .sw .track::after{ content:""; position:absolute; top:3px; left:3px; width:23px; height:23px; border-radius:50%; background:#fff; box-shadow:0 2px 6px rgba(15,23,42,.3); transition:.18s ease; }
+    .sw input:checked + .track{ background:var(--green); }
+    .sw input:checked + .track::after{ transform:translateX(21px); }
+    .sw input:focus-visible + .track{ box-shadow:0 0 0 4px rgba(37,99,235,.28); }
+
+    /* ---------- layout ---------- */
+    /* The side column carries the target and the graph, and it stays beside the
+       table down to 960px — a 1024x768 projector must not have to scroll to see
+       what the class is working towards. */
+    .layout{
+      flex:1; width:min(1420px,100%); margin:0 auto; padding:18px 22px 26px;
+      display:grid; grid-template-columns:minmax(0,1fr) clamp(258px,23vw,326px); gap:clamp(12px,1.6vw,20px);
+      align-items:start; min-width:0;
+    }
+    .layout.hasGraph{ grid-template-columns:minmax(0,1fr) clamp(300px,30vw,412px); }
+    .stage{ display:flex; flex-direction:column; gap:12px; min-width:0; }
+    .side{ display:flex; flex-direction:column; gap:12px; position:sticky; top:14px; min-width:0; }
+    .card{ background:var(--card); border:1px solid var(--border); border-radius:20px; box-shadow:var(--shadow); padding:14px 16px; }
+
+    /* ---------- the sentence ---------- */
+    .eqCard{
+      position:relative; background:var(--card); border:1px solid var(--border); border-radius:20px;
+      box-shadow:var(--shadow); padding:12px 18px; min-height:76px;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .sentence{
+      display:flex; align-items:center; gap:.34em; font-family:var(--mathFont); font-weight:var(--mathWeight);
+      font-size:clamp(1.9rem,4.1vw,2.9rem); line-height:1.05; letter-spacing:-.01em; white-space:nowrap;
+    }
+    .sentence .dv{ color:var(--blue-dark); }
+    .sentence .ds{ color:var(--purple-dark); }
+    .sentence .ans{ color:var(--line-soft); }
+    .sentence .ans.is-known{ color:var(--green-dark); animation:ansPop .5s ease; }
+    @keyframes ansPop{ 0%{ transform:scale(.5); opacity:0 } 60%{ transform:scale(1.22) } 100%{ transform:scale(1) } }
+
+    .eqActions{ position:absolute; right:14px; top:50%; transform:translateY(-50%); display:flex; align-items:center; gap:9px; }
+    .outcomeTag{
+      font-size:.66rem; font-weight:950; letter-spacing:.09em; color:var(--blue-dark);
+      background:#eef2ff; border:1px solid #c7d2fe; border-radius:999px; padding:4px 9px; white-space:nowrap;
+    }
+    .genBtn{
+      appearance:none; display:inline-flex; align-items:center; gap:7px; cursor:pointer;
+      border:1.5px solid var(--border); background:#fff; color:var(--line);
+      padding:8px 12px; border-radius:12px; font-weight:900; font-size:.84rem; transition:.16s ease;
+    }
+    .genBtn:hover{ border-color:var(--blue); color:var(--blue-dark); background:#eef2ff; transform:translateY(-1px); }
+    .genBtn .dice{ font-size:1.1rem; line-height:1; }
+
+    /* ---------- prompt ---------- */
+    .promptBar{
+      display:flex; align-items:center; gap:11px; min-height:44px; padding:8px 16px;
+      background:#fff; border:1px solid var(--border); border-left:5px solid var(--blue);
+      border-radius:14px; box-shadow:0 8px 22px rgba(15,23,42,.07);
+      font-weight:800; font-size:.96rem; color:var(--line);
+    }
+    .promptBar.is-good{ border-left-color:var(--green); }
+    .promptBar.is-warn{ border-left-color:var(--orange); }
+    .pIco{ font-size:1.18rem; line-height:1; flex:0 0 auto; }
+
+    /* ---------- the ratio table ---------- */
+    .tableCard{ background:var(--card); border:1px solid var(--border); border-radius:20px; box-shadow:var(--shadow); padding:12px 14px 10px; }
+    .rtHead{
+      display:grid; grid-template-columns:1fr 74px 1fr; align-items:center; gap:6px;
+      padding:0 8px 8px; border-bottom:2px solid var(--border);
+    }
+    .rtHead .hCol{ font-weight:950; font-size:.86rem; color:var(--muted); text-align:center; letter-spacing:-.01em; }
+    .rtHead .hCol b{ display:block; color:var(--line); font-size:.98rem; }
+    .spine{
+      justify-self:center; display:inline-flex; align-items:center; gap:3px;
+      font-family:var(--mathFont); font-weight:var(--mathWeight); font-size:1rem;
+      color:var(--purple-dark); background:#f5f3ff; border:1px solid #ddd6fe;
+      border-radius:999px; padding:3px 10px; white-space:nowrap;
+    }
+    .spine .arw{ color:var(--purple); font-weight:900; }
+
+    /* the cap is measured against the real page by fitTable(), not guessed */
+    .rtBody{ max-height:300px; overflow:auto; overflow-x:hidden; padding:4px 0 2px; scroll-snap-type:y proximity; }
+    .rtRow{
+      scroll-snap-align:start;
+      position:relative; display:grid; grid-template-columns:1fr 74px 1fr; align-items:center; gap:6px;
+      padding:5px 8px; border-radius:12px; cursor:pointer; border:2px solid transparent;
+      transition:background .14s ease,border-color .14s ease,transform .14s ease;
+    }
+    .rtRow:hover{ background:#f8fafc; }
+    .rtRow:focus-visible{ outline:none; border-color:var(--blue); box-shadow:0 0 0 4px rgba(37,99,235,.16); }
+    .rtRow .v{
+      font-family:var(--mathFont); font-weight:var(--mathWeight); font-size:clamp(1.35rem,2.5vw,1.85rem);
+      text-align:center; line-height:1.12;
+    }
+    .rtRow .vg{ color:var(--blue-dark); }
+    .rtRow .vt{ color:var(--ink); }
+    .rtRow.is-anchor{ background:#eff6ff; position:sticky; top:0; z-index:2; box-shadow:0 6px 10px -8px rgba(15,23,42,.35); }
+    .rtRow.is-anchor .vt{ color:var(--blue-dark); }
+    .rtRow.is-sel{ background:#eef2ff; border-color:var(--blue); }
+    .rtRow.is-over .vt{ color:var(--orange-dark); }
+    .rtRow.is-win{ background:#ecfdf5; border-color:var(--green); }
+    .rtRow.is-win .v{ color:var(--green-dark); }
+    .rtRow.is-parent{ background:#fdf4ff; border-color:#e9d5ff; }
+    .rtRow.is-new{ animation:rowIn .34s ease; }
+    @keyframes rowIn{ from{ opacity:0; transform:translateY(-9px) } to{ opacity:1; transform:none } }
+    .rtRow.is-nudge{ animation:nudge .38s ease; }
+    @keyframes nudge{ 0%,100%{ transform:none } 25%{ transform:translateX(-6px) } 75%{ transform:translateX(6px) } }
+
+    .rowMid{ display:flex; align-items:center; justify-content:center; }
+    .howChip{
+      font-size:.68rem; font-weight:900; color:var(--muted); background:#f1f5f9;
+      border:1px solid var(--border); border-radius:999px; padding:2px 8px; white-space:nowrap;
+      max-width:84px; overflow:hidden; text-overflow:ellipsis; text-align:center;
+    }
+    .rtRow.is-win .howChip{ background:#dcfce7; border-color:#86efac; color:var(--green-dark); }
+    /* a row you can take back is a row you can risk: with delete on every row,
+       any number of groups is worth trying, and the graph rescales when it goes */
+    .delBtn{
+      position:absolute; right:5px; top:50%; transform:translateY(-50%);
+      width:24px; height:24px; border-radius:8px; border:none; background:none; cursor:pointer;
+      color:var(--line-soft); font-size:15px; font-weight:900; line-height:1;
+      opacity:.45; transition:.14s ease; display:grid; place-items:center;
+    }
+    .rtRow:hover .delBtn{ opacity:1; }
+    .delBtn:hover{ background:#fef2f2; color:var(--red); opacity:1; }
+    .delBtn:focus-visible{ outline:none; opacity:1; box-shadow:0 0 0 3px rgba(220,38,38,.28); }
+
+    .overTag{
+      position:absolute; right:32px; top:50%; transform:translateY(-50%);
+      font-size:.66rem; font-weight:900; color:var(--orange-dark); background:#fff7ed;
+      border:1px solid #fed7aa; border-radius:999px; padding:2px 7px; white-space:nowrap;
+    }
+    .winTick{ position:absolute; right:32px; top:50%; transform:translateY(-50%); color:var(--green-dark); font-size:1.15rem; font-weight:900; }
+
+    /* the same operation, done to both columns — flashed beside each number */
+    .opFlash{
+      position:absolute; top:50%; transform:translateY(-50%);
+      font-family:var(--mathFont); font-weight:var(--mathWeight); font-size:1.05rem;
+      color:#fff; background:var(--purple); border-radius:999px; padding:2px 9px;
+      box-shadow:0 6px 16px rgba(124,58,237,.35); pointer-events:none;
+      animation:opF 1.5s ease forwards;
+    }
+    @keyframes opF{ 0%{ opacity:0; transform:translateY(-50%) scale(.6) } 18%{ opacity:1; transform:translateY(-50%) scale(1.1) } 70%{ opacity:1; transform:translateY(-50%) scale(1) } 100%{ opacity:0; transform:translateY(-50%) scale(1) } }
+
+    /* the row being entered: the Groups cell is the only thing a click lands
+       on, and the pair is committed as one thing, the way a coordinate is */
+    .rtNew{
+      position:relative; display:grid; grid-template-columns:1fr 74px 1fr; align-items:center; gap:6px;
+      margin:3px 0 1px; padding:5px 8px; border-radius:12px;
+      border:2px dashed var(--border); transition:border-color .14s ease,background .14s ease;
+    }
+    .rtNew.is-live{ border-style:solid; border-color:var(--blue); background:#f8fafc; }
+    .rtNew.is-live.stage-t{ border-color:var(--purple); background:#faf9ff; }
+    .rtNew.is-shake{ animation:nudge .4s ease; border-color:var(--red); background:#fef2f2; }
+    .gCell{
+      display:block; width:100%; border:none; background:none; padding:4px 0; border-radius:10px;
+      font-family:var(--mathFont); font-weight:var(--mathWeight); font-size:clamp(1.35rem,2.5vw,1.85rem);
+      text-align:center; line-height:1.12; color:var(--blue-dark); cursor:pointer; transition:background .14s ease;
+    }
+    .gCell:hover{ background:rgba(37,99,235,.09); }
+    .gCell:focus-visible{ outline:none; box-shadow:0 0 0 4px rgba(37,99,235,.2); }
+    .newHint{
+      font-family:var(--uiFont); font-weight:900; font-size:.86rem; color:var(--line-soft);
+      letter-spacing:-.01em;
+    }
+    .gCell.locked{ cursor:default; }
+    .gCell.locked:hover{ background:none; }
+    .rtIn{
+      display:block; width:min(100%,168px); margin:0 auto;
+      border:2px solid var(--blue); border-radius:11px; padding:2px 8px; background:#fff;
+      font-family:var(--mathFont); font-weight:var(--mathWeight); font-size:clamp(1.3rem,2.4vw,1.7rem);
+      text-align:center; color:var(--blue-dark);
+    }
+    .rtIn.tot{ border-color:var(--purple); color:var(--ink); }
+    .rtIn:focus-visible{ outline:none; box-shadow:0 0 0 4px rgba(37,99,235,.18); }
+    .rtIn.tot:focus-visible{ box-shadow:0 0 0 4px rgba(124,58,237,.18); }
+    .askChip{
+      font-family:var(--mathFont); font-weight:var(--mathWeight); font-size:.98rem;
+      color:var(--purple-dark); background:#f5f3ff; border:1px solid #ddd6fe;
+      border-radius:999px; padding:2px 9px; white-space:nowrap;
+    }
+
+    #confLayer{ position:fixed; inset:0; pointer-events:none; z-index:210; }
+    .conf{
+      position:absolute; width:8px; height:13px; border-radius:2px; opacity:0;
+      animation:confFly var(--d,900ms) cubic-bezier(.15,.7,.35,1) forwards;
+    }
+    @keyframes confFly{
+      0%{ opacity:1; transform:translate(0,0) rotate(0deg) }
+      100%{ opacity:0; transform:translate(var(--x),var(--y)) rotate(var(--r)) }
+    }
+    @media (prefers-reduced-motion:reduce){
+      .conf{ display:none; }
+      .rtNew.is-shake{ animation:none; }
+    }
+
+    .rtTarget{
+      display:grid; grid-template-columns:1fr 74px 1fr; align-items:center; gap:6px;
+      margin-top:6px; padding:7px 8px; border-top:2px dashed var(--line-soft);
+      background:linear-gradient(180deg,rgba(249,115,22,.07),transparent);
+      border-radius:0 0 12px 12px;
+    }
+    .rtTarget .v{ font-family:var(--mathFont); font-weight:var(--mathWeight); font-size:clamp(1.4rem,2.6vw,1.95rem); text-align:center; }
+    .rtTarget .vg{ color:var(--orange-dark); }
+    .rtTarget .vt{ color:var(--orange-dark); }
+    .rtTarget.is-done .vg,.rtTarget.is-done .vt{ color:var(--green-dark); }
+    .rtTarget .goalChip{
+      justify-self:center; font-size:.66rem; font-weight:950; letter-spacing:.06em; text-transform:uppercase;
+      color:var(--orange-dark); background:#fff7ed; border:1px solid #fed7aa; border-radius:999px; padding:3px 8px;
+    }
+    .rtTarget.is-done .goalChip{ color:var(--green-dark); background:#dcfce7; border-color:#86efac; }
+
+    /* ---------- move bar ---------- */
+    .moveCard{ background:var(--card); border:1px solid var(--border); border-radius:20px; box-shadow:var(--shadow); padding:11px 15px 12px; display:grid; gap:9px; }
+    .moveLead{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; min-height:38px; }
+    .moveLab{ font-weight:900; font-size:.92rem; color:var(--line); }
+    .moveLab em{ font-style:normal; color:var(--blue-dark); font-family:var(--mathFont); font-weight:var(--mathWeight); font-size:1.1em; }
+    .opBtn{
+      appearance:none; cursor:pointer; border:2px solid var(--purple); background:#fff; color:var(--purple-dark);
+      padding:7px 13px; border-radius:12px; font-family:var(--mathFont); font-weight:var(--mathWeight);
+      font-size:1.12rem; line-height:1.1; transition:.15s ease; min-width:56px;
+    }
+    .opBtn:hover{ background:var(--purple); color:#fff; transform:translateY(-1px); }
+    .opBtn:focus-visible{ outline:none; box-shadow:0 0 0 4px rgba(124,58,237,.22); }
+    .opBtn.wide{ font-family:var(--uiFont); font-weight:900; font-size:.9rem; }
+    .opBtn.comb{ border-color:var(--green-dark); color:var(--green-dark); }
+    .opBtn.comb:hover{ background:var(--green-dark); color:#fff; }
+    .opHint{ font-size:.78rem; font-weight:750; color:var(--muted); }
+
+    .entryRow{ display:flex; align-items:center; gap:9px; flex-wrap:wrap; border-top:1px solid var(--border); padding-top:9px; }
+    /* with a pair being entered the table has the whole interaction, so the
+       move card shrinks to its two buttons rather than sitting there empty */
+    .moveCard.is-bare{ padding:9px 15px; }
+    .moveCard.is-bare .moveLead{ display:none; }
+    .moveCard.is-bare .entryRow{ border-top:none; padding-top:0; }
+    .entryLab{ font-weight:900; font-size:.88rem; color:var(--line); }
+    .numIn{
+      width:88px; border:2px solid var(--border); border-radius:12px; padding:7px 10px;
+      font-family:var(--mathFont); font-weight:var(--mathWeight); font-size:1.25rem; text-align:center; color:var(--blue-dark);
+    }
+    .numIn:focus-visible{ outline:none; border-color:var(--blue); box-shadow:0 0 0 4px rgba(37,99,235,.16); }
+    .goBtn{
+      appearance:none; cursor:pointer; border:none; background:var(--blue); color:#fff;
+      padding:9px 16px; border-radius:12px; font-weight:900; font-size:.9rem; transition:.15s ease;
+    }
+    .goBtn:hover{ background:var(--blue-dark); transform:translateY(-1px); }
+    .goBtn:focus-visible{ outline:none; box-shadow:0 0 0 4px rgba(37,99,235,.28); }
+    .ghostBtn{
+      appearance:none; cursor:pointer; border:1.5px solid var(--border); background:#fff; color:var(--muted);
+      padding:8px 13px; border-radius:12px; font-weight:900; font-size:.84rem; transition:.15s ease;
+    }
+    .ghostBtn:hover:not(:disabled){ border-color:var(--line-soft); color:var(--line); }
+    .ghostBtn:disabled{ opacity:.4; cursor:not-allowed; }
+    .spacer{ flex:1 1 auto; }
+
+    /* predict-first panel */
+
+    /* ---------- side cards ---------- */
+    .goalCard{ text-align:center; }
+    .gHead{ font-size:.7rem; letter-spacing:.13em; text-transform:uppercase; font-weight:950; color:var(--muted); }
+    .gBig{ font-family:var(--mathFont); font-weight:var(--mathWeight); font-size:clamp(2.3rem,5vw,3.1rem); line-height:1.02; color:var(--orange-dark); margin-top:2px; }
+    .gSub{ font-size:.83rem; font-weight:800; color:var(--muted); margin-top:1px; }
+    .gAns{ margin-top:9px; padding-top:9px; border-top:1px solid var(--border); display:flex; align-items:baseline; justify-content:center; gap:9px; }
+    .gAns span{ font-weight:900; font-size:.86rem; color:var(--muted); }
+    .gAns b{ font-family:var(--mathFont); font-weight:var(--mathWeight); font-size:1.9rem; color:var(--line-soft); }
+    .gAns b.is-known{ color:var(--green-dark); }
+
+    .bracket{ margin-top:9px; padding-top:9px; border-top:1px solid var(--border); display:grid; gap:5px; }
+    .brRow{ display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:.83rem; font-weight:850; color:var(--line); }
+    .brRow b{ font-family:var(--mathFont); font-weight:var(--mathWeight); font-size:1.15rem; color:var(--blue-dark); }
+    .brRow.hi{ color:var(--muted); }
+    .brNote{ font-size:.76rem; font-weight:750; color:var(--muted); line-height:1.35; text-align:left; }
+
+    .graphCard .gcHead{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:4px; }
+    .gcTitle{ font-size:.7rem; letter-spacing:.13em; text-transform:uppercase; font-weight:950; color:var(--muted); }
+    .plot{ width:100%; height:auto; display:block; max-height:min(36vh,320px); }
+    .plot .grid{ stroke:#eef2f7; stroke-width:1; }
+    .plot .axis{ stroke:var(--line); stroke-width:2; }
+    .plot .tickLab{ font-family:var(--uiFont); font-size:11px; font-weight:800; fill:var(--muted); }
+    .plot .ptLab,.plot .targetLab,.plot .tickLab{ paint-order:stroke; stroke:#fff; stroke-width:3.5; stroke-linejoin:round; }
+    .plot .axLab{ font-family:var(--uiFont); font-size:11.5px; font-weight:950; fill:var(--line); letter-spacing:.02em; }
+    .plot .targetLine{ stroke:var(--orange); stroke-width:2; stroke-dasharray:6 5; }
+    .plot .targetLab{ font-family:var(--uiFont); font-size:11.5px; font-weight:950; fill:var(--orange-dark); }
+    .plot .ray{ stroke:var(--purple); stroke-width:2.5; opacity:.55; }
+    .plot .pt{ fill:var(--blue); stroke:#fff; stroke-width:2; }
+    .plot .pt.anchor{ fill:var(--blue-dark); }
+    .plot .pt.over{ fill:var(--orange); }
+    .plot .pt.sel{ stroke:var(--blue-dark); stroke-width:3; }
+    .plot .pt.win{ fill:var(--green-dark); }
+    .plot .ptLab{ font-family:var(--mathFont); font-size:12.5px; font-weight:500; fill:var(--blue-dark); }
+    .plot .ptLab.win{ fill:var(--green-dark); }
+    .gcNote{ font-size:.75rem; font-weight:750; color:var(--muted); line-height:1.38; margin:5px 2px 0; }
+
+    .checkCard{ background:#ecfdf5; border-color:#a7f3d0; }
+    .checkHead{ font-size:.7rem; letter-spacing:.13em; text-transform:uppercase; font-weight:950; color:var(--green-dark); }
+    .checkLine{ font-family:var(--mathFont); font-weight:var(--mathWeight); font-size:1.34rem; color:var(--green-dark); margin-top:5px; line-height:1.5; }
+    .checkNote{ margin:6px 0 0; font-size:.78rem; font-weight:750; color:#047857; line-height:1.4; }
+
+    /* ---------- intro veil ---------- */
+    /* z-index 30: UNDER the topbar, and showIntro() closes any open menu. */
+    .introVeil{ position:fixed; inset:0; z-index:30; display:grid; place-items:center; }
+    .introBg{ position:absolute; inset:0; background:rgba(248,250,252,.94); backdrop-filter:blur(3px); transition:opacity .42s ease; }
+    .introInner{ position:relative; display:grid; justify-items:center; gap:22px; padding:20px; }
+    .introSentence{
+      display:flex; align-items:center; gap:.34em; font-family:var(--mathFont); font-weight:var(--mathWeight);
+      font-size:clamp(2.6rem,7vw,4.6rem); line-height:1.05; white-space:nowrap;
+      transform-origin:center center; transition:transform .5s cubic-bezier(.4,0,.2,1);
+    }
+    .introSentence .dv{ color:var(--blue-dark); }
+    .introSentence .ds{ color:var(--purple-dark); }
+    .introSentence .ans{ color:var(--line-soft); }
+    .introIn{
+      width:3.2em; border:2.5px solid var(--border); border-radius:14px; padding:2px 6px;
+      font-family:var(--mathFont); font-weight:var(--mathWeight); font-size:1em; text-align:center;
+      color:var(--blue-dark); background:#fff;
+    }
+    .introIn.ds{ color:var(--purple-dark); width:2.4em; }
+    .introIn:focus-visible{ outline:none; border-color:var(--blue); box-shadow:0 0 0 5px rgba(37,99,235,.16); }
+    .introMsg{ font-weight:850; font-size:.94rem; color:var(--orange-dark); min-height:1.2em; }
+    .introNext{
+      appearance:none; cursor:pointer; border:none; background:var(--blue); color:#fff;
+      padding:13px 30px; border-radius:16px; font-weight:900; font-size:1.05rem;
+      box-shadow:0 14px 30px rgba(37,99,235,.32); transition:.16s ease;
+    }
+    .introNext:hover{ background:var(--blue-dark); transform:translateY(-1px); }
+    .introNext:focus-visible{ outline:none; box-shadow:0 0 0 5px rgba(37,99,235,.3); }
+    .introVeil.is-leaving .introBg{ opacity:0; }
+    .introVeil.is-leaving .introNext,.introVeil.is-leaving .introMsg{ opacity:0; transition:opacity .2s ease; }
+
+    /* ---------- responsive ---------- */
+    @media (max-width:1180px){
+      .mmtTopbar{ grid-template-columns:auto minmax(0,1fr) auto; padding:12px 16px; gap:12px; }
+      .mmtBrandText{ display:none; }
+      .btn{ padding:10px 13px; font-size:14px; }
+      .layout{ padding:15px 14px 22px; }
+      .genBtn .genLabel{ display:none; }
+      .genBtn{ padding:8px 10px; }
+    }
+    @media (max-width:960px){
+      .layout,.layout.hasGraph{ grid-template-columns:minmax(0,1fr); }
+      .side{ position:static; display:grid; grid-template-columns:repeat(auto-fit,minmax(268px,1fr)); align-items:start; }
+    }
+    @media (max-width:900px){
+      .mmtTopbar{ grid-template-columns:1fr; justify-items:center; padding:12px 14px; }
+      .mmtBrand{ margin-left:0; } .topActions{ justify-self:center; justify-content:center; }
+      .dropMenu{ right:auto; left:50%; transform:translateX(-50%); }
+      .layout{ padding:13px 12px 22px; }
+      .eqActions{ position:static; transform:none; justify-content:center; margin-left:10px; }
+      .eqCard{ flex-wrap:wrap; gap:8px; }
+    }
+    @media (max-height:820px){
+      .eqCard{ min-height:66px; padding:9px 16px; }
+      .promptBar{ min-height:40px; padding:7px 14px; font-size:.9rem; }
+      .stage{ gap:10px; }
+      .layout{ padding:12px 18px 16px; }
+      .gcNote{ display:none; }
+      .gBig{ font-size:2rem; }
+      .card{ padding:10px 14px; }
+      .checkLine{ font-size:1.16rem; margin-top:3px; }
+      .checkNote{ margin-top:4px; }
+      .side{ gap:10px; }
+    }
+    @media print{ .mmtTopbar,.moveCard,.promptBar{ display:none; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="mmtTopbar">
+      <a class="mmtBrand" href="https://www.millsmathstools.au" target="_self" aria-label="Back to Mills Maths Tools">
+        <span class="mmtBrandLogo" aria-hidden="true">MMT</span>
+        <span class="mmtBrandText"><strong>MMT</strong><span>Mills Maths Tools</span></span>
+      </a>
+      <div class="mmtTopTitle">Division with a Ratio Table</div>
+      <div class="topActions">
+        <div class="menuWrap">
+          <button class="btn" id="settingsBtn" type="button" aria-haspopup="true" aria-expanded="false">Settings &#9662;</button>
+          <nav class="dropMenu settingsMenu" id="settingsMenu" aria-label="Settings">
+            <div class="settingsHead">The question</div>
+            <label class="selRow"><span>Numbers</span>
+              <select id="levelSel" aria-label="Number range">
+                <option value="friendly" selected>Divide by 2&ndash;12</option>
+                <option value="twoDigit">Divide by 15, 20, 25 or 50</option>
+                <option value="custom">Type your own</option>
+              </select>
+            </label>
+            <p class="settingsNote" id="levelNote">Every question divides exactly, so a row can always land right on the number.</p>
+
+            <div class="settingsRule" role="separator"></div>
+            <div class="settingsHead">On screen</div>
+            <label class="sw"><input type="checkbox" id="graphToggle"><span class="track"></span><span>Graph the rows</span></label>
+            <label class="sw"><input type="checkbox" id="bracketToggle"><span class="track"></span><span>Between which rows?</span></label>
+            <p class="settingsNote">Any number of groups is allowed, even a wild one &mdash; the graph rescales to fit it, and the row's &times; puts it back.</p>
+          </nav>
+        </div>
+        <div class="menuWrap">
+          <button class="btn" id="toolsBtn" type="button" aria-haspopup="true" aria-expanded="false">Tools &#9662;</button>
+          <nav class="dropMenu" id="toolsMenu" aria-label="Related tools">
+            <a class="toolLink" href="/worksheet-creators/stage-3/number/ratio-table-division.html">Worksheet Creator<small>Printable A4: tables to finish, build your own, graph it, use it</small></a>
+            <span class="toolLink is-disabled" aria-disabled="true">Student Quiz<small>Not built yet</small></span>
+          </nav>
+        </div>
+        <button class="btn btn-primary" id="newBtn" type="button">New question</button>
+      </div>
+    </header>
+
+    <main class="layout" id="layout">
+      <section class="stage">
+
+        <div class="eqCard">
+          <div class="sentence" id="sentence" aria-live="polite">
+            <span class="dv" id="sDividend">270</span><span>&divide;</span><span class="ds" id="sDivisor">15</span><span>=</span><span class="ans" id="sAnswer" data-role="answer">?</span>
+          </div>
+          <div class="eqActions">
+            <span class="outcomeTag">MA3-MR-01</span>
+            <button class="genBtn" id="genBtn" type="button" title="Keep the divisor, change the number being divided">
+              <span class="dice" aria-hidden="true">&#9860;</span><span class="genLabel">New numbers</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="promptBar" id="promptBar">
+          <span class="pIco" id="promptIco" aria-hidden="true">&#128173;</span>
+          <span id="promptText">Click a row to use it, or type how many groups.</span>
+        </div>
+
+        <div class="tableCard">
+          <div class="rtHead">
+            <div class="hCol">Groups<b id="hGroups">of 15</b></div>
+            <div class="spine" id="spine"><span class="arw">&rarr;</span><span id="spineTxt">&times;15</span></div>
+            <div class="hCol">Total<b>altogether</b></div>
+          </div>
+          <div class="rtBody" id="rtBody"></div>
+          <div class="rtTarget" id="rtTarget">
+            <div class="v vg" id="tGroups" data-role="answer">?</div>
+            <div class="goalChip">Goal</div>
+            <div class="v vt" id="tTotal">270</div>
+          </div>
+        </div>
+
+        <div class="moveCard" id="moveCard">
+          <div class="moveLead" id="moveLead"></div>
+          <div class="entryRow" id="entryRow">
+            <span class="opHint" id="entryHint">Click the Groups column to add a row of your own.</span>
+            <span class="spacer"></span>
+            <button class="ghostBtn" id="undoBtn" type="button" disabled>Undo row</button>
+            <button class="ghostBtn" id="clearBtn" type="button" disabled>Start again</button>
+          </div>
+        </div>
+      </section>
+
+      <aside class="side">
+        <div class="card goalCard">
+          <div class="gHead">Working towards</div>
+          <div class="gBig" id="goalBig">270</div>
+          <div class="gSub" id="goalSub">in groups of 15</div>
+          <div class="gAns"><span>Groups needed</span><b id="goalAns" data-role="answer">?</b></div>
+          <div class="bracket" id="bracketBox" hidden>
+            <div class="brRow"><span>Closest row under</span><b id="brUnder">&ndash;</b></div>
+            <div class="brRow hi"><span>Closest row over</span><b id="brOver">&ndash;</b></div>
+            <p class="brNote" id="brNote">Add a row and this tells you what the answer is between.</p>
+          </div>
+        </div>
+
+        <div class="card graphCard" id="graphCard" hidden>
+          <div class="gcHead"><span class="gcTitle">Every row as a point</span></div>
+          <svg class="plot" id="plot" viewBox="0 0 360 300" role="img" aria-label="Graph of groups against total"></svg>
+          <p class="gcNote" id="gcNote">Each row is a point. They fall in a straight line through (0, 0) because every row is the same rate.</p>
+        </div>
+
+        <div class="card checkCard" id="checkCard" hidden>
+          <div class="checkHead">Check it</div>
+          <div class="checkLine" id="checkLine"></div>
+          <p class="checkNote" id="checkNote"></p>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <div id="confLayer" aria-hidden="true"></div>
+
+  <div class="introVeil" id="introVeil" hidden>
+    <div class="introBg" id="introBg"></div>
+    <div class="introInner">
+      <div class="introSentence" id="introSentence">
+        <span class="dv" id="iDividend">270</span><span>&divide;</span><span class="ds" id="iDivisor">15</span><span>=</span><span class="ans">?</span>
+      </div>
+      <div class="introMsg" id="introMsg"></div>
+      <button class="introNext" id="introNext" type="button">Next &rarr;</button>
+    </div>
+  </div>
+
+<script>
+(function(){
+  "use strict";
+
+  const $ = id => document.getElementById(id);
+  const SVGNS = "http://www.w3.org/2000/svg";
+  const MINUS = "−";          /* a hyphen is not a minus sign */
+  const TIMES = "×";
+  const DIVIDE = "÷";
+
+  /* ------------------------------------------------------------------ state */
+  /* Every display is derived from S.rows. A row is {id, g, t, how, parents}.
+     g is the number of groups, t is the total. Nothing about the table is
+     cached anywhere else, so undo, start-again and a refused move can never
+     disagree with what is on screen. */
+  const S = {
+    dividend: 270,
+    divisor: 15,
+    level: "friendly",        /* friendly | twoDigit | custom */
+    rows: [],
+    sel: [],                  /* up to two row ids */
+    nextId: 1,
+    done: false,
+    lastKey: "",
+    entry: null,              /* {stage:"g"|"t", g, mv} - the row being entered */
+    flash: null,              /* a one-shot message the next paint will show */
+    graph: false, bracket: false, introOpen: false
+  };
+
+  const MAXROWS = 12;
+
+  /* The answer exists in state from the first frame, but nothing writes it to
+     the page until a row lands on the dividend. */
+  const answer = () => S.dividend / S.divisor;
+  const rowById = id => S.rows.find(r => r.id === id) || null;
+  const hasGroups = g => S.rows.some(r => r.g === g);
+  const winRow = () => S.rows.find(r => r.t === S.dividend) || null;
+  const isAnchor = r => S.rows.length > 0 && r.id === S.rows[0].id;
+  const grp = n => n + (n === 1 ? " group" : " groups");
+
+  /* ------------------------------------------------------------- questions */
+  const FRIENDLY = [2,3,4,5,6,7,8,9,10,11,12];
+  const TWODIGIT = [15,20,25,50];
+  const rnd = n => Math.floor(Math.random() * n);
+  const pick = a => a[rnd(a.length)];
+
+  function generate(keepDivisor){
+    for(let tries = 0; tries < 60; tries++){
+      let d, q;
+      if(S.level === "twoDigit"){
+        d = keepDivisor ? S.divisor : pick(TWODIGIT);
+        q = 4 + rnd(21);                       /* 4..24 groups */
+      }else{
+        d = keepDivisor ? S.divisor : pick(FRIENDLY);
+        q = 3 + rnd(18);                       /* 3..20 groups */
+      }
+      /* A quotient under 3 is not worth a table, and one that is a round
+         multiple of ten every time hides the combining move. */
+      if(q === 10 || q === 20) q += 1 + rnd(3);
+      const key = d + "/" + (d * q);
+      if(key === S.lastKey) continue;
+      S.lastKey = key;
+      S.dividend = d * q;
+      S.divisor = d;
+      return;
+    }
+  }
+
+  function setQuestion(dividend, divisor){
+    S.dividend = dividend;
+    S.divisor = divisor;
+    S.lastKey = divisor + "/" + dividend;
+  }
+
+  function resetTable(){
+    S.rows = [{ id: S.nextId++, g: 1, t: S.divisor, how: "the start", parents: [] }];
+    S.sel = [];
+    S.done = false;
+    S.entry = null;
+  }
+
+  /* --------------------------------------------------------------- the table */
+  function makeRow(g, t, how, parents, opLabel){
+    const row = { id: S.nextId++, g: g, t: t, how: how, parents: parents || [] };
+    S.rows.push(row);
+    S.sel = [];
+    if(t === S.dividend){
+      S.done = true;
+      S.flash = { m: grp(g) + " of " + S.divisor + " make " + S.dividend + ".", t: "good" };
+    }else if(t > S.dividend){
+      S.flash = { m: "Past " + S.dividend + " " + MINUS + " you can take a row away later.", t: "warn" };
+    }else{
+      S.flash = { m: "Locked in. What can you make from these rows?", t: "good" };
+    }
+    paintAll();
+    const el = document.querySelector('[data-row="' + row.id + '"]');
+    if(el){
+      el.classList.add("is-new");
+      if(opLabel) flashOp(el, opLabel);
+      el.scrollIntoView({ block:"nearest" });
+    }
+    return row;
+  }
+
+  /* The move is shown happening to BOTH columns, because that is the whole of
+     what a ratio table claims: the same operation on each side keeps the rate. */
+  function flashOp(rowEl, label){
+    [0.24, 0.76].forEach(frac => {
+      const b = document.createElement("span");
+      b.className = "opFlash";
+      b.textContent = label;
+      b.style.left = "calc(" + (frac * 100) + "% - 22px)";
+      rowEl.appendChild(b);
+      setTimeout(() => b.remove(), 1600);
+    });
+  }
+
+  function tryAdd(g, t, how, parents, opLabel){
+    if(!Number.isInteger(g) || g < 1){ nudge(null, "That would not leave a whole number of groups."); return null; }
+    if(S.rows.length >= MAXROWS){ nudge(null, "The table is full " + MINUS + " undo a row or start again."); return null; }
+    const dup = S.rows.find(r => r.g === g);
+    if(dup){ nudge(dup, grp(g) + " is already in the table."); return null; }
+    return makeRow(g, t, how, parents, opLabel);
+  }
+
+  function nudge(row, msg){
+    say(msg, "warn");
+    if(row){
+      const el = document.querySelector('[data-row="' + row.id + '"]');
+      if(el){ el.classList.remove("is-nudge"); void el.offsetWidth; el.classList.add("is-nudge"); }
+    }
+  }
+
+  /* ---------------------------------------------------------------- moves */
+  /* A move is proposed first, so "predict the total" can sit between the press
+     and the row appearing. Everything routes through here. */
+  function propose(move){ commit(move); }
+
+  function commit(move){
+    S.entry = null;
+    const row = tryAdd(move.g, move.t, move.how, move.parents, move.op);
+    paintMoveBar();
+    return row;
+  }
+
+  function scaleMove(row, k, up){
+    const g = up ? row.g * k : row.g / k;
+    const t = up ? row.t * k : row.t / k;
+    const op = (up ? TIMES : DIVIDE) + k;
+    return { g: g, t: t, how: row.g + " " + op, parents: [row.id], op: op,
+             lead: grp(row.g) + " " + op };
+  }
+
+  function combineMove(a, b, plus){
+    const hi = a.g >= b.g ? a : b, lo = a.g >= b.g ? b : a;
+    const g = plus ? a.g + b.g : hi.g - lo.g;
+    const t = plus ? a.t + b.t : hi.t - lo.t;
+    const sign = plus ? "+" : " " + MINUS + " ";
+    const how = plus ? (a.g + " + " + b.g) : (hi.g + " " + MINUS + " " + lo.g);
+    return { g: g, t: t, how: how, parents: [a.id, b.id], op: null,
+             lead: (plus ? (a.g + " + " + b.g) : (hi.g + " " + MINUS + " " + lo.g)) + " groups" };
+  }
+
+  function moveOptions(row){
+    const out = [];
+    [2,3,5,10].forEach(k => {
+      if(row.g * k <= 9999 && !hasGroups(row.g * k)) out.push({ label: TIMES + k, mv: scaleMove(row, k, true) });
+    });
+    [2,3,5,10].forEach(k => {
+      if(row.g % k === 0 && row.t % k === 0 && row.g / k >= 1 && !hasGroups(row.g / k)){
+        out.push({ label: DIVIDE + k, mv: scaleMove(row, k, false) });
+      }
+    });
+    return out;
+  }
+
+  /* ------------------------------------------------------------- selection */
+  function toggleSel(id){
+    const i = S.sel.indexOf(id);
+    if(i >= 0) S.sel.splice(i, 1);
+    else{
+      S.sel.push(id);
+      if(S.sel.length > 2) S.sel.shift();
+    }
+    S.entry = null;
+    paintAll();
+  }
+
+  /* ---------------------------------------------------------------- prompt */
+  function say(msg, tone){
+    $("promptText").textContent = msg;
+    const bar = $("promptBar");
+    bar.classList.toggle("is-good", tone === "good");
+    bar.classList.toggle("is-warn", tone === "warn");
+    $("promptIco").textContent = tone === "good" ? "✅" : tone === "warn" ? "⚠️" : "💭";
+  }
+
+  function defaultPrompt(){
+    if(S.flash){ const f = S.flash; S.flash = null; say(f.m, f.t); return; }
+    if(S.entry){
+      say(S.entry.stage === "g" ? "Type how many groups, then press Enter."
+                                : "Now the total. Enter locks it in, Escape drops it.", null);
+      return;
+    }
+    if(S.done){ const w = winRow(); say(grp(w.g) + " of " + S.divisor + " make " + S.dividend + ".", "good"); return; }
+    if(S.sel.length === 2) say("Add the two rows, or take one from the other.", null);
+    else if(S.sel.length === 1) say("What will this row give you? Predict, then press.", null);
+    else say("Click a row to use it, or add a row of your own.", null);
+  }
+
+  /* ---------------------------------------------------------------- painting */
+  function paintAll(){
+    paintSentence();
+    paintTable();
+    paintMoveBar();
+    paintSide();
+    paintGraph();
+    defaultPrompt();
+    $("undoBtn").disabled = S.rows.length <= 1;
+    $("clearBtn").disabled = S.rows.length <= 1;
+    fitTable();
+  }
+
+  /* How tall the table may be is a question about the page, and it is measured.
+     With the scroll box collapsed the stage is everything else, so what is left
+     between its foot and the fold is exactly the room the rows may have. A
+     guessed vh cap left the move bar under the fold at 1366x768 and wasted
+     130px at 1080p; this gives both screens the rows they can actually hold. */
+  function fitTable(){
+    const body = $("rtBody");
+    const stage = document.querySelector(".stage");
+    if(!body || !stage) return;
+    body.style.maxHeight = "0px";
+    const box = stage.getBoundingClientRect();
+    const room = Math.min(window.innerHeight - box.bottom - 18, 460);
+    const first = body.querySelector(".rtRow");
+    const rowH = first ? first.getBoundingClientRect().height : 46;
+    const whole = Math.floor((room - 6) / rowH) * rowH + 6;
+    body.style.maxHeight = Math.max(rowH * 3 + 6, whole) + "px";
+    /* the unit rate row is sticky, so scrolling and snapping have to leave its
+       height clear or the next row parks underneath it */
+    body.style.scrollPaddingTop = Math.round(rowH) + "px";
+  }
+
+  function paintSentence(){
+    $("sDividend").textContent = S.dividend;
+    $("sDivisor").textContent = S.divisor;
+    const a = $("sAnswer");
+    a.textContent = S.done ? String(winRow().g) : "?";
+    a.classList.toggle("is-known", S.done);
+    $("hGroups").textContent = "of " + S.divisor;
+    $("spineTxt").textContent = TIMES + S.divisor;
+  }
+
+  function paintTable(){
+    const body = $("rtBody");
+    body.textContent = "";
+    /* Where a row came from is worth showing while ONE row is picked; with
+       two picked the screen is already busy with the combining move. */
+    const parents = new Set();
+    if(S.sel.length === 1){
+      const r = rowById(S.sel[0]);
+      if(r) r.parents.forEach(p => parents.add(p));
+    }
+
+    S.rows.forEach(r => {
+      const el = document.createElement("div");
+      el.className = "rtRow";
+      el.dataset.row = r.id;
+      if(isAnchor(r)) el.classList.add("is-anchor");
+      if(S.sel.indexOf(r.id) >= 0) el.classList.add("is-sel");
+      else if(parents.has(r.id)) el.classList.add("is-parent");
+      if(r.t > S.dividend) el.classList.add("is-over");
+      if(S.done && r.t === S.dividend) el.classList.add("is-win");
+
+      /* only the Groups cell takes a click - the Total column is a result, and
+         a click there would say the two columns are the same kind of thing */
+      const g = document.createElement("button");
+      g.type = "button";
+      g.className = "v vg gCell";
+      g.textContent = r.g;
+      g.setAttribute("aria-pressed", S.sel.indexOf(r.id) >= 0 ? "true" : "false");
+      g.setAttribute("aria-label", grp(r.g) + ", total " + r.t);
+      const mid = document.createElement("div");
+      mid.className = "rowMid";
+      const chip = document.createElement("span");
+      chip.className = "howChip"; chip.textContent = r.how; chip.title = r.how;
+      mid.appendChild(chip);
+      const t = document.createElement("div");
+      t.className = "v vt"; t.textContent = r.t;
+      el.appendChild(g); el.appendChild(mid); el.appendChild(t);
+
+      if(S.done && r.t === S.dividend){
+        const tick = document.createElement("span");
+        tick.className = "winTick"; tick.textContent = "✓";
+        el.appendChild(tick);
+      }else if(r.t > S.dividend){
+        const tag = document.createElement("span");
+        tag.className = "overTag"; tag.textContent = "past " + S.dividend;
+        el.appendChild(tag);
+      }
+
+      /* the unit rate is the reference, so it is the one row with no cross */
+      if(!isAnchor(r)){
+        const del = document.createElement("button");
+        del.type = "button";
+        del.className = "delBtn";
+        del.innerHTML = "&times;";
+        del.title = "Take this row out";
+        del.setAttribute("aria-label", "Take out the row for " + grp(r.g));
+        del.addEventListener("click", e => { e.stopPropagation(); deleteRow(r.id); });
+        el.appendChild(del);
+      }
+
+      g.addEventListener("click", () => toggleSel(r.id));
+      body.appendChild(el);
+    });
+
+    paintEntryLine(body);
+
+    $("tGroups").textContent = S.done ? String(winRow().g) : "?";
+    $("tTotal").textContent = S.dividend;
+    $("rtTarget").classList.toggle("is-done", S.done);
+  }
+
+
+  /* --------------------------------------------------------- the entry line */
+  /* A row is entered as a PAIR, the way a coordinate is: the groups, Enter, then
+     the total for those groups. Getting one half right is not getting the row
+     right, so the pair is committed or removed together. */
+  function paintEntryLine(body){
+    if(S.done) return;
+    if(S.rows.length >= MAXROWS && !S.entry) return;
+
+    const line = document.createElement("div");
+    line.className = "rtNew";
+    line.id = "entryLine";
+
+    const left = document.createElement("div");
+    const mid = document.createElement("div");
+    mid.className = "rowMid";
+    const right = document.createElement("div");
+
+    if(!S.entry){
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "gCell newHint";
+      btn.id = "entryOpen";
+      btn.textContent = "+ add a row";
+      btn.setAttribute("aria-label", "Add a row of your own");
+      btn.addEventListener("click", openEntry);
+      left.appendChild(btn);
+    }else if(S.entry.stage === "g"){
+      line.classList.add("is-live");
+      const inp = document.createElement("input");
+      inp.id = "entryG"; inp.className = "rtIn"; inp.type = "text";
+      inp.inputMode = "numeric"; inp.autocomplete = "off";
+      inp.placeholder = "?";
+      inp.setAttribute("aria-label", "How many groups");
+      inp.addEventListener("keydown", e => {
+        if(e.key === "Enter"){ e.preventDefault(); takeGroups(); }
+        else if(e.key === "Escape"){ e.preventDefault(); cancelEntry(); }
+      });
+      left.appendChild(inp);
+    }else{
+      line.classList.add("is-live", "stage-t");
+      const lock = document.createElement("div");
+      lock.className = "v vg gCell locked";
+      lock.textContent = S.entry.g;
+      left.appendChild(lock);
+
+      const ask = document.createElement("span");
+      ask.className = "askChip";
+      ask.textContent = S.entry.g + " " + TIMES + " " + S.divisor;
+      mid.appendChild(ask);
+
+      const inp = document.createElement("input");
+      inp.id = "entryT"; inp.className = "rtIn tot"; inp.type = "text";
+      inp.inputMode = "numeric"; inp.autocomplete = "off";
+      inp.placeholder = "= ?";
+      inp.setAttribute("aria-label", "The total for " + grp(S.entry.g));
+      inp.addEventListener("keydown", e => {
+        if(e.key === "Enter"){ e.preventDefault(); takeTotal(); }
+        else if(e.key === "Escape"){ e.preventDefault(); cancelEntry(); }
+      });
+      right.appendChild(inp);
+    }
+
+    line.appendChild(left); line.appendChild(mid); line.appendChild(right);
+    body.appendChild(line);
+  }
+
+  function focusEntry(){
+    const inp = $("entryT") || $("entryG");
+    if(inp){ inp.focus(); inp.select(); }
+  }
+
+  function openEntry(){
+    if(S.done || S.rows.length >= MAXROWS) return;
+    S.entry = { stage: "g", g: null };
+    S.sel = [];
+    paintAll();
+    focusEntry();
+  }
+
+  function cancelEntry(){
+    S.entry = null;
+    paintAll();
+  }
+
+  function takeGroups(){
+    const raw = String($("entryG").value).trim();
+    if(!raw){ say("Type how many groups, then press Enter.", "warn"); return; }
+    if(!/^\d+$/.test(raw)){ say("Whole numbers of groups only.", "warn"); return; }
+    const g = parseInt(raw, 10);
+    if(g < 1){ say("At least one group.", "warn"); return; }
+    if(g > 9999){ say("Let's keep it under ten thousand groups.", "warn"); return; }
+    const dup = S.rows.find(r => r.g === g);
+    if(dup){ nudge(dup, grp(g) + " is already in the table."); return; }
+    S.entry = { stage: "t", g: g };
+    paintAll();
+    focusEntry();
+    say("Now the total: " + g + " " + TIMES + " " + S.divisor + " = ?", null);
+  }
+
+  function takeTotal(){
+    const e = S.entry;
+    const raw = String($("entryT").value).trim();
+    if(!raw){ say("Type the total, then press Enter.", "warn"); return; }
+    if(!/^\d+$/.test(raw)){ say("Whole numbers only.", "warn"); return; }
+    const t = parseInt(raw, 10);
+    const want = e.g * S.divisor;
+
+    if(t !== want){
+      const line = $("entryLine");
+      if(line){
+        line.classList.remove("is-shake"); void line.offsetWidth; line.classList.add("is-shake");
+      }
+      say("Not that one. " + grp(e.g) + " of " + S.divisor + " " + MINUS + " try again.", "warn");
+      /* the pair goes, not half of it: a wrong total is a wrong row */
+      setTimeout(() => {
+        if(S.entry !== e) return;
+        S.entry = { stage: "g", g: null };
+        paintAll();
+        focusEntry();
+      }, 420);
+      return;
+    }
+
+    /* the next line is opened BEFORE the row lands, so one paint shows the new
+       row, what to say about it, and the line waiting for the next pair */
+    S.entry = (S.rows.length + 1 < MAXROWS) ? { stage: "g", g: null } : null;
+    const row = tryAdd(e.g, t, "typed", [], null);
+    if(!row || S.done){ S.entry = null; paintAll(); }
+    if(row){ celebrate(row.id); focusEntry(); }
+  }
+
+  /* A pair that lands gets a small burst. It marks the moment the two columns
+     agreed, which is the thing being learnt. */
+  function celebrate(rowId){
+    if(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const el = document.querySelector('[data-row="' + rowId + '"]');
+    const layer = $("confLayer");
+    if(!el || !layer) return;
+    const b = el.getBoundingClientRect();
+    const cx = b.left + b.width / 2, cy = b.top + b.height / 2;
+    const cols = ["#2563eb","#22c55e","#7c3aed","#f97316","#db2777","#0891b2"];
+    for(let i = 0; i < 16; i++){
+      const p = document.createElement("span");
+      p.className = "conf";
+      const ang = (Math.PI * 2 * i) / 16 + Math.random() * 0.4;
+      const dist = 70 + Math.random() * 110;
+      p.style.left = cx + "px";
+      p.style.top = cy + "px";
+      p.style.background = cols[i % cols.length];
+      p.style.setProperty("--x", Math.cos(ang) * dist + "px");
+      p.style.setProperty("--y", (Math.sin(ang) * dist + 60) + "px");
+      p.style.setProperty("--r", (Math.random() * 720 - 360) + "deg");
+      p.style.setProperty("--d", (760 + Math.random() * 340) + "ms");
+      layer.appendChild(p);
+      setTimeout(() => p.remove(), 1250);
+    }
+  }
+
+  function paintMoveBar(){
+    const lead = $("moveLead");
+    lead.textContent = "";
+    $("entryHint").textContent = S.entry
+      ? ""
+      : S.done
+        ? "Take a row out to keep exploring, or start a new question."
+        : "Click the Groups column to add a row of your own.";
+
+    /* while a pair is being entered the table carries the whole interaction, so
+       the move bar says nothing and the prompt bar does the talking */
+    $("moveCard").classList.toggle("is-bare", !!S.entry);
+    if(S.entry) return;
+
+    if(S.sel.length === 0){
+      const p = document.createElement("span");
+      p.className = "opHint";
+      p.textContent = "Pick a row from the table to double it, ten-times it, halve it — or pick two rows to put together.";
+      lead.appendChild(p);
+      return;
+    }
+
+    if(S.sel.length === 1){
+      const r = rowById(S.sel[0]);
+      const lab = document.createElement("span");
+      lab.className = "moveLab";
+      lab.innerHTML = "From <em>" + r.g + " " + TIMES + " " + S.divisor + " = " + r.t + "</em> make:";
+      lead.appendChild(lab);
+      const opts = moveOptions(r);
+      if(!opts.length){
+        const n = document.createElement("span");
+        n.className = "opHint";
+        n.textContent = "Every step from this row is already in the table — try another row.";
+        lead.appendChild(n);
+      }
+      opts.forEach(o => {
+        const b = document.createElement("button");
+        b.type = "button"; b.className = "opBtn"; b.textContent = o.label;
+        b.addEventListener("click", () => propose(o.mv));
+        lead.appendChild(b);
+      });
+      return;
+    }
+
+    const a = rowById(S.sel[0]), b = rowById(S.sel[1]);
+    const lab = document.createElement("span");
+    lab.className = "moveLab";
+    lab.innerHTML = "Using <em>" + a.g + "</em> and <em>" + b.g + "</em> groups:";
+    lead.appendChild(lab);
+
+    const addMv = combineMove(a, b, true);
+    const addB = document.createElement("button");
+    addB.type = "button"; addB.className = "opBtn comb wide";
+    addB.textContent = "Add them (" + addMv.g + " groups)";
+    addB.addEventListener("click", () => propose(addMv));
+    lead.appendChild(addB);
+
+    const subMv = combineMove(a, b, false);
+    if(subMv.g >= 1){
+      const subB = document.createElement("button");
+      subB.type = "button"; subB.className = "opBtn comb wide";
+      subB.textContent = "Take one from the other (" + subMv.g + " groups)";
+      subB.addEventListener("click", () => propose(subMv));
+      lead.appendChild(subB);
+    }
+  }
+
+  function paintSide(){
+    $("goalBig").textContent = S.dividend;
+    $("goalSub").textContent = "in groups of " + S.divisor;
+    const ga = $("goalAns");
+    ga.textContent = S.done ? String(winRow().g) : "?";
+    ga.classList.toggle("is-known", S.done);
+
+    $("bracketBox").hidden = !S.bracket;
+    if(S.bracket){
+      let under = null, over = null;
+      S.rows.forEach(r => {
+        if(r.t < S.dividend && (!under || r.t > under.t)) under = r;
+        if(r.t > S.dividend && (!over || r.t < over.t)) over = r;
+      });
+      $("brUnder").textContent = under ? grp(under.g) : "–";
+      $("brOver").textContent = over ? grp(over.g) : "–";
+      const note = $("brNote");
+      $("bracketBox").querySelectorAll(".brRow").forEach(r => { r.hidden = S.done; });
+      if(S.done) note.textContent = "Landed exactly on " + S.dividend + ".";
+      else if(under && over) note.textContent = "So the answer is between " + under.g + " and " + over.g + " groups.";
+      else if(under) note.textContent = "More than " + grp(under.g) + ". Build a row that goes past " + S.dividend + ".";
+      else note.textContent = "Add a row and this tells you what the answer is between.";
+    }
+
+    $("checkCard").hidden = !S.done;
+    if(S.done){
+      const q = winRow().g;
+      $("checkLine").innerHTML = q + " " + TIMES + " " + S.divisor + " = " + S.dividend + "<br>"
+        + S.dividend + " " + DIVIDE + " " + S.divisor + " = " + q;
+      $("checkNote").textContent = "The same fact, written both ways.";
+    }
+  }
+
+  /* ------------------------------------------------------------------ graph */
+  function niceCeil(v){
+    if(v <= 0) return 1;
+    const mag = Math.pow(10, Math.floor(Math.log10(v)));
+    const n = v / mag;
+    const step = n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10;
+    return step * mag;
+  }
+  function el(name, attrs){
+    const e = document.createElementNS(SVGNS, name);
+    for(const k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  function paintGraph(){
+    $("graphCard").hidden = !S.graph;
+    $("layout").classList.toggle("hasGraph", S.graph);
+    if(!S.graph) return;
+
+    const svg = $("plot");
+    svg.textContent = "";
+    const W = 360, H = 300, L = 46, R = 14, T = 30, B = 40;
+    const pw = W - L - R, ph = H - T - B;
+
+    /* The scales must never be derived from the answer, only from the rows the
+       class has actually built and from the target, which is on screen anyway. */
+    const maxG = S.rows.reduce((m, r) => Math.max(m, r.g), 1);
+    const maxT = S.rows.reduce((m, r) => Math.max(m, r.t), S.dividend);
+    const xMax = Math.max(niceCeil(maxG * 1.25), 4);
+    const yMax = Math.max(niceCeil(Math.max(maxT, S.dividend) * 1.12), S.divisor * 2);
+    const X = g => L + (g / xMax) * pw;
+    const Y = t => T + ph - (t / yMax) * ph;
+
+    const xStep = niceCeil(xMax / 5), yStep = niceCeil(yMax / 5);
+    for(let x = xStep; x <= xMax + 1e-9; x += xStep){
+      svg.appendChild(el("line", { class:"grid", x1:X(x), y1:T, x2:X(x), y2:T + ph }));
+      const lb = el("text", { class:"tickLab", x:X(x), y:T + ph + 15, "text-anchor":"middle" });
+      lb.textContent = Math.round(x); svg.appendChild(lb);
+    }
+    for(let y = yStep; y <= yMax + 1e-9; y += yStep){
+      svg.appendChild(el("line", { class:"grid", x1:L, y1:Y(y), x2:L + pw, y2:Y(y) }));
+      const lb = el("text", { class:"tickLab", x:L - 7, y:Y(y) + 4, "text-anchor":"end" });
+      lb.textContent = Math.round(y); svg.appendChild(lb);
+    }
+
+    svg.appendChild(el("line", { class:"axis", x1:L, y1:T, x2:L, y2:T + ph }));
+    svg.appendChild(el("line", { class:"axis", x1:L, y1:T + ph, x2:L + pw, y2:T + ph }));
+    const ox = el("text", { class:"axLab", x:L + pw, y:T + ph + 31, "text-anchor":"end" });
+    ox.textContent = "Groups"; svg.appendChild(ox);
+    const oy = el("text", { class:"axLab", x:2, y:12, "text-anchor":"start" });
+    oy.textContent = "Total"; svg.appendChild(oy);
+    const o0 = el("text", { class:"tickLab", x:L - 7, y:T + ph + 4, "text-anchor":"end" });
+    o0.textContent = "0"; svg.appendChild(o0);
+
+    /* the target */
+    svg.appendChild(el("line", { class:"targetLine", x1:L, y1:Y(S.dividend), x2:L + pw, y2:Y(S.dividend) }));
+    const tl = el("text", { class:"targetLab", x:L + pw, y:Y(S.dividend) - 6, "text-anchor":"end" });
+    tl.textContent = String(S.dividend); svg.appendChild(tl);
+
+    /* one point does not make a line: the ray appears once the class has built
+       a second row and can see that it is the same rate again. */
+    if(S.rows.length >= 2){
+      const xEnd = Math.min(xMax, yMax / S.divisor);
+      svg.appendChild(el("line", { class:"ray", x1:X(0), y1:Y(0), x2:X(xEnd), y2:Y(xEnd * S.divisor) }));
+    }
+
+    S.rows.forEach(r => {
+      if(r.t > yMax || r.g > xMax) return;
+      const cls = "pt" + (isAnchor(r) ? " anchor" : "")
+        + (S.done && r.t === S.dividend ? " win" : r.t > S.dividend ? " over" : "")
+        + (S.sel.indexOf(r.id) >= 0 ? " sel" : "");
+      svg.appendChild(el("circle", { class:cls, cx:X(r.g), cy:Y(r.t), r:(S.done && r.t === S.dividend) ? 7 : 5.5 }));
+      const show = (isAnchor(r) && S.rows.length <= 3) || S.sel.indexOf(r.id) >= 0 || (S.done && r.t === S.dividend);
+      if(show){
+        const lb = el("text", {
+          class:"ptLab" + (S.done && r.t === S.dividend ? " win" : ""),
+          x:Math.min(X(r.g) + 9, L + pw - 4), y:Y(r.t) - 10,
+          "text-anchor": X(r.g) > L + pw - 60 ? "end" : "start"
+        });
+        lb.textContent = "(" + r.g + ", " + r.t + ")";
+        svg.appendChild(lb);
+      }
+    });
+
+    $("gcNote").textContent = S.done
+      ? "The line meets " + S.dividend + " at " + winRow().g + " groups — that is the answer, read off the graph."
+      : "Each row is a point. They line up because every row is the same rate.";
+  }
+
+  /* Taking a row out is not undo: any row can go, at any time, and everything
+     that reads the table - the answer, the bracket, the graph's scales - is
+     re-derived from what is left. */
+  function deleteRow(id){
+    const i = S.rows.findIndex(r => r.id === id);
+    if(i < 1) return;                     /* never the anchor */
+    const gone = S.rows[i];
+    S.rows.splice(i, 1);
+    S.sel = S.sel.filter(x => x !== id);
+    S.entry = null;
+    S.done = !!winRow();
+    S.flash = { m: grp(gone.g) + " taken out.", t: null };
+    paintAll();
+  }
+
+  function undoRow(){
+    if(S.rows.length <= 1) return;
+    S.rows.pop();
+    S.sel = [];
+    S.entry = null;
+    S.done = !!winRow();
+    paintAll();
+  }
+
+  function clearAll(){
+    resetTable();
+    paintAll();
+    say("Back to one group. Build it up again.", null);
+  }
+
+  /* ------------------------------------------------------------- new question */
+  function newQuestion(keepDivisor){
+    if(S.level === "custom"){
+      resetTable(); paintAll(); showIntro(); return;
+    }
+    generate(keepDivisor);
+    resetTable();
+    paintAll();
+    showIntro();
+  }
+
+  /* ---------------------------------------------------------------- intro veil */
+  /* Next does not swap one sentence for another: the SAME element is flown down
+     onto the card, so the sentence the class just read is the sentence the
+     table is about. */
+  function showIntro(){
+    closeMenus();
+    const custom = S.level === "custom";
+    const veil = $("introVeil");
+    const sent = $("introSentence");
+    sent.textContent = "";
+    $("introMsg").textContent = "";
+
+    if(custom){
+      const a = document.createElement("input");
+      a.className = "introIn dv"; a.id = "iDividendIn"; a.type = "text";
+      a.inputMode = "numeric"; a.value = String(S.dividend);
+      a.setAttribute("aria-label", "The number being divided");
+      const d = document.createElement("span"); d.textContent = DIVIDE;
+      const b = document.createElement("input");
+      b.className = "introIn ds"; b.id = "iDivisorIn"; b.type = "text";
+      b.inputMode = "numeric"; b.value = String(S.divisor);
+      b.setAttribute("aria-label", "The size of each group");
+      const eq = document.createElement("span"); eq.textContent = "=";
+      const q = document.createElement("span"); q.className = "ans"; q.textContent = "?";
+      sent.appendChild(a); sent.appendChild(d); sent.appendChild(b); sent.appendChild(eq); sent.appendChild(q);
+    }else{
+      const mk = (cls, txt) => { const s = document.createElement("span"); if(cls) s.className = cls; s.textContent = txt; return s; };
+      sent.appendChild(mk("dv", S.dividend));
+      sent.appendChild(mk(null, DIVIDE));
+      sent.appendChild(mk("ds", S.divisor));
+      sent.appendChild(mk(null, "="));
+      sent.appendChild(mk("ans", "?"));
+    }
+
+    veil.hidden = false;
+    veil.classList.remove("is-leaving");
+    sent.style.transform = "";
+    $("introBg").style.opacity = "";
+    S.introOpen = true;
+    setTimeout(() => { const f = custom ? $("iDividendIn") : $("introNext"); if(f) f.focus(); }, 40);
+  }
+
+  function dismissIntro(){
+    if(!S.introOpen) return;
+    if(S.level === "custom"){
+      const dv = parseInt(String($("iDividendIn").value).replace(/[^0-9]/g, ""), 10);
+      const ds = parseInt(String($("iDivisorIn").value).replace(/[^0-9]/g, ""), 10);
+      if(!Number.isFinite(dv) || !Number.isFinite(ds) || ds < 2 || dv < 2){
+        $("introMsg").textContent = "Type a number to divide, and a group size of 2 or more.";
+        return;
+      }
+      if(dv > 9999 || ds > 99){
+        $("introMsg").textContent = "Keep the number under 10 000 and the group size under 100.";
+        return;
+      }
+      if(dv % ds !== 0){
+        $("introMsg").textContent = ds + " does not go into " + dv + " exactly — try another pair.";
+        return;
+      }
+      if(dv / ds < 2){
+        $("introMsg").textContent = "That is fewer than two groups — there is no table to build.";
+        return;
+      }
+      setQuestion(dv, ds);
+      resetTable();
+      paintAll();
+    }
+
+    const veil = $("introVeil");
+    const sent = $("introSentence");
+    const target = $("sentence");
+    const a = sent.getBoundingClientRect(), b = target.getBoundingClientRect();
+    const scale = Math.min(1, b.width / Math.max(a.width, 1));
+    const dx = (b.left + b.width / 2) - (a.left + a.width / 2);
+    const dy = (b.top + b.height / 2) - (a.top + a.height / 2);
+
+    S.introOpen = false;
+    target.style.visibility = "hidden";
+    veil.classList.add("is-leaving");
+    sent.style.transform = "translate(" + dx + "px," + dy + "px) scale(" + scale + ")";
+
+    setTimeout(() => {
+      veil.hidden = true;
+      veil.classList.remove("is-leaving");
+      sent.style.transform = "";
+      target.style.visibility = "";
+      openEntry();
+    }, 520);
+  }
+
+  /* ----------------------------------------------------------------- menus */
+  function closeMenus(){
+    ["settingsMenu","toolsMenu"].forEach(id => {
+      $(id).classList.remove("open");
+      $(id === "settingsMenu" ? "settingsBtn" : "toolsBtn").setAttribute("aria-expanded","false");
+    });
+  }
+  function toggleMenu(btnId, menuId){
+    $(btnId).addEventListener("click", e => {
+      e.stopPropagation();
+      const m = $(menuId), wasOpen = m.classList.contains("open");
+      closeMenus();
+      if(!wasOpen){ m.classList.add("open"); $(btnId).setAttribute("aria-expanded","true"); }
+    });
+  }
+  toggleMenu("settingsBtn","settingsMenu");
+  toggleMenu("toolsBtn","toolsMenu");
+  document.addEventListener("click", closeMenus);
+  $("settingsMenu").addEventListener("click", e => e.stopPropagation());
+  $("toolsMenu").addEventListener("click", e => e.stopPropagation());
+  document.addEventListener("keydown", e => {
+    if(e.key !== "Escape") return;
+    closeMenus();
+    if(S.entry) cancelEntry();
+  });
+
+  /* ------------------------------------------------------------------ wires */
+  $("undoBtn").addEventListener("click", undoRow);
+  $("clearBtn").addEventListener("click", clearAll);
+  $("genBtn").addEventListener("click", () => newQuestion(true));
+  $("newBtn").addEventListener("click", () => newQuestion(false));
+  $("introNext").addEventListener("click", dismissIntro);
+  document.addEventListener("keydown", e => {
+    if(S.introOpen && e.key === "Enter"){ e.preventDefault(); dismissIntro(); }
+  });
+
+  const LEVEL_NOTES = {
+    friendly: "Divisors a Stage 3 class already knows, so the first rows are recall, not calculation.",
+    twoDigit: "Group sizes short division makes hard — this is where a ratio table earns its place.",
+    custom:   "Type the question on the opening screen. It has to divide exactly, so a row can land on it."
+  };
+  $("levelSel").addEventListener("change", e => {
+    S.level = e.target.value;
+    $("levelNote").textContent = LEVEL_NOTES[S.level];
+    newQuestion(false);
+  });
+
+  function bindToggle(id, key, after){
+    $(id).addEventListener("change", e => {
+      S[key] = e.target.checked;
+      if(after) after();
+      paintAll();
+    });
+  }
+  bindToggle("graphToggle","graph");
+  bindToggle("bracketToggle","bracket");
+
+  let resizeT;
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeT);
+    resizeT = setTimeout(() => { paintGraph(); fitTable(); }, 90);
+  });
+
+  /* ------------------------------------------------------------------ start */
+  generate(false);
+  resetTable();
+  paintAll();
+  showIntro();
+
+  /* A small surface for the automated checks. Nothing in the page reads it. */
+  window.__RTD__ = {
+    S: S,
+    answer: answer,
+    rowById: rowById,
+    winRow: winRow,
+    moveOptions: moveOptions,
+    scaleMove: scaleMove,
+    combineMove: combineMove,
+    propose: propose,
+    commit: commit,
+    openEntry: openEntry,
+    takeGroups: takeGroups,
+    takeTotal: takeTotal,
+    cancelEntry: cancelEntry,
+    tryAdd: tryAdd,
+    toggleSel: toggleSel,
+    undoRow: undoRow,
+    deleteRow: deleteRow,
+    clearAll: clearAll,
+    generate: generate,
+    newQuestion: newQuestion,
+    showIntro: showIntro,
+    dismissIntro: dismissIntro,
+    paintAll: paintAll,
+    setQuestion: function(dv, ds){
+      if(S.level === "custom") S.level = "friendly";
+      setQuestion(dv, ds);
+      resetTable();
+      S.introOpen = false;
+      $("introVeil").hidden = true;
+      $("sentence").style.visibility = "";
+      paintAll();
+    }
+  };
+})();
+</script>
+</body>
+</html>
