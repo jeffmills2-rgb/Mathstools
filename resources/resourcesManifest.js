@@ -705,7 +705,16 @@ window.MMT_RESOURCES = {
           pathway: "Adv",
           focusArea: "Algebraic techniques C",
           statement: "selects and applies appropriate algebraic techniques to operate with algebraic fractions, and expands, factorises and simplifies algebraic expressions",
-          resources: []
+          resources: [
+            {
+              title: "Complete the Square \u2014 demo notes",
+              type: "pdf",
+              file: "complete-the-square-demo-notes.pdf",
+              note: "4-page photo record of a manipulative whiteboard demonstration. Steps 1\u20134 build x\u00b2 + 26x = 27 as an area model, halve the 26x strip, add the missing 169 corner to complete the square, then square-root to get (x + 13)\u00b2 = 196 \u2192 x = 1 or 27 \u2014 with a note on why the negative solution was historically overlooked. Steps 5\u20138 repeat the same build with ax\u00b2 + bx + c = 0 to derive the quadratic formula.",
+              year: "Year 10",
+              tags: ["lesson notes", "completing the square", "quadratics", "area model", "algebra tiles", "quadratic formula", "proof", "demonstration", "worked example"]
+            }
+          ]
         }
       ]
     },

@@ -4,6 +4,38 @@
 > re-uploading everything. Keep it short, current, high-signal. If a fact here
 > stops being true, fix it here first.
 >
+> ## ⚠️ READ FIRST — `.git/index.lock` (recurring, every session)
+>
+> **THE CAUSE IS CLAUDE, NOT A CRASHED GIT.** Almost any git command run from the
+> desktop-bridge shell (`device_bash`) — **including a plain `git status`** —
+> creates `.git/index.lock`, and the bridge shell **cannot delete files**, so the
+> lock is left behind. Jeff's very next `git add` / `git commit` in Terminal then
+> fails with *"Another git process seems to be running"*. Nothing has crashed and
+> nothing is corrupt — it is a stale zero-byte file.
+>
+> **THE RULE FOR CLAUDE: do not run git from the bridge shell.** Not `status`,
+> not `add`, not `commit`, not `diff --stat`. To see what changed, list the files
+> or diff them with `python3`/`ls`. Git in this repo is Jeff's Terminal only.
+> `git log` is read-only and safe, but there is rarely a reason to need it.
+>
+> **THE FIX, whenever it happens** — every push command handed to Jeff should
+> clear the lock first, so the failure can never happen twice:
+>
+> ```bash
+> cd "/Users/jeffmills/Documents/GitHub/Mills Maths Tools" && \
+> rm -f .git/index.lock .git/HEAD.lock .git/refs/heads/main.lock && \
+> git add -A && git commit -m "…" && git push
+> ```
+>
+> Do NOT tell Jeff to hunt for a running git process or to re-clone. If Claude
+> genuinely needs to clear the lock itself, it must ask for delete permission on
+> the repo folder (`device_request_delete_permission`) — the bridge shell's `rm`
+> fails with *"Operation not permitted"* until that is granted, and the grant
+> only lasts for the current session.
+>
+> The bridge also has **NO network access**, so `git push` is always Jeff's
+> Terminal, never Claude's.
+>
 > **NEW (2026-08-17): SINGLE-REPO CONSOLIDATION.** The game SOURCE is no longer a
 > separate folder — it now lives IN this repo at
 > `game-platforms/mills-maths-adventure-source/` (the Vite project), with its
